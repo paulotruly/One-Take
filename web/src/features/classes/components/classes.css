@@ -1,0 +1,203 @@
+/* ---------- Selos ---------- */
+.selo--grupo-COMBATENTE { color: var(--cor-grupo-combatente); }
+.selo--grupo-VANGUARDISTA { color: var(--cor-grupo-vanguardista); }
+.selo--grupo-SUPORTE { color: var(--cor-grupo-suporte); }
+.selo--fixa { color: var(--cor-fixa); }
+.selo--propria { color: var(--cor-propria); }
+.selo--efeito { color: var(--cor-efeito); }
+.selo--nivel { color: var(--cor-fixa); }
+.selo--mana { color: var(--cor-mana); }
+.selo--status-DEBUFF { color: var(--cor-perigo); }
+.selo--status-BUFF { color: var(--cor-sucesso); }
+.selo--status-MISTO { color: var(--cor-esforco); }
+
+/* ---------- Atributos ---------- */
+.stats { display: flex; flex-wrap: wrap; gap: var(--esp-2); }
+.stat {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--esp-1);
+  padding: var(--esp-1) var(--esp-2);
+  border-radius: var(--raio-sm);
+  background: var(--cor-superficie-2);
+  font-size: var(--texto-sm);
+  font-weight: var(--peso-forte);
+}
+.stat__icone { display: inline-flex; }
+.stat__rotulo { color: var(--cor-texto-suave); font-weight: var(--peso-normal); }
+.stat--vida .stat__icone { color: var(--cor-vida); }
+.stat--mana .stat__icone { color: var(--cor-mana); }
+.stat--esforco .stat__icone { color: var(--cor-esforco); }
+.stats--compacto .stat { padding: 0 var(--esp-2); font-size: var(--texto-xs); }
+
+/* ---------- Imagem ---------- */
+.classe-imagem {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: var(--cor-superficie-2);
+}
+.classe-imagem--vazia {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  font-weight: var(--peso-forte);
+  color: var(--cor-texto-suave);
+}
+
+/* ---------- Filtro de grupo ---------- */
+.filtro { display: flex; flex-wrap: wrap; gap: var(--esp-2); }
+.filtro__opcao {
+  padding: var(--esp-1) var(--esp-4);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-pilula);
+  background: transparent;
+  color: var(--cor-texto-suave);
+  font-size: var(--texto-sm);
+  cursor: pointer;
+}
+.filtro__opcao[aria-pressed="true"] {
+  border-color: var(--cor-primaria);
+  background: var(--cor-primaria);
+  color: var(--cor-primaria-texto);
+  font-weight: var(--peso-forte);
+}
+
+/* ---------- Galeria (seleção de herói) ---------- */
+.galeria {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(var(--card-classe-largura), 1fr));
+  gap: var(--esp-5);
+}
+.classe-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border: 2px solid var(--cor-borda);
+  border-radius: var(--raio-lg);
+  background: var(--cor-superficie);
+  overflow: hidden;
+  transition: transform var(--transicao), border-color var(--transicao);
+}
+.classe-card:hover { transform: translateY(-2px); box-shadow: var(--sombra); }
+.classe-card--fixa { border-color: color-mix(in srgb, var(--cor-fixa) 55%, transparent); }
+.classe-card--propria { border-color: color-mix(in srgb, var(--cor-propria) 55%, transparent); }
+.classe-card__link { color: inherit; display: flex; flex-direction: column; flex: 1; }
+.classe-card__link:hover { text-decoration: none; }
+.classe-card__retrato { position: relative; aspect-ratio: 3 / 4; }
+.classe-card__selos {
+  position: absolute;
+  inset: var(--esp-2) var(--esp-2) auto;
+  display: flex;
+  justify-content: space-between;
+  gap: var(--esp-1);
+}
+.classe-card__selos .selo { background: var(--cor-selo-fundo); }
+.classe-card__corpo { display: flex; flex-direction: column; gap: var(--esp-3); padding: var(--esp-4); flex: 1; }
+.classe-card__descricao {
+  color: var(--cor-texto-suave);
+  font-size: var(--texto-sm);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.classe-card__acoes {
+  display: flex;
+  gap: var(--esp-2);
+  padding: 0 var(--esp-4) var(--esp-4);
+}
+.classe-card__acoes .btn { flex: 1; }
+
+/* ---------- Cabeçalho da classe ---------- */
+.classe-cabecalho {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: var(--esp-6);
+  align-items: start;
+}
+.classe-cabecalho__retrato {
+  aspect-ratio: 3 / 4;
+  border-radius: var(--raio-md);
+  overflow: hidden;
+}
+.classe-cabecalho__info { display: flex; flex-direction: column; gap: var(--esp-4); }
+.classe-cabecalho__selos { display: flex; gap: var(--esp-2); flex-wrap: wrap; }
+.classe-cabecalho__descricao { color: var(--cor-texto-suave); white-space: pre-line; }
+.classe-cabecalho__acoes { display: flex; gap: var(--esp-2); flex-wrap: wrap; }
+@media (max-width: 640px) {
+  .classe-cabecalho { grid-template-columns: 1fr; }
+  .classe-cabecalho__retrato { max-width: 180px; }
+}
+
+/* ---------- Seções ---------- */
+.secao { display: flex; flex-direction: column; gap: var(--esp-5); }
+.secao__cabecalho { display: flex; justify-content: space-between; align-items: center; gap: var(--esp-3); flex-wrap: wrap; }
+
+/* ---------- Painel (resumo de habilidades) e deck ---------- */
+.painel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-4);
+  padding: var(--esp-5);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-lg);
+  background: var(--cor-superficie);
+}
+.painel__cabecalho { display: flex; justify-content: space-between; align-items: center; gap: var(--esp-3); flex-wrap: wrap; }
+.painel__descricao { color: var(--cor-texto-suave); font-size: var(--texto-sm); }
+.resumo-habilidades { display: flex; flex-direction: column; gap: var(--esp-2); margin: 0; padding: 0; list-style: none; font-size: var(--texto-sm); }
+.resumo-habilidades li { display: flex; align-items: center; gap: var(--esp-2); }
+.deck {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: var(--card-habilidade-largura);
+  gap: var(--esp-4);
+  overflow-x: auto;
+  padding-bottom: var(--esp-2);
+}
+
+/* ---------- Carta (habilidade) ---------- */
+.carta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-3);
+  padding: var(--esp-4);
+  border: 1px solid var(--cor-borda);
+  border-top: 4px solid var(--cor-efeito);
+  border-radius: var(--raio-md);
+  background: var(--cor-superficie-2);
+  font-size: var(--texto-sm);
+}
+.carta__topo { display: flex; justify-content: space-between; gap: var(--esp-2); }
+.carta__selos { display: flex; gap: var(--esp-1); flex-wrap: wrap; justify-content: flex-end; }
+.carta__descricao { color: var(--cor-texto-suave); font-style: italic; }
+.carta__linha strong { color: var(--cor-texto-suave); font-weight: var(--peso-forte); }
+.carta__efeito { padding: var(--esp-2); border-radius: var(--raio-sm); background: var(--cor-superficie); }
+.carta__rodape { display: flex; justify-content: space-between; gap: var(--esp-1); margin-top: auto; padding-top: var(--esp-2); }
+.carta__rodape > div { display: flex; gap: var(--esp-1); }
+
+/* ---------- Formulários ---------- */
+.form { display: flex; flex-direction: column; gap: var(--esp-5); }
+.form__linha { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: var(--esp-4); }
+.form__previa { width: 96px; aspect-ratio: 3 / 4; border-radius: var(--raio-sm); overflow: hidden; }
+
+/* ---------- Progressão ---------- */
+.progressao { display: flex; flex-direction: column; gap: var(--esp-3); }
+.progressao__linha { display: flex; align-items: center; gap: var(--esp-3); flex-wrap: wrap; }
+.selo--novo { color: var(--cor-sucesso); }
+
+/* ---------- Classes-conceito ---------- */
+.conceitos { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: var(--esp-4); margin: 0; padding: 0; list-style: none; }
+.conceito { display: flex; flex-direction: column; gap: var(--esp-3); padding: var(--esp-4); border: 1px solid var(--cor-borda); border-left: 4px solid var(--cor-primaria); }
+.conceito__topo { display: flex; justify-content: space-between; align-items: center; gap: var(--esp-2); }
+.conceito__topo h3 { display: flex; align-items: center; gap: var(--esp-2); }
+.conceito__subclasses { display: flex; flex-wrap: wrap; gap: var(--esp-2); align-items: center; }
+.conceito__subclasse { padding: var(--esp-1) var(--esp-3); border: 1px solid var(--cor-borda); font-size: var(--texto-sm); color: var(--cor-texto); }
+.conceito__subclasse:hover { text-decoration: none; border-color: var(--cor-primaria); }
+.aviso-inline { color: var(--cor-perigo); font-size: var(--texto-sm); }
+.classe-card__conceito { color: var(--cor-primaria); font-size: var(--texto-xs); font-weight: var(--peso-forte); text-transform: uppercase; letter-spacing: 0.04em; }
+
+/* ---------- Aprimoramentos na carta ---------- */
+.carta__aprimoramentos { margin: 0; padding: var(--esp-2) var(--esp-3); list-style: none; background: var(--cor-fundo); border-left: 2px solid var(--cor-efeito); font-size: var(--texto-xs); display: flex; flex-direction: column; gap: var(--esp-1); }

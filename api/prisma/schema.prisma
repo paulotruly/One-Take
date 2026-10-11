@@ -1,0 +1,457 @@
+// Modelo de dados do One-Take. Explicação das escolhas em docs/DADOS.md.
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "esm"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Papel {
+  MESTRE
+  JOGADOR
+}
+
+enum GrupoClasse {
+  COMBATENTE
+  VANGUARDISTA
+  SUPORTE
+}
+
+/// Categoria da perícia. Lista fixa do sistema; rótulos e ícones (lucide) ficam no front.
+enum CategoriaPericia {
+  CORPO_A_CORPO
+  MAGIA
+  PONTARIA
+  FISICO
+  DEFESA
+  SOCIAL
+  CONHECIMENTO
+  PERCEPCAO
+}
+
+
+/// Perfil do usuário autenticado pelo Supabase Auth. id = auth.users.id.
+model Perfil {
+  id                String    @id @db.Uuid
+  /// Email da conta no Supabase Auth. Contas criadas pelo app usam um email interno (<nickname>@one-take.local).
+  email             String    @unique
+  /// Identificador público e de login (minúsculo, sem "@"). Exibido como @nickname.
+  nickname          String    @unique
+  papel             Papel     @default(JOGADOR)
+  /// Nome de exibição escolhido pelo usuário.
+  nome              String?
+  /// Link externo da foto de perfil.
+  fotoUrl           String?
+  /// true depois que o catálogo de perícias base foi copiado para este mestre.
+  catalogoIniciado  Boolean   @default(false)
+  criadoEm          DateTime  @default(now())
+  classes           Classe[]
+  pericias          Pericia[]
+  racas             Raca[]
+  atributos         Atributo[]
+  grupos            Grupo[]
+  fichas            Ficha[]
+  status            Status[]
+  conceitos         ClasseConceito[]
+}
+
+/// Classe jogável. donoId nulo = classe fixa do sistema (somente leitura).
+model Classe {
+  id            String      @id @default(uuid()) @db.Uuid
+  grupo         GrupoClasse
+  titulo        String
+  descricao     String
+  /// Link externo da imagem (por enquanto não há upload).
+  imagemUrl     String?
+  /// Valores BASE (máximo inicial). Os valores atuais pertencerão à ficha.
+  pontosVida    Int
+  pontosMana    Int
+  pontosEsforco Int
+  donoId        String?     @db.Uuid
+  dono          Perfil?     @relation(fields: [donoId], references: [id], onDelete: Cascade)
+  /// Classe da qual esta foi duplicada (informativo, sem FK).
+  origemId      String?     @db.Uuid
+  /// Classe-conceito à qual esta subclasse pertence (opcional). Ex.: "Bruxa" > "Bruxa elemental".
+  conceitoId    String?     @db.Uuid
+  conceito      ClasseConceito? @relation(fields: [conceitoId], references: [id], onDelete: SetNull)
+  /// Se preenchido, a classe só vale neste grupo (exclusiva). Nulo = geral.
+  grupoExclusivoId String?  @db.Uuid
+  grupoExclusivo   Grupo?   @relation("ClasseExclusiva", fields: [grupoExclusivoId], references: [id], onDelete: SetNull)
+  grupos        ClasseNoGrupo[]
+  fichas        Ficha[]
+  habilidades   Habilidade[]
+  pericias      ClassePericia[]
+  criadoEm      DateTime    @default(now())
+  atualizadoEm  DateTime    @updatedAt
+
+  @@index([donoId])
+  @@index([grupo])
+}
+
+/// Habilidade (carta) da classe. Cada classe tem uma única cartela: o conjunto ordenado de suas habilidades.
+model Habilidade {
+  id              String     @id @default(uuid()) @db.Uuid
+  classeId        String     @db.Uuid
+  classe          Classe     @relation(fields: [classeId], references: [id], onDelete: Cascade)
+  titulo          String
+  descricao       String
+  condicao        String?
+  /// Texto livre e descritivo (ex.: "Dano", "Cura em área").
+  tipoEfeito      String
+  descricaoEfeito String
+  limite          String?
+  nivelNecessario Int        @default(1)
+  /// Mana gasta ao usar a carta. 0 = não custa mana.
+  custoMana       Int        @default(0)
+  /// Status que a carta ativa (no alvo ou em quem usa), opcional.
+  statusId        String?    @db.Uuid
+  status          Status?    @relation(fields: [statusId], references: [id], onDelete: SetNull)
+  aprimoramentos  HabilidadeAprimoramento[]
+  ordem           Int
+
+  @@index([classeId, ordem])
+}
+
+/// Perícia do catálogo: habilidade passiva usada em rolagens.
+/// donoId nulo = perícia base do sistema (usada pelas classes fixas e copiada para cada mestre).
+model Pericia {
+  id        String           @id @default(uuid()) @db.Uuid
+  nome      String
+  descricao String
+  categoria CategoriaPericia
+  atributoId String          @db.Uuid
+  atributo  Atributo         @relation(fields: [atributoId], references: [id])
+  donoId    String?          @db.Uuid
+  dono      Perfil?          @relation(fields: [donoId], references: [id], onDelete: Cascade)
+  /// Perícia base da qual esta é cópia (informativo, sem FK).
+  origemId  String?          @db.Uuid
+  classes   ClassePericia[]
+  racas     RacaPericia[]
+  grupos    PericiaNoGrupo[]
+  fichas    FichaPericia[]
+  criadoEm  DateTime         @default(now())
+
+  @@unique([donoId, nome])
+  @@index([donoId])
+  @@index([atributoId])
+}
+
+/// Atributo que agrupa perícias (e, nas fichas, recebe dados d20).
+/// donoId nulo = atributo fixo do sistema (Capacidade física, Carisma, Conhecimento): visível a todos, não editável.
+/// Com dono = atributo criado por um mestre, só dele.
+model Atributo {
+  id        String    @id @default(uuid()) @db.Uuid
+  nome      String
+  descricao String
+  /// Ordem de exibição dos fixos; criados pelo mestre vêm depois, por nome.
+  ordem     Int       @default(100)
+  donoId    String?   @db.Uuid
+  dono      Perfil?   @relation(fields: [donoId], references: [id], onDelete: Cascade)
+  /// Se preenchido, o atributo (e suas perícias) só vale neste grupo. Nulo = geral.
+  grupoExclusivoId String? @db.Uuid
+  grupoExclusivo   Grupo?  @relation("AtributoExclusivo", fields: [grupoExclusivoId], references: [id], onDelete: SetNull)
+  pericias  Pericia[]
+  grupos    AtributoNoGrupo[]
+  fichas    FichaAtributo[]
+  criadoEm  DateTime  @default(now())
+
+  @@unique([donoId, nome])
+  @@index([donoId])
+}
+
+/// Perícia que uma classe possui, com o modificador daquela classe.
+model ClassePericia {
+  classeId    String  @db.Uuid
+  classe      Classe  @relation(fields: [classeId], references: [id], onDelete: Cascade)
+  periciaId   String  @db.Uuid
+  pericia     Pericia @relation(fields: [periciaId], references: [id], onDelete: Cascade)
+  modificador Int     @default(0)
+
+  @@id([classeId, periciaId])
+  @@index([periciaId])
+}
+
+/// Raça criada por um mestre (só ele vê e edita). Dá perícias base ao jogador e define o deslocamento.
+model Raca {
+  id           String        @id @default(uuid()) @db.Uuid
+  donoId       String        @db.Uuid
+  dono         Perfil        @relation(fields: [donoId], references: [id], onDelete: Cascade)
+  titulo       String
+  descricao    String
+  /// Link externo da imagem da raça.
+  imagemUrl    String?
+  /// Quadrados no grid que o personagem anda por turno. CHECK >= 1 via SQL.
+  deslocamento Int
+  pericias     RacaPericia[]
+  /// Se preenchido, a raça só vale neste grupo. Nulo = geral.
+  grupoExclusivoId String?   @db.Uuid
+  grupoExclusivo   Grupo?    @relation("RacaExclusiva", fields: [grupoExclusivoId], references: [id], onDelete: SetNull)
+  grupos       RacaNoGrupo[]
+  fichas       Ficha[]
+  criadoEm     DateTime      @default(now())
+  atualizadoEm DateTime      @updatedAt
+
+  @@index([donoId])
+}
+
+/// Perícia que a raça concede, com a quantidade de pontos base para o jogador.
+model RacaPericia {
+  racaId    String  @db.Uuid
+  raca      Raca    @relation(fields: [racaId], references: [id], onDelete: Cascade)
+  periciaId String  @db.Uuid
+  pericia   Pericia @relation(fields: [periciaId], references: [id], onDelete: Cascade)
+  pontos    Int
+
+  @@id([racaId, periciaId])
+  @@index([periciaId])
+}
+
+/// Grupo: o RPG de um mestre. Jogadores entram com o código e criam uma ficha.
+model Grupo {
+  id                       String     @id @default(uuid()) @db.Uuid
+  mestreId                 String     @db.Uuid
+  mestre                   Perfil     @relation(fields: [mestreId], references: [id], onDelete: Cascade)
+  titulo                   String
+  sinopse                  String
+  genero                   String
+  imagemUrl                String?
+  /// Máximo de jogadores (fichas) no grupo. CHECK 1..50 via SQL.
+  limiteMembros            Int
+  /// Código de entrada (6 caracteres, maiúsculo).
+  codigo                   String     @unique
+  /// false = dois jogadores do grupo não podem ter a mesma classe.
+  permitirClassesRepetidas Boolean    @default(true)
+  /// Regras padrão de combate (api/src/regras/combate.ts) que o mestre desligou neste grupo.
+  regrasPadraoDesativadas  String[]   @default([])
+  regrasProprias           RegraDaMesa[]
+  classes                  ClasseNoGrupo[]
+  racas                    RacaNoGrupo[]
+  atributos                AtributoNoGrupo[]
+  pericias                 PericiaNoGrupo[]
+  fichas                   Ficha[]
+  itens                    Item[]
+  status                   StatusNoGrupo[]
+  classesExclusivas        Classe[]   @relation("ClasseExclusiva")
+  racasExclusivas          Raca[]     @relation("RacaExclusiva")
+  atributosExclusivos      Atributo[] @relation("AtributoExclusivo")
+  criadoEm                 DateTime   @default(now())
+  atualizadoEm             DateTime   @updatedAt
+
+  @@index([mestreId])
+}
+
+/// Classes disponíveis no grupo.
+model ClasseNoGrupo {
+  grupoId  String @db.Uuid
+  grupo    Grupo  @relation(fields: [grupoId], references: [id], onDelete: Cascade)
+  classeId String @db.Uuid
+  classe   Classe @relation(fields: [classeId], references: [id], onDelete: Cascade)
+
+  @@id([grupoId, classeId])
+}
+
+/// Raças disponíveis no grupo.
+model RacaNoGrupo {
+  grupoId String @db.Uuid
+  grupo   Grupo  @relation(fields: [grupoId], references: [id], onDelete: Cascade)
+  racaId  String @db.Uuid
+  raca    Raca   @relation(fields: [racaId], references: [id], onDelete: Cascade)
+
+  @@id([grupoId, racaId])
+}
+
+/// Atributos (grupos de perícias) disponíveis no grupo: recebem os dados da ficha.
+model AtributoNoGrupo {
+  grupoId    String   @db.Uuid
+  grupo      Grupo    @relation(fields: [grupoId], references: [id], onDelete: Cascade)
+  atributoId String   @db.Uuid
+  atributo   Atributo @relation(fields: [atributoId], references: [id], onDelete: Cascade)
+
+  @@id([grupoId, atributoId])
+}
+
+/// Perícias disponíveis no grupo (dentro dos atributos disponíveis).
+model PericiaNoGrupo {
+  grupoId   String  @db.Uuid
+  grupo     Grupo   @relation(fields: [grupoId], references: [id], onDelete: Cascade)
+  periciaId String  @db.Uuid
+  pericia   Pericia @relation(fields: [periciaId], references: [id], onDelete: Cascade)
+
+  @@id([grupoId, periciaId])
+}
+
+/// Ficha de personagem de um jogador dentro de um grupo (1 por jogador por grupo).
+model Ficha {
+  id                       String   @id @default(uuid()) @db.Uuid
+  grupoId                  String   @db.Uuid
+  grupo                    Grupo    @relation(fields: [grupoId], references: [id], onDelete: Cascade)
+  jogadorId                String   @db.Uuid
+  jogador                  Perfil   @relation(fields: [jogadorId], references: [id], onDelete: Cascade)
+  nome                     String
+  historia                 String?
+  imagemUrl                String?
+  classeId                 String   @db.Uuid
+  classe                   Classe   @relation(fields: [classeId], references: [id], onDelete: Restrict)
+  racaId                   String   @db.Uuid
+  raca                     Raca     @relation(fields: [racaId], references: [id], onDelete: Restrict)
+  nivel                    Int      @default(1)
+  vidaAtual                Int
+  manaAtual                Int
+  esforcoAtual             Int
+  /// Pontos de perícia ganhos ao subir de nível e ainda não usados.
+  pontosPericiaDisponiveis Int      @default(0)
+  atributos                FichaAtributo[]
+  pericias                 FichaPericia[]
+  itens                    Item[]
+  status                   FichaStatus[]
+  criadoEm                 DateTime @default(now())
+  atualizadoEm             DateTime @updatedAt
+
+  @@unique([grupoId, jogadorId])
+  @@index([jogadorId])
+}
+
+/// Dados (d20) da ficha em cada atributo.
+model FichaAtributo {
+  fichaId    String   @db.Uuid
+  ficha      Ficha    @relation(fields: [fichaId], references: [id], onDelete: Cascade)
+  atributoId String   @db.Uuid
+  atributo   Atributo @relation(fields: [atributoId], references: [id], onDelete: Restrict)
+  dados      Int
+
+  @@id([fichaId, atributoId])
+}
+
+/// Pontos de perícia que a ficha colocou ao subir de nível (somam com raça e classe).
+model FichaPericia {
+  fichaId   String  @db.Uuid
+  ficha     Ficha   @relation(fields: [fichaId], references: [id], onDelete: Cascade)
+  periciaId String  @db.Uuid
+  pericia   Pericia @relation(fields: [periciaId], references: [id], onDelete: Restrict)
+  pontos    Int
+
+  @@id([fichaId, periciaId])
+}
+
+/// Item de um grupo. Com fichaId = está no inventário daquela ficha; nulo = vago no grupo.
+model Item {
+  id        String   @id @default(uuid()) @db.Uuid
+  grupoId   String   @db.Uuid
+  grupo     Grupo    @relation(fields: [grupoId], references: [id], onDelete: Cascade)
+  fichaId   String?  @db.Uuid
+  ficha     Ficha?   @relation(fields: [fichaId], references: [id], onDelete: SetNull)
+  nome      String
+  descricao String
+  criadoEm  DateTime @default(now())
+
+  @@index([grupoId])
+  @@index([fichaId])
+}
+
+/// Efeito do status: só informativo (o sistema não altera números; a ficha mostra um alerta).
+enum TipoStatus {
+  BUFF
+  DEBUFF
+  MISTO
+}
+
+/// Status automáticos: ligados pelos recursos da ficha.
+enum GatilhoStatus {
+  VIDA_ZERO
+  MANA_ZERO
+  ESFORCO_ZERO
+}
+
+/// Status (condição/emoção) do personagem. donoId nulo = status fixo do sistema (não editável).
+model Status {
+  id          String          @id @default(uuid()) @db.Uuid
+  nome        String
+  descricao   String
+  /// O que muda para o personagem, em texto (ex.: "-10 no total dos dados de testes físicos").
+  efeito      String
+  tipo        TipoStatus
+  /// Só status do sistema têm gatilho; os demais são aplicados pelo mestre.
+  gatilho     GatilhoStatus?
+  ordem       Int             @default(100)
+  donoId      String?         @db.Uuid
+  dono        Perfil?         @relation(fields: [donoId], references: [id], onDelete: Cascade)
+  grupos      StatusNoGrupo[]
+  fichas      FichaStatus[]
+  habilidades Habilidade[]
+  aprimoramentos HabilidadeAprimoramento[]
+  criadoEm    DateTime        @default(now())
+
+  @@unique([donoId, nome])
+  @@index([donoId])
+}
+
+/// Status ativados no grupo (os demais não aparecem nem podem ser aplicados ali).
+model StatusNoGrupo {
+  grupoId  String @db.Uuid
+  grupo    Grupo  @relation(fields: [grupoId], references: [id], onDelete: Cascade)
+  statusId String @db.Uuid
+  status   Status @relation(fields: [statusId], references: [id], onDelete: Cascade)
+
+  @@id([grupoId, statusId])
+}
+
+/// Status aplicado pelo mestre numa ficha durante a sessão.
+model FichaStatus {
+  fichaId    String   @db.Uuid
+  ficha      Ficha    @relation(fields: [fichaId], references: [id], onDelete: Cascade)
+  statusId   String   @db.Uuid
+  status     Status   @relation(fields: [statusId], references: [id], onDelete: Cascade)
+  aplicadoEm DateTime @default(now())
+
+  @@id([fichaId, statusId])
+}
+
+/// Classe-conceito: classe generalista (só título e descrição) que agrupa subclasses.
+/// O jogador escolhe a subclasse (uma Classe normal com conceitoId), nunca o conceito.
+model ClasseConceito {
+  id           String   @id @default(uuid()) @db.Uuid
+  donoId       String   @db.Uuid
+  dono         Perfil   @relation(fields: [donoId], references: [id], onDelete: Cascade)
+  titulo       String
+  descricao    String
+  subclasses   Classe[]
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  @@index([donoId])
+}
+
+/// A mesma carta muda a partir de um nível. Campos nulos = continuam como na carta.
+model HabilidadeAprimoramento {
+  id              String     @id @default(uuid()) @db.Uuid
+  habilidadeId    String     @db.Uuid
+  habilidade      Habilidade @relation(fields: [habilidadeId], references: [id], onDelete: Cascade)
+  /// A partir deste nível a carta fica assim. Maior que o nível necessário da carta.
+  nivel           Int
+  titulo          String?
+  descricaoEfeito String?
+  condicao        String?
+  limite          String?
+  custoMana       Int?
+  statusId        String?    @db.Uuid
+  status          Status?    @relation(fields: [statusId], references: [id], onDelete: SetNull)
+  criadoEm        DateTime   @default(now())
+
+  @@unique([habilidadeId, nivel])
+}
+
+/// Regra própria do mestre para um grupo ("regra da mesa"), além ou no lugar das regras padrão.
+model RegraDaMesa {
+  id       String   @id @default(uuid()) @db.Uuid
+  grupoId  String   @db.Uuid
+  grupo    Grupo    @relation(fields: [grupoId], references: [id], onDelete: Cascade)
+  titulo   String
+  texto    String
+  criadoEm DateTime @default(now())
+
+  @@index([grupoId])
+}

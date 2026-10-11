@@ -1,0 +1,333 @@
+// Ficha do personagem. Usada pelo jogador (/jogador/fichas/:id) e pelo mestre do grupo (/mestre/fichas/:id).
+// Jogador e mestre mexem em vida/mana/esforço, inventário e pontos de perícia; só o mestre sobe o nível.
+import { ArrowUp, Backpack, Dices, Droplet, Footprints, Heart, Package, Skull, Trash2, TriangleAlert, X, Zap } from "lucide-react";
+import { useState, type FormEvent } from "react";
+import { useNavigate, useParams } from "react-router";
+import { Avatar } from "../../../components/ui/Avatar";
+import { Button } from "../../../components/ui/Button";
+import { ConfirmDialog } from "../../../components/ui/ConfirmDialog";
+import { Field } from "../../../components/ui/Field";
+import { LinkVoltar } from "../../../components/ui/LinkVoltar";
+import { Modal } from "../../../components/ui/Modal";
+import { EmptyState, ErrorState, Loading } from "../../../components/ui/States";
+import { erroDeFormulario, errosDeCampo, mensagemDeErro } from "../../../lib/api";
+import { ClasseImagem } from "../../classes/components/ClasseImagem";
+import { HabilidadeCard } from "../../classes/components/HabilidadeCard";
+import { GrupoBadge } from "../../classes/components/Selos";
+import { PericiaItem } from "../../pericias/components/PericiaItem";
+import { PericiasPorAtributo } from "../../pericias/components/PericiasPorAtributo";
+import { StatusBadge } from "../../status/components/StatusBadge";
+import { ROTULO_TIPO } from "../../status/types";
+import { useAplicarStatus, useEditarFicha, useExcluirFicha, useFicha, useGastarPericia, useMoverItem, useRemoverStatus, useSubirNivel } from "../api";
+import { BarraRecurso } from "../components/BarraRecurso";
+import type { FichaDetalhe } from "../types";
+
+export function FichaPage() {
+  const { id = "" } = useParams();
+  const ficha = useFicha(id);
+  if (ficha.isPending) return <Loading texto="Carregando ficha…" />;
+  if (ficha.isError) {
+    return (
+      <div className="pagina">
+        <ErrorState mensagem={mensagemDeErro(ficha.error)} onTentarNovamente={() => ficha.refetch()} />
+      </div>
+    );
+  }
+  return <Ficha f={ficha.data} />;
+}
+
+function Ficha({ f }: { f: FichaDetalhe }) {
+  const navigate = useNavigate();
+  const editar = useEditarFicha(f.id);
+  const subir = useSubirNivel(f.id);
+  const gastar = useGastarPericia(f.id);
+  const mover = useMoverItem();
+  const excluir = useExcluirFicha();
+  const aplicarStatus = useAplicarStatus(f.id);
+  const removerStatus = useRemoverStatus(f.id);
+  const [statusEscolhido, setStatusEscolhido] = useState("");
+
+  const [confirmarNivel, setConfirmarNivel] = useState(false);
+  const [confirmarSaida, setConfirmarSaida] = useState(false);
+  const [editando, setEditando] = useState(false);
+  const [periciaEscolhida, setPericiaEscolhida] = useState("");
+
+  const voltar = f.souMestre ? `/mestre/grupos/${f.grupo.id}` : "/jogador";
+  const cheio = f.inventario.itens.length >= f.inventario.capacidade;
+  // A morte já tem o aviso grande; os demais status viram alertas.
+  const alertas = f.status.filter((st) => st.gatilho !== "VIDA_ZERO" && st.gatilho !== "MANA_ZERO");
+  const erroAcao = editar.error ?? gastar.error ?? mover.error ?? subir.error ?? aplicarStatus.error ?? removerStatus.error;
+
+  return (
+    <div className="pagina">
+      <LinkVoltar to={voltar}>{f.souMestre ? f.grupo.titulo : "Minhas fichas"}</LinkVoltar>
+
+      {/* ---------- Cabeçalho ---------- */}
+      <header className="classe-cabecalho">
+        <div className="classe-cabecalho__retrato">
+          <ClasseImagem url={f.imagemUrl ?? f.classe.imagemUrl} titulo={f.nome} />
+        </div>
+        <div className="classe-cabecalho__info">
+          <div className="classe-cabecalho__selos">
+            <span className="selo selo--nivel">Nível {f.nivel}</span>
+            <GrupoBadge grupo={f.classe.grupo} />
+          </div>
+          <h1>{f.nome}</h1>
+          <p className="pericia__nome">
+            <Avatar url={f.jogador.fotoUrl} nome={f.jogador.nome} tamanho={24} />
+            {f.jogador.nome || `@${f.jogador.nickname}`} · {f.raca.titulo} · {f.classe.titulo} · Grupo {f.grupo.titulo}
+          </p>
+          <span className="stat" title="Deslocamento por turno">
+            <Footprints size={14} aria-hidden /> Deslocamento: {f.raca.deslocamento} quadrados
+          </span>
+          {f.historia && <p className="classe-cabecalho__descricao">{f.historia}</p>}
+          <div className="classe-cabecalho__acoes">
+            {f.souMestre && (
+              <Button variante="primario" onClick={() => { subir.reset(); setConfirmarNivel(true); }}>
+                <ArrowUp size={16} aria-hidden /> Subir nível
+              </Button>
+            )}
+            <Button onClick={() => { editar.reset(); setEditando(true); }}>Editar personagem</Button>
+            <Button variante="perigo" onClick={() => { excluir.reset(); setConfirmarSaida(true); }}>
+              {f.souMestre ? "Remover do grupo" : "Sair do grupo"}
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      {erroAcao && <div className="aviso">{mensagemDeErro(erroAcao)}</div>}
+
+      {/* ---------- Alertas de status (só avisos: o sistema não altera números) ---------- */}
+      {f.morto && (
+        <div className="alerta-status alerta-status--morte" role="alert">
+          <Skull size={22} aria-hidden />
+          <div>
+            <strong>Personagem morto.</strong>{" "}
+            {f.vida.atual === 0 ? "A vida chegou a 0." : "A mana, a energia vital, chegou a 0."} Fale com o mestre.
+          </div>
+        </div>
+      )}
+      {alertas.length > 0 && (
+        <section className="alertas-status" aria-label="Status do personagem">
+          {alertas.map((st) => (
+            <div key={st.id} className={`alerta-status alerta-status--${st.tipo}`} role="status">
+              <TriangleAlert size={18} aria-hidden />
+              <div className="alerta-status__texto">
+                <p>
+                  <StatusBadge nome={st.nome} tipo={st.tipo} />{" "}
+                  <span className="pagina__subtitulo">{st.automatico ? "automático" : ROTULO_TIPO[st.tipo]}</span>
+                </p>
+                <p><strong>{st.efeito}</strong></p>
+                {st.descricao && <p className="pagina__subtitulo">{st.descricao}</p>}
+              </div>
+              {f.souMestre && !st.automatico && (
+                <Button pequeno variante="fantasma" aria-label={`Remover ${st.nome}`} title="Remover status" onClick={() => removerStatus.mutate(st.id)}>
+                  <X size={14} aria-hidden />
+                </Button>
+              )}
+            </div>
+          ))}
+        </section>
+      )}
+      {f.souMestre && f.statusAplicaveis.length > 0 && (
+        <div className="painel entrar-codigo__linha">
+          <select value={statusEscolhido} onChange={(e) => setStatusEscolhido(e.target.value)} aria-label="Status para aplicar">
+            <option value="">Aplicar status…</option>
+            {f.statusAplicaveis.map((st) => <option key={st.id} value={st.id}>{st.nome} ({ROTULO_TIPO[st.tipo]})</option>)}
+          </select>
+          <Button disabled={!statusEscolhido || aplicarStatus.isPending} onClick={() => aplicarStatus.mutate(statusEscolhido, { onSuccess: () => setStatusEscolhido("") })}>
+            Aplicar
+          </Button>
+        </div>
+      )}
+
+      {/* ---------- Recursos ---------- */}
+      <section className="secao">
+        <h2>Recursos</h2>
+        <div className="recursos">
+          <BarraRecurso rotulo="Vida" Icone={Heart} tipo="vida" atual={f.vida.atual} max={f.vida.max} editavel ocupado={editar.isPending}
+            onMudar={(v) => editar.mutate({ vidaAtual: v })} />
+          <BarraRecurso rotulo="Mana" Icone={Droplet} tipo="mana" atual={f.mana.atual} max={f.mana.max} editavel ocupado={editar.isPending}
+            onMudar={(v) => editar.mutate({ manaAtual: v })} />
+          <BarraRecurso rotulo="Esforço" Icone={Zap} tipo="esforco" atual={f.esforco.atual} max={f.esforco.max} editavel ocupado={editar.isPending}
+            onMudar={(v) => editar.mutate({ esforcoAtual: v })} />
+        </div>
+      </section>
+
+      {/* ---------- Atributos ---------- */}
+      <section className="secao">
+        <h2>Atributos</h2>
+        <p className="pagina__subtitulo">Nos testes, role os d20 do atributo e use o maior resultado.</p>
+        <ul className="dados-atributos">
+          {f.atributos.map((a) => (
+            <li key={a.id} className="dados-atributo">
+              <div>
+                <strong>{a.nome}</strong>
+                {a.descricao && <p className="pericia__descricao">{a.descricao}</p>}
+              </div>
+              <span className="contador__valor"><Dices size={16} aria-hidden /> {a.dados}d20</span>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      {/* ---------- Perícias ---------- */}
+      <section className="secao">
+        <h2>Perícias</h2>
+        {f.pontosPericiaDisponiveis >= f.custoPericia && (
+          <div className="painel">
+            <p>
+              Você tem <strong>{f.pontosPericiaDisponiveis} pontos de perícia</strong>. Use {f.custoPericia} numa perícia nova ou some +{f.custoPericia} numa que já tem.
+            </p>
+            <div className="entrar-codigo__linha">
+              <select value={periciaEscolhida} onChange={(e) => setPericiaEscolhida(e.target.value)} aria-label="Perícia">
+                <option value="">Escolha a perícia…</option>
+                {f.opcoesPericia.map((o) => (
+                  <option key={o.id} value={o.id}>
+                    {o.nome} ({o.atributo}){o.tem ? "" : " · nova"}
+                  </option>
+                ))}
+              </select>
+              <Button variante="primario" disabled={!periciaEscolhida || gastar.isPending}
+                onClick={() => gastar.mutate(periciaEscolhida, { onSuccess: () => setPericiaEscolhida("") })}>
+                Usar +{f.custoPericia}
+              </Button>
+            </div>
+          </div>
+        )}
+        {f.pericias.length === 0 ? (
+          <EmptyState compacto titulo="Sem perícias ainda" descricao="Elas vêm da raça, da classe e dos pontos de nível." />
+        ) : (
+          <PericiasPorAtributo
+            pericias={f.pericias}
+            mostrarDescricao={false}
+            renderItem={(p) => (
+              <PericiaItem
+                key={p.id}
+                pericia={p}
+                valor={p.total}
+                tituloValor="Total"
+                rodape={
+                  <span className="pericia__usos">
+                    {[p.raca && `raça +${p.raca}`, p.classe && `classe ${p.classe >= 0 ? "+" : ""}${p.classe}`, p.nivel && `níveis +${p.nivel}`]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </span>
+                }
+              />
+            )}
+          />
+        )}
+      </section>
+
+      {/* ---------- Habilidades ---------- */}
+      <section className="secao">
+        <h2>Habilidades</h2>
+        <p className="pagina__subtitulo">
+          Cartas disponíveis no nível {f.nivel}.{f.proximasHabilidades > 0 && ` Mais ${f.proximasHabilidades} liberam em níveis maiores.`}
+        </p>
+        {f.habilidades.length === 0 ? (
+          <EmptyState compacto titulo="Nenhuma carta neste nível" />
+        ) : (
+          <div className="deck">
+            {f.habilidades.map((h) => <HabilidadeCard key={h.id} habilidade={h} />)}
+          </div>
+        )}
+      </section>
+
+      {/* ---------- Inventário ---------- */}
+      <section className="secao">
+        <div className="secao__cabecalho">
+          <h2><Backpack size={20} aria-hidden /> Inventário</h2>
+          <span className="selo">{f.inventario.itens.length} / {f.inventario.capacidade} espaços</span>
+        </div>
+        {f.inventario.itens.length === 0 ? (
+          <EmptyState compacto titulo="Inventário vazio" descricao="O mestre entrega os itens durante a sessão." />
+        ) : (
+          <ul className="pericias">
+            {f.inventario.itens.map((item) => (
+              <li key={item.id} className="pericia pericia--atributo">
+                <div>
+                  <div className="pericia__nome"><Package size={16} aria-hidden /> <strong>{item.nome}</strong></div>
+                  {item.descricao && <p className="pericia__descricao">{item.descricao}</p>}
+                </div>
+                <div className="pericia__acoes">
+                  {f.outrasFichas.length > 0 && (
+                    <select className="select-pequeno" value="" aria-label={`Passar ${item.nome}`}
+                      onChange={(e) => e.target.value && mover.mutate({ itemId: item.id, fichaId: e.target.value })}>
+                      <option value="">Passar para…</option>
+                      {f.outrasFichas.map((o) => (
+                        <option key={o.id} value={o.id}>{o.nome} (@{o.jogador})</option>
+                      ))}
+                    </select>
+                  )}
+                  <Button pequeno variante="fantasma" title="Descartar: o item fica vago no grupo" onClick={() => mover.mutate({ itemId: item.id, fichaId: null })}>
+                    <Trash2 size={14} aria-hidden /> Descartar
+                  </Button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+        {cheio && <p className="pagina__subtitulo">Inventário cheio. Cada nível dá mais espaço.</p>}
+      </section>
+
+      <EditarPersonagem aberto={editando} f={f} onFechar={() => setEditando(false)} editar={editar} />
+
+      <ConfirmDialog
+        aberto={confirmarNivel}
+        titulo="Subir nível"
+        rotuloConfirmar="Subir nível"
+        mensagem={<>{f.nome} vai para o nível {f.nivel + 1}: +5 de vida, mana e esforço, +5 pontos de perícia, novas cartas e +2 espaços no inventário.</>}
+        processando={subir.isPending}
+        erro={subir.isError ? mensagemDeErro(subir.error) : null}
+        onCancelar={() => setConfirmarNivel(false)}
+        onConfirmar={() => subir.mutate(undefined, { onSuccess: () => setConfirmarNivel(false) })}
+      />
+
+      <ConfirmDialog
+        aberto={confirmarSaida}
+        titulo={f.souMestre ? "Remover do grupo" : "Sair do grupo"}
+        rotuloConfirmar={f.souMestre ? "Remover" : "Sair"}
+        mensagem={<>A ficha de <strong>{f.nome}</strong> será apagada e os itens dela ficam vagos no grupo. Não dá para desfazer.</>}
+        processando={excluir.isPending}
+        erro={excluir.isError ? mensagemDeErro(excluir.error) : null}
+        onCancelar={() => setConfirmarSaida(false)}
+        onConfirmar={() => excluir.mutate(f.id, { onSuccess: () => navigate(voltar, { replace: true }) })}
+      />
+    </div>
+  );
+}
+
+function EditarPersonagem({ aberto, f, onFechar, editar }: { aberto: boolean; f: FichaDetalhe; onFechar: () => void; editar: ReturnType<typeof useEditarFicha> }) {
+  const [nome, setNome] = useState(f.nome);
+  const [historia, setHistoria] = useState(f.historia ?? "");
+  const [imagemUrl, setImagemUrl] = useState(f.imagemUrl ?? "");
+  const erros = errosDeCampo(editar.error);
+
+  function enviar(e: FormEvent) {
+    e.preventDefault();
+    editar.mutate({ nome, historia: historia.trim() || null, imagemUrl: imagemUrl.trim() || null }, { onSuccess: onFechar });
+  }
+
+  return (
+    <Modal aberto={aberto} onFechar={onFechar} titulo="Editar personagem">
+      <form className="form" noValidate onSubmit={enviar}>
+        <Field rotulo="Nome do personagem" erro={erros.nome}>
+          <input value={nome} onChange={(e) => setNome(e.target.value)} maxLength={60} autoFocus />
+        </Field>
+        <Field rotulo="Link da imagem" erro={erros.imagemUrl}>
+          <input type="url" value={imagemUrl} onChange={(e) => setImagemUrl(e.target.value)} placeholder="https://" />
+        </Field>
+        <Field rotulo="História" erro={erros.historia}>
+          <textarea value={historia} onChange={(e) => setHistoria(e.target.value)} maxLength={4000} rows={5} />
+        </Field>
+        {editar.isError && <div className="aviso">{erroDeFormulario(editar.error)}</div>}
+        <div className="modal__acoes">
+          <Button onClick={onFechar} disabled={editar.isPending}>Cancelar</Button>
+          <Button type="submit" variante="primario" disabled={editar.isPending}>{editar.isPending ? "Salvando…" : "Salvar"}</Button>
+        </div>
+      </form>
+    </Modal>
+  );
+}

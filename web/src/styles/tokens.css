@@ -1,0 +1,77 @@
+/*
+ * Tokens de design (tema claro, fundo branco). TODO o visual sai daqui: para trocar o tema, mude estes valores.
+ * Componentes não usam cores/tamanhos literais.
+ */
+:root {
+  /* Superfícies e texto */
+  --cor-fundo: #ffffff;
+  --cor-superficie: #ffffff;
+  --cor-superficie-2: #f4f4f5;
+  --cor-borda: #e4e4e7;
+  --cor-texto: #18181b;
+  --cor-texto-suave: #71717a;
+  --cor-overlay: rgb(24 24 27 / 40%);
+
+  /* Ações */
+  --cor-primaria: #4f46e5;
+  --cor-primaria-hover: #4338ca;
+  --cor-primaria-texto: #ffffff;
+  --cor-perigo: #dc2626;
+  --cor-perigo-fundo: #fef2f2;
+  --cor-sucesso: #059669;
+
+  /* Origem da classe */
+  --cor-fixa: #b45309;
+  --cor-propria: #4f46e5;
+
+  /* Grupos */
+  --cor-grupo-combatente: #dc2626;
+  --cor-grupo-vanguardista: #2563eb;
+  --cor-grupo-suporte: #059669;
+
+  /* Atributos base */
+  --cor-vida: #e11d48;
+  --cor-mana: #2563eb;
+  --cor-esforco: #d97706;
+
+  /* Habilidades e perícias */
+  --cor-efeito: #7c3aed;
+  --cor-atributo: #0369a1;
+
+  /* Tipografia */
+  --fonte-base: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --fonte-titulo: var(--fonte-base);
+  --texto-xs: 0.75rem;
+  --texto-sm: 0.875rem;
+  --texto-md: 1rem;
+  --texto-lg: 1.25rem;
+  --texto-xl: 1.75rem;
+  --peso-normal: 400;
+  --peso-forte: 600;
+  --altura-linha: 1.5;
+
+  /* Espaçamento */
+  --esp-1: 0.25rem;
+  --esp-2: 0.5rem;
+  --esp-3: 0.75rem;
+  --esp-4: 1rem;
+  --esp-5: 1.5rem;
+  --esp-6: 2rem;
+  --esp-7: 3rem;
+
+  /* Forma: cantos retos em tudo (decisão de design atual: nada arredondado) */
+  --raio-sm: 0;
+  --raio-md: 0;
+  --raio-lg: 0;
+  --raio-pilula: 0;
+  --sombra: 0 8px 30px rgb(0 0 0 / 12%);
+  --transicao: 150ms ease;
+
+  /* Selos sobre imagens */
+  --cor-selo-fundo: rgb(255 255 255 / 92%);
+
+  /* Layout */
+  --largura-max: 1200px;
+  --card-classe-largura: 220px;
+  --card-habilidade-largura: 230px;
+}

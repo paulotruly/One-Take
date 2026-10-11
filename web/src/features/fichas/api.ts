@@ -1,0 +1,66 @@
+// Hooks de fichas (jogador e mestre) e do inventário.
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { api } from "../../lib/api";
+import type { Convite, CriarFichaInput, FichaDetalhe, FichaResumo } from "./types";
+
+export function useMinhasFichas() {
+  return useQuery({ queryKey: ["fichas", "minhas"], queryFn: () => api<FichaResumo[]>("/api/fichas") });
+}
+
+export function useFicha(id: string) {
+  return useQuery({ queryKey: ["fichas", "detalhe", id], queryFn: () => api<FichaDetalhe>(`/api/fichas/${id}`) });
+}
+
+export function useConvite(codigo: string) {
+  return useQuery({
+    queryKey: ["convite", codigo],
+    queryFn: () => api<Convite>(`/api/convites/${encodeURIComponent(codigo)}`),
+    enabled: codigo.length > 0,
+  });
+}
+
+/** Fichas aparecem no grupo do mestre (membros, itens vagos), então invalidam os dois. */
+function useEscrita<V, R>(fn: (v: V) => Promise<R>) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: fn,
+    onSuccess: () => Promise.all(["fichas", "grupos", "convite"].map((k) => qc.invalidateQueries({ queryKey: [k] }))),
+  });
+}
+
+export const useCriarFicha = () =>
+  useEscrita((dados: CriarFichaInput) => api<FichaDetalhe>("/api/fichas", { method: "POST", body: dados }));
+
+/** Rápido: usa a ficha devolvida pela API em vez de recarregar; só o grupo é recarregado. */
+export function useEditarFicha(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (dados: Partial<{ nome: string; historia: string | null; imagemUrl: string | null; vidaAtual: number; manaAtual: number; esforcoAtual: number }>) =>
+      api<FichaDetalhe>(`/api/fichas/${id}`, { method: "PATCH", body: dados }),
+    onSuccess: (ficha) => {
+      qc.setQueryData(["fichas", "detalhe", id], ficha);
+      return qc.invalidateQueries({ queryKey: ["grupos"] });
+    },
+  });
+}
+
+export const useAplicarStatus = (id: string) =>
+  useEscrita((statusId: string) => api<FichaDetalhe>(`/api/fichas/${id}/status`, { method: "POST", body: { statusId } }));
+
+export const useRemoverStatus = (id: string) =>
+  useEscrita((statusId: string) => api<FichaDetalhe>(`/api/fichas/${id}/status/${statusId}`, { method: "DELETE" }));
+
+export const useExcluirFicha = () => useEscrita((id: string) => api<void>(`/api/fichas/${id}`, { method: "DELETE" }));
+
+export const useSubirNivel = (id: string) => useEscrita(() => api<FichaDetalhe>(`/api/fichas/${id}/subir-nivel`, { method: "POST" }));
+
+export const useGastarPericia = (id: string) =>
+  useEscrita((periciaId: string) => api<FichaDetalhe>(`/api/fichas/${id}/pericias`, { method: "POST", body: { periciaId } }));
+
+/** fichaId nulo = descartar (fica vago no grupo). */
+export const useMoverItem = () =>
+  useEscrita(({ itemId, fichaId }: { itemId: string; fichaId: string | null }) =>
+    api(`/api/itens/${itemId}/mover`, { method: "POST", body: { fichaId } }),
+  );
+
+export const useExcluirItem = () => useEscrita((itemId: string) => api<void>(`/api/itens/${itemId}`, { method: "DELETE" }));

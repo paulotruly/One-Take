@@ -1,0 +1,76 @@
+/* ---------- Entrar com código ---------- */
+.entrar-codigo { gap: var(--esp-3); }
+.entrar-codigo__linha { display: flex; gap: var(--esp-3); flex-wrap: wrap; }
+.entrar-codigo__linha select { min-height: 38px; padding: 0 var(--esp-3); border: 1px solid var(--cor-borda); background: var(--cor-fundo); flex: 1; min-width: 220px; }
+.entrar-codigo__input {
+  width: 200px;
+  min-height: 38px;
+  padding: 0 var(--esp-3);
+  border: 1px solid var(--cor-borda);
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: var(--texto-lg);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+/* ---------- Escolha de raça/classe ---------- */
+.opcoes { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: var(--esp-4); }
+.opcao {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--esp-2);
+  padding: 0 0 var(--esp-4);
+  border: 1px solid var(--cor-borda);
+  background: var(--cor-fundo);
+  text-align: left;
+  cursor: pointer;
+}
+.opcao > :not(.opcao__imagem) { margin: 0 var(--esp-4); }
+.opcao:hover:not(:disabled) { border-color: var(--cor-texto-suave); }
+.opcao:disabled { opacity: 0.5; cursor: not-allowed; }
+.opcao--ativa { outline: 2px solid var(--cor-primaria); outline-offset: -2px; }
+.opcao__imagem { width: 100%; aspect-ratio: 4 / 3; overflow: hidden; border-bottom: 1px solid var(--cor-borda); }
+.opcao__texto { color: var(--cor-texto-suave); font-size: var(--texto-xs); }
+.opcao-com-detalhe { display: flex; flex-direction: column; gap: var(--esp-2); }
+.opcao-com-detalhe > .opcao { flex: 1; }
+.classe-detalhes { display: flex; flex-direction: column; gap: var(--esp-5); }
+.classe-detalhes h3 { display: flex; align-items: center; gap: var(--esp-2); }
+
+/* ---------- Dados por atributo ---------- */
+.dados-atributos { display: flex; flex-direction: column; gap: var(--esp-3); margin: 0; padding: 0; list-style: none; }
+.dados-atributo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--esp-4);
+  padding: var(--esp-4);
+  border: 1px solid var(--cor-borda);
+}
+.contador { display: flex; align-items: center; gap: var(--esp-2); }
+.contador__valor { display: inline-flex; align-items: center; gap: var(--esp-1); min-width: 70px; justify-content: center; font-weight: var(--peso-forte); }
+
+/* ---------- Recursos (vida, mana, esforço) ---------- */
+.recursos { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--esp-4); }
+.recurso { display: flex; flex-direction: column; gap: var(--esp-3); padding: var(--esp-4); border: 1px solid var(--cor-borda); }
+.recurso__topo { display: flex; justify-content: space-between; align-items: center; gap: var(--esp-2); }
+.recurso__rotulo { display: inline-flex; align-items: center; gap: var(--esp-2); font-weight: var(--peso-forte); }
+.recurso__valor { font-size: var(--texto-lg); font-weight: var(--peso-forte); }
+.recurso__input { width: 4ch; padding: 0; border: 0; border-bottom: 1px dashed var(--cor-borda); background: none; font-weight: inherit; text-align: right; }
+.recurso__barra { height: 8px; background: var(--cor-superficie-2); }
+.recurso__preenchido { height: 100%; background: currentColor; transition: width var(--transicao); }
+.stat--vida .recurso__preenchido { background: var(--cor-vida); }
+.stat--mana .recurso__preenchido { background: var(--cor-mana); }
+.stat--esforco .recurso__preenchido { background: var(--cor-esforco); }
+.recurso__acoes { display: flex; gap: var(--esp-2); align-items: center; }
+.recurso__quantidade { width: 64px; min-height: 30px; padding: 0 var(--esp-2); border: 1px solid var(--cor-borda); text-align: center; }
+.recurso--zerado { border-color: var(--cor-perigo); background: var(--cor-perigo-fundo); }
+
+/* ---------- Alertas de status ---------- */
+.alertas-status { display: flex; flex-direction: column; gap: var(--esp-2); }
+.alerta-status { display: flex; align-items: flex-start; gap: var(--esp-3); padding: var(--esp-3) var(--esp-4); border: 1px solid var(--cor-borda); border-left-width: 4px; }
+.alerta-status__texto { display: flex; flex-direction: column; gap: var(--esp-1); flex: 1; }
+.alerta-status--DEBUFF { border-left-color: var(--cor-perigo); background: var(--cor-perigo-fundo); }
+.alerta-status--BUFF { border-left-color: var(--cor-sucesso); background: color-mix(in srgb, var(--cor-sucesso) 8%, transparent); }
+.alerta-status--MISTO { border-left-color: var(--cor-esforco); background: color-mix(in srgb, var(--cor-esforco) 8%, transparent); }
+.alerta-status--morte { border-color: var(--cor-perigo); background: var(--cor-perigo); color: #fff; align-items: center; }

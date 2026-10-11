@@ -1,0 +1,45 @@
+/* ---------- Legenda de categorias ---------- */
+.categorias { display: flex; flex-wrap: wrap; gap: var(--esp-3); margin: 0; padding: 0; list-style: none; }
+.categorias li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--esp-1);
+  padding: var(--esp-1) var(--esp-3);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-pilula);
+  font-size: var(--texto-xs);
+  color: var(--cor-texto-suave);
+}
+
+/* ---------- Grupo de atributo ---------- */
+.atributo { display: flex; flex-direction: column; gap: var(--esp-4); }
+.atributo__cabecalho { display: flex; flex-direction: column; gap: var(--esp-1); }
+.atributo__descricao { color: var(--cor-texto-suave); font-size: var(--texto-sm); }
+.selo--atributo { color: var(--cor-atributo); }
+
+/* ---------- Item de perícia (catálogo e classe) ---------- */
+.pericias { display: flex; flex-direction: column; gap: var(--esp-3); padding: 0; margin: 0; list-style: none; }
+.pericia {
+  display: grid;
+  grid-template-columns: 2.5rem 1fr auto;
+  align-items: center;
+  gap: var(--esp-4);
+  padding: var(--esp-4);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-md);
+  background: var(--cor-superficie);
+}
+.pericia--com-mod { grid-template-columns: 2.5rem 3rem 1fr auto; }
+.pericia__icone { display: flex; justify-content: center; color: var(--cor-texto-suave); }
+.categoria-icone { display: inline-flex; align-items: center; }
+.pericia__mod { font-size: var(--texto-lg); font-weight: var(--peso-forte); text-align: center; }
+.pericia__nome { display: flex; align-items: center; gap: var(--esp-2); flex-wrap: wrap; }
+.pericia__descricao { color: var(--cor-texto-suave); font-size: var(--texto-sm); }
+.pericia__usos { color: var(--cor-texto-suave); font-size: var(--texto-xs); }
+.pericia__acoes { display: flex; gap: var(--esp-1); }
+.pericia--atributo { grid-template-columns: 1fr auto; }
+@media (max-width: 560px) {
+  .pericia, .pericia--com-mod { grid-template-columns: 2rem 1fr; }
+  .pericia--com-mod .pericia__mod { grid-column: 1; }
+  .pericia__acoes { grid-column: 1 / -1; justify-content: flex-end; }
+}

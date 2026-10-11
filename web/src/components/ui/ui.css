@@ -1,0 +1,108 @@
+/* ---------- Botão ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--esp-2);
+  min-height: 38px;
+  padding: var(--esp-2) var(--esp-4);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-sm);
+  background: var(--cor-fundo);
+  color: var(--cor-texto);
+  font-size: var(--texto-sm);
+  font-weight: var(--peso-forte);
+  cursor: pointer;
+  transition: background var(--transicao), border-color var(--transicao);
+  white-space: nowrap;
+}
+.btn:hover:not(:disabled) { border-color: var(--cor-texto-suave); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn--primario { background: var(--cor-primaria); border-color: var(--cor-primaria); color: var(--cor-primaria-texto); }
+.btn--primario:hover:not(:disabled) { background: var(--cor-primaria-hover); border-color: var(--cor-primaria-hover); }
+.btn--perigo { background: transparent; border-color: var(--cor-perigo); color: var(--cor-perigo); }
+.btn--perigo:hover:not(:disabled) { background: var(--cor-perigo-fundo); border-color: var(--cor-perigo); }
+.btn--fantasma { background: transparent; border-color: transparent; }
+.btn--fantasma:hover:not(:disabled) { background: var(--cor-superficie-2); border-color: transparent; }
+.btn--pequeno { min-height: 30px; padding: var(--esp-1) var(--esp-3); font-size: var(--texto-xs); }
+
+/* ---------- Campos ---------- */
+.campo { display: flex; flex-direction: column; gap: var(--esp-2); }
+.campo__rotulo { font-size: var(--texto-sm); font-weight: var(--peso-forte); }
+.campo__dica { font-size: var(--texto-xs); color: var(--cor-texto-suave); }
+.campo__erro { font-size: var(--texto-xs); color: var(--cor-perigo); }
+.campo input,
+.campo select,
+.campo textarea {
+  width: 100%;
+  min-height: 40px;
+  padding: var(--esp-2) var(--esp-3);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-sm);
+  background: var(--cor-fundo);
+}
+.campo textarea { resize: vertical; min-height: 4.5rem; }
+.campo--invalido input,
+.campo--invalido select,
+.campo--invalido textarea { border-color: var(--cor-perigo); }
+
+/* ---------- Modal ---------- */
+.modal {
+  width: min(560px, calc(100vw - 2 * var(--esp-4)));
+  max-height: calc(100vh - 2 * var(--esp-6));
+  padding: 0;
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-lg);
+  background: var(--cor-superficie);
+  color: var(--cor-texto);
+  box-shadow: var(--sombra);
+}
+.modal::backdrop { background: var(--cor-overlay); }
+.modal--largo { width: min(960px, calc(100vw - 2 * var(--esp-4))); }
+.modal__conteudo { display: flex; flex-direction: column; gap: var(--esp-5); padding: var(--esp-6); }
+.modal__cabecalho { display: flex; justify-content: space-between; align-items: center; gap: var(--esp-4); }
+.modal__acoes { display: flex; justify-content: flex-end; gap: var(--esp-3); padding-top: var(--esp-2); }
+
+/* ---------- Estados ---------- */
+.estado {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--esp-3);
+  padding: var(--esp-7) var(--esp-4);
+  text-align: center;
+  color: var(--cor-texto-suave);
+}
+.estado__titulo { color: var(--cor-texto); font-weight: var(--peso-forte); }
+.estado--erro .estado__titulo { color: var(--cor-perigo); }
+.estado--compacto { padding: var(--esp-5) var(--esp-4); }
+.spinner { color: var(--cor-primaria); animation: girar 0.8s linear infinite; }
+@keyframes girar { to { transform: rotate(360deg); } }
+
+.aviso {
+  padding: var(--esp-3) var(--esp-4);
+  border: 1px solid var(--cor-perigo);
+  border-radius: var(--raio-sm);
+  background: var(--cor-perigo-fundo);
+  color: var(--cor-perigo);
+  font-size: var(--texto-sm);
+}
+
+/* ---------- Selo ---------- */
+.selo {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--esp-1);
+  padding: 0 var(--esp-2);
+  border: 1px solid currentColor;
+  border-radius: var(--raio-pilula);
+  font-size: var(--texto-xs);
+  font-weight: var(--peso-forte);
+  line-height: 1.6;
+  white-space: nowrap;
+}
+.selo svg { flex-shrink: 0; }
+.btn svg { flex-shrink: 0; }
+
+/* ---------- Link de voltar ---------- */
+.link-voltar { display: inline-flex; align-items: center; gap: var(--esp-1); font-size: var(--texto-sm); }
