@@ -226,3 +226,4 @@
 /* ---------- Aprimoramentos na carta ---------- */
 .carta__aprimoramentos { margin: 0; padding: var(--esp-2) var(--esp-3); list-style: none; background: var(--cor-fundo); border-left: 2px solid var(--cor-efeito); font-size: var(--texto-xs); display: flex; flex-direction: column; gap: var(--esp-1); }
 .painel__titulo { display: flex; align-items: center; gap: var(--esp-2); font-size: var(--texto-lg); }
+.carta__teste b { color: var(--cor-texto); }

@@ -1,4 +1,4 @@
-// Exporta classes e bestas (com cartas, aprimoramentos, perícias e atributos) em JSON, para o balanceamento
+// Exporta classes, bestas e NPCs (com cartas, aprimoramentos, perícias e atributos) em JSON, para o balanceamento
 // (skill .claude/skills/balancear). Só leitura.
 // Uso:
 //   npm run exportar -- > conteudo.json                 (tudo)
@@ -13,7 +13,7 @@ async function main() {
   const filtro = titulo ? { titulo: { contains: titulo, mode: "insensitive" as const } } : {};
   const prisma = criarPrisma(process.env.DIRECT_URL ?? process.env.DATABASE_URL ?? "");
   try {
-    const cartas = { orderBy: { ordem: "asc" as const }, include: { aprimoramentos: { orderBy: { nivel: "asc" as const } } } };
+    const cartas = { orderBy: { ordem: "asc" as const }, include: { pericia: { select: { nome: true } }, aprimoramentos: { orderBy: { nivel: "asc" as const } } } };
     const classes = await prisma.classe.findMany({
       where: filtro,
       orderBy: { titulo: "asc" },
@@ -29,9 +29,20 @@ async function main() {
         dono: { select: { nickname: true } },
       },
     });
+    const npcs = await prisma.npc.findMany({
+      where: titulo ? { nome: { contains: titulo, mode: "insensitive" as const } } : {},
+      orderBy: { nome: "asc" },
+      include: {
+        raca: { select: { titulo: true } },
+        classe: { select: { titulo: true, pontosVida: true, pontosMana: true, pontosEsforco: true } },
+        atributos: { include: { atributo: true } },
+        pericias: { include: { pericia: true } },
+        dono: { select: { nickname: true } },
+      },
+    });
     const carta = (h: (typeof classes)[number]["habilidades"][number]) => ({
       titulo: h.titulo, tipoEfeito: h.tipoEfeito, efeito: h.descricaoEfeito, condicao: h.condicao, limite: h.limite,
-      nivelNecessario: h.nivelNecessario, custoMana: h.custoMana,
+      nivelNecessario: h.nivelNecessario, custoMana: h.custoMana, pericia: h.pericia?.nome ?? null,
       aprimoramentos: h.aprimoramentos.map((a) => ({ nivel: a.nivel, efeito: a.descricaoEfeito, custoMana: a.custoMana, limite: a.limite, condicao: a.condicao })),
     });
     const saida = {
@@ -40,6 +51,12 @@ async function main() {
         vida: c.pontosVida, mana: c.pontosMana, esforco: c.pontosEsforco,
         pericias: c.pericias.map((p) => ({ nome: p.pericia.nome, atributo: p.pericia.atributo.nome, modificador: p.modificador })),
         cartas: c.habilidades.map(carta),
+      })),
+      npcs: npcs.map((n) => ({
+        nome: n.nome, dono: n.dono.nickname, raca: n.raca.titulo, classe: n.classe?.titulo ?? null, nivel: n.nivel,
+        vida: n.classe?.pontosVida ?? n.vidaBase, mana: n.classe?.pontosMana ?? n.manaBase, esforco: n.classe?.pontosEsforco ?? n.esforcoBase,
+        atributos: n.atributos.map((a) => ({ nome: a.atributo.nome, dados: a.dados })),
+        periciasExtras: n.pericias.map((p) => ({ nome: p.pericia.nome, pontos: p.pontos })),
       })),
       bestas: bestas.map((b) => ({
         titulo: b.titulo, dono: b.dono.nickname, vida: b.pontosVida, mana: b.pontosMana, esforco: b.pontosEsforco, deslocamento: b.deslocamento,

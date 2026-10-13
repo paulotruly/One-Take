@@ -2,6 +2,7 @@
 import type { Habilidade } from "../classes/types";
 import type { Criatura } from "../grupos/types";
 import type { AtributoResumo, CategoriaPericia } from "../pericias/types";
+import type { Status } from "../status/types";
 
 export type Besta = {
   id: string;
@@ -51,6 +52,8 @@ export type CriaturaDetalhe = Criatura & {
   pericias: PericiaDaBesta[];
   habilidades: Habilidade[];
   proximasHabilidades: number;
+  statusDetalhado: Status[];
+  statusAplicaveis: Status[];
 };
 
 /** Resposta ao editar uma criatura: some quando morre. */

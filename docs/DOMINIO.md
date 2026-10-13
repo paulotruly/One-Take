@@ -57,6 +57,8 @@ Cada carta da cartela:
   É aqui que os pontos de mana da classe são usados.
 - **Ordem** dentro da cartela (o mestre reordena).
 - **Ativa status** (opcional).
+- **Perícia do teste** (opcional): qual perícia o personagem testa para usar a carta. Fichas, NPCs e criaturas mostram o teste pronto
+  daquele personagem (dados do atributo da perícia + total dele nela; sem a perícia, bônus 0).
 - **Aprimoramentos** (opcional): a partir de um nível, a mesma carta muda (título, efeito, condição, limite, custo de mana,
   status). Campos não preenchidos não mudam; os aprimoramentos se acumulam por nível. A ficha mostra a versão do nível atual.
 
@@ -121,7 +123,9 @@ Atributos agrupam as perícias e recebem os dados nos testes.
   perícias específicas. Isso permite adaptar o sistema a temas diferentes de RPG.
 - **Geral ou exclusivo**: ao criar uma classe, raça ou atributo, o mestre pode marcá-lo como exclusivo de um grupo
   (sempre opcional). Exclusivo só pode valer naquele grupo e já entra liberado nele. Tudo pode ficar "geral" e ser
-  restringido só na hora de montar o grupo.
+  restringido só na hora de montar o grupo. Itens, criaturas e NPCs também podem ser exclusivos (só deixam de aparecer para os outros grupos).
+  **Só vira exclusivo o que ninguém de fora usa** (fichas de outros grupos, NPCs de fora, criaturas invocadas em outros grupos):
+  senão, 409 `EXCLUSIVO_EM_USO`. NPC exclusivo só usa raça e classe gerais ou do mesmo grupo.
 - Membro = jogador com ficha no grupo. Só entra enquanto houver vaga.
 
 ## Ficha
@@ -129,6 +133,7 @@ Criada pelo jogador ao entrar no grupo com o código (**uma ficha por jogador em
 - Nome do personagem, **raça** e **classe** (só as liberadas no grupo), **história** (parágrafo opcional) e imagem (link).
 - **3 pontos de atributo** distribuídos entre os atributos do grupo (soma exata 3; atributo pode ficar com 0).
 - Vida, mana e esforço **atuais**: começam cheios; jogador e mestre podem mexer, sempre entre 0 e o máximo.
+  **A vida o jogador só diminui**; aumentar (curar) é só o mestre. Mana e esforço o jogador ajusta nos dois sentidos.
 - **Nível**: só o mestre sobe (ver Progressão).
 - **Perícias**: soma dos pontos da raça + modificador da classe + pontos colocados ao subir de nível.
 - **Cartas**: as da classe com nível necessário até o nível da ficha.
@@ -148,6 +153,17 @@ Criada pelo jogador ao entrar no grupo com o código (**uma ficha por jogador em
   consumido (some). O efeito é aplicado pela mesa. Pré-requisito em texto é só informativo.
 - O jogador pode passar um item para outro membro do grupo, **descartar** (fica **vago no grupo**) ou pegar um item
   vago. O mestre pode mover, editar e excluir qualquer item. Ninguém passa do limite de espaços.
+
+## NPCs
+- Personagens do mestre **com ficha**: nome, descrição, imagem, **raça (obrigatória)**, **classe (opcional)**, **nível**, dados por
+  atributo, perícias (raça + classe + pontos extras do mestre), cartas da classe no nível (com aprimoramentos) e **inventário**.
+- **NPC simples** = só raça, sem classe e sem cartas; aí o mestre define vida, mana e esforço base. Com classe, a base é a da classe.
+  A progressão é a mesma das fichas (+5 por nível); mudar nível, classe ou base faz o atual acompanhar a diferença.
+- **Geral ou exclusivo de um grupo.** Os exclusivos aparecem na página do grupo; todos ficam na página NPCs.
+- Vida ou mana em 0 = morto (aviso na ficha; o NPC não some).
+- **Inventário**: mesma capacidade das fichas (5 + 2 por nível). O mestre lança itens do catálogo no NPC, usa, entrega a uma ficha
+  (de qualquer grupo dele; se o NPC for exclusivo, só do grupo dele), deixa vago num grupo ou exclui. Excluir o NPC apaga os itens dele.
+  Itens com NPC geral não pertencem a grupo nenhum; excluir um grupo não apaga itens que estão com NPCs.
 
 ## Bestiário (criaturas)
 - Criaturas do mestre, montados **como classes**: título, descrição, imagem, vida/mana/esforço base (nível 1, nenhum zero),
@@ -171,6 +187,7 @@ O One-Take é RPG de mesa com apoio de tecnologia: o app controla fichas e avisa
     Atordoado; proposta inicial) e os criados por cada mestre.
   - Em cada grupo o mestre escolhe quais status valem (opcional). Grupo novo começa com os fixos marcados.
   - Uma carta de habilidade pode indicar o status que **ativa** (campo opcional); o mestre aplica na ficha do alvo.
+  - **NPCs e criaturas** também recebem status. Valem os ativados no grupo (NPC exclusivo e criatura invocada) ou todos os do mestre (NPC geral).
 
 ## Progressão de nível
 O One-Take dura um dia, então a progressão é **rápida, simples e fixa**:
@@ -186,7 +203,7 @@ Ainda em aberto (o designer vai definir): se as cartas de um nível são todas r
 nova é escolhida pelo jogador ou já determinada. Por ora: recebe todas as cartas; a escolha da perícia fica para a ficha.
 
 O mestre sobe o nível na ficha do membro; cada classe também mostra uma **prévia** da progressão.
-**Descer de nível não é possível** (regra do jogo): subir é definitivo, o mestre confirma com cuidado.
+**Descer de nível não é possível** (regra do jogo): subir é definitivo, o mestre confirma com cuidado. Nível máximo: 100.
 Os +5 pontos de perícia de cada nível são usados na ficha (perícia nova do grupo com +5, ou +5 numa que já tem).
 
 ## Ainda não existe

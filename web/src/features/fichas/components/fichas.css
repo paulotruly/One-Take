@@ -74,3 +74,5 @@
 .alerta-status--BUFF { border-left-color: var(--cor-sucesso); background: color-mix(in srgb, var(--cor-sucesso) 8%, transparent); }
 .alerta-status--MISTO { border-left-color: var(--cor-esforco); background: color-mix(in srgb, var(--cor-esforco) 8%, transparent); }
 .alerta-status--morte { border-color: var(--cor-perigo); background: var(--cor-perigo); color: #fff; align-items: center; }
+
+.recurso__dica { color: var(--cor-texto-suave); font-size: var(--texto-xs); }

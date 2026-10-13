@@ -2,6 +2,7 @@ import { Router } from "express";
 import { idDe } from "../../lib/validacao.js";
 import { usuarioDe } from "../../middleware/auth.js";
 import { editarCriaturaSchema, invocarSchema } from "../bestas/bestas.schemas.js";
+import { aplicarStatusSchema } from "../status/status.schemas.js";
 import * as service from "./criaturas.service.js";
 
 // Criaturas invocadas num grupo (rotas do mestre).
@@ -26,4 +27,13 @@ criaturasRouter.patch("/criaturas/:id", async (req, res) => {
 criaturasRouter.delete("/criaturas/:id", async (req, res) => {
   await service.remover(criaturaId(req.params.id), usuarioDe(req).id);
   res.status(204).end();
+});
+
+criaturasRouter.post("/criaturas/:id/status", async (req, res) => {
+  const { statusId } = aplicarStatusSchema.parse(req.body);
+  res.json(await service.aplicarStatus(criaturaId(req.params.id), usuarioDe(req).id, statusId));
+});
+
+criaturasRouter.delete("/criaturas/:id/status/:statusId", async (req, res) => {
+  res.json(await service.removerStatus(criaturaId(req.params.id), usuarioDe(req).id, idDe(req.params.statusId, "Status não encontrado")));
 });

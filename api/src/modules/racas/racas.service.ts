@@ -1,7 +1,7 @@
 import type { z } from "zod";
 import type { Atributo, Pericia, RacaPericia } from "../../generated/prisma/client.js";
 import { naoEncontrado } from "../../lib/errors.js";
-import { aplicarExclusividade, validarGrupoExclusivo } from "../../lib/exclusividade.js";
+import { aplicarExclusividade, garantirExclusividadePossivel, validarGrupoExclusivo } from "../../lib/exclusividade.js";
 import { getPrisma } from "../../lib/prisma.js";
 import { apresentarAtributo, porAtributoENome } from "../atributos/atributos.service.js";
 import { validarConceito } from "../conceitos/conceitos.routes.js";
@@ -56,6 +56,7 @@ export async function criar(usuarioId: string, dados: z.infer<typeof criarRacaSc
 export async function editar(id: string, usuarioId: string, dados: z.infer<typeof editarRacaSchema>) {
   await racaDoMestre(id, usuarioId);
   await validarGrupoExclusivo(dados.grupoExclusivoId, usuarioId);
+  await garantirExclusividadePossivel("raca", id, dados.grupoExclusivoId);
   await validarConceito("raca", dados.conceitoId, usuarioId);
   await getPrisma().raca.update({ where: { id }, data: dados });
   await aplicarExclusividade("raca", id, dados.grupoExclusivoId);

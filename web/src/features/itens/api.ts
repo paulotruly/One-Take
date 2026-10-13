@@ -16,7 +16,7 @@ function useEscrita<V, R>(fn: (v: V) => Promise<R>) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: fn,
-    onSuccess: () => Promise.all(["itens", "fichas", "grupos"].map((k) => qc.invalidateQueries({ queryKey: [k] }))),
+    onSuccess: () => Promise.all(["itens", "fichas", "grupos", "npcs"].map((k) => qc.invalidateQueries({ queryKey: [k] }))),
   });
 }
 
@@ -39,7 +39,7 @@ export const useEditarModelo = () =>
 export const useExcluirModelo = () => useEscrita((id: string) => api<void>(`/api/catalogo-itens/${id}`, { method: "DELETE" }));
 
 export const useLancarItem = () =>
-  useEscrita(({ modeloId, ...dados }: { modeloId: string; grupoId: string; fichaId: string | null; quantidade: number }) =>
+  useEscrita(({ modeloId, ...dados }: { modeloId: string; grupoId?: string; fichaId?: string | null; npcId?: string; quantidade: number }) =>
     api<{ lancados: number }>(`/api/catalogo-itens/${modeloId}/lancar`, { method: "POST", body: dados }),
   );
 

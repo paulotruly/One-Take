@@ -195,6 +195,7 @@ export function Recursos() {
         <li>O máximo começa no valor base da classe e sobe +{g.pontosVida} de vida, +{g.pontosMana} de mana e +{g.pontosEsforco} de esforço a cada nível.</li>
         <li>Uma ficha nova começa com tudo cheio.</li>
         <li>Durante a sessão, jogador e mestre ajustam os valores atuais (dá para tirar ou somar vários pontos de uma vez). Eles nunca passam do máximo nem ficam abaixo de zero.</li>
+        <li>A <strong>vida</strong> o jogador só diminui; aumentar (curar) é decisão do mestre.</li>
         <li>Quando um recurso chega a 0, a ficha mostra um <strong>alerta</strong> (veja <Link to="/docs/status">Status</Link>).</li>
       </ul>
     </>
@@ -219,6 +220,7 @@ export function StatusTopico() {
       <h2>Aplicados pelo mestre</h2>
       <p>Durante a sessão, o mestre aplica e remove estes status na ficha de cada personagem. Uma carta de habilidade pode indicar qual status ela ativa.</p>
       <Tabela cabecalho={["Status", "Tipo", "Efeito"]} linhas={manuais.map((s) => [<strong key={s.nome}>{s.nome}</strong>, tipo[s.tipo], s.efeito])} />
+      <p>NPCs e criaturas também recebem status, aplicados pelo mestre na ficha deles.</p>
       <h2>Personalizável</h2>
       <ul>
         <li>O mestre pode criar status próprios, com nome, tipo e efeito.</li>
@@ -335,6 +337,7 @@ export function Habilidades() {
           ["Título e descrição", "O nome e o sabor da carta."],
           ["Tipo de efeito", "Escolhido de uma lista fixa (veja abaixo)."],
           ["Efeito", "O que a carta causa."],
+          ["Perícia do teste (opcional)", "Qual perícia o personagem testa para usar a carta. A ficha mostra o teste pronto daquele personagem (ex.: Luta 2d20 + 5)."],
           ["Condição (opcional)", "O que precisa acontecer para poder usar. Ex.: ter acertado dois ataques seguidos."],
           ["Limite (opcional)", "Quantas vezes ou quando pode ser usada. Ex.: 1 vez por sessão."],
           [<span key="m" className="regra__inline"><Droplet size={14} aria-hidden /> Custo de mana</span>, "Quanta mana gasta. Muitas cartas não custam nada."],

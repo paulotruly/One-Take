@@ -2,7 +2,7 @@
 
 Sistema de RPG de mesa para sessões únicas (one-shots). Classes prontas no estilo hero shooter:
 o jogador escolhe uma classe com kit de habilidades já definido. Etapa atual: interface do **mestre**
-para criar classes, raças, perícias, atributos, itens e bestiário e conduzir grupos (status, itens, criaturas);
+para criar classes, raças, perícias, atributos, itens, NPCs e bestiário e conduzir grupos (status, itens, NPCs, criaturas);
 interface do jogador com fichas e inventário (uma conta joga e, se ativar, mestra); login por nickname; regras públicas.
 Sessões e rolagem de dados no app ainda não existem (a ficha mostra o teste pronto).
 

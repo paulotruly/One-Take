@@ -2,7 +2,7 @@
 // Só o mestre dono vê e edita; de outro mestre = 404.
 import type { z } from "zod";
 import { naoEncontrado } from "../../lib/errors.js";
-import { validarGrupoExclusivo } from "../../lib/exclusividade.js";
+import { garantirExclusividadePossivel, validarGrupoExclusivo } from "../../lib/exclusividade.js";
 import { getPrisma } from "../../lib/prisma.js";
 import { previaProgressao } from "../../regras/progressao.js";
 import { notacaoDoTeste } from "../../regras/teste.js";
@@ -80,6 +80,7 @@ export async function criar(usuarioId: string, dados: z.infer<typeof criarBestaS
 export async function editar(id: string, usuarioId: string, dados: z.infer<typeof editarBestaSchema>) {
   await bestaEditavel(id, usuarioId);
   await validarGrupoExclusivo(dados.grupoExclusivoId, usuarioId);
+  await garantirExclusividadePossivel("besta", id, dados.grupoExclusivoId);
   await validarConceito("besta", dados.conceitoId, usuarioId);
   await getPrisma().besta.update({ where: { id }, data: dados });
   return detalhar(id, usuarioId);

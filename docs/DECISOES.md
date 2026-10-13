@@ -161,3 +161,21 @@ Formato: data — decisão. Motivo.
   (Lâmina Rubra, Bastião, Tecelã de Luz) e a conta @teste com a ficha dela (usava a Lâmina Rubra). Ficaram a estrutura do sistema
   (atributos, perícias base, status e categorias fixas) e tudo o que @paulo criou. O `db:seed` não cria mais classes e o
   `db:seed-teste` foi removido.
+- **NPCs com ficha — decisão do produto.** Raça obrigatória, classe opcional (NPC simples = só raça, sem cartas, com base de
+  vida/mana/esforço própria), nível, dados, perícias, cartas e inventário; geral ou exclusivo de um grupo. Interpretações: NPC é uma
+  entidade própria (não uma `Ficha`), porque NPC geral não pertence a grupo e não tem jogador; NPC não ganha pontos de perícia por
+  nível, o mestre dá pontos extras direto; morte não apaga o NPC (só avisa); mestre pode mudar o nível para baixo (a regra de não descer
+  vale para personagens de jogadores). Para o inventário, `Item.grupoId` passou a ser opcional (item de NPC geral não tem grupo) e
+  ganhou `npcId`; itens com NPC não aparecem como vagos.
+- **Correções do mapeamento de inconsistências (2026-10-13).** Item com NPC geral não pertence a grupo (excluir grupo não o apaga);
+  excluir grupo solta os itens que estão com NPCs; nível necessário da carta não pode alcançar um aprimoramento; nomes de criatura
+  continuam do maior número (sem repetir); nível máximo 100 ao subir; NPC exclusivo só entrega itens dentro do grupo dele;
+  raça/classe exclusiva só em NPC do mesmo grupo; não vira exclusivo o que está em uso fora do grupo (`EXCLUSIVO_EM_USO`);
+  barra lateral lembra a interface em páginas comuns; busca da documentação visível no celular; soma de perícias unificada.
+- **Jogador só diminui a vida — decisão do produto.** Aumentar a vida (cura) é só o mestre. Interpretado só para a vida; mana e
+  esforço o jogador continua ajustando nos dois sentidos.
+- **Esforço continua manual — decisão do produto.** O app não desconta esforço ao rolar.
+- **Status em NPCs e criaturas — decisão do produto.** Tabelas `NpcStatus` e `CriaturaStatus`; valem os status do grupo (NPC exclusivo,
+  criatura) ou todos os do mestre (NPC geral).
+- **Perícia do teste na habilidade — decisão do produto.** Campo opcional `Habilidade.periciaId` (opcional para não invalidar as cartas
+  que já existem); a ficha de cada personagem mostra o teste pronto para usar a carta. Duplicar classe e `fixar-classe` remapeiam a perícia.

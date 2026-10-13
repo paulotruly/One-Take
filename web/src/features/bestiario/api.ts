@@ -81,4 +81,9 @@ export const useEditarCriatura = () =>
     api<RespostaCriatura>(`/api/criaturas/${id}`, { method: "PATCH", body: dados }),
   );
 
+export const useAplicarStatusCriatura = (id: string) =>
+  useEscrita((statusId: string) => api<CriaturaDetalhe>(`/api/criaturas/${id}/status`, { method: "POST", body: { statusId } }));
+export const useRemoverStatusCriatura = (id: string) =>
+  useEscrita((statusId: string) => api<CriaturaDetalhe>(`/api/criaturas/${id}/status/${statusId}`, { method: "DELETE" }));
+
 export const useRemoverCriatura = () => useEscrita((id: string) => api<void>(`/api/criaturas/${id}`, { method: "DELETE" }));

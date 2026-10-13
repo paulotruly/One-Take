@@ -210,7 +210,7 @@ describe("itens", () => {
     prismaFalso.item.findUnique.mockResolvedValue(item());
     prismaFalso.ficha.findUnique
       .mockResolvedValueOnce({ id: FICHA }) // minha ficha no grupo (após auth, que usa perfil)
-      .mockResolvedValueOnce({ grupoId: GRUPO, nivel: 1 }); // destino
+      .mockResolvedValueOnce({ id: OUTRA_FICHA, grupoId: GRUPO, nivel: 1, grupo: { mestreId: MESTRE.id } }); // destino
     prismaFalso.item.findMany.mockResolvedValue(Array.from({ length: 4 }, () => ({ espacos: 1 })));
     prismaFalso.item.update.mockImplementation(async ({ data }) => ({ ...item(), ...data }));
     const res = await comoJogador(request(app).post(`/api/itens/${ITEM}/mover`)).send({ fichaId: OUTRA_FICHA });

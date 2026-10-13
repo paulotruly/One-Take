@@ -17,6 +17,8 @@ import { useClasses } from "../../classes/api";
 import { ClasseImagem } from "../../classes/components/ClasseImagem";
 import { useExcluirItem, useMoverItem } from "../../fichas/api";
 import { useCategoriasItem, useCriarItemNoGrupo } from "../../itens/api";
+import { useNpcs } from "../../npcs/api";
+import { NpcLinha } from "../../npcs/components/NpcLinha";
 import { ItemDetalhe, ItemLinha } from "../../itens/components/ItemCartao";
 import { ItemForm } from "../../itens/components/ItemForm";
 import { LancarItemModal } from "../../itens/pages/LancarItemModal";
@@ -37,6 +39,7 @@ export function GrupoDetalhePage() {
   const classes = useClasses();
   const pericias = useCatalogo();
   const categorias = useCategoriasItem();
+  const npcs = useNpcs(id);
 
   const [copiado, setCopiado] = useState(false);
   const [confirmarExclusao, setConfirmarExclusao] = useState(false);
@@ -149,6 +152,28 @@ export function GrupoDetalhePage() {
         )}
       </section>
 
+      {/* ---------- NPCs exclusivos do grupo ---------- */}
+      <section className="secao">
+        <div className="secao__cabecalho">
+          <div>
+            <h2>NPCs</h2>
+            <p className="pagina__subtitulo">NPCs exclusivos deste grupo. Os gerais ficam em <Link to="/mestre/npcs">NPCs</Link>.</p>
+          </div>
+          <Link to={`/mestre/npcs/novo?grupo=${id}`} className="btn">
+            <Plus size={16} aria-hidden /> Novo NPC
+          </Link>
+        </div>
+        {npcs.isPending ? (
+          <Loading compacto />
+        ) : npcs.isError ? (
+          <ErrorState mensagem={mensagemDeErro(npcs.error)} onTentarNovamente={() => npcs.refetch()} />
+        ) : npcs.data.length === 0 ? (
+          <EmptyState compacto titulo="Nenhum NPC neste grupo" />
+        ) : (
+          <ul className="membros">{npcs.data.map((n) => <NpcLinha key={n.id} n={n} />)}</ul>
+        )}
+      </section>
+
       {/* ---------- Criaturas invocadas ---------- */}
       <section className="secao">
         <div className="secao__cabecalho">
@@ -171,6 +196,9 @@ export function GrupoDetalhePage() {
                   <Avatar url={c.besta.imagemUrl} nome={c.nome} tamanho={40} />
                   <span className="criatura__info">
                     <strong>{c.nome} <span className="pagina__subtitulo">· nível {c.nivel}</span></strong>
+                    {c.status.length > 0 && (
+                      <span className="membro__status">{c.status.map((s) => <StatusBadge key={s.id} nome={s.nome} tipo={s.tipo} />)}</span>
+                    )}
                     <span className="stats stats--compacto">
                       <span className="stat stat--vida"><Heart size={12} aria-hidden /> {c.vida.atual}/{c.vida.max}</span>
                       <span className="stat stat--mana"><Droplet size={12} aria-hidden /> {c.mana.atual}/{c.mana.max}</span>

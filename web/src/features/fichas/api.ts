@@ -24,7 +24,7 @@ function useEscrita<V, R>(fn: (v: V) => Promise<R>) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: fn,
-    onSuccess: () => Promise.all(["fichas", "grupos", "convite"].map((k) => qc.invalidateQueries({ queryKey: [k] }))),
+    onSuccess: () => Promise.all(["fichas", "grupos", "convite", "npcs"].map((k) => qc.invalidateQueries({ queryKey: [k] }))),
   });
 }
 
@@ -57,10 +57,10 @@ export const useSubirNivel = (id: string) => useEscrita(() => api<FichaDetalhe>(
 export const useGastarPericia = (id: string) =>
   useEscrita((periciaId: string) => api<FichaDetalhe>(`/api/fichas/${id}/pericias`, { method: "POST", body: { periciaId } }));
 
-/** fichaId nulo = descartar (fica vago no grupo). */
+/** fichaId nulo = fica vago no grupo (o mestre pode escolher o grupo); npcId = vai para um NPC (só o mestre). */
 export const useMoverItem = () =>
-  useEscrita(({ itemId, fichaId }: { itemId: string; fichaId: string | null }) =>
-    api(`/api/itens/${itemId}/mover`, { method: "POST", body: { fichaId } }),
+  useEscrita(({ itemId, ...destino }: { itemId: string; fichaId: string | null; npcId?: string; grupoId?: string }) =>
+    api(`/api/itens/${itemId}/mover`, { method: "POST", body: destino }),
   );
 
 export const useExcluirItem = () => useEscrita((itemId: string) => api<void>(`/api/itens/${itemId}`, { method: "DELETE" }));

@@ -59,6 +59,7 @@ model Perfil {
   conceitos         ClasseConceito[]
   conceitosRaca     RacaConceito[]
   itensModelo       ItemModelo[]
+  npcs              Npc[]
   categoriasItem    CategoriaItem[]
   bestas            Besta[]
   conceitosBesta    BestaConceito[]
@@ -88,6 +89,7 @@ model Classe {
   grupoExclusivo   Grupo?   @relation("ClasseExclusiva", fields: [grupoExclusivoId], references: [id], onDelete: SetNull)
   grupos        ClasseNoGrupo[]
   fichas        Ficha[]
+  npcs          Npc[]
   habilidades   Habilidade[]
   pericias      ClassePericia[]
   itensModeloQueExigem ItemModelo[] @relation("ItemModeloClasse")
@@ -124,6 +126,9 @@ model Habilidade {
   descricao       String
   condicao        String?
   tipoEfeito      TipoEfeito
+  /// Perícia que o personagem testa para usar a carta (opcional). A ficha mostra o teste pronto ("2d20 + 5").
+  periciaId       String?    @db.Uuid
+  pericia         Pericia?   @relation(fields: [periciaId], references: [id], onDelete: SetNull)
   descricaoEfeito String
   limite          String?
   nivelNecessario Int        @default(1)
@@ -156,7 +161,9 @@ model Pericia {
   racas     RacaPericia[]
   grupos    PericiaNoGrupo[]
   fichas    FichaPericia[]
+  npcs      NpcPericia[]
   bestas    BestaPericia[]
+  habilidades Habilidade[]
   itensModeloQueExigem ItemModelo[] @relation("ItemModeloPericia")
   itensQueExigem       Item[]       @relation("ItemPericia")
   criadoEm  DateTime         @default(now())
@@ -183,6 +190,7 @@ model Atributo {
   pericias  Pericia[]
   grupos    AtributoNoGrupo[]
   fichas    FichaAtributo[]
+  npcs      NpcAtributo[]
   bestas    BestaAtributo[]
   criadoEm  DateTime  @default(now())
 
@@ -222,6 +230,7 @@ model Raca {
   grupoExclusivo   Grupo?    @relation("RacaExclusiva", fields: [grupoExclusivoId], references: [id], onDelete: SetNull)
   grupos       RacaNoGrupo[]
   fichas       Ficha[]
+  npcs         Npc[]
   criadoEm     DateTime      @default(now())
   atualizadoEm DateTime      @updatedAt
 
@@ -259,6 +268,7 @@ model Grupo {
   regrasPadraoDesativadas  String[]   @default([])
   regrasProprias           RegraDaMesa[]
   criaturas                Criatura[]
+  npcsExclusivos           Npc[]      @relation("NpcExclusivo")
   itensModeloExclusivos    ItemModelo[] @relation("ItemModeloExclusivo")
   bestasExclusivas         Besta[]    @relation("BestaExclusiva")
   classes                  ClasseNoGrupo[]
@@ -423,14 +433,17 @@ model ItemModelo {
   @@index([donoId])
 }
 
-/// Item de um grupo. Com fichaId = está no inventário daquela ficha; nulo = vago no grupo.
+/// Item. Com fichaId = no inventário daquela ficha; com npcId = no inventário daquele NPC; nenhum dos dois = vago no grupo.
+/// Item de NPC geral pode não ter grupo (CHECK: tem grupo ou NPC).
 /// Guarda uma cópia dos campos do molde (editar o molde não muda itens já lançados).
 model Item {
   id                 String        @id @default(uuid()) @db.Uuid
-  grupoId            String        @db.Uuid
-  grupo              Grupo         @relation(fields: [grupoId], references: [id], onDelete: Cascade)
+  grupoId            String?       @db.Uuid
+  grupo              Grupo?        @relation(fields: [grupoId], references: [id], onDelete: Cascade)
   fichaId            String?       @db.Uuid
   ficha              Ficha?        @relation(fields: [fichaId], references: [id], onDelete: SetNull)
+  npcId              String?       @db.Uuid
+  npc                Npc?          @relation(fields: [npcId], references: [id], onDelete: Cascade)
   /// Molde do catálogo de onde veio (informativo). Nulo = criado direto no grupo.
   modeloId           String?       @db.Uuid
   modelo             ItemModelo?   @relation(fields: [modeloId], references: [id], onDelete: SetNull)
@@ -453,6 +466,7 @@ model Item {
 
   @@index([grupoId])
   @@index([fichaId])
+  @@index([npcId])
 }
 
 /// Efeito do status: só informativo (o sistema não altera números; a ficha mostra um alerta).
@@ -484,6 +498,8 @@ model Status {
   dono        Perfil?         @relation(fields: [donoId], references: [id], onDelete: Cascade)
   grupos      StatusNoGrupo[]
   fichas      FichaStatus[]
+  npcs        NpcStatus[]
+  criaturas   CriaturaStatus[]
   habilidades Habilidade[]
   aprimoramentos HabilidadeAprimoramento[]
   criadoEm    DateTime        @default(now())
@@ -653,7 +669,86 @@ model Criatura {
   vidaAtual    Int
   manaAtual    Int
   esforcoAtual Int
+  status       CriaturaStatus[]
   criadoEm     DateTime @default(now())
 
   @@index([grupoId])
+}
+
+/// NPC do mestre: personagem com ficha (raça obrigatória, classe opcional, nível, dados, perícias, inventário).
+/// Sem classe, os valores base de vida/mana/esforço são os do próprio NPC. Geral ou exclusivo de um grupo.
+model Npc {
+  id               String        @id @default(uuid()) @db.Uuid
+  donoId           String        @db.Uuid
+  dono             Perfil        @relation(fields: [donoId], references: [id], onDelete: Cascade)
+  nome             String
+  descricao        String        @default("")
+  imagemUrl        String?
+  racaId           String        @db.Uuid
+  raca             Raca          @relation(fields: [racaId], references: [id], onDelete: Restrict)
+  classeId         String?       @db.Uuid
+  classe           Classe?       @relation(fields: [classeId], references: [id], onDelete: Restrict)
+  nivel            Int           @default(1)
+  /// Base (nível 1) quando não há classe. Com classe, vale a base da classe.
+  vidaBase         Int?
+  manaBase         Int?
+  esforcoBase      Int?
+  vidaAtual        Int
+  manaAtual        Int
+  esforcoAtual     Int
+  grupoExclusivoId String?       @db.Uuid
+  grupoExclusivo   Grupo?        @relation("NpcExclusivo", fields: [grupoExclusivoId], references: [id], onDelete: SetNull)
+  atributos        NpcAtributo[]
+  pericias         NpcPericia[]
+  status           NpcStatus[]
+  itens            Item[]
+  criadoEm         DateTime      @default(now())
+  atualizadoEm     DateTime      @updatedAt
+
+  @@index([donoId])
+  @@index([grupoExclusivoId])
+}
+
+/// Dados (d20) do NPC em cada atributo.
+model NpcAtributo {
+  npcId      String   @db.Uuid
+  npc        Npc      @relation(fields: [npcId], references: [id], onDelete: Cascade)
+  atributoId String   @db.Uuid
+  atributo   Atributo @relation(fields: [atributoId], references: [id], onDelete: Cascade)
+  dados      Int
+
+  @@id([npcId, atributoId])
+}
+
+/// Pontos extras do NPC numa perícia (somam com raça e classe).
+model NpcPericia {
+  npcId     String  @db.Uuid
+  npc       Npc     @relation(fields: [npcId], references: [id], onDelete: Cascade)
+  periciaId String  @db.Uuid
+  pericia   Pericia @relation(fields: [periciaId], references: [id], onDelete: Cascade)
+  pontos    Int
+
+  @@id([npcId, periciaId])
+}
+
+/// Status aplicado pelo mestre num NPC.
+model NpcStatus {
+  npcId      String   @db.Uuid
+  npc        Npc      @relation(fields: [npcId], references: [id], onDelete: Cascade)
+  statusId   String   @db.Uuid
+  status     Status   @relation(fields: [statusId], references: [id], onDelete: Cascade)
+  aplicadoEm DateTime @default(now())
+
+  @@id([npcId, statusId])
+}
+
+/// Status aplicado pelo mestre numa criatura invocada.
+model CriaturaStatus {
+  criaturaId String   @db.Uuid
+  criatura   Criatura @relation(fields: [criaturaId], references: [id], onDelete: Cascade)
+  statusId   String   @db.Uuid
+  status     Status   @relation(fields: [statusId], references: [id], onDelete: Cascade)
+  aplicadoEm DateTime @default(now())
+
+  @@id([criaturaId, statusId])
 }

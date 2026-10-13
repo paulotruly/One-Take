@@ -4,6 +4,7 @@ import { getPrisma } from "../../lib/prisma.js";
 import { bestaEditavel } from "../bestas/bestas.service.js";
 import { classeEditavel } from "../classes/classes.service.js";
 import { comStatus, resumoStatus } from "./habilidades.include.js";
+import { periciaDoMestre } from "../pericias/pericias.service.js";
 import { statusUsavel } from "../status/status.service.js";
 import type { aprimoramentoSchema, criarHabilidadeSchema, editarHabilidadeSchema } from "./habilidades.schemas.js";
 
@@ -26,6 +27,7 @@ async function habilidadeEditavel(id: string, usuarioId: string) {
 export async function criar(dono: DonoCartela, usuarioId: string, dados: z.infer<typeof criarHabilidadeSchema>) {
   await donoEditavel(dono, usuarioId);
   if (dados.statusId) await statusUsavel(dados.statusId, usuarioId);
+  if (dados.periciaId) await periciaDoMestre(dados.periciaId, usuarioId);
   const prisma = getPrisma();
   const { _max } = await prisma.habilidade.aggregate({ where: dono, _max: { ordem: true } });
   return prisma.habilidade.create({ data: { ...dados, ...dono, ordem: (_max.ordem ?? -1) + 1 }, include: comStatus });
@@ -33,7 +35,16 @@ export async function criar(dono: DonoCartela, usuarioId: string, dados: z.infer
 
 export async function editar(id: string, usuarioId: string, dados: z.infer<typeof editarHabilidadeSchema>) {
   await habilidadeEditavel(id, usuarioId);
+  if (dados.nivelNecessario !== undefined) {
+    const primeiro = await getPrisma().habilidadeAprimoramento.findFirst({ where: { habilidadeId: id }, orderBy: { nivel: "asc" }, select: { nivel: true } });
+    if (primeiro && dados.nivelNecessario >= primeiro.nivel) {
+      throw requisicaoInvalida(`Esta carta tem aprimoramento no nível ${primeiro.nivel}: o nível necessário precisa ser menor que isso.`, [
+        { campo: "nivelNecessario", mensagem: `Use um nível menor que ${primeiro.nivel} (ou mude o aprimoramento)` },
+      ]);
+    }
+  }
   if (dados.statusId) await statusUsavel(dados.statusId, usuarioId);
+  if (dados.periciaId) await periciaDoMestre(dados.periciaId, usuarioId);
   return getPrisma().habilidade.update({ where: { id }, data: dados, include: comStatus });
 }
 

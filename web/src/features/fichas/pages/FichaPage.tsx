@@ -165,7 +165,7 @@ function Ficha({ f }: { f: FichaDetalhe }) {
       <section className="secao">
         <h2>Recursos</h2>
         <div className="recursos">
-          <BarraRecurso rotulo="Vida" Icone={Heart} tipo="vida" atual={f.vida.atual} max={f.vida.max} editavel ocupado={editar.isPending}
+          <BarraRecurso rotulo="Vida" Icone={Heart} tipo="vida" atual={f.vida.atual} max={f.vida.max} editavel podeAumentar={f.souMestre} ocupado={editar.isPending}
             onMudar={(v) => editar.mutate({ vidaAtual: v })} />
           <BarraRecurso rotulo="Mana" Icone={Droplet} tipo="mana" atual={f.mana.atual} max={f.mana.max} editavel ocupado={editar.isPending}
             onMudar={(v) => editar.mutate({ manaAtual: v })} />

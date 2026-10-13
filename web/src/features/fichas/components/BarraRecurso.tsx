@@ -10,6 +10,8 @@ type Props = {
   atual: number;
   max: number;
   editavel: boolean;
+  /** false = só pode diminuir (ex.: o jogador não aumenta a própria vida; só o mestre). */
+  podeAumentar?: boolean;
   ocupado?: boolean;
   onMudar: (novo: number) => void;
 };
@@ -18,7 +20,7 @@ type Props = {
  * Recurso atual/máximo com barra. Para mudar rápido: digite a quantidade e use Tirar ou Somar
  * (ex.: 7 de dano de uma vez). O valor atual também pode ser digitado direto.
  */
-export function BarraRecurso({ rotulo, Icone, tipo, atual, max, editavel, ocupado, onMudar }: Props) {
+export function BarraRecurso({ rotulo, Icone, tipo, atual, max, editavel, podeAumentar = true, ocupado, onMudar }: Props) {
   const [texto, setTexto] = useState(String(atual));
   const [quantidade, setQuantidade] = useState("");
   useEffect(() => setTexto(String(atual)), [atual]);
@@ -27,7 +29,7 @@ export function BarraRecurso({ rotulo, Icone, tipo, atual, max, editavel, ocupad
 
   function confirmarAtual() {
     const n = Number(texto);
-    if (Number.isFinite(n) && limitar(n) !== atual) onMudar(limitar(n));
+    if (Number.isFinite(n) && limitar(n) !== atual && (podeAumentar || limitar(n) < atual)) onMudar(limitar(n));
     else setTexto(String(atual));
   }
 
@@ -83,11 +85,14 @@ export function BarraRecurso({ rotulo, Icone, tipo, atual, max, editavel, ocupad
           <Button pequeno disabled={ocupado || !quantidade || atual <= 0} onClick={() => aplicar(-1)} title={`Tirar de ${rotulo}`}>
             <Minus size={14} aria-hidden /> Tirar
           </Button>
-          <Button pequeno disabled={ocupado || !quantidade || atual >= max} onClick={() => aplicar(1)} title={`Somar em ${rotulo}`}>
-            <Plus size={14} aria-hidden /> Somar
-          </Button>
+          {podeAumentar && (
+            <Button pequeno disabled={ocupado || !quantidade || atual >= max} onClick={() => aplicar(1)} title={`Somar em ${rotulo}`}>
+              <Plus size={14} aria-hidden /> Somar
+            </Button>
+          )}
         </form>
       )}
+      {editavel && !podeAumentar && <p className="recurso__dica">Só o mestre aumenta {rotulo.toLowerCase()}.</p>}
     </div>
   );
 }

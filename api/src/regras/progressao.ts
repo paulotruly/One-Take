@@ -6,6 +6,8 @@
 
 export const PROGRESSAO = {
   nivelInicial: 1,
+  /** Nível mais alto do sistema (fichas, NPCs, criaturas e cartas). */
+  nivelMaximo: 100,
   /** Ganho a cada nível acima do inicial. */
   ganhoPorNivel: {
     pontosVida: 5,

@@ -35,6 +35,7 @@ export function HabilidadeCard({ habilidade: h, onAbrir, acoes }: { habilidade: 
             <span className="selo selo--novo" title="Muda em níveis maiores">+{h.aprimoramentos!.length} nv</span>
           )}
         </span>
+        {h.teste ? <span className="carta__limite">{h.teste.pericia}: {h.teste.teste}</span> : h.pericia && <span className="carta__limite">Teste: {h.pericia.nome}</span>}
         {h.limite && <span className="carta__limite">{h.limite}</span>}
       </button>
       {acoes && (
@@ -75,6 +76,11 @@ export function HabilidadeDetalhe({ habilidade: h }: { habilidade: Habilidade })
         {h.aprimoradaNoNivel && <span className="selo selo--novo">Aprimorada no nível {h.aprimoradaNoNivel}</span>}
       </div>
       <p className="carta__descricao">{h.descricao}</p>
+      {(h.teste || h.pericia) && (
+        <p className="carta__linha carta__teste">
+          <strong>Teste:</strong> {h.teste ? <>{h.teste.pericia} ({h.teste.atributo}): <b>{h.teste.teste}</b></> : <>{h.pericia!.nome} ({h.pericia!.atributo.nome})</>}
+        </p>
+      )}
       {h.condicao && (
         <p className="carta__linha">
           <strong>Condição:</strong> {h.condicao}

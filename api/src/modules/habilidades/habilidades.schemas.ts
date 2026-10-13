@@ -16,12 +16,15 @@ const base = z.object({
   custoMana: inteiro(0, 999),
   /** Status que a carta ativa (opcional). */
   statusId: z.guid("Status inválido").nullable(),
+  /** Perícia que o personagem testa para usar a carta (opcional). */
+  periciaId: z.guid("Perícia inválida").nullable(),
 });
 
 export const criarHabilidadeSchema = base.extend({
   nivelNecessario: base.shape.nivelNecessario.default(1),
   custoMana: base.shape.custoMana.default(0),
   statusId: base.shape.statusId.default(null),
+  periciaId: base.shape.periciaId.default(null),
 });
 export const editarHabilidadeSchema = base.partial();
 

@@ -153,8 +153,14 @@ export function ClasseForm({
 export function HabilidadeForm({
   inicial,
   opcoesStatus = [],
+  opcoesPericias = [],
   ...p
-}: BaseProps<HabilidadeInput> & { inicial?: HabilidadeInput; opcoesStatus?: { id: string; nome: string; automatico: boolean }[] }) {
+}: BaseProps<HabilidadeInput> & {
+  inicial?: HabilidadeInput;
+  opcoesStatus?: { id: string; nome: string; automatico: boolean }[];
+  /** Perícias do catálogo do mestre (para escolher a perícia testada pela carta). */
+  opcoesPericias?: { id: string; nome: string; atributo: { nome: string } }[];
+}) {
   const [v, setV] = useState({
     titulo: inicial?.titulo ?? "",
     descricao: inicial?.descricao ?? "",
@@ -165,6 +171,7 @@ export function HabilidadeForm({
     nivelNecessario: String(inicial?.nivelNecessario ?? 1),
     custoMana: String(inicial?.custoMana ?? 0),
     statusId: inicial?.statusId ?? "",
+    periciaId: inicial?.periciaId ?? "",
   });
   const set = (campo: keyof typeof v) => (e: { target: { value: string } }) => setV({ ...v, [campo]: e.target.value });
   const e = p.erros ?? {};
@@ -182,6 +189,7 @@ export function HabilidadeForm({
           nivelNecessario: inteiro(v.nivelNecessario),
           custoMana: inteiro(v.custoMana),
           statusId: v.statusId || null,
+          periciaId: v.periciaId || null,
         })
       }
     >
@@ -212,6 +220,14 @@ export function HabilidadeForm({
       </Field>
       <Field rotulo="Condição (opcional)" erro={e.condicao} dica="O que precisa acontecer para poder usar.">
         <input value={v.condicao} onChange={set("condicao")} maxLength={500} />
+      </Field>
+      <Field rotulo="Perícia do teste" erro={e.periciaId} dica="Qual perícia o personagem testa para usar a carta. A ficha mostra o teste pronto (ex.: 2d20 + 5).">
+        <select value={v.periciaId} onChange={set("periciaId")}>
+          <option value="">Nenhuma (sem teste ou o mestre decide)</option>
+          {opcoesPericias.map((p) => (
+            <option key={p.id} value={p.id}>{p.nome} ({p.atributo.nome})</option>
+          ))}
+        </select>
       </Field>
       <Field rotulo="Ativa status (opcional)" erro={e.statusId} dica="Se a carta coloca um status no alvo ou em quem usa. O mestre aplica na ficha durante a sessão.">
         <select value={v.statusId} onChange={set("statusId")}>

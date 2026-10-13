@@ -112,9 +112,9 @@ export async function detalhar(id: string, usuarioId: string) {
           raca: { select: { titulo: true } },
         },
       },
-      itens: { where: { fichaId: null }, orderBy: { criadoEm: "asc" }, include: comRequisitos },
+      itens: { where: { fichaId: null, npcId: null }, orderBy: { criadoEm: "asc" }, include: comRequisitos },
       regrasProprias: { orderBy: { criadoEm: "asc" } },
-      criaturas: { orderBy: { criadoEm: "asc" }, include: { besta: true } },
+      criaturas: { orderBy: { criadoEm: "asc" }, include: { besta: true, status: { include: { status: true } } } },
     },
   });
   const { classes, racas, atributos, pericias, status, fichas, itens, criaturas, ...grupo } = g;
@@ -148,7 +148,7 @@ export async function detalhar(id: string, usuarioId: string) {
     statusAtivos: ativos.map(apresentarStatus).sort((a, b) => a.ordem - b.ordem || a.nome.localeCompare(b.nome, "pt-BR")),
     itensVagos: itens.map(apresentarItem),
     /** Criaturas invocadas pelo mestre. */
-    criaturas: criaturas.map(apresentarCriatura),
+    criaturas: criaturas.map((c) => apresentarCriatura(c, ativos)),
   };
 }
 
@@ -187,7 +187,12 @@ export async function novoCodigoDoGrupo(id: string, usuarioId: string) {
 /** Exclui o grupo com as fichas e itens dele. */
 export async function excluir(id: string, usuarioId: string) {
   await grupoDoMestre(id, usuarioId);
-  await getPrisma().grupo.delete({ where: { id } });
+  const prisma = getPrisma();
+  // Itens que estão com NPCs continuam com eles (os NPCs exclusivos deste grupo viram gerais).
+  await prisma.$transaction([
+    prisma.item.updateMany({ where: { grupoId: id, npcId: { not: null } }, data: { grupoId: null } }),
+    prisma.grupo.delete({ where: { id } }),
+  ]);
 }
 
 // ---------- Regras próprias do mestre (regras da mesa) ----------

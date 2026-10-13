@@ -29,6 +29,9 @@ Formato único:
 | 403 | `PROIBIDO` | interface de mestre não ativada (ou ação só do mestre do grupo) |
 | 403 | `NAO_SABE_USAR` | jogador tenta usar item sem cumprir o pré-requisito |
 | 409 | `INVENTARIO_CHEIO` | o item (com seus espaços) não cabe |
+| 403 | `SO_MESTRE_CURA` | jogador tentou aumentar a vida da própria ficha (só diminuir) |
+| 409 | `NIVEL_MAXIMO` | subir nível além do 100 |
+| 409 | `EXCLUSIVO_EM_USO` | tornar exclusivo de um grupo algo usado fora dele |
 | 403 | `CLASSE_FIXA` | tentativa de alterar classe fixa (ou seus filhos) |
 | 404 | `NAO_ENCONTRADO` | não existe, id malformado, ou pertence a outro mestre |
 | 409 | `NOME_EM_USO` | já existe perícia/atributo com esse nome |
@@ -40,7 +43,8 @@ Formato único:
 ## Tipos de resposta
 **Classe (resumo)**: `{ id, grupo, titulo, descricao, imagemUrl, pontosVida, pontosMana, pontosEsforco, donoId, origemId, fixa, criadoEm, atualizadoEm }`
 **Classe (detalhe)**: resumo + `habilidades: Habilidade[]` (a cartela, por `ordem`) + `pericias: PericiaDaClasse[]` (por atributo e nome).
-**Habilidade**: `{ id, classeId, bestaId, titulo, descricao, condicao, tipoEfeito, descricaoEfeito, limite, nivelNecessario, custoMana, ordem }`
+**Habilidade**: `{ id, classeId, bestaId, periciaId, pericia: { id, nome, atributo } | null, titulo, descricao, condicao, tipoEfeito, descricaoEfeito, limite, nivelNecessario, custoMana, ordem }`
+Nas fichas, NPCs e criaturas, cada carta vem também com `teste: { pericia, atributo, teste: "2d20 + 5" } | null`. `periciaId` no POST/PATCH = perícia do catálogo do mestre.
 `tipoEfeito`: `DANO | DEFESA | CURA | SUPORTE | FORTALECIMENTO | ENFRAQUECIMENTO | CONTROLE | MOBILIDADE | INVOCACAO | UTILIDADE` (obrigatório; outro valor = 400 "Escolha um tipo de efeito").
 **PericiaCatalogo**: `{ id, nome, descricao, categoria, atributoId, atributo: Atributo, donoId, origemId, criadoEm, usosClasses, usosRacas }`
 **PericiaDaClasse**: `{ id, nome, descricao, categoria, atributo: Atributo, modificador }` (`id` = id da perícia no catálogo)
@@ -138,7 +142,7 @@ Classes, raças e atributos aceitam `grupoExclusivoId` (id de um grupo do mestre
 | POST | `/api/fichas/:id/status` | `{ statusId }` (só mestre; status ativado no grupo e não automático) | `FichaDetalhe` |
 | DELETE | `/api/fichas/:id/status/:statusId` | — (só mestre) | `FichaDetalhe` |
 | DELETE | `/api/fichas/:id` | — | `204` (dono sai / mestre remove; itens ficam vagos) |
-| POST | `/api/itens/:id/mover` | `{ fichaId \| null }` | jogador: do próprio inventário para outra ficha do grupo, descartar (null) ou pegar item vago; mestre: qualquer. 409 `INVENTARIO_CHEIO` |
+| POST | `/api/itens/:id/mover` | `{ fichaId \| null, npcId?, grupoId? }` | jogador: do próprio inventário para outra ficha do grupo, descartar (null) ou pegar item vago. Mestre: qualquer; `npcId` manda para um NPC; ficha de qualquer grupo dele quando o item vem de NPC; `grupoId` escolhe onde fica vago (obrigatório para item de NPC sem grupo). 409 `INVENTARIO_CHEIO` |
 | POST | `/api/itens/:id/usar` | — | dono da ficha (com pré-requisito) ou mestre → `{ consumido, item \| null }`. Usos limitados perdem 1; no último o item é apagado. Item vago = 400 |
 | PATCH / DELETE | `/api/itens/:id` | campos de item (parciais) + `usosRestantes?` | só mestre. Mudar `usosMaximos` limita os restantes ao novo máximo |
 
@@ -155,7 +159,7 @@ Campos de item no corpo: `{ categoriaId? (Artefatos; null = sem categoria), nome
 | GET | `/api/catalogo-itens?grupoId=` | — | moldes do mestre (com `grupoExclusivoId`); com `grupoId`, só os que podem ir para aquele grupo |
 | POST | `/api/catalogo-itens` | campos de item + `grupoExclusivoId?` | `201` |
 | PATCH / DELETE | `/api/catalogo-itens/:id` | parcial | itens já lançados não mudam (são cópias) |
-| POST | `/api/catalogo-itens/:id/lancar` | `{ grupoId, fichaId?, quantidade? (1–20) }` | `201 { lancados }`; sem ficha = vago. 409 `INVENTARIO_CHEIO` |
+| POST | `/api/catalogo-itens/:id/lancar` | `{ grupoId, fichaId?, quantidade? (1–20) }` ou `{ npcId, quantidade? }` | `201 { lancados }`; sem ficha = vago. Item exclusivo de um grupo só vai para NPC exclusivo do mesmo grupo. 409 `INVENTARIO_CHEIO` |
 
 ## Conceitos de raça e de besta (mestre)
 `/api/conceitos-raca` e `/api/conceitos-besta`: mesmas rotas de `/api/conceitos` (GET, POST, PATCH/DELETE `/:id`, corpo `{ titulo, descricao }`),
@@ -191,3 +195,24 @@ Cartas de besta usam as mesmas rotas `/api/habilidades/:id` e `/api/aprimorament
 | POST | `/api/categorias-item` | `{ nome (até 40), descricao? (""), icone? ("pacote") }` | `201`; nome igual a outra (fixa ou sua, sem diferenciar maiúsculas) = 409 `NOME_EM_USO` |
 | PATCH / DELETE | `/api/categorias-item/:id` | parcial | fixa = 403 `CATEGORIA_FIXA`; excluir deixa os itens sem categoria |
 `icone`: `pacote | espada | machado | arco | escudo | joia | anel | coroa | varinha | caneca | pocao | comida | livro | pergaminho | mapa | chave | moeda | roupa | martelo | bomba`.
+
+## NPCs (mestre)
+| Método | Rota | Corpo | Resposta |
+|---|---|---|---|
+| GET | `/api/npcs?grupoId=` | — | NPCs do mestre (com `grupoId`: só os exclusivos daquele grupo): `{ id, nome, descricao, imagemUrl, nivel, raca, classe, grupoExclusivo, vida, mana, esforco, morto }` |
+| POST | `/api/npcs` | `{ nome, racaId, classeId?, nivel? (1), vidaBase?, manaBase?, esforcoBase? (obrigatórios sem classe), descricao?, imagemUrl?, grupoExclusivoId? }` | `201 NpcDetalhe` (recursos cheios). Sem classe e sem base = 400 com os campos faltando |
+| GET / PATCH / DELETE | `/api/npcs/:id` | PATCH: parcial + `vidaAtual?`, `manaAtual?`, `esforcoAtual?` | `NpcDetalhe` / `204` (apaga os itens dele). Mudar nível/classe/base faz o atual acompanhar a diferença |
+| PUT | `/api/npcs/:id/atributos/:atributoId` | `{ dados }` (0..20; 0 tira) | `NpcDetalhe` |
+| PUT | `/api/npcs/:id/pericias/:periciaId` | `{ pontos }` (−99..99; 0 tira) | `NpcDetalhe` |
+**NpcDetalhe**: dados do NPC + `raca`, `classe`, `vida`/`mana`/`esforco` `{ atual, max }`, `morto`, `atributos` (com `teste`), `pericias` (raça/classe/extra/total + `teste`),
+`habilidades` do nível (aprimoradas), `proximasHabilidades`, `inventario { capacidade, usados, itens }`, `destinos { grupos[], fichas[] }` (para onde os itens podem ir).
+
+## Status em NPCs e criaturas (mestre)
+| Método | Rota | Corpo | Resposta |
+|---|---|---|---|
+| POST | `/api/npcs/:id/status` | `{ statusId }` | `NpcDetalhe` (agora com `status[]` e `statusAplicaveis[]`) |
+| DELETE | `/api/npcs/:id/status/:statusId` | — | `NpcDetalhe` |
+| POST | `/api/criaturas/:id/status` | `{ statusId }` | ficha da criatura (com `statusDetalhado[]` e `statusAplicaveis[]`) |
+| DELETE | `/api/criaturas/:id/status/:statusId` | — | ficha da criatura |
+Valem os status ativados no grupo (NPC exclusivo, criatura) ou todos os do mestre (NPC geral). Automáticos (vida/mana/esforço em 0) aparecem sozinhos.
+A `Criatura` no grupo traz `status[]` (resumo). `PATCH /api/fichas/:id`: o jogador só diminui `vidaAtual` (aumentar = 403 `SO_MESTRE_CURA`).

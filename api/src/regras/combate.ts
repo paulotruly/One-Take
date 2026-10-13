@@ -3,7 +3,7 @@
 // O texto completo de cada uma fica na documentação (/docs/<slug>).
 
 export const REGRAS_PADRAO = [
-  { slug: "combate-grid-turno", titulo: "Grid e turno", resumo: "O jogo é movido por grid. Em combate, cada turno é 1 movimento + 1 ação." },
+  { slug: "combate-grid-turno", titulo: "Grid e turno", resumo: "O jogo é movido por um grid físico, na mesa (o app não guarda posições). Em combate, cada turno é 1 movimento + 1 ação." },
   { slug: "combate-alcance", titulo: "Alcance e posicionamento", resumo: "Deslocamento pela raça; teste de Capacidade física + Atletismo para andar mais, gastando o turno. Corpo a corpo ataca a 1–3 quadrados." },
   { slug: "combate-dominio", titulo: "Domínio de combate", resumo: "Segurar, prender ou pressionar o alvo: conforme o dado, -5, -10 ou -15 em Capacidade física por 1 turno, ou perda do turno." },
   { slug: "combate-intervencao", titulo: "Intervenção defensiva", resumo: "Capacidade física + Iniciativa maior que o ataque: o personagem defende o aliado. 1 por turno." },

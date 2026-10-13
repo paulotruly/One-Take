@@ -92,3 +92,9 @@
 .docs__resultado:hover { text-decoration: none; border-left-color: var(--cor-primaria); background: var(--cor-superficie-2); }
 .docs__resultado-secao { color: var(--cor-primaria); font-size: var(--texto-xs); font-weight: var(--peso-forte); text-transform: uppercase; letter-spacing: 0.06em; }
 .docs__resultado-trecho { color: var(--cor-texto-suave); font-size: var(--texto-xs); line-height: 1.5; }
+
+.docs__busca-movel { display: none; }
+@media (max-width: 860px) {
+  .docs__busca-movel { display: block; }
+  .docs__lateral .docs__busca { display: none; }
+}

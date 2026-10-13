@@ -37,6 +37,11 @@ export const prismaFalso = {
   criatura: modelo(),
   itemModelo: modelo(),
   categoriaItem: modelo(),
+  npc: modelo(),
+  npcAtributo: modelo(),
+  npcPericia: modelo(),
+  npcStatus: modelo(),
+  criaturaStatus: modelo(),
   $transaction: vi.fn(async (ops: unknown) => (Array.isArray(ops) ? Promise.all(ops) : ops)),
   $queryRaw: vi.fn(),
 };

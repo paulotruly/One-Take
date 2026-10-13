@@ -42,6 +42,7 @@ export type Criatura = {
   vida: Recurso;
   mana: Recurso;
   esforco: Recurso;
+  status: { id: string; nome: string; tipo: "BUFF" | "DEBUFF" | "MISTO"; automatico: boolean }[];
 };
 
 export type GrupoDetalhe = Omit<Grupo, "membros"> & {

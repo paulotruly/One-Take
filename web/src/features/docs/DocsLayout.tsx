@@ -28,6 +28,10 @@ export function DocsPage() {
 
   return (
     <div className="docs">
+      {/* No celular a busca fica fora do menu, sempre à vista. */}
+      <div className="docs__busca-movel">
+        <BuscaDocs busca={busca} onBusca={setBusca} />
+      </div>
       <button type="button" className="docs__abrir-menu btn" onClick={() => setMenuAberto(!menuAberto)} aria-expanded={menuAberto}>
         <Menu size={16} aria-hidden /> {atual.secao} / {atual.titulo}
       </button>

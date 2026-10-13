@@ -1,7 +1,7 @@
 import type { z } from "zod";
 import type { Atributo } from "../../generated/prisma/client.js";
 import { AppError, conflito, naoEncontrado } from "../../lib/errors.js";
-import { aplicarExclusividade, validarGrupoExclusivo } from "../../lib/exclusividade.js";
+import { aplicarExclusividade, garantirExclusividadePossivel, validarGrupoExclusivo } from "../../lib/exclusividade.js";
 import { getPrisma } from "../../lib/prisma.js";
 import type { criarAtributoSchema, editarAtributoSchema } from "./atributos.schemas.js";
 
@@ -69,6 +69,7 @@ export async function editar(id: string, usuarioId: string, dados: z.infer<typeo
   await atributoEditavel(id, usuarioId);
   if (dados.nome) await garantirNomeLivre(usuarioId, dados.nome, id);
   await validarGrupoExclusivo(dados.grupoExclusivoId, usuarioId);
+  await garantirExclusividadePossivel("atributo", id, dados.grupoExclusivoId);
   const { _count, ...a } = await getPrisma().atributo.update({ where: { id }, data: dados, include: contarPericias });
   await aplicarExclusividade("atributo", id, dados.grupoExclusivoId);
   return { ...apresentarAtributo(a), pericias: _count.pericias };

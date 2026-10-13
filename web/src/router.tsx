@@ -19,6 +19,9 @@ import { BestaDetalhePage } from "./features/bestiario/pages/BestaDetalhePage";
 import { EditarBestaPage, NovaBestaPage } from "./features/bestiario/pages/BestaFormPage";
 import { BestiarioPage } from "./features/bestiario/pages/BestiarioPage";
 import { CatalogoItensPage } from "./features/itens/pages/CatalogoItensPage";
+import { NpcDetalhePage } from "./features/npcs/pages/NpcDetalhePage";
+import { EditarNpcPage, NovoNpcPage } from "./features/npcs/pages/NpcFormPage";
+import { NpcsPage } from "./features/npcs/pages/NpcsPage";
 import { AppLayout } from "./layouts/AppLayout";
 import { AtivarMestrePage } from "./pages/AtivarMestrePage";
 import { PublicLayout } from "./layouts/PublicLayout";
@@ -78,6 +81,10 @@ export const router = createBrowserRouter([
           { path: "bestiario/:id", element: <BestaDetalhePage /> },
           { path: "bestiario/:id/editar", element: <EditarBestaPage /> },
           { path: "itens", element: <CatalogoItensPage /> },
+          { path: "npcs", element: <NpcsPage /> },
+          { path: "npcs/novo", element: <NovoNpcPage /> },
+          { path: "npcs/:id", element: <NpcDetalhePage /> },
+          { path: "npcs/:id/editar", element: <EditarNpcPage /> },
           { path: "pericias", element: <PericiasPage /> },
           { path: "status", element: <StatusPage /> },
           { path: "grupos", element: <GruposPage /> },

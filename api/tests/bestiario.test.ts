@@ -29,6 +29,7 @@ beforeAll(async () => {
 beforeEach(() => {
   vi.resetAllMocks();
   prismaFalso.$transaction.mockImplementation(async (ops: unknown) => (Array.isArray(ops) ? Promise.all(ops) : ops));
+  prismaFalso.statusNoGrupo.findMany.mockResolvedValue([]);
 });
 
 const comoMestre = (r: request.Test) => {
@@ -86,7 +87,6 @@ describe("bestiário", () => {
   it("invoca criaturas no grupo com recursos cheios no nível escolhido e nomes numerados", async () => {
     prismaFalso.grupo.findUnique.mockResolvedValue(grupo());
     prismaFalso.besta.findUnique.mockResolvedValue(besta());
-    prismaFalso.criatura.count.mockResolvedValue(0);
     prismaFalso.criatura.createMany.mockResolvedValue({ count: 2 });
     prismaFalso.criatura.findMany.mockResolvedValue([]);
     const res = await comoMestre(request(app).post(`/api/grupos/${GRUPO}/criaturas`)).send({ bestaId: BESTA, nivel: 3, quantidade: 2 });
@@ -202,5 +202,46 @@ describe("categorias de item", () => {
     prismaFalso.categoriaItem.findFirst.mockResolvedValue({ nome: "Armas" });
     const repetida = await comoMestre(request(app).post("/api/categorias-item")).send({ nome: "armas" });
     expect(repetida.status).toBe(409);
+  });
+});
+
+describe("NPCs", () => {
+  const NPC = "22222222-0000-4000-8000-0000000000d1";
+  const RACA = "22222222-0000-4000-8000-0000000000d2";
+
+  it("NPC sem classe precisa de vida, mana e esforço base", async () => {
+    prismaFalso.raca.findUnique.mockResolvedValue({ donoId: MESTRE.id });
+    const res = await comoMestre(request(app).post("/api/npcs")).send({ nome: "Taverneiro", racaId: RACA, vidaBase: 10 });
+    expect(res.status).toBe(400);
+    expect(res.body.error.details.map((d: { campo: string }) => d.campo)).toEqual(["manaBase", "esforcoBase"]);
+  });
+
+  it("NPC com classe começa cheio, com a vida da classe no nível dele", async () => {
+    prismaFalso.raca.findUnique.mockResolvedValue({ donoId: MESTRE.id });
+    prismaFalso.classe.findUnique.mockResolvedValue({ id: CLASSE, donoId: null, pontosVida: 30, pontosMana: 10, pontosEsforco: 20 });
+    prismaFalso.npc.create.mockImplementation(async ({ data }) => ({ id: NPC, ...data }));
+    prismaFalso.npc.findUnique.mockResolvedValue({ id: NPC, donoId: MESTRE.id });
+    prismaFalso.npc.findUniqueOrThrow.mockRejectedValue(new Error("parar aqui"));
+    await comoMestre(request(app).post("/api/npcs")).send({ nome: "Capitã", racaId: RACA, classeId: CLASSE, nivel: 3 });
+    expect(prismaFalso.npc.create.mock.calls[0]![0].data).toMatchObject({ nivel: 3, vidaAtual: 40, manaAtual: 20, esforcoAtual: 30 });
+  });
+
+  it("mestre passa item do NPC para a ficha de um jogador do grupo dele", async () => {
+    prismaFalso.item.findUnique.mockResolvedValue({
+      id: ITEM, grupoId: null, fichaId: null, npcId: NPC, espacos: 1, usosMaximos: null, usosRestantes: null,
+      grupo: null, npc: { donoId: MESTRE.id }, ficha: null, categoria: null, requisitoPericia: null, requisitoClasse: null,
+    });
+    prismaFalso.ficha.findUnique.mockResolvedValue({ id: FICHA, grupoId: GRUPO, nivel: 1, grupo: { mestreId: MESTRE.id } });
+    prismaFalso.item.findMany.mockResolvedValue([]);
+    prismaFalso.item.update.mockImplementation(async ({ data }) => ({ id: ITEM, espacos: 1, ...data }));
+    const res = await comoMestre(request(app).post(`/api/itens/${ITEM}/mover`)).send({ fichaId: FICHA });
+    expect(res.status).toBe(200);
+    expect(prismaFalso.item.update.mock.calls[0]![0].data).toEqual({ fichaId: FICHA, npcId: null, grupoId: GRUPO });
+  });
+
+  it("jogador não mexe em item de NPC", async () => {
+    prismaFalso.item.findUnique.mockResolvedValue({ id: ITEM, grupoId: GRUPO, fichaId: null, npcId: NPC, grupo: { mestreId: MESTRE.id }, npc: { donoId: MESTRE.id }, ficha: null });
+    const res = await comoJogador(request(app).post(`/api/itens/${ITEM}/mover`)).send({ fichaId: FICHA });
+    expect(res.status).toBe(404);
   });
 });

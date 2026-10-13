@@ -38,7 +38,8 @@ web/
     features/pericias/       # catálogo de perícias e atributos (types com categorias e ícones, api, components, pages)
     features/racas/          # raças do mestre e arquétipos de raça
     features/itens/          # catálogo de itens (CatalogoItensPage), ItemLinha/ItemDetalhe/ItemForm, LancarItemModal
-    features/bestiario/      # bestiário (páginas de criatura), GridBatalha, InvocarModal, CriaturaModal
+    features/bestiario/      # bestiário (páginas de criatura), InvocarModal, CriaturaModal
+    features/npcs/           # NPCs: lista (NpcLinha), formulário, ficha do NPC com inventário
     features/classes/pages/CartelaEditor.tsx  # editor de cartas usado por classes e criaturas
 .claude/skills/balancear/    # skill de balanceamento: SKILL.md (método e referências) + calc.mjs (calculadora)
     layouts/AppLayout.tsx    # topo com navegação (Classes | Perícias), email e "Sair"
@@ -55,7 +56,8 @@ docs/
 5. Qualquer erro lançado (Express 5 captura async) → `error-handler` → `{ error: { code, message, details? } }`.
 
 ## Autenticação
-- Front faz login no Supabase Auth (email/senha) e manda o `access_token` em cada chamada.
+- Login por **nickname e senha**: o front chama `POST /api/entrar`, a API acha o email interno da conta e pede a sessão ao Supabase;
+  o front guarda a sessão e manda o `access_token` em cada chamada.
 - API não chama o Supabase por requisição: só verifica a assinatura (chaves públicas em cache).
 - Papel vem da tabela `Perfil`, não do token. Novo usuário = JOGADOR. Promover: `npm run promover -- email` (lê `auth.users`; não precisa ter logado antes).
 
@@ -102,7 +104,7 @@ exibido direto pelo front. Não há upload nem uso do Supabase Storage.
   `/mestre/classes/:id/habilidades` (criar/editar/reordenar/excluir cartas), `/mestre/pericias` (catálogo); `/jogador` (reservada, tela vazia); `/` redireciona conforme o papel.
 - `RequirePapel` exige sessão; com `papel="MESTRE"`, exige a interface de mestre ativada (senão vai para `/ativar-mestre`).
   `/jogador` vale para qualquer conta. O topo alterna **Mestrar**/**Jogar**; `/area` volta à última interface usada (localStorage).
-- Mestre também: `/mestre/bestiario`, `/mestre/bestiario/novo`, `/mestre/bestiario/:id`, `/mestre/bestiario/:id/editar`, `/mestre/itens`.
+- Mestre também: `/mestre/npcs`, `/mestre/npcs/novo` (`?grupo=` já marca exclusivo), `/mestre/npcs/:id`, `/mestre/npcs/:id/editar`, `/mestre/bestiario`, `/mestre/bestiario/novo`, `/mestre/bestiario/:id`, `/mestre/bestiario/:id/editar`, `/mestre/itens`.
   Logado: `/ativar-mestre`.
 - Layouts: `PublicLayout` (regras, guia; botões Entrar/Criar conta; links no topo) e `AppLayout` (topo com marca, troca Mestrar/Jogar
   e menu do perfil com Editar perfil e Sair; navegação da interface numa **barra lateral**, que no celular vira gaveta aberta pelo botão de menu).

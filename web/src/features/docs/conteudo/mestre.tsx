@@ -1,5 +1,5 @@
 // Tópicos da documentação: guia do mestre, guia do jogador e referência.
-import { Activity, Backpack, Copy, Footprints, Layers, ListChecks, Lock, PawPrint, Shield } from "lucide-react";
+import { Activity, Backpack, Copy, Footprints, Layers, ListChecks, Lock, PawPrint, Shield, UserRound } from "lucide-react";
 import { Link } from "react-router";
 import { Cartoes, Destaque, Passos, Tabela } from "../../../components/texto/Manual";
 import { useRegras } from "../regras";
@@ -15,6 +15,7 @@ export function MestreVisaoGeral() {
           { Icone: Shield, titulo: "Grupos", texto: "Seus RPGs: código de entrada, membros, fichas e itens." },
           { Icone: Layers, titulo: "Classes", texto: "Os heróis prontos: recursos, cartela de cartas e perícias." },
           { Icone: Footprints, titulo: "Raças", texto: "Origens: deslocamento e perícias de base." },
+          { Icone: UserRound, titulo: "NPCs", texto: "Personagens do mestre com ficha completa e inventário." },
           { Icone: PawPrint, titulo: "Bestiário", texto: "Criaturas para invocar nos grupos, montadas como classes." },
           { Icone: Backpack, titulo: "Itens", texto: "Armas, artefatos, taverna e sebo, sempre à mão para lançar." },
           { Icone: ListChecks, titulo: "Perícias", texto: "Seu catálogo de perícias e atributos." },
@@ -149,10 +150,14 @@ export function MestreExclusividade() {
         cabecalho={["Opção", "O que acontece"]}
         linhas={[
           ["Geral (padrão)", "Pode ser liberado em qualquer grupo seu. Você escolhe na hora de montar cada grupo."],
-          ["Exclusivo de um grupo", "Só vale naquele grupo e já entra liberado nele. Não aparece para os outros grupos."],
+          ["Exclusivo de um grupo", "Só vale naquele grupo. Classes, raças e atributos já entram liberados nele; itens, criaturas e NPCs não têm lista de liberação, só deixam de aparecer para os outros grupos."],
         ]}
       />
       <p>Dá para deixar tudo como geral e decidir só ao montar o grupo. Use exclusivo para coisas feitas sob medida para uma aventura.</p>
+      <Destaque tipo="aviso" titulo="Exclusivo só se ninguém de fora usa">
+        Não dá para tornar exclusivo de um grupo algo que já está em uso fora dele (por exemplo, uma classe usada por uma ficha de outro grupo
+        ou por um NPC geral). E um NPC exclusivo só pode ter raça e classe gerais ou exclusivas do mesmo grupo.
+      </Destaque>
     </>
   );
 }
@@ -182,6 +187,30 @@ export function MestreBestiario() {
         Compare o dano esperado da criatura com a vida dos personagens do mesmo nível. Uma criatura comum não deveria derrubar um personagem em 1 ou 2
         turnos, a não ser que seja um chefe de propósito.
       </Destaque>
+    </>
+  );
+}
+
+export function MestreNpcs() {
+  const { ficha: f } = useRegras();
+  return (
+    <>
+      <p>
+        Em <strong>NPCs</strong> você cria os personagens do mestre (taverneiros, vilões, aliados). Todo NPC tem <strong>ficha</strong>,
+        como os personagens dos jogadores.
+      </p>
+      <Tabela
+        cabecalho={["Parte", "Como funciona"]}
+        linhas={[
+          ["Raça", "Obrigatória: dá deslocamento e perícias de base."],
+          ["Classe", "Opcional. Com classe, o NPC usa a vida/mana/esforço e as cartas dela. Sem classe, é um NPC simples: você define vida, mana e esforço base."],
+          ["Nível", "Mesma progressão dos personagens. Você pode mudar à vontade; o valor atual acompanha."],
+          ["Atributos e perícias", "Dados por atributo com + e -; perícias da raça e da classe, mais pontos extras que você der. A ficha mostra o teste pronto."],
+          ["Inventário", `Mesma capacidade das fichas (${f.inventarioInicial} espaços no nível 1, +${f.inventarioPorNivel} por nível). Dê itens do catálogo, use, entregue a um jogador ou deixe vago num grupo.`],
+          ["Disponibilidade", "Geral ou exclusivo de um grupo. Os exclusivos aparecem na página do grupo, na seção NPCs."],
+        ]}
+      />
+      <p>Vida ou mana em 0 deixa o NPC morto (a ficha avisa). Excluir um NPC apaga os itens que estão com ele.</p>
     </>
   );
 }
@@ -256,7 +285,7 @@ export function MestreSessao() {
       <h2>Fichas dos membros</h2>
       <p>Na página do grupo você vê todos os membros com vida, mana e esforço. Clique num membro para abrir a ficha. Na ficha você pode:</p>
       <ul>
-        <li>Ajustar vida, mana e esforço atuais: digite a quantidade e use Tirar ou Somar (ex.: 7 de dano de uma vez), ou digite o valor. O jogador também pode.</li>
+        <li>Ajustar vida, mana e esforço atuais: digite a quantidade e use Tirar ou Somar (ex.: 7 de dano de uma vez), ou digite o valor. O jogador também pode, mas a vida ele só diminui: aumentar é com você.</li>
         <li>Aplicar e remover status (veja <Link to="/docs/mestre-status">Status na sessão</Link>). Vida ou mana em 0 mostra o aviso de morte.</li>
         <li>Ver atributos, perícias com o teste pronto (ex.: 2d20 + 5) e as cartas disponíveis no nível atual.</li>
         <li>Editar nome, imagem e história do personagem.</li>
@@ -302,6 +331,7 @@ export function MestreStatus() {
         </li>
         <li>Na ficha do personagem há a mesma coisa, no quadro <strong>Status</strong> logo abaixo do cabeçalho.</li>
         <li>Se nenhum status aparece para aplicar, é porque o grupo não tem status ativados: marque em Editar grupo, seção Status.</li>
+        <li>NPCs e criaturas também recebem status: na ficha do NPC e na ficha da criatura (toque nela na página do grupo).</li>
         <li>Ao criar uma carta de habilidade, use o campo <strong>Ativa status</strong> para indicar o status que ela causa. Quando a carta for usada, aplique na ficha do alvo.</li>
       </ul>
     </>
@@ -320,7 +350,7 @@ export function MestreSubirNivel() {
         <li>as cartas daquele nível;</li>
         <li>+{r.ficha.inventarioPorNivel} espaços no inventário.</li>
       </ul>
-      <Destaque tipo="aviso" titulo="Atenção">Não existe descer de nível: subir é definitivo. Confira antes de confirmar.</Destaque>
+      <Destaque tipo="aviso" titulo="Atenção">Não existe descer de nível: subir é definitivo. Confira antes de confirmar. O nível máximo é {r.progressao.nivelMaximo}.</Destaque>
     </>
   );
 }
@@ -381,7 +411,7 @@ export function JogadorFicha() {
       <Tabela
         cabecalho={["Parte", "O que dá para fazer"]}
         linhas={[
-          ["Recursos", "Ajustar vida, mana e esforço atuais com os botões ou digitando."],
+          ["Recursos", "Ajustar vida, mana e esforço atuais com os botões ou digitando. A vida você só diminui: aumentar (curar) é com o mestre."],
           ["Atributos", "Ver quantos d20 rolar em cada atributo."],
           ["Perícias", "Ver o teste pronto (ex.: 2d20 + 5), o total e de onde vem cada ponto. Depois de subir de nível, usar os pontos de perícia."],
           ["Habilidades", "Cartas pequenas em grade: toque numa para ver tudo. Mostra as do seu nível e quantas ainda vão liberar."],

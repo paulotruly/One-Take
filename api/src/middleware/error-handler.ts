@@ -22,7 +22,7 @@ export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
   }
   // Exclusão bloqueada por FK RESTRICT (ex.: classe/raça/perícia usada por fichas).
   if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2003") {
-    res.status(409).json({ error: { code: "EM_USO", message: "Não é possível excluir: está sendo usado por fichas de personagens." } });
+    res.status(409).json({ error: { code: "EM_USO", message: "Não é possível excluir: está sendo usado por fichas de personagens ou NPCs." } });
     return;
   }
   // JSON malformado no corpo (body-parser).

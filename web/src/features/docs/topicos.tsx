@@ -45,6 +45,7 @@ export const SECOES: Secao[] = [
       { slug: "mestre-catalogo", titulo: "Perícias e atributos", resumo: "Seu catálogo próprio.", Conteudo: mestre.MestreCatalogo },
       { slug: "mestre-racas", titulo: "Criando raças", Conteudo: mestre.MestreRacas },
       { slug: "mestre-classes", titulo: "Criando classes e cartas", Conteudo: mestre.MestreClasses },
+      { slug: "mestre-npcs", titulo: "NPCs", resumo: "Personagens do mestre com ficha e inventário.", Conteudo: mestre.MestreNpcs },
       { slug: "mestre-bestiario", titulo: "Bestiário", resumo: "Criando criaturas para invocar nos grupos.", Conteudo: mestre.MestreBestiario },
       { slug: "mestre-itens", titulo: "Itens", resumo: "O catálogo de itens e como lançar.", Conteudo: mestre.MestreItens },
       { slug: "mestre-exclusividade", titulo: "Geral ou exclusivo", resumo: "Restringir classes, raças, atributos, itens e criaturas a um grupo.", Conteudo: mestre.MestreExclusividade },

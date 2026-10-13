@@ -7,7 +7,8 @@ import { ErrorState, Loading } from "../../../components/ui/States";
 import { mensagemDeErro } from "../../../lib/api";
 import { HabilidadesDeck } from "../../classes/components/HabilidadesDeck";
 import { BarraRecurso } from "../../fichas/components/BarraRecurso";
-import { useCriatura, useEditarCriatura, useRemoverCriatura } from "../api";
+import { PainelStatus } from "../../status/components/PainelStatus";
+import { useAplicarStatusCriatura, useCriatura, useEditarCriatura, useRemoverCriatura, useRemoverStatusCriatura } from "../api";
 
 type Props = {
   criaturaId: string | null;
@@ -20,6 +21,8 @@ export function CriaturaModal({ criaturaId, onFechar, onSumiu }: Props) {
   const criatura = useCriatura(criaturaId);
   const editar = useEditarCriatura();
   const remover = useRemoverCriatura();
+  const aplicarStatus = useAplicarStatusCriatura(criaturaId ?? "");
+  const removerStatus = useRemoverStatusCriatura(criaturaId ?? "");
   const c = criatura.data;
 
   function mudar(dados: { vidaAtual?: number; manaAtual?: number; esforcoAtual?: number }) {
@@ -47,7 +50,16 @@ export function CriaturaModal({ criaturaId, onFechar, onSumiu }: Props) {
             <BarraRecurso rotulo="Mana" Icone={Droplet} tipo="mana" atual={c.mana.atual} max={c.mana.max} editavel ocupado={editar.isPending} onMudar={(v) => mudar({ manaAtual: v })} />
             <BarraRecurso rotulo="Esforço" Icone={Zap} tipo="esforco" atual={c.esforco.atual} max={c.esforco.max} editavel ocupado={editar.isPending} onMudar={(v) => mudar({ esforcoAtual: v })} />
           </div>
-          <p className="pagina__subtitulo">Vida ou mana em 0: a criatura morre e some do grupo sozinho.</p>
+          <p className="pagina__subtitulo">Vida ou mana em 0: a criatura morre e some do grupo sozinha.</p>
+          <PainelStatus
+            status={c.statusDetalhado}
+            aplicaveis={c.statusAplicaveis}
+            onAplicar={(id) => aplicarStatus.mutate(id)}
+            onRemover={(id) => removerStatus.mutate(id)}
+            ocupado={aplicarStatus.isPending || removerStatus.isPending}
+            semAplicaveis="Nenhum status para aplicar: ative status no grupo (Editar grupo)."
+          />
+          {(aplicarStatus.isError || removerStatus.isError) && <div className="aviso">{mensagemDeErro(aplicarStatus.error ?? removerStatus.error)}</div>}
 
           {c.atributos.length > 0 && (
             <div>

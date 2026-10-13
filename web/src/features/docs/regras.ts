@@ -5,6 +5,7 @@ import { api } from "../../lib/api";
 export type Regras = {
   progressao: {
     nivelInicial: number;
+    nivelMaximo: number;
     ganhoPorNivel: { pontosVida: number; pontosMana: number; pontosEsforco: number; pontosPericia: number };
   };
   ficha: { pontosAtributoIniciais: number; inventarioInicial: number; inventarioPorNivel: number };
@@ -23,7 +24,7 @@ export type Regras = {
 
 /** Usado só enquanto /api/regras carrega (mesmos valores da regra atual). */
 const PADRAO: Regras = {
-  progressao: { nivelInicial: 1, ganhoPorNivel: { pontosVida: 5, pontosMana: 5, pontosEsforco: 5, pontosPericia: 5 } },
+  progressao: { nivelInicial: 1, nivelMaximo: 100, ganhoPorNivel: { pontosVida: 5, pontosMana: 5, pontosEsforco: 5, pontosPericia: 5 } },
   ficha: { pontosAtributoIniciais: 3, inventarioInicial: 5, inventarioPorNivel: 2 },
   teste: { ladosDoDado: 20, dadosComAtributoZero: 1, divisorComAtributoZero: 2, esforcoPorDadoExtra: 1, esforcoComAtributoZero: false, chances: [] },
   atributosFixos: [

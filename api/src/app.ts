@@ -21,6 +21,7 @@ import { bestasRouter } from "./modules/bestas/bestas.routes.js";
 import { criaturasRouter } from "./modules/criaturas/criaturas.routes.js";
 import { catalogoItensRouter } from "./modules/itens/catalogo.routes.js";
 import { categoriasItemRouter } from "./modules/itens/categorias.js";
+import { npcsRouter } from "./modules/npcs/npcs.routes.js";
 
 export function criarApp({ corsOrigin }: { corsOrigin: string[] }) {
   const app = express();
@@ -55,7 +56,7 @@ export function criarApp({ corsOrigin }: { corsOrigin: string[] }) {
   });
   mestre.use(
     classesRouter, habilidadesRouter, periciasRouter, racasRouter, atributosRouter, gruposRouter, statusRouter, conceitosRouter,
-    bestasRouter, criaturasRouter, catalogoItensRouter, categoriasItemRouter,
+    bestasRouter, criaturasRouter, catalogoItensRouter, categoriasItemRouter, npcsRouter,
   );
   api.use(mestre);
 

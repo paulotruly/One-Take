@@ -39,9 +39,12 @@ export const criarModeloSchema = comDefaults.extend({ grupoExclusivoId: grupoExc
 export const editarModeloSchema = campos.extend({ grupoExclusivoId: grupoExclusivoSchema }).partial();
 
 export const lancarSchema = z.object({
-  grupoId: z.guid("Escolha o grupo"),
+  /** Grupo onde o item entra (obrigatório, a não ser que vá para um NPC). */
+  grupoId: z.guid("Escolha o grupo").optional(),
   /** Ficha que recebe; ausente/nulo = fica vago no grupo. */
   fichaId: z.guid().nullish(),
+  /** NPC que recebe (no lugar de grupo/ficha). */
+  npcId: z.guid("NPC inválido").optional(),
   quantidade: inteiro(1, 20).default(1),
 });
 
@@ -57,6 +60,10 @@ export const editarItemSchema = campos.partial().extend({
 });
 
 export const moverItemSchema = z.object({
-  /** Ficha de destino; nulo = descartar (fica vago no grupo). */
+  /** Ficha de destino; nulo = fica vago no grupo. */
   fichaId: z.guid().nullable(),
+  /** NPC de destino (só o mestre). */
+  npcId: z.guid("NPC inválido").optional(),
+  /** Grupo onde o item fica vago (só o mestre; necessário para item de NPC sem grupo). */
+  grupoId: z.guid("Grupo inválido").optional(),
 });

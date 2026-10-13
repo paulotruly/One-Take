@@ -16,6 +16,31 @@ export async function statusUsavel(id: string, usuarioId: string) {
   return status;
 }
 
+/**
+ * Status que valem para um personagem: os ativados no grupo dele; sem grupo (NPC geral), todos os do mestre (fixos + próprios).
+ */
+export async function statusDisponiveis(mestreId: string, grupoId: string | null) {
+  const prisma = getPrisma();
+  if (grupoId) return (await prisma.statusNoGrupo.findMany({ where: { grupoId }, include: { status: true } })).map((s) => s.status);
+  return prisma.status.findMany({ where: { OR: [{ donoId: null }, { donoId: mestreId }] } });
+}
+
+/** Status manuais que ainda podem ser aplicados (disponíveis, não automáticos, ainda não aplicados), ordenados. */
+export function statusAplicaveis(disponiveis: Status[], aplicadosIds: string[]) {
+  return disponiveis
+    .filter((st) => !st.gatilho && !aplicadosIds.includes(st.id))
+    .map(apresentarStatus)
+    .sort((a, b) => a.ordem - b.ordem || a.nome.localeCompare(b.nome, "pt-BR"));
+}
+
+/** Confere se o status pode ser aplicado manualmente ali (existe, é do mestre, não é automático, está disponível). */
+export async function validarAplicacao(statusId: string, mestreId: string, disponiveis: Status[]) {
+  const status = await statusUsavel(statusId, mestreId);
+  if (status.gatilho) throw new AppError(400, "REQUISICAO_INVALIDA", "Este status é automático: ele aparece sozinho pelos recursos.");
+  if (!disponiveis.some((d) => d.id === statusId)) throw new AppError(400, "REQUISICAO_INVALIDA", "Este status não está ativado no grupo.");
+  return status;
+}
+
 async function statusEditavel(id: string, usuarioId: string) {
   const status = await statusUsavel(id, usuarioId);
   if (status.donoId === null) throw new AppError(403, "STATUS_FIXO", "Status fixos do sistema não podem ser alterados.");

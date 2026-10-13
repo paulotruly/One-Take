@@ -61,7 +61,7 @@ fichasRouter.delete("/fichas/:id/status/:statusId", async (req, res) => {
 
 // ---------- Itens ----------
 fichasRouter.post("/itens/:id/mover", async (req, res) => {
-  const { fichaId: destino } = moverItemSchema.parse(req.body);
+  const destino = moverItemSchema.parse(req.body);
   res.json(await itens.mover(itemId(req.params.id), usuarioDe(req).id, destino));
 });
 

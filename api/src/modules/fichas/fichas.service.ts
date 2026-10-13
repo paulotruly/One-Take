@@ -1,7 +1,6 @@
 // Fichas de personagem. O jogador cria a ficha dentro de um grupo usando o código de entrada.
 // Quem pode ver/editar: o dono da ficha e o mestre do grupo. Nível: só o mestre.
 import type { z } from "zod";
-import type { Atributo, Pericia } from "../../generated/prisma/client.js";
 import { AppError, conflito, naoEncontrado, proibido, requisicaoInvalida } from "../../lib/errors.js";
 import { getPrisma } from "../../lib/prisma.js";
 import { regrasPadraoAtivas } from "../../regras/combate.js";
@@ -10,7 +9,8 @@ import { notacaoDoTeste } from "../../regras/teste.js";
 import { apresentarItem, comRequisitos } from "../itens/itens.apresentar.js";
 import { aplicarAprimoramentos, atributosNoNivel, habilidadesNoNivel, PROGRESSAO } from "../../regras/progressao.js";
 import { comStatus } from "../habilidades/habilidades.include.js";
-import { apresentarAtributo, porAtributoENome } from "../atributos/atributos.service.js";
+import { apresentarAtributo } from "../atributos/atributos.service.js";
+import { copiasDoCatalogo, somarPericias, testeDaCarta } from "../pericias/soma.js";
 import { apresentarClasse, apresentarPericias } from "../classes/classes.service.js";
 import { apresentarStatus, statusUsavel } from "../status/status.service.js";
 import { estaMorto } from "../../regras/status.js";
@@ -157,11 +157,6 @@ export async function listarMinhas(usuarioId: string) {
   }));
 }
 
-type LinhaPericia = {
-  id: string; nome: string; descricao: string; categoria: Pericia["categoria"];
-  atributo: ReturnType<typeof apresentarAtributo>; raca: number; classe: number; nivel: number; total: number;
-};
-
 /** Ficha completa com tudo calculado pelas regras: máximos, cartas do nível, perícias somadas, inventário. */
 export async function detalhar(id: string, usuarioId: string) {
   const { souMestre } = await fichaAcessivel(id, usuarioId);
@@ -195,28 +190,15 @@ export async function detalhar(id: string, usuarioId: string) {
     },
   });
 
-  // Classes fixas usam perícias base; elas contam como a cópia do catálogo do mestre (mesma origem).
-  const copias = await prisma.pericia.findMany({ where: { donoId: f.grupo.mestreId, origemId: { not: null } }, select: { id: true, origemId: true } });
-  const copiaDe = new Map(copias.map((c) => [c.origemId!, c.id]));
-  const linhas = new Map<string, LinhaPericia>();
-  function somar(p: Pericia & { atributo: Atributo }, fonte: "raca" | "classe" | "nivel", valor: number) {
-    const chave = p.donoId === null ? (copiaDe.get(p.id) ?? p.id) : p.id;
-    const l = linhas.get(chave) ?? {
-      id: chave, nome: p.nome, descricao: p.descricao, categoria: p.categoria, atributo: apresentarAtributo(p.atributo),
-      raca: 0, classe: 0, nivel: 0, total: 0,
-    };
-    l[fonte] += valor;
-    l.total += valor;
-    linhas.set(chave, l);
-  }
-  f.raca.pericias.forEach((rp) => somar(rp.pericia, "raca", rp.pontos));
-  f.classe.pericias.forEach((cp) => somar(cp.pericia, "classe", cp.modificador));
-  f.pericias.forEach((fp) => somar(fp.pericia, "nivel", fp.pontos));
+  const copiaDe = await copiasDoCatalogo(f.grupo.mestreId);
+  const linhas = somarPericias(["raca", "classe", "nivel"] as const, [
+    ...f.raca.pericias.map((rp) => ({ pericia: rp.pericia, fonte: "raca" as const, valor: rp.pontos })),
+    ...f.classe.pericias.map((cp) => ({ pericia: cp.pericia, fonte: "classe" as const, valor: cp.modificador })),
+    ...f.pericias.map((fp) => ({ pericia: fp.pericia, fonte: "nivel" as const, valor: fp.pontos })),
+  ], copiaDe);
   const dadosPorAtributo = new Map(f.atributos.map((fa) => [fa.atributoId, fa.dados]));
   // Teste de cada perícia: d20 do atributo dela + total da perícia (regras/teste.ts).
-  const pericias = [...linhas.values()]
-    .sort(porAtributoENome)
-    .map((p) => ({ ...p, teste: notacaoDoTeste(dadosPorAtributo.get(p.atributo.id) ?? 0, p.total) }));
+  const pericias = linhas.map((p) => ({ ...p, teste: notacaoDoTeste(dadosPorAtributo.get(p.atributo.id) ?? 0, p.total) }));
   const periciasComPontos = new Set(pericias.filter((p) => p.total > 0).map((p) => p.id));
 
   // Onde gastar pontos de nível: perícias do grupo + as que a ficha já tem.
@@ -262,7 +244,10 @@ export async function detalhar(id: string, usuarioId: string) {
     custoPericia: PROGRESSAO.ganhoPorNivel.pontosPericia,
     opcoesPericia: [...opcoes.values()].sort((a, b) => a.atributo.localeCompare(b.atributo, "pt-BR") || a.nome.localeCompare(b.nome, "pt-BR")),
     /** Cartas do nível, já com os aprimoramentos que valem até o nível da ficha. */
-    habilidades: habilidadesNoNivel(habilidades, f.nivel).map((h) => aplicarAprimoramentos(h, f.nivel)),
+    habilidades: habilidadesNoNivel(habilidades, f.nivel).map((h) => ({
+      ...aplicarAprimoramentos(h, f.nivel),
+      teste: testeDaCarta(h, new Map(linhas.map((l) => [l.id, l.total])), dadosPorAtributo, copiaDe),
+    })),
     proximasHabilidades: habilidades.filter((h) => h.nivelNecessario > f.nivel).length,
     inventario: {
       capacidade: capacidadeInventario(f.nivel),
@@ -289,12 +274,19 @@ export async function detalhar(id: string, usuarioId: string) {
 
 // ---------- Alterar ----------
 
-/** Jogador dono ou mestre: nome, história, imagem e vida/mana/esforço atuais (limitados entre 0 e o máximo). */
+/**
+ * Jogador dono ou mestre: nome, história, imagem e vida/mana/esforço atuais (limitados entre 0 e o máximo).
+ * O jogador pode diminuir a vida, mas só o mestre aumenta (cura é decisão da mesa).
+ */
 export async function editar(id: string, usuarioId: string, dados: z.infer<typeof editarFichaSchema>) {
-  const { ficha } = await fichaAcessivel(id, usuarioId);
+  const { ficha, souMestre } = await fichaAcessivel(id, usuarioId);
   const classe = await getPrisma().classe.findUniqueOrThrow({ where: { id: ficha.classeId } });
   const max = atributosNoNivel(classe, ficha.nivel);
   const limitar = (v: number | undefined, m: number) => (v === undefined ? undefined : Math.min(Math.max(v, 0), m));
+  const vidaHoje = Math.min(ficha.vidaAtual, max.pontosVida);
+  if (!souMestre && dados.vidaAtual !== undefined && limitar(dados.vidaAtual, max.pontosVida)! > vidaHoje) {
+    throw new AppError(403, "SO_MESTRE_CURA", "Só o mestre aumenta a vida. Você pode diminuir.");
+  }
   await getPrisma().ficha.update({
     where: { id },
     data: {
@@ -311,6 +303,7 @@ export async function editar(id: string, usuarioId: string, dados: z.infer<typeo
 export async function subirNivel(id: string, usuarioId: string) {
   const { ficha, souMestre } = await fichaAcessivel(id, usuarioId);
   if (!souMestre) throw proibido("Só o mestre do grupo sobe o nível.");
+  if (ficha.nivel >= PROGRESSAO.nivelMaximo) throw new AppError(409, "NIVEL_MAXIMO", `O nível máximo é ${PROGRESSAO.nivelMaximo}.`);
   const g = PROGRESSAO.ganhoPorNivel;
   await getPrisma().ficha.update({
     where: { id },

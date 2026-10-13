@@ -21,6 +21,8 @@
   (criaturas como classes, arquétipo de criatura, invocar no grupo, morte automática); cartas em grade com pop-up; status visível na
   ficha e no grupo; ficha e inventário para celular; skill de balanceamento e scripts `fixar-classe` e `exportar`.
 
+- NPCs com ficha (raça, classe opcional, nível, dados, perícias, cartas, inventário), gerais ou exclusivos de um grupo.
+
 ## Em andamento
 - Instruções de deploy (Render, Vercel).
 
@@ -28,7 +30,6 @@
 - Sessões, rolagem de dados no app (com gasto de esforço), combate.
 
 ## Ideias em aberto
-- O que fazer ao excluir uma classe usada por fichas (bloquear? arquivar? soft delete?).
 - Drag-and-drop para reordenar cartas (hoje: botões de seta).
 - Upload de imagem para o Supabase Storage (hoje é só link externo).
 - Testes de integração contra um Postgres real (ex.: branch do Supabase ou container).

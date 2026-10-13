@@ -1,7 +1,7 @@
-import { Activity, Backpack, ChevronDown, Crown, Gamepad2, Layers, ListChecks, LogOut, Menu, PawPrint, ScrollText, Shield, UserPen, Users, X, type LucideIcon } from "lucide-react";
+import { Activity, Backpack, ChevronDown, Crown, Gamepad2, Layers, ListChecks, LogOut, Menu, PawPrint, ScrollText, Shield, UserPen, UserRound, Users, X, type LucideIcon } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, Outlet, useLocation } from "react-router";
-import { lembrarInterface, useAuth, useMe, type Papel } from "../auth/AuthProvider";
+import { interfaceLembrada, lembrarInterface, useAuth, useMe, type Papel } from "../auth/AuthProvider";
 import { Avatar } from "../components/ui/Avatar";
 import { Button } from "../components/ui/Button";
 import { Marca } from "../components/ui/Marca";
@@ -13,6 +13,7 @@ const LINKS: Record<Papel, LinkTopo[]> = {
     { to: "/mestre/grupos", rotulo: "Grupos", Icone: Shield, ativoEm: /^\/mestre\/(grupos|fichas)/ },
     { to: "/mestre", rotulo: "Classes", Icone: Layers, ativoEm: /^\/mestre(\/classes.*)?\/?$/ },
     { to: "/mestre/racas", rotulo: "Raças", Icone: Users, ativoEm: /^\/mestre\/racas/ },
+    { to: "/mestre/npcs", rotulo: "NPCs", Icone: UserRound, ativoEm: /^\/mestre\/npcs/ },
     { to: "/mestre/bestiario", rotulo: "Bestiário", Icone: PawPrint, ativoEm: /^\/mestre\/bestiario/ },
     { to: "/mestre/itens", rotulo: "Itens", Icone: Backpack, ativoEm: /^\/mestre\/itens/ },
     { to: "/mestre/pericias", rotulo: "Perícias", Icone: ListChecks, ativoEm: /^\/mestre\/pericias/ },
@@ -31,7 +32,14 @@ export function AppLayout() {
   const { sair } = useAuth();
   const me = useMe();
   const { pathname } = useLocation();
-  const area: Papel = pathname.startsWith("/mestre") ? "MESTRE" : "JOGADOR";
+  // Em páginas comuns (perfil, ativar mestre) continua a interface em que a pessoa estava.
+  const area: Papel = pathname.startsWith("/mestre")
+    ? "MESTRE"
+    : pathname.startsWith("/jogador")
+      ? "JOGADOR"
+      : me.data?.papel === "MESTRE" && interfaceLembrada() === "MESTRE"
+        ? "MESTRE"
+        : "JOGADOR";
   const links = me.data ? LINKS[area] : [];
   const ehMestre = me.data?.papel === "MESTRE";
 

@@ -16,6 +16,7 @@ Classe / Raca / Atributo / ItemModelo / Besta .grupoExclusivoId? >── Grupo  
 Perfil 1 ──< RacaConceito 1 ──< Raca (conceitoId?) ;  Perfil 1 ──< BestaConceito 1 ──< Besta (conceitoId?)
 Perfil 1 ──< ItemModelo 1 ──< Item (modeloId?, cópia dos campos)
 Perfil 1 ──< Besta 1 ──< Habilidade (bestaId) / BestaPericia (modificador) / BestaAtributo (dados)
+Perfil 1 ──< Npc >── Raca, Classe? ; Npc 1 ──< NpcAtributo (dados) / NpcPericia (pontos extras) / Item (npcId)
 Grupo 1 ──< Criatura >── Besta   (criatura invocada: nível e recursos atuais)
 ```
 
@@ -24,7 +25,7 @@ Grupo 1 ──< Criatura >── Besta   (criatura invocada: nível e recursos a
 |---|---|---|
 | `Perfil` | `id` (= `auth.users.id`), `email` (interno `<nick>@one-take.local` para contas do app), `nickname` (único), `papel`, `nome?`, `fotoUrl?` | Criado no 1º acesso à API com o papel e nome escolhidos no cadastro |
 | `Classe` | `grupo`, `titulo`, `descricao`, `imagemUrl?`, `pontosVida`, `pontosMana`, `pontosEsforco`, `donoId?`, `origemId?` | `donoId` nulo = fixa |
-| `Habilidade` | `classeId?` **ou** `bestaId?` (CHECK: exatamente um), `titulo`, `descricao`, `condicao?`, `tipoEfeito` (enum `TipoEfeito`), `descricaoEfeito`, `limite?`, `nivelNecessario` (≥1, padrão 1), `custoMana` (≥0, padrão 0 = sem custo), `ordem` | Cartela de classe ou de criatura |
+| `Habilidade` | `classeId?` **ou** `bestaId?` (CHECK: exatamente um), `titulo`, `descricao`, `condicao?`, `tipoEfeito` (enum `TipoEfeito`), `periciaId?` (perícia do teste, SetNull), `descricaoEfeito`, `limite?`, `nivelNecessario` (≥1, padrão 1), `custoMana` (≥0, padrão 0 = sem custo), `ordem` | Cartela de classe ou de criatura |
 | `Pericia` | `nome`, `descricao`, `categoria`, `atributoId`, `donoId?`, `origemId?` | Catálogo. `donoId` nulo = base do sistema. Nome único por dono |
 | `ClassePericia` | `classeId`, `periciaId`, `modificador` | Perícia que a classe tem. PK composta |
 | `Atributo` | `nome`, `descricao`, `ordem`, `donoId?` | `donoId` nulo = fixo (Capacidade física, Carisma, Conhecimento). Nome único por dono |
@@ -38,7 +39,10 @@ Grupo 1 ──< Criatura >── Besta   (criatura invocada: nível e recursos a
 | `FichaPericia` | `fichaId`, `periciaId`, `pontos` | pontos de nível gastos |
 | `CategoriaItem` | `nome`, `descricao`, `icone` (chave da lista `ICONES_ITEM`), `ordem`, `donoId?` | `donoId` nulo = fixa (ids `...8004-1..4`); nome único por dono |
 | `ItemModelo` | `donoId`, `categoriaId?`, `nome`, `descricao`, `imagemUrl?`, `efeito?`, `espacos` (≥1), `usosMaximos?` (≥1; nulo = sem limite), `requisito?`, `requisitoPericiaId?`, `requisitoClasseId?`, `grupoExclusivoId?` | Catálogo de itens do mestre (molde) |
-| `Item` | `grupoId`, `fichaId?`, `modeloId?`, mesmos campos do molde + `usosRestantes?` | `fichaId` nulo = vago no grupo. Cópia do molde ao lançar |
+| `Item` | `grupoId?`, `fichaId?`, `npcId?`, `modeloId?`, mesmos campos do molde + `usosRestantes?` | Com ficha ou NPC = no inventário; nenhum = vago no grupo. CHECK: tem grupo ou NPC; não está com ficha e NPC ao mesmo tempo |
+| `Npc` | `donoId`, `nome`, `descricao`, `imagemUrl?`, `racaId`, `classeId?`, `nivel` (≥1), `vidaBase?`/`manaBase?`/`esforcoBase?` (obrigatórios sem classe, CHECK), `vidaAtual`, `manaAtual`, `esforcoAtual`, `grupoExclusivoId?` | Raça e classe com `RESTRICT` (409 `EM_USO`) |
+| `NpcStatus` / `CriaturaStatus` | `npcId`/`criaturaId`, `statusId`, `aplicadoEm` | status aplicados pelo mestre |
+| `NpcAtributo` / `NpcPericia` | `npcId` + `atributoId`/`periciaId`, `dados`/`pontos` | d20 por atributo / pontos extras na perícia |
 | `Besta` | `donoId`, `titulo`, `descricao`, `imagemUrl?`, `pontosVida/Mana/Esforco` (≥1), `deslocamento` (≥1), `conceitoId?`, `grupoExclusivoId?` | Criatura do bestiário |
 | `BestaConceito` | `donoId`, `titulo`, `descricao` | criatura generalista com formas |
 | `BestaPericia` | `bestaId`, `periciaId`, `modificador` | PK composta |
@@ -112,3 +116,5 @@ Nomes no código x na interface: `ClasseConceito`/`RacaConceito`/`BestaConceito`
 - **Categoria de item como tabela** (era enum até a migration `categorias_de_item`, que converteu os valores para as 4 fixas).
   `categoriaId` é SetNull: apagar a categoria não apaga itens.
 - **Itens e criaturas não têm tabelas `*NoGrupo`**: ficam sempre disponíveis ao mestre; só a exclusividade (`grupoExclusivoId`) restringe.
+- **Soma de perícias numa função só** (`api/src/modules/pericias/soma.ts`): ficha, NPC e pré-requisito de item usam `somarPericias`;
+  o teste de uma carta para um personagem sai de `testeDaCarta`.

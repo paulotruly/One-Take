@@ -91,6 +91,11 @@ export type Habilidade = {
   custoMana: number;
   /** Status que a carta ativa (opcional). */
   statusId: string | null;
+  /** Perícia que o personagem testa para usar a carta (opcional). */
+  periciaId: string | null;
+  pericia?: { id: string; nome: string; atributo: { id: string; nome: string } } | null;
+  /** Na ficha (personagem, NPC ou criatura): o teste pronto para usar a carta. */
+  teste?: { pericia: string; atributo: string; teste: string } | null;
   status?: { id: string; nome: string; tipo: "BUFF" | "DEBUFF" | "MISTO" } | null;
   aprimoramentos?: Aprimoramento[];
   /** Na ficha: a partir de que nível vale a versão mostrada (null = carta original). */
@@ -124,7 +129,7 @@ export type ClasseInput = Pick<
   Classe,
   "grupo" | "titulo" | "descricao" | "imagemUrl" | "pontosVida" | "pontosMana" | "pontosEsforco"
 > & { grupoExclusivoId: string | null; conceitoId: string | null };
-export type HabilidadeInput = Omit<Habilidade, "id" | "classeId" | "bestaId" | "ordem" | "status" | "aprimoramentos" | "aprimoradaNoNivel" | "proximoAprimoramento">;
+export type HabilidadeInput = Omit<Habilidade, "id" | "classeId" | "bestaId" | "ordem" | "status" | "pericia" | "teste" | "aprimoramentos" | "aprimoradaNoNivel" | "proximoAprimoramento">;
 
 export const GRUPOS: Grupo[] = ["COMBATENTE", "VANGUARDISTA", "SUPORTE"];
 export const ROTULO_GRUPO: Record<Grupo, string> = {

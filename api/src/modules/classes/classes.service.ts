@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import type { z } from "zod";
 import type { Atributo, Classe, ClassePericia, GrupoClasse, Pericia } from "../../generated/prisma/client.js";
 import { classeFixa, naoEncontrado } from "../../lib/errors.js";
-import { aplicarExclusividade, validarGrupoExclusivo } from "../../lib/exclusividade.js";
+import { aplicarExclusividade, garantirExclusividadePossivel, validarGrupoExclusivo } from "../../lib/exclusividade.js";
 import { getPrisma } from "../../lib/prisma.js";
 import { previaProgressao } from "../../regras/progressao.js";
 import { apresentarAtributo, porAtributoENome } from "../atributos/atributos.service.js";
@@ -96,6 +96,7 @@ export async function criar(usuarioId: string, dados: z.infer<typeof criarClasse
 export async function editar(id: string, usuarioId: string, dados: z.infer<typeof editarClasseSchema>) {
   await classeEditavel(id, usuarioId);
   await validarGrupoExclusivo(dados.grupoExclusivoId, usuarioId);
+  await garantirExclusividadePossivel("classe", id, dados.grupoExclusivoId);
   await validarConceito(dados.conceitoId, usuarioId);
   const classe = await getPrisma().classe.update({ where: { id }, data: dados });
   await aplicarExclusividade("classe", id, dados.grupoExclusivoId);
@@ -117,8 +118,13 @@ export async function duplicar(id: string, usuarioId: string) {
   const prisma = getPrisma();
   const origem = await prisma.classe.findUniqueOrThrow({
     where: { id },
-    include: { habilidades: { include: { aprimoramentos: true } }, pericias: { include: { pericia: true } } },
+    include: { habilidades: { include: { aprimoramentos: true, pericia: true } }, pericias: { include: { pericia: true } } },
   });
+  // Perícias testadas pelas cartas também passam a apontar para o catálogo do mestre.
+  const periciaDaCarta = new Map<string, string>();
+  for (const h of origem.habilidades) {
+    if (h.pericia && !periciaDaCarta.has(h.pericia.id)) periciaDaCarta.set(h.pericia.id, await periciaNoCatalogo(h.pericia, usuarioId));
+  }
 
   const vinculos: { periciaId: string; modificador: number }[] = [];
   for (const { modificador, pericia } of origem.pericias) {
@@ -140,8 +146,9 @@ export async function duplicar(id: string, usuarioId: string) {
       origemId: origem.id,
       conceitoId: origem.donoId === usuarioId ? origem.conceitoId : null,
       habilidades: {
-        create: origem.habilidades.map(({ id: _id, classeId: _c, aprimoramentos, ...h }) => ({
+        create: origem.habilidades.map(({ id: _id, classeId: _c, aprimoramentos, pericia: _p, ...h }) => ({
           ...h,
+          periciaId: h.periciaId ? (periciaDaCarta.get(h.periciaId) ?? null) : null,
           aprimoramentos: { create: aprimoramentos.map(({ id: _a, habilidadeId: _h, criadoEm: _d, ...a }) => a) },
         })),
       },

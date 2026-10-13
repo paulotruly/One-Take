@@ -1,5 +1,5 @@
-// Container: o mestre escolhe um item do catálogo e lança no grupo (vago) ou direto numa ficha.
-// Usado na página do grupo e na ficha do personagem.
+// Container: o mestre escolhe um item do catálogo e lança no grupo (vago), direto numa ficha ou no inventário de um NPC.
+// Usado na página do grupo, na ficha do personagem e na ficha do NPC.
 import { useState } from "react";
 import { Link } from "react-router";
 import { Button } from "../../../components/ui/Button";
@@ -12,7 +12,10 @@ import { ItemDetalhe, ItemLinha } from "../components/ItemCartao";
 import type { ItemModelo } from "../types";
 
 type Props = {
-  grupoId: string;
+  /** Grupo onde o item entra (para NPC: o grupo exclusivo dele, ou null se for geral). */
+  grupoId: string | null;
+  /** Lançar direto no inventário deste NPC (no lugar de escolher ficha). */
+  npc?: { id: string; nome: string };
   aberto: boolean;
   onFechar: () => void;
   /** Fichas que podem receber. */
@@ -21,8 +24,8 @@ type Props = {
   destinoInicial?: string | null;
 };
 
-export function LancarItemModal({ grupoId, aberto, onFechar, destinos, destinoInicial = null }: Props) {
-  const catalogo = useCatalogoItens(grupoId);
+export function LancarItemModal({ grupoId, npc, aberto, onFechar, destinos, destinoInicial = null }: Props) {
+  const catalogo = useCatalogoItens(grupoId ?? undefined);
   const lancar = useLancarItem();
   const categorias = useCategoriasItem();
   const [categoria, setCategoria] = useState<string | undefined>(undefined);
@@ -38,7 +41,8 @@ export function LancarItemModal({ grupoId, aberto, onFechar, destinos, destinoIn
     onFechar();
   }
 
-  const lista = (catalogo.data ?? []).filter((i) => !categoria || i.categoria?.id === categoria);
+  // NPC geral (sem grupo) só recebe itens gerais.
+  const lista = (catalogo.data ?? []).filter((i) => (!categoria || i.categoria?.id === categoria) && (grupoId || !i.grupoExclusivoId));
 
   return (
     <Modal aberto={aberto} onFechar={fechar} titulo={escolhido ? `Lançar: ${escolhido.nome}` : "Lançar item do catálogo"}>
@@ -70,12 +74,16 @@ export function LancarItemModal({ grupoId, aberto, onFechar, destinos, destinoIn
       ) : (
         <div className="form">
           <ItemDetalhe item={escolhido} />
-          <Field rotulo="Para quem">
-            <select value={destino} onChange={(e) => setDestino(e.target.value)}>
-              <option value="">Ninguém (vago no grupo)</option>
-              {destinos.map((d) => <option key={d.id} value={d.id}>{d.rotulo}</option>)}
-            </select>
-          </Field>
+          {npc ? (
+            <p className="pagina__subtitulo">Vai para o inventário de <strong>{npc.nome}</strong>.</p>
+          ) : (
+            <Field rotulo="Para quem">
+              <select value={destino} onChange={(e) => setDestino(e.target.value)}>
+                <option value="">Ninguém (vago no grupo)</option>
+                {destinos.map((d) => <option key={d.id} value={d.id}>{d.rotulo}</option>)}
+              </select>
+            </Field>
+          )}
           <Field rotulo="Quantidade">
             <input type="number" min={1} max={20} step={1} inputMode="numeric" value={quantidade} onChange={(e) => setQuantidade(e.target.value)} />
           </Field>
@@ -87,10 +95,12 @@ export function LancarItemModal({ grupoId, aberto, onFechar, destinos, destinoIn
               disabled={lancar.isPending}
               onClick={() =>
                 lancar.mutate(
-                  { modeloId: escolhido.id, grupoId, fichaId: destino || null, quantidade: Number(quantidade) || 1 },
+                  npc
+                    ? { modeloId: escolhido.id, npcId: npc.id, quantidade: Number(quantidade) || 1 }
+                    : { modeloId: escolhido.id, grupoId: grupoId ?? undefined, fichaId: destino || null, quantidade: Number(quantidade) || 1 },
                   {
                     onSuccess: () => {
-                      const para = destinos.find((d) => d.id === destino)?.rotulo;
+                      const para = npc?.nome ?? destinos.find((d) => d.id === destino)?.rotulo;
                       setUltimo(`${escolhido.nome} lançado ${para ? `para ${para}` : "vago no grupo"}.`);
                       setEscolhido(null);
                     },
