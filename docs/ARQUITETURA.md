@@ -104,7 +104,8 @@ exibido direto pelo front. Não há upload nem uso do Supabase Storage.
   `/mestre/classes/:id/habilidades` (criar/editar/reordenar/excluir cartas), `/mestre/pericias` (catálogo); `/jogador` (reservada, tela vazia); `/` redireciona conforme o papel.
 - `RequirePapel` exige sessão; com `papel="MESTRE"`, exige a interface de mestre ativada (senão vai para `/ativar-mestre`).
   `/jogador` vale para qualquer conta. O topo alterna **Mestrar**/**Jogar**; `/area` volta à última interface usada (localStorage).
-- Mestre também: `/mestre/npcs`, `/mestre/npcs/novo` (`?grupo=` já marca exclusivo), `/mestre/npcs/:id`, `/mestre/npcs/:id/editar`, `/mestre/bestiario`, `/mestre/bestiario/novo`, `/mestre/bestiario/:id`, `/mestre/bestiario/:id/editar`, `/mestre/itens`.
+- Mestre também: `/mestre/npcs`, `/mestre/npcs/novo` (`?grupo=` volta ao grupo, `?kit=` já marca o kit), `/mestre/npcs/:id`, `/mestre/npcs/:id/editar`, `/mestre/bestiario`, `/mestre/bestiario/novo`, `/mestre/bestiario/:id`, `/mestre/bestiario/:id/editar`, `/mestre/itens`, `/mestre/kits`.
+  Kit ativo: guardado no navegador (`features/kits/types.ts`, try/catch); `useKitAtivo` + `soDoKit` filtram as listas (só o kit; fixos do sistema sempre) e o kit ativo é o padrão dos formulários. No grupo vale `visivelNoKit` (kit + gerais).
   Logado: `/ativar-mestre`.
 - Layouts: `PublicLayout` (regras, guia; botões Entrar/Criar conta; links no topo) e `AppLayout` (topo com marca, troca Mestrar/Jogar
   e menu do perfil com Editar perfil e Sair; navegação da interface numa **barra lateral**, que no celular vira gaveta aberta pelo botão de menu).

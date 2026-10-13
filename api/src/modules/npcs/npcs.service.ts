@@ -3,7 +3,7 @@
 // Sem imports do serviço de itens (ele importa este arquivo).
 import type { z } from "zod";
 import { naoEncontrado, requisicaoInvalida } from "../../lib/errors.js";
-import { validarGrupoExclusivo } from "../../lib/exclusividade.js";
+import { comKits, definirKits, visivelNoKit } from "../../lib/kits.js";
 import { getPrisma } from "../../lib/prisma.js";
 import { capacidadeInventario, espacosUsados } from "../../regras/ficha.js";
 import { aplicarAprimoramentos, atributosNoNivel, habilidadesNoNivel } from "../../regras/progressao.js";
@@ -37,27 +37,13 @@ function baseDo(npc: { vidaBase: number | null; manaBase: number | null; esforco
 async function validar(
   d: Partial<z.infer<typeof criarNpcSchema>>,
   usuarioId: string,
-  atual?: { racaId: string; classeId: string | null; grupoExclusivoId: string | null; vidaBase: number | null; manaBase: number | null; esforcoBase: number | null },
+  atual?: { racaId: string; classeId: string | null; vidaBase: number | null; manaBase: number | null; esforcoBase: number | null },
 ) {
-  const prisma = getPrisma();
-  await validarGrupoExclusivo(d.grupoExclusivoId, usuarioId);
-  // Raça ou classe exclusiva de um grupo só serve para NPC exclusivo do mesmo grupo.
-  const grupoDoNpc = d.grupoExclusivoId !== undefined ? d.grupoExclusivoId ?? null : atual?.grupoExclusivoId ?? null;
-  const racaId = d.racaId ?? atual?.racaId;
-  if (racaId) {
-    const raca = await prisma.raca.findUnique({ where: { id: racaId }, select: { donoId: true, grupoExclusivoId: true, titulo: true } });
+  if (d.racaId) {
+    const raca = await getPrisma().raca.findUnique({ where: { id: d.racaId }, select: { donoId: true } });
     if (!raca || raca.donoId !== usuarioId) throw naoEncontrado("Raça não encontrada");
-    if (raca.grupoExclusivoId && raca.grupoExclusivoId !== grupoDoNpc) {
-      throw requisicaoInvalida(`A raça ${raca.titulo} é exclusiva de um grupo: o NPC precisa ser exclusivo desse grupo.`, [{ campo: "racaId", mensagem: "Exclusiva de outro grupo" }]);
-    }
   }
-  const classeIdFinal = d.classeId !== undefined ? d.classeId : atual?.classeId ?? null;
-  if (classeIdFinal) {
-    const classe = await classeLegivel(classeIdFinal, usuarioId);
-    if (classe.grupoExclusivoId && classe.grupoExclusivoId !== grupoDoNpc) {
-      throw requisicaoInvalida(`A classe ${classe.titulo} é exclusiva de um grupo: o NPC precisa ser exclusivo desse grupo.`, [{ campo: "classeId", mensagem: "Exclusiva de outro grupo" }]);
-    }
-  }
+  if (d.classeId) await classeLegivel(d.classeId, usuarioId);
   const classeId = d.classeId !== undefined ? d.classeId : atual?.classeId ?? null;
   if (!classeId) {
     const faltando = (["vidaBase", "manaBase", "esforcoBase"] as const).filter((k) => (d[k] !== undefined ? d[k] : atual?.[k] ?? null) === null);
@@ -78,22 +64,23 @@ const completo = {
   atributos: { include: { atributo: true } },
   pericias: { include: { pericia: { include: { atributo: true } } } },
   itens: { orderBy: { criadoEm: "asc" }, include: comRequisitos },
-  grupoExclusivo: { select: { id: true, titulo: true } },
   status: { include: { status: true } },
+  ...comKits,
 } as const;
 
 
-export async function listar(usuarioId: string, grupoId?: string) {
+/** `kitId` = só os que aparecem com aquele kit (do kit + gerais). */
+export async function listar(usuarioId: string, kitId?: string) {
   const npcs = await getPrisma().npc.findMany({
-    where: { donoId: usuarioId, ...(grupoId && { grupoExclusivoId: grupoId }) },
+    where: { donoId: usuarioId, ...visivelNoKit(kitId) },
     orderBy: { nome: "asc" },
-    include: { raca: { select: { titulo: true } }, classe: { select: { titulo: true, pontosVida: true, pontosMana: true, pontosEsforco: true } }, grupoExclusivo: { select: { id: true, titulo: true } } },
+    include: { raca: { select: { titulo: true } }, classe: { select: { titulo: true, pontosVida: true, pontosMana: true, pontosEsforco: true } }, ...comKits },
   });
   return npcs.map((n) => {
     const max = atributosNoNivel(baseDo(n, n.classe), n.nivel);
     return {
       id: n.id, nome: n.nome, descricao: n.descricao, imagemUrl: n.imagemUrl, nivel: n.nivel,
-      raca: n.raca.titulo, classe: n.classe?.titulo ?? null, grupoExclusivo: n.grupoExclusivo,
+      raca: n.raca.titulo, classe: n.classe?.titulo ?? null, kitIds: n.kits.map((k) => k.kitId),
       vida: { atual: Math.min(n.vidaAtual, max.pontosVida), max: max.pontosVida },
       mana: { atual: Math.min(n.manaAtual, max.pontosMana), max: max.pontosMana },
       esforco: { atual: Math.min(n.esforcoAtual, max.pontosEsforco), max: max.pontosEsforco },
@@ -123,12 +110,13 @@ export async function detalhar(id: string, usuarioId: string) {
     esforcoAtual: Math.min(n.esforcoAtual, max.pontosEsforco),
   };
   const habilidades = n.classe?.habilidades ?? [];
-  const disponiveis = await statusDisponiveis(usuarioId, n.grupoExclusivoId);
+  // NPC não é de um grupo: valem todos os status do mestre (fixos + próprios).
+  const disponiveis = await statusDisponiveis(usuarioId, null);
   const aplicados = n.status.map((s) => s.status);
 
-  // Para onde os itens do NPC podem ir: fichas e grupos do mestre (só do grupo dele, se for exclusivo).
+  // Para onde os itens do NPC podem ir: fichas e grupos do mestre.
   const grupos = await prisma.grupo.findMany({
-    where: { mestreId: usuarioId, ...(n.grupoExclusivoId && { id: n.grupoExclusivoId }) },
+    where: { mestreId: usuarioId },
     orderBy: { titulo: "asc" },
     select: { id: true, titulo: true, fichas: { orderBy: { nome: "asc" }, select: { id: true, nome: true, jogador: { select: { nickname: true } } } } },
   });
@@ -144,8 +132,7 @@ export async function detalhar(id: string, usuarioId: string) {
     vidaBase: n.vidaBase,
     manaBase: n.manaBase,
     esforcoBase: n.esforcoBase,
-    grupoExclusivoId: n.grupoExclusivoId,
-    grupoExclusivo: n.grupoExclusivo,
+    kitIds: n.kits.map((k) => k.kitId),
     raca: { id: n.raca.id, titulo: n.raca.titulo, deslocamento: n.raca.deslocamento },
     classe: n.classe ? { id: n.classe.id, titulo: n.classe.titulo, grupo: n.classe.grupo } : null,
     vida: { atual: atuais.vidaAtual, max: max.pontosVida },
@@ -179,10 +166,12 @@ async function maximoAtual(npc: { classeId: string | null; nivel: number; vidaBa
 
 export async function criar(usuarioId: string, dados: z.infer<typeof criarNpcSchema>) {
   await validar(dados, usuarioId);
-  const max = await maximoAtual(dados);
+  const { kitIds, ...resto } = dados;
+  const max = await maximoAtual(resto);
   const npc = await getPrisma().npc.create({
-    data: { ...dados, donoId: usuarioId, vidaAtual: max.pontosVida, manaAtual: max.pontosMana, esforcoAtual: max.pontosEsforco },
+    data: { ...resto, donoId: usuarioId, vidaAtual: max.pontosVida, manaAtual: max.pontosMana, esforcoAtual: max.pontosEsforco },
   });
+  await definirKits("npc", npc.id, kitIds, usuarioId);
   return detalhar(npc.id, usuarioId);
 }
 
@@ -194,13 +183,9 @@ export async function editar(id: string, usuarioId: string, dados: z.infer<typeo
   const atual = await npcDoMestre(id, usuarioId);
   await validar(dados, usuarioId, atual);
   const antes = await maximoAtual(atual);
-  const { vidaAtual, manaAtual, esforcoAtual, ...resto } = dados;
+  const { vidaAtual, manaAtual, esforcoAtual, kitIds, ...resto } = dados;
   const novo = { ...atual, ...resto };
   const depois = await maximoAtual(novo);
-  // Mudou a exclusividade: os itens do NPC passam a pertencer ao grupo novo (ou a nenhum, se ficou geral).
-  if (resto.grupoExclusivoId !== undefined && (resto.grupoExclusivoId ?? null) !== atual.grupoExclusivoId) {
-    await getPrisma().item.updateMany({ where: { npcId: id }, data: { grupoId: resto.grupoExclusivoId ?? null } });
-  }
   const ajustar = (valor: number | undefined, guardado: number, a: number, d: number) =>
     Math.min(Math.max(valor ?? guardado + (d - a), 0), d);
   await getPrisma().npc.update({
@@ -212,6 +197,7 @@ export async function editar(id: string, usuarioId: string, dados: z.infer<typeo
       esforcoAtual: ajustar(esforcoAtual, Math.min(atual.esforcoAtual, antes.pontosEsforco), antes.pontosEsforco, depois.pontosEsforco),
     },
   });
+  await definirKits("npc", id, kitIds, usuarioId);
   return detalhar(id, usuarioId);
 }
 
@@ -245,7 +231,8 @@ export async function definirPericia(npcId: string, periciaId: string, usuarioId
 
 export async function aplicarStatus(npcId: string, usuarioId: string, statusId: string) {
   const npc = await npcDoMestre(npcId, usuarioId);
-  await validarAplicacao(statusId, usuarioId, await statusDisponiveis(usuarioId, npc.grupoExclusivoId));
+  await npcDoMestre(npc.id, usuarioId);
+  await validarAplicacao(statusId, usuarioId, await statusDisponiveis(usuarioId, null));
   await getPrisma().npcStatus.upsert({ where: { npcId_statusId: { npcId, statusId } }, create: { npcId, statusId }, update: {} });
   return detalhar(npcId, usuarioId);
 }

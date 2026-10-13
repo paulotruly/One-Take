@@ -59,13 +59,13 @@ function FichaNpc({ n }: { n: NpcDetalhe }) {
   const [aviso, setAviso] = useState<string | null>(null);
   const itemAberto = n.inventario.itens.find((i) => i.id === itemAbertoId) ?? null;
   const dados = new Map(n.atributos.map((a) => [a.id, a.dados]));
-  const voltar = n.grupoExclusivo ? `/mestre/grupos/${n.grupoExclusivo.id}` : "/mestre/npcs";
+  const voltar = "/mestre/npcs";
   const fecharItem = () => setItemAbertoId(null);
   const cheio = n.inventario.usados >= n.inventario.capacidade;
 
   return (
     <div className="pagina">
-      <LinkVoltar to={voltar}>{n.grupoExclusivo ? n.grupoExclusivo.titulo : "NPCs"}</LinkVoltar>
+      <LinkVoltar to={voltar}>NPCs</LinkVoltar>
 
       <header className="classe-cabecalho">
         <div className="classe-cabecalho__retrato">
@@ -75,7 +75,7 @@ function FichaNpc({ n }: { n: NpcDetalhe }) {
           <div className="classe-cabecalho__selos">
             <span className="selo selo--nivel">Nível {n.nivel}</span>
             <span className="selo">NPC</span>
-            <span className="selo">{n.grupoExclusivo ? `Exclusivo: ${n.grupoExclusivo.titulo}` : "Geral"}</span>
+            {n.kitIds.length === 0 && <span className="selo">Geral</span>}
           </div>
           <h1>{n.nome}</h1>
           <p className="pericia__nome">{n.raca.titulo}{n.classe ? ` · ${n.classe.titulo}` : " · sem classe"}</p>
@@ -104,7 +104,7 @@ function FichaNpc({ n }: { n: NpcDetalhe }) {
         onAplicar={(id) => aplicarStatus.mutate(id)}
         onRemover={(id) => removerStatus.mutate(id)}
         ocupado={aplicarStatus.isPending || removerStatus.isPending}
-        semAplicaveis={n.grupoExclusivo ? "Nenhum status para aplicar: ative status no grupo (Editar grupo)." : "Nenhum status para aplicar."}
+        semAplicaveis="Nenhum status para aplicar."
       />
       {(aplicarStatus.isError || removerStatus.isError) && <div className="aviso">{mensagemDeErro(aplicarStatus.error ?? removerStatus.error)}</div>}
 
@@ -249,7 +249,7 @@ function FichaNpc({ n }: { n: NpcDetalhe }) {
         )}
       </Modal>
 
-      <LancarItemModal grupoId={n.grupoExclusivoId} npc={{ id: n.id, nome: n.nome }} aberto={lancando} onFechar={() => setLancando(false)} destinos={[]} />
+      <LancarItemModal grupoId={null} npc={{ id: n.id, nome: n.nome }} aberto={lancando} onFechar={() => setLancando(false)} destinos={[]} />
 
       <Modal aberto={periciaEmEdicao !== undefined} onFechar={() => setPericiaEmEdicao(undefined)} titulo={periciaEmEdicao ? "Pontos extras" : "Dar pontos extras"}>
         <VinculoPericiaForm

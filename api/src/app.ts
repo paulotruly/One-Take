@@ -22,6 +22,7 @@ import { criaturasRouter } from "./modules/criaturas/criaturas.routes.js";
 import { catalogoItensRouter } from "./modules/itens/catalogo.routes.js";
 import { categoriasItemRouter } from "./modules/itens/categorias.js";
 import { npcsRouter } from "./modules/npcs/npcs.routes.js";
+import { kitsRouter } from "./modules/kits/kits.routes.js";
 
 export function criarApp({ corsOrigin }: { corsOrigin: string[] }) {
   const app = express();
@@ -56,7 +57,7 @@ export function criarApp({ corsOrigin }: { corsOrigin: string[] }) {
   });
   mestre.use(
     classesRouter, habilidadesRouter, periciasRouter, racasRouter, atributosRouter, gruposRouter, statusRouter, conceitosRouter,
-    bestasRouter, criaturasRouter, catalogoItensRouter, categoriasItemRouter, npcsRouter,
+    bestasRouter, criaturasRouter, catalogoItensRouter, categoriasItemRouter, npcsRouter, kitsRouter,
   );
   api.use(mestre);
 

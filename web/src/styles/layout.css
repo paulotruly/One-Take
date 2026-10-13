@@ -143,6 +143,12 @@ button.topo__perfil { border: 0; background: transparent; font: inherit; cursor:
 .lateral__link:hover { text-decoration: none; color: var(--cor-texto); background: var(--cor-superficie-2); }
 .lateral__link--ativo { color: var(--cor-texto); border-left-color: var(--cor-primaria); background: var(--cor-superficie-2); }
 .lateral__fundo { display: none; }
+/* Kit ativo (mestre): filtra as listas pelo kit + o que é geral. */
+.seletor-kit { display: flex; flex-direction: column; gap: var(--esp-1); padding: 0 0 var(--esp-3); margin-bottom: var(--esp-2); border-bottom: 1px solid var(--cor-borda); }
+.seletor-kit__rotulo { display: flex; align-items: center; gap: var(--esp-1); color: var(--cor-texto-suave); font-size: var(--texto-xs); font-weight: var(--peso-forte); text-transform: uppercase; }
+.seletor-kit select { width: 100%; }
+.aviso-kit { display: flex; align-items: center; gap: var(--esp-2); flex-wrap: wrap; padding: var(--esp-2) var(--esp-3); border: 1px solid var(--cor-borda); border-left: 4px solid var(--cor-primaria); background: var(--cor-superficie-2); font-size: var(--texto-sm); }
+.aviso-kit span { flex: 1; min-width: 200px; }
 .app__corpo > .conteudo { flex: 1; min-width: 0; margin: 0; }
 @media (max-width: 760px) {
   .topo .topo__menu { display: inline-flex; }

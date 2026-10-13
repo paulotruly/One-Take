@@ -12,11 +12,13 @@ export type Status = {
   ordem: number;
   fixo: boolean;
   automatico: boolean;
+  /** Na lista do mestre: kits de RPG em que o status está (vazio = geral). */
+  kitIds?: string[];
 };
 
 export type StatusResumo = { id: string; nome: string; tipo: TipoStatus };
 
-export type StatusInput = { nome: string; descricao: string; efeito: string; tipo: TipoStatus };
+export type StatusInput = { nome: string; descricao: string; efeito: string; tipo: TipoStatus; kitIds: string[] };
 
 export const ROTULO_TIPO: Record<TipoStatus, string> = { BUFF: "Benefício", DEBUFF: "Prejuízo", MISTO: "Misto" };
 export const LISTA_TIPOS: TipoStatus[] = ["DEBUFF", "BUFF", "MISTO"];

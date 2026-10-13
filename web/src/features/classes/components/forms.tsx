@@ -13,7 +13,8 @@ import {
   type HabilidadeInput,
   type TipoEfeito,
 } from "../types";
-import { ExclusividadeField } from "../../grupos/components/ExclusividadeField";
+import { KitsField } from "../../kits/components/KitsField";
+import { kitsPadrao } from "../../kits/types";
 import { ClasseImagem } from "./ClasseImagem";
 
 type BaseProps<T> = {
@@ -64,13 +65,11 @@ function Form({ onSubmit, children }: { onSubmit: () => void; children: ReactNod
 export function ClasseForm({
   inicial,
   rotulo = "Salvar",
-  grupos = [],
   conceitos = [],
   ...p
 }: BaseProps<ClasseInput> & {
   inicial?: ClasseInput;
   rotulo?: string;
-  grupos?: { id: string; titulo: string }[];
   conceitos?: { id: string; titulo: string }[];
 }) {
   const [v, setV] = useState({
@@ -82,7 +81,7 @@ export function ClasseForm({
     pontosMana: String(inicial?.pontosMana ?? ""),
     pontosEsforco: String(inicial?.pontosEsforco ?? ""),
   });
-  const [grupoExclusivoId, setGrupoExclusivoId] = useState<string | null>(inicial?.grupoExclusivoId ?? null);
+  const [kitIds, setKitIds] = useState<string[]>(inicial?.kitIds ?? kitsPadrao());
   const [conceitoId, setConceitoId] = useState<string>(inicial?.conceitoId ?? "");
   const set = (campo: keyof typeof v) => (e: { target: { value: string } }) => setV({ ...v, [campo]: e.target.value });
   const e = p.erros ?? {};
@@ -98,7 +97,7 @@ export function ClasseForm({
           pontosVida: inteiro(v.pontosVida),
           pontosMana: inteiro(v.pontosMana),
           pontosEsforco: inteiro(v.pontosEsforco),
-          grupoExclusivoId,
+          kitIds,
           conceitoId: conceitoId || null,
         })
       }
@@ -135,7 +134,7 @@ export function ClasseForm({
           <input type="number" min={1} step={1} inputMode="numeric" value={v.pontosEsforco} onChange={set("pontosEsforco")} />
         </Field>
       </div>
-      <ExclusividadeField valor={grupoExclusivoId} grupos={grupos} onChange={setGrupoExclusivoId} erro={e.grupoExclusivoId} />
+      <KitsField valor={kitIds} onChange={setKitIds} erro={e.kitIds} />
       <Field rotulo="Link da imagem" erro={e.imagemUrl} dica="Opcional. Cole o endereço (https://…) de uma imagem.">
         <input type="url" value={v.imagemUrl} onChange={set("imagemUrl")} placeholder="https://…" />
       </Field>

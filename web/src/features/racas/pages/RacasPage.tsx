@@ -1,4 +1,7 @@
 import { Footprints, Plus } from "lucide-react";
+import { AvisoKit } from "../../kits/components/AvisoKit";
+import { useKitAtivo } from "../../kits/api";
+import { soDoKit } from "../../kits/types";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { Button } from "../../../components/ui/Button";
@@ -8,12 +11,14 @@ import { erroDeFormulario, errosDeCampo, mensagemDeErro } from "../../../lib/api
 import { ClasseImagem } from "../../classes/components/ClasseImagem";
 import { ConceitosBloco } from "../../classes/components/ConceitosBloco";
 import { formatarModificador } from "../../pericias/types";
-import { useGrupos } from "../../grupos/api";
 import { useConceitosRaca, useCriarConceitoRaca, useCriarRaca, useEditarConceitoRaca, useExcluirConceitoRaca, useRacas } from "../api";
 import { RacaForm } from "../components/RacaForm";
+import { kitsPadrao } from "../../kits/types";
 
 export function RacasPage() {
   const racas = useRacas();
+  const { kitId } = useKitAtivo();
+  const racasNoKit = (racas.data ?? []).filter((x) => soDoKit(x.kitIds, kitId));
   const conceitos = useConceitosRaca();
   const criar = useCriarRaca();
   const criarConceito = useCriarConceitoRaca();
@@ -22,7 +27,6 @@ export function RacasPage() {
   const navigate = useNavigate();
   // undefined = fechado; string = conceito já escolhido ("" = avulsa)
   const [criando, setCriando] = useState<string | undefined>(undefined);
-  const grupos = useGrupos();
 
   function novaRaca(conceitoId = "") {
     criar.reset();
@@ -59,15 +63,16 @@ export function RacasPage() {
       />
 
       <h2>Todas as raças</h2>
+      <AvisoKit />
       {racas.isPending ? (
         <Loading texto="Carregando raças…" />
       ) : racas.isError ? (
         <ErrorState mensagem={mensagemDeErro(racas.error)} onTentarNovamente={() => racas.refetch()} />
-      ) : racas.data.length === 0 ? (
+      ) : racasNoKit.length === 0 ? (
         <EmptyState titulo="Nenhuma raça ainda" descricao="Crie a primeira raça para usar nas fichas." />
       ) : (
         <ul className="lista-cards">
-          {racas.data.map((r) => (
+          {racasNoKit.map((r) => (
             <li key={r.id}>
               <Link to={`/mestre/racas/${r.id}`} className="card-link card-link--com-imagem">
                 <div className="card-link__imagem">
@@ -97,8 +102,7 @@ export function RacasPage() {
       <Modal aberto={criando !== undefined} onFechar={() => setCriando(undefined)} titulo="Nova raça">
         <RacaForm
           key={criando ?? "fechado"}
-          inicial={criando ? { titulo: "", descricao: "", imagemUrl: null, deslocamento: undefined as unknown as number, grupoExclusivoId: null, conceitoId: criando } : undefined}
-          grupos={grupos.data}
+          inicial={criando ? { titulo: "", descricao: "", imagemUrl: null, deslocamento: undefined as unknown as number, kitIds: kitsPadrao(), conceitoId: criando } : undefined}
           conceitos={conceitos.data}
           enviando={criar.isPending}
           erros={errosDeCampo(criar.error)}

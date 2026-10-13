@@ -1,6 +1,7 @@
-import { Activity, Backpack, ChevronDown, Crown, Gamepad2, Layers, ListChecks, LogOut, Menu, PawPrint, ScrollText, Shield, UserPen, UserRound, Users, X, type LucideIcon } from "lucide-react";
+import { Activity, Backpack, ChevronDown, Crown, Gamepad2, Layers, ListChecks, LogOut, Menu, Package, PawPrint, ScrollText, Shield, UserPen, UserRound, Users, X, type LucideIcon } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, Outlet, useLocation } from "react-router";
+import { SeletorKit } from "../features/kits/components/SeletorKit";
 import { interfaceLembrada, lembrarInterface, useAuth, useMe, type Papel } from "../auth/AuthProvider";
 import { Avatar } from "../components/ui/Avatar";
 import { Button } from "../components/ui/Button";
@@ -11,6 +12,7 @@ type LinkTopo = { to: string; rotulo: string; Icone: LucideIcon; /** Caminhos em
 const LINKS: Record<Papel, LinkTopo[]> = {
   MESTRE: [
     { to: "/mestre/grupos", rotulo: "Grupos", Icone: Shield, ativoEm: /^\/mestre\/(grupos|fichas)/ },
+    { to: "/mestre/kits", rotulo: "Kits de RPG", Icone: Package, ativoEm: /^\/mestre\/kits/ },
     { to: "/mestre", rotulo: "Classes", Icone: Layers, ativoEm: /^\/mestre(\/classes.*)?\/?$/ },
     { to: "/mestre/racas", rotulo: "Raças", Icone: Users, ativoEm: /^\/mestre\/racas/ },
     { to: "/mestre/npcs", rotulo: "NPCs", Icone: UserRound, ativoEm: /^\/mestre\/npcs/ },
@@ -108,6 +110,7 @@ export function AppLayout() {
       <div className="app__corpo">
         {/* Navegação lateral; no celular vira uma gaveta aberta pelo botão de menu. */}
         <nav id="navegacao-lateral" className={`lateral ${menuAberto ? "lateral--aberta" : ""}`} aria-label="Principal">
+          {area === "MESTRE" && ehMestre && <SeletorKit />}
           {links.map(({ to, rotulo, Icone, ativoEm }) => {
             const ativo = ativoEm.test(pathname);
             return (

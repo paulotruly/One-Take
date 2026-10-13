@@ -5,6 +5,7 @@ import { getPrisma } from "../../lib/prisma.js";
 import type { Usuario } from "../../middleware/auth.js";
 import { apresentarAtributo, atributoUsavel, porAtributoENome } from "../atributos/atributos.service.js";
 import { classeEditavel } from "../classes/classes.service.js";
+import { comKits, definirKits } from "../../lib/kits.js";
 import type { criarPericiaSchema, editarPericiaSchema } from "./pericias.schemas.js";
 
 // ---------- Catálogo do mestre ----------
@@ -40,11 +41,11 @@ async function garantirNomeLivre(usuarioId: string, nome: string, exceto?: strin
   if (existente && existente.id !== exceto) throw conflito("NOME_EM_USO", `Você já tem uma perícia chamada "${nome}".`);
 }
 
-const contarUsos = { atributo: true, _count: { select: { classes: true, racas: true } } } as const;
+const contarUsos = { atributo: true, _count: { select: { classes: true, racas: true } }, ...comKits } as const;
 
-/** Perícia do catálogo com seu atributo e quantas classes e raças do mestre a usam. */
-function apresentar<T extends { atributo: Atributo; _count: { classes: number; racas: number } }>({ _count, atributo, ...p }: T) {
-  return { ...p, atributo: apresentarAtributo(atributo), usosClasses: _count.classes, usosRacas: _count.racas };
+/** Perícia do catálogo com seu atributo, quantas classes e raças do mestre a usam e os kits em que está. */
+function apresentar<T extends { atributo: Atributo; _count: { classes: number; racas: number }; kits?: { kitId: string }[] }>({ _count, atributo, kits, ...p }: T) {
+  return { ...p, atributo: apresentarAtributo(atributo), usosClasses: _count.classes, usosRacas: _count.racas, kitIds: (kits ?? []).map((k) => k.kitId) };
 }
 
 export async function listar(usuarioId: string) {
@@ -58,14 +59,19 @@ export async function listar(usuarioId: string) {
 export async function criar(usuarioId: string, dados: z.infer<typeof criarPericiaSchema>) {
   await garantirNomeLivre(usuarioId, dados.nome);
   await atributoUsavel(dados.atributoId, usuarioId);
-  return apresentar(await getPrisma().pericia.create({ data: { ...dados, donoId: usuarioId }, include: contarUsos }));
+  const { kitIds, ...resto } = dados;
+  const p = await getPrisma().pericia.create({ data: { ...resto, donoId: usuarioId }, include: contarUsos });
+  await definirKits("pericia", p.id, kitIds, usuarioId);
+  return apresentar({ ...p, kits: (kitIds ?? []).map((kitId) => ({ kitId })) });
 }
 
 export async function editar(id: string, usuarioId: string, dados: z.infer<typeof editarPericiaSchema>) {
   await periciaDoMestre(id, usuarioId);
   if (dados.nome) await garantirNomeLivre(usuarioId, dados.nome, id);
   if (dados.atributoId) await atributoUsavel(dados.atributoId, usuarioId);
-  return apresentar(await getPrisma().pericia.update({ where: { id }, data: dados, include: contarUsos }));
+  const { kitIds, ...resto } = dados;
+  await definirKits("pericia", id, kitIds, usuarioId);
+  return apresentar(await getPrisma().pericia.update({ where: { id }, data: resto, include: contarUsos }));
 }
 
 /** Exclui do catálogo e, em cascata, das classes e raças que a usavam. */

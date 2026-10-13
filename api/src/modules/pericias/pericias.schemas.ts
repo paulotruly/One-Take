@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { CategoriaPericia } from "../../generated/prisma/enums.js";
+import { kitIdsSchema } from "../../lib/kits.js";
 import { inteiro, texto } from "../../lib/validacao.js";
 
 // Perícia do catálogo. Sem defaults na base: no Zod 4 o default valeria também no PATCH.
@@ -8,6 +9,8 @@ const base = z.object({
   descricao: z.string().trim().max(1000),
   categoria: z.enum(CategoriaPericia),
   atributoId: z.guid("Escolha um atributo"),
+  /** Kits de RPG em que a perícia está (sem kit = geral). */
+  kitIds: kitIdsSchema,
 });
 
 export const criarPericiaSchema = base.extend({ descricao: base.shape.descricao.default("") });

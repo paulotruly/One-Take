@@ -1,16 +1,16 @@
 import type { z } from "zod";
 import type { Atributo } from "../../generated/prisma/client.js";
 import { AppError, conflito, naoEncontrado } from "../../lib/errors.js";
-import { aplicarExclusividade, garantirExclusividadePossivel, validarGrupoExclusivo } from "../../lib/exclusividade.js";
+import { comKits, definirKits } from "../../lib/kits.js";
 import { getPrisma } from "../../lib/prisma.js";
 import type { criarAtributoSchema, editarAtributoSchema } from "./atributos.schemas.js";
 
 // Atributos fixos (donoId nulo) valem para todos e não são editáveis.
 // Atributos com dono são do mestre que os criou.
 
-/** Formato público de um atributo. */
-export function apresentarAtributo({ id, nome, descricao, ordem, donoId, grupoExclusivoId }: Atributo) {
-  return { id, nome, descricao, ordem, fixo: donoId === null, grupoExclusivoId };
+/** Formato público de um atributo (com `kitIds` quando os kits vierem junto). */
+export function apresentarAtributo({ id, nome, descricao, ordem, donoId, kits }: Atributo & { kits?: { kitId: string }[] }) {
+  return { id, nome, descricao, ordem, fixo: donoId === null, ...(kits && { kitIds: kits.map((k) => k.kitId) }) };
 }
 
 /** Ordena perícias pelo atributo (fixos na ordem definida, depois os do mestre) e pelo nome. */
@@ -52,26 +52,25 @@ export async function listar(usuarioId: string) {
   const atributos = await getPrisma().atributo.findMany({
     where: { OR: [{ donoId: null }, { donoId: usuarioId }] },
     orderBy: [{ ordem: "asc" }, { nome: "asc" }],
-    include: { _count: { select: { pericias: { where: { donoId: usuarioId } } } } },
+    include: { _count: { select: { pericias: { where: { donoId: usuarioId } } } }, ...comKits },
   });
   return atributos.map(({ _count, ...a }) => ({ ...apresentarAtributo(a), pericias: _count.pericias }));
 }
 
 export async function criar(usuarioId: string, dados: z.infer<typeof criarAtributoSchema>) {
   await garantirNomeLivre(usuarioId, dados.nome);
-  await validarGrupoExclusivo(dados.grupoExclusivoId, usuarioId);
-  const a = await getPrisma().atributo.create({ data: { ...dados, donoId: usuarioId } });
-  await aplicarExclusividade("atributo", a.id, dados.grupoExclusivoId);
-  return { ...apresentarAtributo(a), pericias: 0 };
+  const { kitIds, ...resto } = dados;
+  const a = await getPrisma().atributo.create({ data: { ...resto, donoId: usuarioId } });
+  await definirKits("atributo", a.id, kitIds, usuarioId);
+  return { ...apresentarAtributo({ ...a, kits: (kitIds ?? []).map((kitId) => ({ kitId })) }), pericias: 0 };
 }
 
 export async function editar(id: string, usuarioId: string, dados: z.infer<typeof editarAtributoSchema>) {
   await atributoEditavel(id, usuarioId);
   if (dados.nome) await garantirNomeLivre(usuarioId, dados.nome, id);
-  await validarGrupoExclusivo(dados.grupoExclusivoId, usuarioId);
-  await garantirExclusividadePossivel("atributo", id, dados.grupoExclusivoId);
-  const { _count, ...a } = await getPrisma().atributo.update({ where: { id }, data: dados, include: contarPericias });
-  await aplicarExclusividade("atributo", id, dados.grupoExclusivoId);
+  const { kitIds, ...resto } = dados;
+  await definirKits("atributo", id, kitIds, usuarioId);
+  const { _count, ...a } = await getPrisma().atributo.update({ where: { id }, data: resto, include: { ...contarPericias, ...comKits } });
   return { ...apresentarAtributo(a), pericias: _count.pericias };
 }
 

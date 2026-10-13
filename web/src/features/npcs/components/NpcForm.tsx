@@ -3,7 +3,8 @@ import { useState, type FormEvent } from "react";
 import { Button } from "../../../components/ui/Button";
 import { Field } from "../../../components/ui/Field";
 import { ClasseImagem } from "../../classes/components/ClasseImagem";
-import { ExclusividadeField } from "../../grupos/components/ExclusividadeField";
+import { KitsField } from "../../kits/components/KitsField";
+import { kitsPadrao } from "../../kits/types";
 import type { NpcInput } from "../types";
 
 type Opcao = { id: string; titulo: string };
@@ -11,7 +12,6 @@ type Props = {
   inicial?: Partial<NpcInput>;
   racas: Opcao[];
   classes: Opcao[];
-  grupos: Opcao[];
   rotulo?: string;
   onEnviar: (dados: NpcInput) => void;
   onCancelar: () => void;
@@ -22,7 +22,7 @@ type Props = {
 
 const numero = (s: string) => (s.trim() === "" ? null : Number(s));
 
-export function NpcForm({ inicial, racas, classes, grupos, rotulo = "Salvar NPC", onEnviar, onCancelar, enviando, erros = {}, erroGeral }: Props) {
+export function NpcForm({ inicial, racas, classes, rotulo = "Salvar NPC", onEnviar, onCancelar, enviando, erros = {}, erroGeral }: Props) {
   const [v, setV] = useState({
     nome: inicial?.nome ?? "",
     descricao: inicial?.descricao ?? "",
@@ -34,7 +34,7 @@ export function NpcForm({ inicial, racas, classes, grupos, rotulo = "Salvar NPC"
     manaBase: String(inicial?.manaBase ?? ""),
     esforcoBase: String(inicial?.esforcoBase ?? ""),
   });
-  const [grupoExclusivoId, setGrupoExclusivoId] = useState<string | null>(inicial?.grupoExclusivoId ?? null);
+  const [kitIds, setKitIds] = useState<string[]>(inicial?.kitIds ?? kitsPadrao());
   const set = (campo: keyof typeof v) => (e: { target: { value: string } }) => setV({ ...v, [campo]: e.target.value });
   const semClasse = !v.classeId;
 
@@ -50,7 +50,7 @@ export function NpcForm({ inicial, racas, classes, grupos, rotulo = "Salvar NPC"
       vidaBase: semClasse ? numero(v.vidaBase) : null,
       manaBase: semClasse ? numero(v.manaBase) : null,
       esforcoBase: semClasse ? numero(v.esforcoBase) : null,
-      grupoExclusivoId,
+      kitIds,
     });
   }
 
@@ -92,7 +92,7 @@ export function NpcForm({ inicial, racas, classes, grupos, rotulo = "Salvar NPC"
       <Field rotulo="Descrição (opcional)" erro={erros.descricao} dica="Quem é, o que quer, como fala.">
         <textarea value={v.descricao} onChange={set("descricao")} maxLength={2000} rows={3} />
       </Field>
-      <ExclusividadeField valor={grupoExclusivoId} grupos={grupos} onChange={setGrupoExclusivoId} erro={erros.grupoExclusivoId} />
+      <KitsField valor={kitIds} onChange={setKitIds} erro={erros.kitIds} />
       <Field rotulo="Link da imagem" erro={erros.imagemUrl} dica="Opcional. Cole o endereço (https://...) de uma imagem.">
         <input type="url" value={v.imagemUrl} onChange={set("imagemUrl")} placeholder="https://" />
       </Field>

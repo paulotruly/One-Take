@@ -64,9 +64,9 @@ export type Item = Omit<CamposItem, "categoriaId" | "requisitoPericiaId" | "requ
 export type ItemDaFicha = Item & { podeUsar: boolean; motivoNaoPodeUsar: string | null };
 
 /** Molde do catálogo do mestre. */
-export type ItemModelo = Item & { grupoExclusivoId: string | null };
+export type ItemModelo = Item & { kitIds: string[] };
 
-export type ItemModeloInput = CamposItem & { grupoExclusivoId: string | null };
+export type ItemModeloInput = CamposItem & { kitIds: string[] };
 export type ItemNoGrupoInput = CamposItem & { fichaId: string | null };
 
 /** Converte o item apresentado de volta para o formulário. */

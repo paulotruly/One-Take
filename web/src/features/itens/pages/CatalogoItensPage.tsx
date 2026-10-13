@@ -8,7 +8,10 @@ import { Modal } from "../../../components/ui/Modal";
 import { EmptyState, ErrorState, Loading } from "../../../components/ui/States";
 import { erroDeFormulario, errosDeCampo, mensagemDeErro } from "../../../lib/api";
 import { useClasses } from "../../classes/api";
-import { ExclusividadeField } from "../../grupos/components/ExclusividadeField";
+import { AvisoKit } from "../../kits/components/AvisoKit";
+import { KitsField } from "../../kits/components/KitsField";
+import { useKitAtivo } from "../../kits/api";
+import { kitsPadrao, soDoKit } from "../../kits/types";
 import { useGrupos } from "../../grupos/api";
 import { useCatalogo } from "../../pericias/api";
 import { useCatalogoItens, useCategoriasItem, useCriarModelo, useEditarModelo, useExcluirModelo, useLancarItem } from "../api";
@@ -34,7 +37,8 @@ export function CatalogoItensPage() {
   // undefined = fechado; null = novo; item = editando
   const [emEdicao, setEmEdicao] = useState<ItemModelo | null | undefined>(undefined);
   const [aExcluir, setAExcluir] = useState<ItemModelo | null>(null);
-  const [grupoExclusivoId, setGrupoExclusivoId] = useState<string | null>(null);
+  const [kitIds, setKitIds] = useState<string[]>([]);
+  const { kitId } = useKitAtivo();
   const [lancando, setLancando] = useState<ItemModelo | null>(null);
   const [destinoGrupo, setDestinoGrupo] = useState("");
   const [quantidade, setQuantidade] = useState("1");
@@ -45,7 +49,7 @@ export function CatalogoItensPage() {
     criar.reset();
     editar.reset();
     setAberto(null);
-    setGrupoExclusivoId(i?.grupoExclusivoId ?? null);
+    setKitIds(i?.kitIds ?? kitsPadrao());
     setEmEdicao(i);
   }
   const fecharForm = () => setEmEdicao(undefined);
@@ -54,15 +58,15 @@ export function CatalogoItensPage() {
     lancar.reset();
     setAberto(null);
     setLancadoEm(null);
-    setDestinoGrupo(i.grupoExclusivoId ?? "");
+    setDestinoGrupo("");
     setQuantidade("1");
     setLancando(i);
   }
 
-  const lista = (itens.data ?? []).filter((i) => !categoria || i.categoria?.id === categoria);
+  const lista = (itens.data ?? []).filter((i) => (!categoria || i.categoria?.id === categoria) && soDoKit(i.kitIds, kitId));
   const opcoesPericias = (pericias.data ?? []).map((p) => ({ id: p.id, rotulo: `${p.nome} (${p.atributo.nome})` }));
   const opcoesClasses = (classes.data ?? []).map((c) => ({ id: c.id, rotulo: c.fixa ? `${c.titulo} (fixa)` : c.titulo }));
-  const gruposParaLancar = (grupos.data ?? []).filter((g) => !lancando?.grupoExclusivoId || g.id === lancando.grupoExclusivoId);
+  const gruposParaLancar = grupos.data ?? [];
 
   return (
     <div className="pagina">
@@ -80,6 +84,8 @@ export function CatalogoItensPage() {
           </Button>
         </div>
       </div>
+
+      <AvisoKit />
 
       <div className="filtro" role="group" aria-label="Filtrar por categoria">
         <button type="button" className="filtro__opcao" aria-pressed={!categoria} onClick={() => setCategoria(undefined)}>Todos</button>
@@ -103,7 +109,7 @@ export function CatalogoItensPage() {
               key={i.id}
               item={i}
               onAbrir={() => setAberto(i)}
-              extra={i.grupoExclusivoId && <span className="selo">Exclusivo: {grupos.data?.find((g) => g.id === i.grupoExclusivoId)?.titulo ?? "grupo"}</span>}
+              extra={i.kitIds.length === 0 && <span className="selo">Geral</span>}
             />
           ))}
         </ul>
@@ -135,13 +141,13 @@ export function CatalogoItensPage() {
           pericias={opcoesPericias}
           classes={opcoesClasses}
           categorias={categorias.data ?? []}
-          extra={<ExclusividadeField valor={grupoExclusivoId} grupos={grupos.data ?? []} onChange={setGrupoExclusivoId} erro={errosDeCampo(salvando.error).grupoExclusivoId} />}
+          extra={<KitsField valor={kitIds} onChange={setKitIds} erro={errosDeCampo(salvando.error).kitIds} />}
           enviando={salvando.isPending}
           erros={errosDeCampo(salvando.error)}
           erroGeral={erroDeFormulario(salvando.error)}
           onCancelar={fecharForm}
           onEnviar={(campos) => {
-            const dados = { ...campos, grupoExclusivoId };
+            const dados = { ...campos, kitIds };
             if (emEdicao) editar.mutate({ id: emEdicao.id, dados }, { onSuccess: fecharForm });
             else criar.mutate(dados, { onSuccess: fecharForm });
           }}

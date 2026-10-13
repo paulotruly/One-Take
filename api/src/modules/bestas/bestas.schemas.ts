@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { grupoExclusivoSchema } from "../../lib/exclusividade.js";
+import { kitIdsSchema } from "../../lib/kits.js";
 import { inteiro, texto, urlOpcional } from "../../lib/validacao.js";
 
 // Vida, mana e esforço base (nível 1): como nas classes, nenhum pode ser zero.
@@ -14,8 +14,8 @@ const base = z.object({
   pontosEsforco: pontos,
   /** Quadrados no grid por turno. */
   deslocamento: inteiro(1, 99),
-  /** Opcional: só pode ser invocada neste grupo. Nulo/ausente = geral. */
-  grupoExclusivoId: grupoExclusivoSchema,
+  /** Kits de RPG em que está (sem kit = geral). */
+  kitIds: kitIdsSchema,
   /** Opcional: forma deste arquétipo de criatura. */
   conceitoId: z.guid("Arquétipo de criatura inválido").nullish(),
 });

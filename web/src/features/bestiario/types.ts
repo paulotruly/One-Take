@@ -15,7 +15,8 @@ export type Besta = {
   deslocamento: number;
   conceitoId: string | null;
   conceito: { id: string; titulo: string } | null;
-  grupoExclusivoId: string | null;
+  /** Kits de RPG em que a criatura está (vazio = geral). */
+  kitIds: string[];
   /** Na listagem: quantas cartas tem. */
   cartas?: number;
 };
@@ -35,7 +36,7 @@ export type AtributoDaBesta = AtributoResumo & { dados: number; teste: string };
 
 export type BestaDetalhe = Besta & { habilidades: Habilidade[]; pericias: PericiaDaBesta[]; atributos: AtributoDaBesta[] };
 
-export type BestaInput = Pick<Besta, "titulo" | "descricao" | "imagemUrl" | "pontosVida" | "pontosMana" | "pontosEsforco" | "deslocamento" | "grupoExclusivoId" | "conceitoId">;
+export type BestaInput = Pick<Besta, "titulo" | "descricao" | "imagemUrl" | "pontosVida" | "pontosMana" | "pontosEsforco" | "deslocamento" | "kitIds" | "conceitoId">;
 
 export type BestaConceito = {
   id: string;

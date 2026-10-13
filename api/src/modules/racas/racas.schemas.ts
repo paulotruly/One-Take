@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { grupoExclusivoSchema } from "../../lib/exclusividade.js";
+import { kitIdsSchema } from "../../lib/kits.js";
 import { inteiro, texto, urlOpcional } from "../../lib/validacao.js";
 
 const base = z.object({
@@ -8,8 +8,8 @@ const base = z.object({
   imagemUrl: urlOpcional(),
   /** Quadrados no grid por turno. */
   deslocamento: inteiro(1, 99),
-  /** Opcional: só vale neste grupo. Nulo/ausente = geral. */
-  grupoExclusivoId: grupoExclusivoSchema,
+  /** Kits de RPG em que está (sem kit = geral). */
+  kitIds: kitIdsSchema,
   /** Opcional: sub-raça deste arquétipo de raça. */
   conceitoId: z.guid("Arquétipo de raça inválido").nullish(),
 });

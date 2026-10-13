@@ -13,7 +13,7 @@ export function NpcLinha({ n }: { n: NpcResumo }) {
         <div className="membro__info">
           <strong>{n.nome} {n.morto && <span className="selo selo--status-DEBUFF"><Skull size={12} aria-hidden /> Morto</span>}</strong>
           <span className="pagina__subtitulo">
-            {n.raca}{n.classe ? ` · ${n.classe}` : ""} · Nível {n.nivel}{n.grupoExclusivo ? ` · ${n.grupoExclusivo.titulo}` : " · Geral"}
+            {n.raca}{n.classe ? ` · ${n.classe}` : ""} · Nível {n.nivel}{n.kitIds.length === 0 && " · Geral"}
           </span>
         </div>
         <div className="stats stats--compacto">

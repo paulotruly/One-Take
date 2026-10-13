@@ -43,7 +43,7 @@ const comoJogador = (r: request.Test) => {
 
 const besta = (x: Record<string, unknown> = {}) => ({
   id: BESTA, donoId: MESTRE.id, titulo: "Lobo", descricao: "Caça em bando", imagemUrl: null,
-  pontosVida: 12, pontosMana: 3, pontosEsforco: 6, deslocamento: 8, conceitoId: null, grupoExclusivoId: null, ...x,
+  pontosVida: 12, pontosMana: 3, pontosEsforco: 6, deslocamento: 8, conceitoId: null, ...x,
 });
 const grupo = (x: Record<string, unknown> = {}) => ({ id: GRUPO, mestreId: MESTRE.id, ...x });
 const criatura = (x: Record<string, unknown> = {}) => ({
@@ -75,8 +75,8 @@ describe("bestiário", () => {
       ...besta(),
       habilidades: [],
       conceito: null,
-      atributos: [{ atributoId: FIS, dados: 2, atributo: { id: FIS, nome: "Capacidade física", descricao: "", ordem: 1, donoId: null, grupoExclusivoId: null } }],
-      pericias: [{ modificador: 5, pericia: { id: "p1", nome: "Atletismo", descricao: "", categoria: "FISICO", atributo: { id: FIS, nome: "Capacidade física", descricao: "", ordem: 1, donoId: null, grupoExclusivoId: null } } }],
+      atributos: [{ atributoId: FIS, dados: 2, atributo: { id: FIS, nome: "Capacidade física", descricao: "", ordem: 1, donoId: null } }],
+      pericias: [{ modificador: 5, pericia: { id: "p1", nome: "Atletismo", descricao: "", categoria: "FISICO", atributo: { id: FIS, nome: "Capacidade física", descricao: "", ordem: 1, donoId: null } } }],
     });
     const res = await comoMestre(request(app).get(`/api/bestas/${BESTA}`));
     expect(res.status).toBe(200);
@@ -97,13 +97,6 @@ describe("bestiário", () => {
       expect.objectContaining({ nome: "Lobo 1", nivel: 3, vidaAtual: 22, manaAtual: 13, esforcoAtual: 16 }),
       expect.objectContaining({ nome: "Lobo 2", nivel: 3 }),
     ]);
-  });
-
-  it("não invoca criatura exclusivo de outro grupo", async () => {
-    prismaFalso.grupo.findUnique.mockResolvedValue(grupo());
-    prismaFalso.besta.findUnique.mockResolvedValue(besta({ grupoExclusivoId: "22222222-0000-4000-8000-0000000000ff" }));
-    const res = await comoMestre(request(app).post(`/api/grupos/${GRUPO}/criaturas`)).send({ bestaId: BESTA });
-    expect(res.status).toBe(400);
   });
 
   it("vida em 0: a criatura morre e some do grupo", async () => {
@@ -156,7 +149,7 @@ describe("itens: usar, pré-requisito e catálogo", () => {
   it("lançar do catálogo cria cópias no grupo (vagas por padrão)", async () => {
     prismaFalso.itemModelo.findUnique.mockResolvedValue({
       id: MODELO, donoId: MESTRE.id, categoriaId: "00000000-0000-4000-8004-000000000001", nome: "Arco curto", descricao: "", imagemUrl: null, efeito: null, espacos: 2,
-      usosMaximos: null, requisito: "Arqueiros", requisitoPericiaId: null, requisitoClasseId: null, grupoExclusivoId: null,
+      usosMaximos: null, requisito: "Arqueiros", requisitoPericiaId: null, requisitoClasseId: null,
       criadoEm: new Date(), atualizadoEm: new Date(),
     });
     prismaFalso.grupo.findUnique.mockResolvedValue(grupo());

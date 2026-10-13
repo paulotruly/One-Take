@@ -3,7 +3,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { naoEncontrado } from "../../lib/errors.js";
-import { validarGrupoExclusivo } from "../../lib/exclusividade.js";
+import { comKitIds, comKits, definirKits, visivelNoKit } from "../../lib/kits.js";
 import { getPrisma } from "../../lib/prisma.js";
 import { idDe } from "../../lib/validacao.js";
 import { usuarioDe } from "../../middleware/auth.js";
@@ -21,18 +21,19 @@ async function modeloDoMestre(id: string, usuarioId: string) {
   return m;
 }
 
-const apresentar = <T extends Parameters<typeof apresentarItem>[0] & { grupoExclusivoId: string | null }>(m: T) => ({
+const apresentar = <T extends Parameters<typeof apresentarItem>[0] & { kits?: { kitId: string }[] }>(m: T) => ({
   ...apresentarItem(m),
-  grupoExclusivoId: m.grupoExclusivoId,
+  kitIds: comKitIds(m).kitIds,
 });
+const incluir = { ...comRequisitos, ...comKits } as const;
 
-/** `?grupoId=` mostra só o que pode ser lançado naquele grupo (geral + exclusivo dele). */
+/** `?kitId=` mostra só o que aparece com aquele kit (do kit + gerais). */
 catalogoItensRouter.get("/catalogo-itens", async (req, res) => {
-  const { grupoId } = z.object({ grupoId: z.guid().optional() }).parse(req.query);
+  const { kitId } = z.object({ kitId: z.guid().optional() }).parse(req.query);
   const modelos = await getPrisma().itemModelo.findMany({
-    where: { donoId: usuarioDe(req).id, ...(grupoId && { OR: [{ grupoExclusivoId: null }, { grupoExclusivoId: grupoId }] }) },
+    where: { donoId: usuarioDe(req).id, ...visivelNoKit(kitId) },
     orderBy: [{ categoria: { ordem: "asc" } }, { nome: "asc" }],
-    include: comRequisitos,
+    include: incluir,
   });
   res.json(modelos.map(apresentar));
 });
@@ -40,10 +41,11 @@ catalogoItensRouter.get("/catalogo-itens", async (req, res) => {
 catalogoItensRouter.post("/catalogo-itens", async (req, res) => {
   const dados = criarModeloSchema.parse(req.body);
   const usuarioId = usuarioDe(req).id;
-  await validarGrupoExclusivo(dados.grupoExclusivoId, usuarioId);
   await validarRequisitos(dados, usuarioId);
-  const m = await getPrisma().itemModelo.create({ data: { ...dados, donoId: usuarioId }, include: comRequisitos });
-  res.status(201).json(apresentar(m));
+  const { kitIds, ...resto } = dados;
+  const m = await getPrisma().itemModelo.create({ data: { ...resto, donoId: usuarioId }, include: comRequisitos });
+  await definirKits("itemModelo", m.id, kitIds, usuarioId);
+  res.status(201).json(apresentar({ ...m, kits: (kitIds ?? []).map((kitId) => ({ kitId })) }));
 });
 
 catalogoItensRouter.patch("/catalogo-itens/:id", async (req, res) => {
@@ -51,10 +53,10 @@ catalogoItensRouter.patch("/catalogo-itens/:id", async (req, res) => {
   const usuarioId = usuarioDe(req).id;
   const id = modeloId(req.params.id);
   await modeloDoMestre(id, usuarioId);
-  await validarGrupoExclusivo(dados.grupoExclusivoId, usuarioId);
   await validarRequisitos(dados, usuarioId);
-  const m = await getPrisma().itemModelo.update({ where: { id }, data: dados, include: comRequisitos });
-  res.json(apresentar(m));
+  const { kitIds, ...resto } = dados;
+  await definirKits("itemModelo", id, kitIds, usuarioId);
+  res.json(apresentar(await getPrisma().itemModelo.update({ where: { id }, data: resto, include: incluir })));
 });
 
 /** Itens já lançados continuam nos grupos (são cópias). */

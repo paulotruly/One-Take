@@ -25,11 +25,11 @@ export const CATEGORIAS: Record<CategoriaPericia, { Icone: LucideIcon; rotulo: s
 export const LISTA_CATEGORIAS = Object.keys(CATEGORIAS) as CategoriaPericia[];
 
 /** Atributo como vem embutido nas perícias. `fixo` = do sistema (não editável). */
-export type AtributoResumo = { id: string; nome: string; descricao: string; ordem: number; fixo: boolean; grupoExclusivoId?: string | null };
+export type AtributoResumo = { id: string; nome: string; descricao: string; ordem: number; fixo: boolean; kitIds?: string[] };
 
 /** Atributo na lista de atributos, com quantas perícias do mestre usam. */
 export type Atributo = AtributoResumo & { pericias: number };
-export type AtributoInput = { nome: string; descricao: string; grupoExclusivoId: string | null };
+export type AtributoInput = { nome: string; descricao: string; kitIds: string[] };
 
 type PericiaBase = {
   id: string;
@@ -42,6 +42,7 @@ type PericiaBase = {
 /** Perícia do catálogo do mestre, com quantas classes e raças dele a usam. */
 export type PericiaCatalogo = PericiaBase & {
   atributoId: string;
+  kitIds: string[];
   origemId: string | null;
   usosClasses: number;
   usosRacas: number;
@@ -53,7 +54,7 @@ export type PericiaDaClasse = PericiaBase & { modificador: number };
 /** Perícia de uma raça: dados do catálogo + pontos base que a raça dá. */
 export type PericiaDaRaca = PericiaBase & { pontos: number };
 
-export type PericiaInput = { nome: string; descricao: string; categoria: CategoriaPericia; atributoId: string };
+export type PericiaInput = { nome: string; descricao: string; categoria: CategoriaPericia; atributoId: string; kitIds: string[] };
 
 export function formatarModificador(n: number) {
   return n >= 0 ? `+${n}` : `${n}`;

@@ -31,7 +31,6 @@ Formato único:
 | 409 | `INVENTARIO_CHEIO` | o item (com seus espaços) não cabe |
 | 403 | `SO_MESTRE_CURA` | jogador tentou aumentar a vida da própria ficha (só diminuir) |
 | 409 | `NIVEL_MAXIMO` | subir nível além do 100 |
-| 409 | `EXCLUSIVO_EM_USO` | tornar exclusivo de um grupo algo usado fora dele |
 | 403 | `CLASSE_FIXA` | tentativa de alterar classe fixa (ou seus filhos) |
 | 404 | `NAO_ENCONTRADO` | não existe, id malformado, ou pertence a outro mestre |
 | 409 | `NOME_EM_USO` | já existe perícia/atributo com esse nome |
@@ -118,16 +117,28 @@ A prévia de progressão tem `aprimoradas[]` por nível.
 | Método | Rota | Corpo | Resposta |
 |---|---|---|---|
 | GET | `/api/grupos` | — | grupos do mestre com `membros` (nº de fichas) |
-| POST | `/api/grupos` | `{ titulo, sinopse, genero, imagemUrl?, limiteMembros, permitirClassesRepetidas, disponiveis? }` | `201 GrupoDetalhe` (código gerado) |
-| GET | `/api/grupos/:id` | — | `GrupoDetalhe`: grupo + `disponiveis { classeIds, racaIds, atributoIds, periciaIds, statusIds }` + `membros[]` (ficha, jogador, classe, raça, nível, vida/mana/esforço atual/max, status) + `statusAtivos[]` + `itensVagos: Item[]` + `criaturas: Criatura[]` |
+| POST | `/api/grupos` | `{ titulo, sinopse, genero, imagemUrl?, limiteMembros, permitirClassesRepetidas, kitId? (null), disponiveis? }` | `201 GrupoDetalhe` (código gerado) |
+| GET | `/api/grupos/:id` | — | `GrupoDetalhe`: grupo (com `kitId` e `kit { id, nome }`) + `disponiveis { classeIds, racaIds, atributoIds, periciaIds, statusIds }` + `membros[]` (ficha, jogador, classe, raça, nível, vida/mana/esforço atual/max, status) + `statusAtivos[]` + `itensVagos: Item[]` + `criaturas: Criatura[]` |
 | PATCH | `/api/grupos/:id` | subconjunto (limite não pode ficar abaixo dos membros) | `GrupoDetalhe` |
-| PUT | `/api/grupos/:id/disponiveis` | `{ classeIds, racaIds, atributoIds, periciaIds }` (perícias do catálogo, dentro dos atributos; nada exclusivo de outro grupo) | `GrupoDetalhe` |
+| PUT | `/api/grupos/:id/disponiveis` | `{ classeIds, racaIds, atributoIds, periciaIds }` (do mestre; perícias do catálogo, dentro dos atributos) | `GrupoDetalhe` |
 | POST | `/api/grupos/:id/codigo` | — | `GrupoDetalhe` com código novo |
 | DELETE | `/api/grupos/:id` | — | `204` (apaga fichas e itens) |
 | POST | `/api/grupos/:id/itens` | campos de item + `fichaId?` (item avulso) | `201 Item` (sem ficha = vago) |
-| POST | `/api/grupos/:id/criaturas` | `{ bestaId, nivel? (1), quantidade? (1, máx 20) }` | `201 Criatura[]` (todas do grupo). Criatura exclusivo de outro grupo = 400 |
+| POST | `/api/grupos/:id/criaturas` | `{ bestaId, nivel? (1), quantidade? (1, máx 20) }` | `201 Criatura[]` (todas do grupo) |
 
-Classes, raças e atributos aceitam `grupoExclusivoId` (id de um grupo do mestre ou `null` = geral) no POST/PATCH.
+O kit do grupo (`kitId`) não limita o PUT de disponíveis: a tela usa o kit para pré-marcar, e itens, criaturas e NPCs mostrados no grupo seguem o kit.
+
+## Kits de RPG (mestre)
+| Método | Rota | Corpo | Resposta |
+|---|---|---|---|
+| GET | `/api/kits` | — | kits do mestre: `{ id, nome, descricao, conteudo { classes, racas, atributos, pericias, status, itens, bestas, npcs, grupos } }` |
+| POST | `/api/kits` | `{ nome, descricao? }` | `201 Kit` |
+| PATCH | `/api/kits/:id` | parcial | `Kit` |
+| DELETE | `/api/kits/:id` | — | `204`. Nada é apagado: as coisas saem do kit (sem outro kit, viram gerais) e os grupos ficam sem kit |
+
+Classes, raças, atributos, perícias, status, itens do catálogo, criaturas e NPCs aceitam `kitIds: string[]` (máx. 50, kits do mestre;
+outro = 404) no POST/PATCH e devolvem `kitIds` (vazio = geral). No PATCH, mandar `kitIds` troca a lista inteira; omitir mantém.
+Listas com `?kitId=` (`/api/catalogo-itens`, `/api/npcs`) devolvem o que está no kit mais o que é geral.
 
 ## Fichas, convites e itens (qualquer usuário logado)
 | Método | Rota | Corpo | Resposta |
@@ -156,10 +167,10 @@ Campos de item no corpo: `{ categoriaId? (Artefatos; null = sem categoria), nome
 ## Catálogo de itens (mestre)
 | Método | Rota | Corpo | Resposta |
 |---|---|---|---|
-| GET | `/api/catalogo-itens?grupoId=` | — | moldes do mestre (com `grupoExclusivoId`); com `grupoId`, só os que podem ir para aquele grupo |
-| POST | `/api/catalogo-itens` | campos de item + `grupoExclusivoId?` | `201` |
+| GET | `/api/catalogo-itens?kitId=` | — | moldes do mestre (com `kitIds`); com `kitId`, só os do kit + os gerais |
+| POST | `/api/catalogo-itens` | campos de item + `kitIds?` | `201` |
 | PATCH / DELETE | `/api/catalogo-itens/:id` | parcial | itens já lançados não mudam (são cópias) |
-| POST | `/api/catalogo-itens/:id/lancar` | `{ grupoId, fichaId?, quantidade? (1–20) }` ou `{ npcId, quantidade? }` | `201 { lancados }`; sem ficha = vago. Item exclusivo de um grupo só vai para NPC exclusivo do mesmo grupo. 409 `INVENTARIO_CHEIO` |
+| POST | `/api/catalogo-itens/:id/lancar` | `{ grupoId, fichaId?, quantidade? (1–20) }` ou `{ npcId, quantidade? }` | `201 { lancados }`; sem ficha = vago. Item dado a NPC não fica preso a grupo. 409 `INVENTARIO_CHEIO` |
 
 ## Conceitos de raça e de besta (mestre)
 `/api/conceitos-raca` e `/api/conceitos-besta`: mesmas rotas de `/api/conceitos` (GET, POST, PATCH/DELETE `/:id`, corpo `{ titulo, descricao }`),
@@ -169,7 +180,7 @@ com `subracas[]` e `formas[]`. Raças e bestas aceitam `conceitoId` (do próprio
 | Método | Rota | Corpo | Resposta |
 |---|---|---|---|
 | GET | `/api/bestas` | — | bestas do mestre com `conceito` e `cartas` (nº) |
-| POST | `/api/bestas` | `{ titulo, descricao, imagemUrl?, pontosVida, pontosMana, pontosEsforco (≥1), deslocamento (≥1), conceitoId?, grupoExclusivoId? }` | `201 BestaDetalhe` |
+| POST | `/api/bestas` | `{ titulo, descricao, imagemUrl?, pontosVida, pontosMana, pontosEsforco (≥1), deslocamento (≥1), conceitoId?, kitIds? }` | `201 BestaDetalhe` |
 | GET / PATCH / DELETE | `/api/bestas/:id` | parcial no PATCH | `BestaDetalhe` / `204` (apaga cartela e criaturas invocadas dela). De outro mestre = 404 |
 | GET | `/api/bestas/:id/progressao` | — | igual à prévia da classe |
 | POST | `/api/bestas/:id/duplicar` | — | `201 BestaDetalhe` "(cópia)" com cartas, aprimoramentos, perícias e atributos |
@@ -199,8 +210,8 @@ Cartas de besta usam as mesmas rotas `/api/habilidades/:id` e `/api/aprimorament
 ## NPCs (mestre)
 | Método | Rota | Corpo | Resposta |
 |---|---|---|---|
-| GET | `/api/npcs?grupoId=` | — | NPCs do mestre (com `grupoId`: só os exclusivos daquele grupo): `{ id, nome, descricao, imagemUrl, nivel, raca, classe, grupoExclusivo, vida, mana, esforco, morto }` |
-| POST | `/api/npcs` | `{ nome, racaId, classeId?, nivel? (1), vidaBase?, manaBase?, esforcoBase? (obrigatórios sem classe), descricao?, imagemUrl?, grupoExclusivoId? }` | `201 NpcDetalhe` (recursos cheios). Sem classe e sem base = 400 com os campos faltando |
+| GET | `/api/npcs?kitId=` | — | NPCs do mestre (com `kitId`: os do kit + os gerais): `{ id, nome, descricao, imagemUrl, nivel, raca, classe, kitIds, vida, mana, esforco, morto }` |
+| POST | `/api/npcs` | `{ nome, racaId, classeId?, nivel? (1), vidaBase?, manaBase?, esforcoBase? (obrigatórios sem classe), descricao?, imagemUrl?, kitIds? }` | `201 NpcDetalhe` (recursos cheios). Sem classe e sem base = 400 com os campos faltando |
 | GET / PATCH / DELETE | `/api/npcs/:id` | PATCH: parcial + `vidaAtual?`, `manaAtual?`, `esforcoAtual?` | `NpcDetalhe` / `204` (apaga os itens dele). Mudar nível/classe/base faz o atual acompanhar a diferença |
 | PUT | `/api/npcs/:id/atributos/:atributoId` | `{ dados }` (0..20; 0 tira) | `NpcDetalhe` |
 | PUT | `/api/npcs/:id/pericias/:periciaId` | `{ pontos }` (−99..99; 0 tira) | `NpcDetalhe` |
@@ -214,5 +225,5 @@ Cartas de besta usam as mesmas rotas `/api/habilidades/:id` e `/api/aprimorament
 | DELETE | `/api/npcs/:id/status/:statusId` | — | `NpcDetalhe` |
 | POST | `/api/criaturas/:id/status` | `{ statusId }` | ficha da criatura (com `statusDetalhado[]` e `statusAplicaveis[]`) |
 | DELETE | `/api/criaturas/:id/status/:statusId` | — | ficha da criatura |
-Valem os status ativados no grupo (NPC exclusivo, criatura) ou todos os do mestre (NPC geral). Automáticos (vida/mana/esforço em 0) aparecem sozinhos.
+Valem os status ativados no grupo (criatura) ou todos os do mestre (NPC). Automáticos (vida/mana/esforço em 0) aparecem sozinhos.
 A `Criatura` no grupo traz `status[]` (resumo). `PATCH /api/fichas/:id`: o jogador só diminui `vidaAtual` (aumentar = 403 `SO_MESTRE_CURA`).

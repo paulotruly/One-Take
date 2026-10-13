@@ -12,7 +12,8 @@ Perfil 1 ──< Raca 1 ──< RacaPericia (pontos) >── 1 Pericia
 Perfil(mestre) 1 ──< Grupo ──< ClasseNoGrupo / RacaNoGrupo / AtributoNoGrupo / PericiaNoGrupo
 Grupo 1 ──< Ficha >── Perfil(jogador), Classe, Raca     (unique grupoId+jogadorId)
 Ficha 1 ──< FichaAtributo (dados) / FichaPericia (pontos de nível) / Item ;  Grupo 1 ──< Item (fichaId nulo = vago)
-Classe / Raca / Atributo / ItemModelo / Besta .grupoExclusivoId? >── Grupo   (nulo = geral)
+Perfil 1 ──< Kit ──< KitClasse / KitRaca / KitAtributo / KitPericia / KitStatus / KitItemModelo / KitBesta / KitNpc   (sem kit = geral)
+Kit 1 ──< Grupo (kitId?, SetNull)
 Perfil 1 ──< RacaConceito 1 ──< Raca (conceitoId?) ;  Perfil 1 ──< BestaConceito 1 ──< Besta (conceitoId?)
 Perfil 1 ──< ItemModelo 1 ──< Item (modeloId?, cópia dos campos)
 Perfil 1 ──< Besta 1 ──< Habilidade (bestaId) / BestaPericia (modificador) / BestaAtributo (dados)
@@ -32,18 +33,20 @@ Grupo 1 ──< Criatura >── Besta   (criatura invocada: nível e recursos a
 | `Raca` | `donoId`, `titulo`, `descricao`, `imagemUrl?`, `deslocamento` (≥1), `conceitoId?` | Do mestre; `conceitoId` = sub-raça (SetNull ao excluir o conceito) |
 | `RacaConceito` | `donoId`, `titulo`, `descricao` | raça generalista que agrupa sub-raças |
 | `RacaPericia` | `racaId`, `periciaId`, `pontos` (≥1) | Perícia de base da raça. PK composta |
-| `Grupo` | `mestreId`, `titulo`, `sinopse`, `genero`, `imagemUrl?`, `limiteMembros` (1–50), `codigo` (único), `permitirClassesRepetidas` | O RPG do mestre |
+| `Grupo` | `kitId?` (SetNull), `mestreId`, `titulo`, `sinopse`, `genero`, `imagemUrl?`, `limiteMembros` (1–50), `codigo` (único), `permitirClassesRepetidas` | O RPG do mestre |
+| `Kit` | `donoId`, `nome`, `descricao` | Kit de RPG do mestre |
+| `KitClasse`, `KitRaca`, `KitAtributo`, `KitPericia`, `KitStatus`, `KitItemModelo`, `KitBesta`, `KitNpc` | `kitId` + id da coisa | PK composta, índice no id da coisa |
 | `ClasseNoGrupo`, `RacaNoGrupo`, `AtributoNoGrupo`, `PericiaNoGrupo` | `grupoId` + id do item | O que vale no grupo |
 | `Ficha` | `grupoId`, `jogadorId`, `nome`, `historia?`, `imagemUrl?`, `classeId`, `racaId`, `nivel`, `vidaAtual`, `manaAtual`, `esforcoAtual`, `pontosPericiaDisponiveis` | 1 por jogador por grupo |
 | `FichaAtributo` | `fichaId`, `atributoId`, `dados` | d20 por atributo |
 | `FichaPericia` | `fichaId`, `periciaId`, `pontos` | pontos de nível gastos |
 | `CategoriaItem` | `nome`, `descricao`, `icone` (chave da lista `ICONES_ITEM`), `ordem`, `donoId?` | `donoId` nulo = fixa (ids `...8004-1..4`); nome único por dono |
-| `ItemModelo` | `donoId`, `categoriaId?`, `nome`, `descricao`, `imagemUrl?`, `efeito?`, `espacos` (≥1), `usosMaximos?` (≥1; nulo = sem limite), `requisito?`, `requisitoPericiaId?`, `requisitoClasseId?`, `grupoExclusivoId?` | Catálogo de itens do mestre (molde) |
+| `ItemModelo` | `donoId`, `categoriaId?`, `nome`, `descricao`, `imagemUrl?`, `efeito?`, `espacos` (≥1), `usosMaximos?` (≥1; nulo = sem limite), `requisito?`, `requisitoPericiaId?`, `requisitoClasseId?` | Catálogo de itens do mestre (molde) |
 | `Item` | `grupoId?`, `fichaId?`, `npcId?`, `modeloId?`, mesmos campos do molde + `usosRestantes?` | Com ficha ou NPC = no inventário; nenhum = vago no grupo. CHECK: tem grupo ou NPC; não está com ficha e NPC ao mesmo tempo |
-| `Npc` | `donoId`, `nome`, `descricao`, `imagemUrl?`, `racaId`, `classeId?`, `nivel` (≥1), `vidaBase?`/`manaBase?`/`esforcoBase?` (obrigatórios sem classe, CHECK), `vidaAtual`, `manaAtual`, `esforcoAtual`, `grupoExclusivoId?` | Raça e classe com `RESTRICT` (409 `EM_USO`) |
+| `Npc` | `donoId`, `nome`, `descricao`, `imagemUrl?`, `racaId`, `classeId?`, `nivel` (≥1), `vidaBase?`/`manaBase?`/`esforcoBase?` (obrigatórios sem classe, CHECK), `vidaAtual`, `manaAtual`, `esforcoAtual` | Raça e classe com `RESTRICT` (409 `EM_USO`) |
 | `NpcStatus` / `CriaturaStatus` | `npcId`/`criaturaId`, `statusId`, `aplicadoEm` | status aplicados pelo mestre |
 | `NpcAtributo` / `NpcPericia` | `npcId` + `atributoId`/`periciaId`, `dados`/`pontos` | d20 por atributo / pontos extras na perícia |
-| `Besta` | `donoId`, `titulo`, `descricao`, `imagemUrl?`, `pontosVida/Mana/Esforco` (≥1), `deslocamento` (≥1), `conceitoId?`, `grupoExclusivoId?` | Criatura do bestiário |
+| `Besta` | `donoId`, `titulo`, `descricao`, `imagemUrl?`, `pontosVida/Mana/Esforco` (≥1), `deslocamento` (≥1), `conceitoId?` | Criatura do bestiário |
 | `BestaConceito` | `donoId`, `titulo`, `descricao` | criatura generalista com formas |
 | `BestaPericia` | `bestaId`, `periciaId`, `modificador` | PK composta |
 | `BestaAtributo` | `bestaId`, `atributoId`, `dados` (≥0) | d20 da criatura por atributo |
@@ -92,9 +95,12 @@ Nomes no código x na interface: `ClasseConceito`/`RacaConceito`/`BestaConceito`
   e CC para Carisma (perícias sociais e Vontade) ou Conhecimento (o resto).
 - **Raça do mestre** (sem raças fixas por enquanto). Perícias de base em `RacaPericia.pontos`, escolhidas do catálogo.
 - **Constantes de ficha** (3 pontos de atributo, inventário 5 + 2 por nível) ficam em `api/src/regras/ficha.ts`.
-- **Disponibilidade por tabelas de junção** (`*NoGrupo`): uma fonte só para "o que vale no grupo". Exclusividade
-  (`grupoExclusivoId` em Classe/Raca/Atributo) é aplicada pela API: ao marcar exclusivo, o item sai dos outros grupos
-  e entra no dele; o grupo não aceita item exclusivo de outro grupo.
+- **Disponibilidade por tabelas de junção** (`*NoGrupo`): uma fonte só para "o que vale no grupo". O kit do grupo só serve
+  para a tela pré-marcar; não restringe o que é gravado.
+- **Kits de RPG por tabelas de junção** (`Kit*`, muitos-para-muitos, Cascade dos dois lados): uma coisa pode estar em vários kits;
+  sem linha = geral. Filtro "do kit + geral" em `visivelNoKit` (`api/src/lib/kits.ts`); `definirKits` troca a lista inteira.
+  A migration `kits_de_rpg` substituiu `grupoExclusivoId`: criou um kit por grupo que tinha coisas exclusivas (com o nome do grupo),
+  ligou o grupo a ele e moveu as exclusivas para o kit (perícias pelos atributos exclusivos).
 - **Ficha guarda só o que muda** (nível, atuais, dados, pontos gastos). Máximos, cartas disponíveis, perícias somadas
   e capacidade do inventário são calculados com `api/src/regras/` a cada leitura.
 - **Perícias base (classes fixas) contam como a cópia do catálogo do mestre** (mesmo `origemId`) ao somar na ficha.
@@ -115,6 +121,6 @@ Nomes no código x na interface: `ClasseConceito`/`RacaConceito`/`BestaConceito`
   ou mana 0, `estaMorto`) apaga a linha: não há "criatura morto" guardado.
 - **Categoria de item como tabela** (era enum até a migration `categorias_de_item`, que converteu os valores para as 4 fixas).
   `categoriaId` é SetNull: apagar a categoria não apaga itens.
-- **Itens e criaturas não têm tabelas `*NoGrupo`**: ficam sempre disponíveis ao mestre; só a exclusividade (`grupoExclusivoId`) restringe.
+- **Itens, criaturas e NPCs não têm tabelas `*NoGrupo`**: no grupo aparecem os do kit dele mais os gerais (sem kit: todos).
 - **Soma de perícias numa função só** (`api/src/modules/pericias/soma.ts`): ficha, NPC e pré-requisito de item usam `somarPericias`;
   o teste de uma carta para um personagem sai de `testeDaCarta`.

@@ -1,4 +1,7 @@
 // Bestiário do mestre: criaturas montadas como classes, prontas para invocar nos grupos.
+import { AvisoKit } from "../../kits/components/AvisoKit";
+import { useKitAtivo } from "../../kits/api";
+import { soDoKit } from "../../kits/types";
 import { Footprints, PawPrint, Plus } from "lucide-react";
 import { Link } from "react-router";
 import { EmptyState, ErrorState, Loading } from "../../../components/ui/States";
@@ -10,6 +13,8 @@ import { useBestas, useConceitosBesta, useCriarConceitoBesta, useEditarConceitoB
 
 export function BestiarioPage() {
   const bestas = useBestas();
+  const { kitId } = useKitAtivo();
+  const bestasNoKit = (bestas.data ?? []).filter((x) => soDoKit(x.kitIds, kitId));
   const conceitos = useConceitosBesta();
 
   return (
@@ -45,15 +50,16 @@ export function BestiarioPage() {
       />
 
       <h2>Todas as criaturas</h2>
+      <AvisoKit />
       {bestas.isPending ? (
         <Loading texto="Carregando bestiário…" />
       ) : bestas.isError ? (
         <ErrorState mensagem={mensagemDeErro(bestas.error)} onTentarNovamente={() => bestas.refetch()} />
-      ) : bestas.data.length === 0 ? (
+      ) : bestasNoKit.length === 0 ? (
         <EmptyState titulo="Nenhuma criatura ainda" descricao="Crie a primeira criatura para invocar nas sessões." />
       ) : (
         <div className="galeria">
-          {bestas.data.map((b) => (
+          {bestasNoKit.map((b) => (
             <article key={b.id} className="classe-card">
               <Link to={`/mestre/bestiario/${b.id}`} className="classe-card__link">
                 <div className="classe-card__retrato">

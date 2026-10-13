@@ -59,15 +59,12 @@ export async function lancar(modeloId: string, usuarioId: string, dados: z.infer
   let destino: { grupoId: string | null; fichaId: string | null; npcId: string | null };
   if (dados.npcId) {
     const npc = await npcDoMestre(dados.npcId, usuarioId);
-    if (modelo.grupoExclusivoId && modelo.grupoExclusivoId !== npc.grupoExclusivoId) {
-      throw requisicaoInvalida("Este item é exclusivo de um grupo; só NPCs desse grupo podem recebê-lo.");
-    }
     await garantirEspacoNpc(npc, total);
-    destino = { grupoId: npc.grupoExclusivoId, fichaId: null, npcId: npc.id };
+    // Item com NPC não pertence a grupo nenhum (NPCs não são de um grupo).
+    destino = { grupoId: null, fichaId: null, npcId: npc.id };
   } else {
     if (!dados.grupoId) throw requisicaoInvalida("Escolha o grupo ou o NPC que recebe o item.", [{ campo: "grupoId", mensagem: "Obrigatório" }]);
     await grupoDoMestre(dados.grupoId, usuarioId);
-    if (modelo.grupoExclusivoId && modelo.grupoExclusivoId !== dados.grupoId) throw requisicaoInvalida("Este item é exclusivo de outro grupo.");
     if (dados.fichaId) {
       const ficha = await garantirEspacoFicha(dados.fichaId, total);
       if (ficha.grupoId !== dados.grupoId) throw naoEncontrado("Ficha de destino não encontrada neste grupo");
@@ -75,7 +72,7 @@ export async function lancar(modeloId: string, usuarioId: string, dados: z.infer
     destino = { grupoId: dados.grupoId, fichaId: dados.fichaId ?? null, npcId: null };
   }
 
-  const { id: _id, donoId: _d, grupoExclusivoId: _g, criadoEm: _c, atualizadoEm: _a, ...campos } = modelo;
+  const { id: _id, donoId: _d, criadoEm: _c, atualizadoEm: _a, ...campos } = modelo;
   await prisma.item.createMany({
     data: Array.from({ length: dados.quantidade }, () => ({ ...campos, modeloId, ...destino, usosRestantes: campos.usosMaximos })),
   });
@@ -154,15 +151,14 @@ export async function mover(id: string, usuarioId: string, destino: z.infer<type
     if (destino.npcId === item.npcId) return apresentarItem(item);
     const npc = await npcDoMestre(destino.npcId, usuarioId);
     await garantirEspacoNpc(npc, item.espacos);
-    // Com NPC geral o item não pertence a grupo nenhum (não some se um grupo for excluído); com NPC exclusivo, fica no grupo dele.
-    return apresentarItem(await prisma.item.update({ where: { id }, data: { npcId: npc.id, fichaId: null, grupoId: npc.grupoExclusivoId }, include: comRequisitos }));
+    // Com NPC o item não pertence a grupo nenhum (não some se um grupo for excluído).
+    return apresentarItem(await prisma.item.update({ where: { id }, data: { npcId: npc.id, fichaId: null, grupoId: null }, include: comRequisitos }));
   }
 
   // Para uma ficha.
   if (destino.fichaId) {
     if (destino.fichaId === item.fichaId) return apresentarItem(item);
     const ficha = await garantirEspacoFicha(destino.fichaId, item.espacos);
-    await respeitarNpcExclusivo(item.npcId, ficha.grupoId);
     const mesmoGrupo = ficha.grupoId === item.grupoId;
     // Jogador: só dentro do grupo. Mestre: qualquer ficha dos grupos dele (ex.: o NPC entrega um item).
     if (!mesmoGrupo && !(souMestre && ficha.grupo.mestreId === usuarioId)) throw naoEncontrado("Ficha de destino não encontrada neste grupo");
@@ -173,18 +169,8 @@ export async function mover(id: string, usuarioId: string, destino: z.infer<type
   const grupoId = destino.grupoId ?? item.grupoId;
   if (!grupoId) throw requisicaoInvalida("Este item é de um NPC sem grupo: escolha o grupo onde ele fica vago.", [{ campo: "grupoId", mensagem: "Escolha o grupo" }]);
   if (destino.grupoId && destino.grupoId !== item.grupoId) await grupoDoMestre(destino.grupoId, usuarioId);
-  await respeitarNpcExclusivo(item.npcId, grupoId);
   if (item.fichaId === null && item.npcId === null && item.grupoId === grupoId) return apresentarItem(item);
   return apresentarItem(await prisma.item.update({ where: { id }, data: { fichaId: null, npcId: null, grupoId }, include: comRequisitos }));
-}
-
-/** Item de NPC exclusivo de um grupo só sai para aquele grupo. */
-async function respeitarNpcExclusivo(npcId: string | null, grupoDestino: string) {
-  if (!npcId) return;
-  const npc = await getPrisma().npc.findUnique({ where: { id: npcId }, select: { grupoExclusivoId: true, nome: true } });
-  if (npc?.grupoExclusivoId && npc.grupoExclusivoId !== grupoDestino) {
-    throw requisicaoInvalida(`${npc.nome} é exclusivo de outro grupo: os itens dele só vão para esse grupo.`);
-  }
 }
 
 /**

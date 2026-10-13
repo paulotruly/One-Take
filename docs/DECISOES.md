@@ -179,3 +179,12 @@ Formato: data — decisão. Motivo.
   criatura) ou todos os do mestre (NPC geral).
 - **Perícia do teste na habilidade — decisão do produto.** Campo opcional `Habilidade.periciaId` (opcional para não invalidar as cartas
   que já existem); a ficha de cada personagem mostra o teste pronto para usar a carta. Duplicar classe e `fixar-classe` remapeiam a perícia.
+- **Kits de RPG no lugar de "exclusivo de um grupo" (2026-10-13) — decisão do produto.** Kits substituem a exclusividade e uma coisa
+  pode estar em vários kits. Vale para classes, raças, atributos, perícias, status, itens do catálogo, criaturas e NPCs. Interpretações:
+  sem kit = geral (aparece em todos); o kit ativo é guardado no navegador (filtro de interface, não dado do jogo) e vira o kit padrão
+  do que for criado; o kit do grupo só pré-marca o que vale (não trava o PUT de disponíveis) e filtra itens, criaturas e NPCs mostrados
+  no grupo; excluir kit não apaga conteúdo. A migration converteu os dados: um kit por grupo que tinha exclusivos, ligado ao grupo.
+  As regras antigas de exclusividade (`EXCLUSIVO_EM_USO`, NPC exclusivo só com raça/classe do grupo) deixaram de existir.
+- **Kit ativo mostra só o kit (2026-10-13) — decisão do produto.** Com um kit ativo, as listas do mestre não mostram o geral; o geral
+  aparece em "Todos". Interpretações: o que é fixo do sistema (classes fixas, atributos e status fixos) continua aparecendo, porque não
+  pode entrar em kit; no grupo com kit, itens, criaturas, NPCs e a pré-marcação continuam com o do kit mais o geral.

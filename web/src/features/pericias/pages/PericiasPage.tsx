@@ -1,5 +1,8 @@
 // Catálogo do mestre: atributos (3 fixos + os dele) e perícias (nome, descrição, categoria, atributo).
 // Classes e raças usam perícias deste catálogo.
+import { AvisoKit } from "../../kits/components/AvisoKit";
+import { useKitAtivo } from "../../kits/api";
+import { soDoKit } from "../../kits/types";
 import { Lock, Plus } from "lucide-react";
 import { useState } from "react";
 import { Button } from "../../../components/ui/Button";
@@ -17,7 +20,6 @@ import {
   useExcluirAtributo,
   useExcluirPericia,
 } from "../api";
-import { useGrupos } from "../../grupos/api";
 import { CategoriaIcone } from "../components/CategoriaIcone";
 import { AtributoForm, PericiaCatalogoForm } from "../components/forms";
 import { PericiaItem } from "../components/PericiaItem";
@@ -36,13 +38,15 @@ type Exclusao = { tipo: "pericia"; item: PericiaCatalogo } | { tipo: "atributo";
 export function PericiasPage() {
   const catalogo = useCatalogo();
   const atributos = useAtributos();
+  const { kitId } = useKitAtivo();
+  const atributosNoKit = (atributos.data ?? []).filter((a) => a.fixo || soDoKit(a.kitIds, kitId));
+  const periciasNoKit = (catalogo.data ?? []).filter((p) => soDoKit(p.kitIds, kitId));
   const criar = useCriarPericia();
   const editar = useEditarPericia();
   const excluirPericia = useExcluirPericia();
   const criarAtributo = useCriarAtributo();
   const editarAtributo = useEditarAtributo();
   const excluirAtributo = useExcluirAtributo();
-  const grupos = useGrupos();
 
   // undefined = fechado; null = novo; objeto = editando
   const [periciaEmEdicao, setPericiaEmEdicao] = useState<PericiaCatalogo | null | undefined>(undefined);
@@ -90,13 +94,14 @@ export function PericiasPage() {
             <Plus size={16} aria-hidden /> Novo atributo
           </Button>
         </div>
+        <AvisoKit />
         {atributos.isPending ? (
           <Loading compacto texto="Carregando atributos…" />
         ) : atributos.isError ? (
           <ErrorState mensagem={mensagemDeErro(atributos.error)} onTentarNovamente={() => atributos.refetch()} />
         ) : (
           <ul className="pericias">
-            {atributos.data.map((a) => (
+            {atributosNoKit.map((a) => (
               <li key={a.id} className="pericia pericia--atributo">
                 <div>
                   <div className="pericia__nome">
@@ -149,11 +154,11 @@ export function PericiasPage() {
           <Loading texto="Carregando perícias…" />
         ) : catalogo.isError ? (
           <ErrorState mensagem={mensagemDeErro(catalogo.error)} onTentarNovamente={() => catalogo.refetch()} />
-        ) : catalogo.data.length === 0 ? (
+        ) : periciasNoKit.length === 0 ? (
           <EmptyState titulo="Nenhuma perícia no catálogo" descricao="Crie perícias para poder adicioná-las às classes e raças." />
         ) : (
           <PericiasPorAtributo
-            pericias={catalogo.data}
+            pericias={periciasNoKit}
             renderItem={(p) => (
               <PericiaItem
                 key={p.id}
@@ -193,8 +198,7 @@ export function PericiasPage() {
 
       <Modal aberto={atributoEmEdicao !== undefined} onFechar={fecharAtributo} titulo={atributoEmEdicao ? "Editar atributo" : "Novo atributo"}>
         <AtributoForm
-          inicial={atributoEmEdicao ? { ...atributoEmEdicao, grupoExclusivoId: atributoEmEdicao.grupoExclusivoId ?? null } : undefined}
-          grupos={grupos.data}
+          inicial={atributoEmEdicao ? { ...atributoEmEdicao, kitIds: atributoEmEdicao.kitIds ?? [] } : undefined}
           enviando={salvandoAtributo.isPending}
           erros={errosDeCampo(salvandoAtributo.error)}
           erroGeral={erroDeFormulario(salvandoAtributo.error)}

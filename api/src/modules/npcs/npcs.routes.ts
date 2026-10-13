@@ -11,8 +11,8 @@ export const npcsRouter = Router();
 const npcId = (v: unknown) => idDe(v, "NPC não encontrado");
 
 npcsRouter.get("/npcs", async (req, res) => {
-  const { grupoId } = filtroNpcsSchema.parse(req.query);
-  res.json(await service.listar(usuarioDe(req).id, grupoId));
+  const { kitId } = filtroNpcsSchema.parse(req.query);
+  res.json(await service.listar(usuarioDe(req).id, kitId));
 });
 
 npcsRouter.post("/npcs", async (req, res) => {

@@ -142,21 +142,24 @@ export function MestreClasses() {
   );
 }
 
-export function MestreExclusividade() {
+export function MestreKits() {
   return (
     <>
-      <p>Classes, raças, atributos, itens do catálogo e criaturas do bestiário têm o campo <strong>Disponibilidade</strong>, sempre opcional:</p>
+      <p>
+        Um <strong>kit de RPG</strong> junta o conteúdo de uma aventura: classes, raças, atributos, perícias, status, itens do catálogo,
+        criaturas e NPCs. Crie kits no menu <strong>Kits de RPG</strong> e marque, no formulário de cada coisa, em quais kits ela entra.
+      </p>
       <Tabela
-        cabecalho={["Opção", "O que acontece"]}
+        cabecalho={["Situação", "O que acontece"]}
         linhas={[
-          ["Geral (padrão)", "Pode ser liberado em qualquer grupo seu. Você escolhe na hora de montar cada grupo."],
-          ["Exclusivo de um grupo", "Só vale naquele grupo. Classes, raças e atributos já entram liberados nele; itens, criaturas e NPCs não têm lista de liberação, só deixam de aparecer para os outros grupos."],
+          ["Sem kit (geral)", "Aparece em Todos (sem kit ativo) e pode ser usado em qualquer grupo. É o padrão."],
+          ["Em um ou mais kits", "Aparece só com esses kits. A mesma coisa pode estar em vários kits (ex.: um Lobo no kit de terror e no de fantasia)."],
+          ["Kit ativo", "Escolhido no topo da navegação lateral. As listas mostram só o que é do kit (mais o que é fixo do sistema), e tudo o que você criar já entra nele. Para ver o geral, escolha Todos."],
+          ["Grupo com kit", "Ao montar o grupo, escolha o kit: ele já marca as classes, raças, perícias e status do kit (você ajusta). Itens, criaturas e NPCs mostrados no grupo seguem o kit."],
         ]}
       />
-      <p>Dá para deixar tudo como geral e decidir só ao montar o grupo. Use exclusivo para coisas feitas sob medida para uma aventura.</p>
-      <Destaque tipo="aviso" titulo="Exclusivo só se ninguém de fora usa">
-        Não dá para tornar exclusivo de um grupo algo que já está em uso fora dele (por exemplo, uma classe usada por uma ficha de outro grupo
-        ou por um NPC geral). E um NPC exclusivo só pode ter raça e classe gerais ou exclusivas do mesmo grupo.
+      <Destaque tipo="dica" titulo="Excluir um kit não apaga nada">
+        O que estava só nele vira geral, e os grupos que usavam o kit ficam sem kit. O que já foi liberado nos grupos continua liberado.
       </Destaque>
     </>
   );
@@ -180,7 +183,7 @@ export function MestreBestiario() {
       <ul>
         <li><strong>Nível</strong>: você escolhe ao invocar no grupo. A progressão é a mesma das classes (a prévia aparece na página da criatura).</li>
         <li><strong>Arquétipo de criatura</strong>: uma criatura geral (ex.: Lobo) com formas (Lobo das neves, Lobo alfa).</li>
-        <li><strong>Disponibilidade</strong>: geral (qualquer grupo) ou exclusivo de um grupo.</li>
+        <li><strong>Kits de RPG</strong>: em quais kits a criatura aparece (nenhum = geral). Ao invocar, o grupo mostra as do kit dele e as gerais.</li>
         <li><strong>Duplicar</strong> cria uma cópia com cartas, perícias e atributos para fazer variações rápido.</li>
       </ul>
       <Destaque tipo="dica" titulo="Equilíbrio">
@@ -207,7 +210,7 @@ export function MestreNpcs() {
           ["Nível", "Mesma progressão dos personagens. Você pode mudar à vontade; o valor atual acompanha."],
           ["Atributos e perícias", "Dados por atributo com + e -; perícias da raça e da classe, mais pontos extras que você der. A ficha mostra o teste pronto."],
           ["Inventário", `Mesma capacidade das fichas (${f.inventarioInicial} espaços no nível 1, +${f.inventarioPorNivel} por nível). Dê itens do catálogo, use, entregue a um jogador ou deixe vago num grupo.`],
-          ["Disponibilidade", "Geral ou exclusivo de um grupo. Os exclusivos aparecem na página do grupo, na seção NPCs."],
+          ["Kits de RPG", "Em quais kits o NPC aparece (nenhum = geral). A página do grupo mostra os NPCs do kit dele e os gerais."],
         ]}
       />
       <p>Vida ou mana em 0 deixa o NPC morto (a ficha avisa). Excluir um NPC apaga os itens que estão com ele.</p>
@@ -228,7 +231,7 @@ export function MestreItens() {
           ["Espaços", "Quantos espaços ocupa no inventário (mínimo 1)."],
           ["Consumo", "Sem limite, ou um número de usos: ao acabar, o item some."],
           ["Pré-requisito", "Classe e/ou perícia exigidas para saber usar, e um requisito em texto. Quem não cumpre carrega, mas não usa."],
-          ["Disponibilidade", "Geral (qualquer grupo) ou exclusivo de um grupo."],
+          ["Kits de RPG", "Em quais kits o item aparece (nenhum = geral). Ao lançar num grupo, o catálogo mostra o do kit do grupo e o geral."],
         ]}
       />
       <ul>
@@ -377,9 +380,9 @@ export function MestreProtecoes() {
 export function MestreTemas() {
   return (
     <>
-      <p>Com atributos próprios, exclusividade e a escolha do que vale em cada grupo, o mesmo sistema serve para aventuras bem diferentes.</p>
+      <p>Com atributos próprios, kits de RPG e a escolha do que vale em cada grupo, o mesmo sistema serve para aventuras bem diferentes.</p>
       <Destaque titulo="Exemplo: terror">
-        Crie o atributo <strong>Sanidade</strong> (exclusivo do grupo de terror) com as perícias Coragem e Ocultismo. No grupo,
+        Crie o kit <strong>Terror</strong> e, nele, o atributo <strong>Sanidade</strong> com as perícias Coragem e Ocultismo. No grupo, escolha o kit,
         desmarque as perícias de magia e libere só classes de suporte e vanguarda. Os jogadores vão distribuir os d20 entre Capacidade
         física, Conhecimento e Sanidade.
       </Destaque>

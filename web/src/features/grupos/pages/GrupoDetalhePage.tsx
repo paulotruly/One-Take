@@ -39,7 +39,7 @@ export function GrupoDetalhePage() {
   const classes = useClasses();
   const pericias = useCatalogo();
   const categorias = useCategoriasItem();
-  const npcs = useNpcs(id);
+  const npcs = useNpcs(grupo.data?.kitId ?? null);
 
   const [copiado, setCopiado] = useState(false);
   const [confirmarExclusao, setConfirmarExclusao] = useState(false);
@@ -85,6 +85,7 @@ export function GrupoDetalhePage() {
         <div className="classe-cabecalho__info">
           <div className="classe-cabecalho__selos">
             <span className="selo">{g.genero}</span>
+            {g.kit && <span className="selo">Kit: {g.kit.nome}</span>}
             <span className="selo">{g.permitirClassesRepetidas ? "Classes podem repetir" : "Sem classes repetidas"}</span>
           </div>
           <h1>{g.titulo}</h1>
@@ -152,14 +153,16 @@ export function GrupoDetalhePage() {
         )}
       </section>
 
-      {/* ---------- NPCs exclusivos do grupo ---------- */}
+      {/* ---------- NPCs do kit do grupo ---------- */}
       <section className="secao">
         <div className="secao__cabecalho">
           <div>
             <h2>NPCs</h2>
-            <p className="pagina__subtitulo">NPCs exclusivos deste grupo. Os gerais ficam em <Link to="/mestre/npcs">NPCs</Link>.</p>
+            <p className="pagina__subtitulo">
+              {g.kit ? <>NPCs do kit {g.kit.nome} e os gerais.</> : <>Todos os seus NPCs (o grupo não tem kit).</>} Gerencie em <Link to="/mestre/npcs">NPCs</Link>.
+            </p>
           </div>
-          <Link to={`/mestre/npcs/novo?grupo=${id}`} className="btn">
+          <Link to={`/mestre/npcs/novo?grupo=${id}${g.kitId ? `&kit=${g.kitId}` : ""}`} className="btn">
             <Plus size={16} aria-hidden /> Novo NPC
           </Link>
         </div>
@@ -168,7 +171,7 @@ export function GrupoDetalhePage() {
         ) : npcs.isError ? (
           <ErrorState mensagem={mensagemDeErro(npcs.error)} onTentarNovamente={() => npcs.refetch()} />
         ) : npcs.data.length === 0 ? (
-          <EmptyState compacto titulo="Nenhum NPC neste grupo" />
+          <EmptyState compacto titulo="Nenhum NPC para este grupo" />
         ) : (
           <ul className="membros">{npcs.data.map((n) => <NpcLinha key={n.id} n={n} />)}</ul>
         )}
@@ -290,9 +293,9 @@ export function GrupoDetalhePage() {
         />
       </Modal>
 
-      <LancarItemModal grupoId={id} aberto={lancando} onFechar={() => setLancando(false)} destinos={destinos} />
+      <LancarItemModal grupoId={id} kitId={g.kitId} aberto={lancando} onFechar={() => setLancando(false)} destinos={destinos} />
       <StatusMembroModal grupoId={id} membro={membroStatus} statusAtivos={g.statusAtivos} onFechar={() => setStatusDe(null)} />
-      <InvocarModal grupoId={id} aberto={invocando} onFechar={() => setInvocando(false)} />
+      <InvocarModal grupoId={id} kitId={g.kitId} aberto={invocando} onFechar={() => setInvocando(false)} />
       <CriaturaModal
         criaturaId={fichaCriatura}
         onFechar={() => setFichaCriatura(null)}

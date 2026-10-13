@@ -76,8 +76,8 @@ async function main() {
       if (statusDoMestre.length) await tx.habilidade.updateMany({ where: { id: { in: statusDoMestre } }, data: { statusId: null } });
       const aprimDoMestre = c.habilidades.flatMap((h) => h.aprimoramentos).filter((a) => a.status && a.status.donoId !== null).map((a) => a.id);
       if (aprimDoMestre.length) await tx.habilidadeAprimoramento.updateMany({ where: { id: { in: aprimDoMestre } }, data: { statusId: null } });
-      // Fixa não tem dono, conceito do mestre nem exclusividade de grupo.
-      await tx.classe.update({ where: { id: c.id }, data: { donoId: null, conceitoId: null, grupoExclusivoId: null } });
+      // Fixa não tem dono, arquétipo do mestre nem kits (kits são de um mestre).
+      await tx.classe.update({ where: { id: c.id }, data: { donoId: null, conceitoId: null, kits: { deleteMany: {} } } });
     });
     console.log(`ok: ${c.titulo} agora é classe fixa do sistema (${c.habilidades.length} cartas, ${c.pericias.length} perícias).`);
   } finally {

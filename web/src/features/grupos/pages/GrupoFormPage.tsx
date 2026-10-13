@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { Button } from "../../../components/ui/Button";
+import { Field } from "../../../components/ui/Field";
 import { LinkVoltar } from "../../../components/ui/LinkVoltar";
 import { ErrorState, Loading } from "../../../components/ui/States";
 import { erroDeFormulario, errosDeCampo, mensagemDeErro } from "../../../lib/api";
@@ -9,6 +10,8 @@ import { useClasses } from "../../classes/api";
 import { useAtributos, useCatalogo } from "../../pericias/api";
 import { useRacas } from "../../racas/api";
 import { useStatus } from "../../status/api";
+import { useKitAtivo, useKits } from "../../kits/api";
+import { visivelNoKit } from "../../kits/types";
 import { useCriarGrupo, useDefinirDisponiveis, useEditarGrupo, useGrupo } from "../api";
 import { DisponiveisSelector } from "../components/DisponiveisSelector";
 import { GrupoInfoForm, type GrupoInfo } from "../components/GrupoInfoForm";
@@ -33,6 +36,8 @@ function Formulario({ grupo }: { grupo?: GrupoDetalhe }) {
   const atributos = useAtributos();
   const catalogo = useCatalogo();
   const status = useStatus();
+  const kits = useKits();
+  const { kitId: kitAtivo } = useKitAtivo();
   const criar = useCriarGrupo();
   const editar = useEditarGrupo(grupo?.id ?? "");
   const definir = useDefinirDisponiveis(grupo?.id ?? "");
@@ -45,19 +50,39 @@ function Formulario({ grupo }: { grupo?: GrupoDetalhe }) {
     limiteMembros: String(grupo?.limiteMembros ?? 4),
     permitirClassesRepetidas: grupo?.permitirClassesRepetidas ?? true,
   });
+  const [kitId, setKitId] = useState<string | null>(grupo ? grupo.kitId : kitAtivo);
   const [disponiveis, setDisponiveis] = useState<Disponiveis>(
     grupo?.disponiveis ?? { classeIds: [], racaIds: [], atributoIds: [], periciaIds: [], statusIds: [] },
   );
 
-  // Grupo novo já começa com os status fixos do sistema ativados (dá para desmarcar).
-  const [statusIniciados, setStatusIniciados] = useState(!!grupo);
-  useEffect(() => {
-    if (statusIniciados || !status.data) return;
-    setDisponiveis((d) => ({ ...d, statusIds: status.data.filter((s) => s.fixo).map((s) => s.id) }));
-    setStatusIniciados(true);
-  }, [status.data, statusIniciados]);
-
   const carregando = classes.isPending || racas.isPending || atributos.isPending || catalogo.isPending || status.isPending;
+
+  /** Marca tudo o que o kit traz (do kit + gerais); os status fixos do sistema vêm sempre. Sem kit, só os status fixos. */
+  function marcarDoKit(k: string | null) {
+    const no = (x: { kitIds?: string[] }) => visivelNoKit(x.kitIds, k);
+    const atrs = (atributos.data ?? []).filter((a) => !a.fixo && no(a)).map((a) => a.id);
+    setDisponiveis({
+      classeIds: k ? (classes.data ?? []).filter(no).map((c) => c.id) : [],
+      racaIds: k ? (racas.data ?? []).filter(no).map((r) => r.id) : [],
+      atributoIds: k ? atrs : [],
+      periciaIds: k ? (catalogo.data ?? []).filter((p) => no(p) && atrs.includes(p.atributoId)).map((p) => p.id) : [],
+      statusIds: (status.data ?? []).filter((s) => s.fixo || (k && no(s))).map((s) => s.id),
+    });
+  }
+
+  // Grupo novo: já começa marcado pelo kit ativo (ou só com os status fixos), quando os dados chegam.
+  const [iniciado, setIniciado] = useState(!!grupo);
+  useEffect(() => {
+    if (iniciado || carregando) return;
+    marcarDoKit(kitId);
+    setIniciado(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [carregando, iniciado]);
+
+  function trocarKit(k: string | null) {
+    setKitId(k);
+    marcarDoKit(k);
+  }
   const erroCarga = classes.error ?? racas.error ?? atributos.error ?? catalogo.error ?? status.error;
   const erro = criar.error ?? editar.error ?? definir.error;
   const enviando = criar.isPending || editar.isPending || definir.isPending;
@@ -70,6 +95,7 @@ function Formulario({ grupo }: { grupo?: GrupoDetalhe }) {
       imagemUrl: info.imagemUrl.trim() || null,
       limiteMembros: info.limiteMembros.trim() === "" ? (undefined as unknown as number) : Number(info.limiteMembros),
       permitirClassesRepetidas: info.permitirClassesRepetidas,
+      kitId,
     };
   }
 
@@ -99,13 +125,21 @@ function Formulario({ grupo }: { grupo?: GrupoDetalhe }) {
         </section>
         <section className="secao">
           <h2>O que vale neste grupo</h2>
+          <Field
+            rotulo="Kit de RPG"
+            dica={kitId ? "Trocar o kit marca de novo o que vale (do kit + gerais). Itens, criaturas e NPCs do grupo seguem o kit." : "Sem kit: você marca tudo à mão e o grupo vê todos os itens, criaturas e NPCs."}
+          >
+            <select value={kitId ?? ""} onChange={(e) => trocarKit(e.target.value || null)} disabled={carregando}>
+              <option value="">Sem kit</option>
+              {(kits.data ?? []).map((k) => <option key={k.id} value={k.id}>{k.nome}</option>)}
+            </select>
+          </Field>
           {carregando ? (
             <Loading compacto texto="Carregando classes, raças e perícias…" />
           ) : erroCarga ? (
             <ErrorState mensagem={mensagemDeErro(erroCarga)} />
           ) : (
             <DisponiveisSelector
-              grupoId={grupo?.id ?? null}
               classes={classes.data ?? []}
               racas={racas.data ?? []}
               atributos={atributos.data ?? []}

@@ -2,16 +2,16 @@ import { randomUUID } from "node:crypto";
 import type { z } from "zod";
 import type { Atributo, Classe, ClassePericia, GrupoClasse, Pericia } from "../../generated/prisma/client.js";
 import { classeFixa, naoEncontrado } from "../../lib/errors.js";
-import { aplicarExclusividade, garantirExclusividadePossivel, validarGrupoExclusivo } from "../../lib/exclusividade.js";
+import { comKits, definirKits } from "../../lib/kits.js";
 import { getPrisma } from "../../lib/prisma.js";
 import { previaProgressao } from "../../regras/progressao.js";
 import { apresentarAtributo, porAtributoENome } from "../atributos/atributos.service.js";
 import { comStatus } from "../habilidades/habilidades.include.js";
 import type { criarClasseSchema, editarClasseSchema } from "./classes.schemas.js";
 
-/** Formato público de uma classe: acrescenta `fixa`. */
-export function apresentarClasse<T extends Classe>(c: T) {
-  return { ...c, fixa: c.donoId === null };
+/** Formato público de uma classe: acrescenta `fixa` e, se vierem os kits, `kitIds`. */
+export function apresentarClasse<T extends Classe & { kits?: { kitId: string }[] }>({ kits, ...c }: T) {
+  return { ...c, fixa: c.donoId === null, ...(kits && { kitIds: kits.map((k) => k.kitId) }) };
 }
 
 /** Perícias da classe achatadas: dados do catálogo + modificador da classe, por atributo e nome. */
@@ -45,7 +45,7 @@ export async function listar(usuarioId: string, grupo?: GrupoClasse) {
   const classes = await getPrisma().classe.findMany({
     where: { OR: [{ donoId: null }, { donoId: usuarioId }], ...(grupo && { grupo }) },
     orderBy: [{ titulo: "asc" }],
-    include: { conceito: { select: { id: true, titulo: true } } },
+    include: { conceito: { select: { id: true, titulo: true } }, ...comKits },
   });
   // Fixas primeiro, depois as próprias.
   return classes
@@ -61,6 +61,7 @@ export async function detalhar(id: string, usuarioId: string) {
       habilidades: { orderBy: { ordem: "asc" }, include: comStatus },
       pericias: { include: { pericia: { include: { atributo: true } } } },
       conceito: { select: { id: true, titulo: true, descricao: true } },
+      ...comKits,
     },
   });
   const { pericias, ...resto } = classe;
@@ -86,21 +87,19 @@ async function validarConceito(conceitoId: string | null | undefined, usuarioId:
 }
 
 export async function criar(usuarioId: string, dados: z.infer<typeof criarClasseSchema>) {
-  await validarGrupoExclusivo(dados.grupoExclusivoId, usuarioId);
   await validarConceito(dados.conceitoId, usuarioId);
-  const classe = await getPrisma().classe.create({ data: { ...dados, donoId: usuarioId } });
-  await aplicarExclusividade("classe", classe.id, dados.grupoExclusivoId);
-  return apresentarClasse(classe);
+  const { kitIds, ...resto } = dados;
+  const classe = await getPrisma().classe.create({ data: { ...resto, donoId: usuarioId } });
+  await definirKits("classe", classe.id, kitIds, usuarioId);
+  return apresentarClasse({ ...classe, kits: (kitIds ?? []).map((kitId) => ({ kitId })) });
 }
 
 export async function editar(id: string, usuarioId: string, dados: z.infer<typeof editarClasseSchema>) {
   await classeEditavel(id, usuarioId);
-  await validarGrupoExclusivo(dados.grupoExclusivoId, usuarioId);
-  await garantirExclusividadePossivel("classe", id, dados.grupoExclusivoId);
   await validarConceito(dados.conceitoId, usuarioId);
-  const classe = await getPrisma().classe.update({ where: { id }, data: dados });
-  await aplicarExclusividade("classe", id, dados.grupoExclusivoId);
-  return apresentarClasse(classe);
+  const { kitIds, ...resto } = dados;
+  await definirKits("classe", id, kitIds, usuarioId);
+  return apresentarClasse(await getPrisma().classe.update({ where: { id }, data: resto, include: comKits }));
 }
 
 export async function excluir(id: string, usuarioId: string) {

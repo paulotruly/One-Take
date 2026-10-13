@@ -1,12 +1,12 @@
 import { z } from "zod";
-import { grupoExclusivoSchema } from "../../lib/exclusividade.js";
+import { kitIdsSchema } from "../../lib/kits.js";
 import { texto } from "../../lib/validacao.js";
 
 const base = z.object({
   nome: texto(60),
   descricao: z.string().trim().max(1000),
-  /** Opcional: só vale neste grupo. Nulo/ausente = geral. */
-  grupoExclusivoId: grupoExclusivoSchema,
+  /** Kits de RPG em que está (sem kit = geral). */
+  kitIds: kitIdsSchema,
 });
 
 export const criarAtributoSchema = base.extend({ descricao: base.shape.descricao.default("") });

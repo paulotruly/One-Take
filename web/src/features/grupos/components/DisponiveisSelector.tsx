@@ -1,6 +1,5 @@
-// Escolha do que vale no grupo: classes, raças, atributos (grupos de perícias) e perícias específicas.
-// Itens exclusivos de outro grupo não aparecem; os exclusivos deste grupo ficam marcados e travados.
-import { Lock } from "lucide-react";
+// Escolha do que vale no grupo: classes, raças, atributos (grupos de perícias), perícias específicas e status.
+// O kit do grupo só pré-marca; aqui o mestre ajusta à vontade.
 import type { ReactNode } from "react";
 import { ROTULO_GRUPO, type Classe } from "../../classes/types";
 import type { Atributo, PericiaCatalogo } from "../../pericias/types";
@@ -10,8 +9,6 @@ import { StatusBadge } from "../../status/components/StatusBadge";
 import type { Disponiveis } from "../types";
 
 type Props = {
-  /** null = grupo ainda não criado. */
-  grupoId: string | null;
   classes: Classe[];
   racas: Raca[];
   atributos: Atributo[];
@@ -21,18 +18,11 @@ type Props = {
   onChange: (d: Disponiveis) => void;
 };
 
-const visivel = (grupoExclusivoId: string | null | undefined, grupoId: string | null) => !grupoExclusivoId || grupoExclusivoId === grupoId;
-
-function Caixa({ marcado, travado, onChange, children }: { marcado: boolean; travado?: boolean; onChange: (v: boolean) => void; children: ReactNode }) {
+function Caixa({ marcado, onChange, children }: { marcado: boolean; onChange: (v: boolean) => void; children: ReactNode }) {
   return (
     <label className={`checklist__item ${marcado ? "checklist__item--marcado" : ""}`}>
-      <input type="checkbox" checked={marcado} disabled={travado} onChange={(e) => onChange(e.target.checked)} />
+      <input type="checkbox" checked={marcado} onChange={(e) => onChange(e.target.checked)} />
       <span>{children}</span>
-      {travado && (
-        <span className="selo" title="Exclusivo deste grupo">
-          <Lock size={12} aria-hidden /> Exclusivo
-        </span>
-      )}
     </label>
   );
 }
@@ -41,11 +31,7 @@ function alternar(lista: string[], id: string, marcar: boolean) {
   return marcar ? [...new Set([...lista, id])] : lista.filter((x) => x !== id);
 }
 
-export function DisponiveisSelector({ grupoId, classes, racas, atributos, pericias, status, valor, onChange }: Props) {
-  const exclusivo = (g: string | null | undefined) => !!grupoId && g === grupoId;
-  const cls = classes.filter((c) => visivel(c.grupoExclusivoId, grupoId));
-  const rcs = racas.filter((r) => visivel(r.grupoExclusivoId, grupoId));
-  const atrs = atributos.filter((a) => visivel(a.grupoExclusivoId, grupoId));
+export function DisponiveisSelector({ classes: cls, racas: rcs, atributos: atrs, pericias, status, valor, onChange }: Props) {
   const set = (parcial: Partial<Disponiveis>) => onChange({ ...valor, ...parcial });
 
   function marcarAtributo(a: Atributo, marcar: boolean) {
@@ -68,14 +54,14 @@ export function DisponiveisSelector({ grupoId, classes, racas, atributos, perici
         </legend>
         <div className="disponiveis__atalhos">
           <button type="button" className="link-botao" onClick={() => todos("classeIds", cls.map((c) => c.id), true)}>Marcar todas</button>
-          <button type="button" className="link-botao" onClick={() => todos("classeIds", cls.filter((c) => !exclusivo(c.grupoExclusivoId)).map((c) => c.id), false)}>Limpar</button>
+          <button type="button" className="link-botao" onClick={() => todos("classeIds", cls.map((c) => c.id), false)}>Limpar</button>
         </div>
         {cls.length === 0 ? (
           <p className="pagina__subtitulo">Nenhuma classe disponível.</p>
         ) : (
           <div className="checklist">
             {cls.map((c) => (
-              <Caixa key={c.id} marcado={valor.classeIds.includes(c.id)} travado={exclusivo(c.grupoExclusivoId)} onChange={(m) => set({ classeIds: alternar(valor.classeIds, c.id, m) })}>
+              <Caixa key={c.id} marcado={valor.classeIds.includes(c.id)} onChange={(m) => set({ classeIds: alternar(valor.classeIds, c.id, m) })}>
                 {c.titulo} <span className="pagina__subtitulo">· {ROTULO_GRUPO[c.grupo]}{c.fixa ? " · fixa" : ""}</span>
               </Caixa>
             ))}
@@ -89,14 +75,14 @@ export function DisponiveisSelector({ grupoId, classes, racas, atributos, perici
         </legend>
         <div className="disponiveis__atalhos">
           <button type="button" className="link-botao" onClick={() => todos("racaIds", rcs.map((r) => r.id), true)}>Marcar todas</button>
-          <button type="button" className="link-botao" onClick={() => todos("racaIds", rcs.filter((r) => !exclusivo(r.grupoExclusivoId)).map((r) => r.id), false)}>Limpar</button>
+          <button type="button" className="link-botao" onClick={() => todos("racaIds", rcs.map((r) => r.id), false)}>Limpar</button>
         </div>
         {rcs.length === 0 ? (
           <p className="pagina__subtitulo">Nenhuma raça criada ainda. Crie raças no menu Raças.</p>
         ) : (
           <div className="checklist">
             {rcs.map((r) => (
-              <Caixa key={r.id} marcado={valor.racaIds.includes(r.id)} travado={exclusivo(r.grupoExclusivoId)} onChange={(m) => set({ racaIds: alternar(valor.racaIds, r.id, m) })}>
+              <Caixa key={r.id} marcado={valor.racaIds.includes(r.id)} onChange={(m) => set({ racaIds: alternar(valor.racaIds, r.id, m) })}>
                 {r.titulo} <span className="pagina__subtitulo">· {r.deslocamento} quadrados</span>
               </Caixa>
             ))}
@@ -114,7 +100,7 @@ export function DisponiveisSelector({ grupoId, classes, racas, atributos, perici
           const doAtributo = pericias.filter((p) => p.atributoId === a.id);
           return (
             <div key={a.id} className="disponiveis__atributo">
-              <Caixa marcado={marcado} travado={exclusivo(a.grupoExclusivoId)} onChange={(m) => marcarAtributo(a, m)}>
+              <Caixa marcado={marcado} onChange={(m) => marcarAtributo(a, m)}>
                 <strong>{a.nome}</strong>
               </Caixa>
               {marcado && doAtributo.length > 0 && (

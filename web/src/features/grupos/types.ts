@@ -9,6 +9,8 @@ export type Grupo = {
   limiteMembros: number;
   codigo: string;
   permitirClassesRepetidas: boolean;
+  /** Kit de RPG do grupo: itens, criaturas e NPCs mostrados seguem o kit (null = tudo). */
+  kitId: string | null;
   /** Na listagem: quantos jogadores já têm ficha. */
   membros: number;
 };
@@ -46,6 +48,7 @@ export type Criatura = {
 };
 
 export type GrupoDetalhe = Omit<Grupo, "membros"> & {
+  kit: { id: string; nome: string } | null;
   disponiveis: Disponiveis;
   membros: Membro[];
   statusAtivos: Status[];
@@ -53,4 +56,4 @@ export type GrupoDetalhe = Omit<Grupo, "membros"> & {
   criaturas: Criatura[];
 };
 
-export type GrupoInput = Pick<Grupo, "titulo" | "sinopse" | "genero" | "imagemUrl" | "limiteMembros" | "permitirClassesRepetidas">;
+export type GrupoInput = Pick<Grupo, "titulo" | "sinopse" | "genero" | "imagemUrl" | "limiteMembros" | "permitirClassesRepetidas" | "kitId">;

@@ -2,6 +2,7 @@
 import { randomInt } from "node:crypto";
 import type { z } from "zod";
 import { naoEncontrado, requisicaoInvalida } from "../../lib/errors.js";
+import { validarKits } from "../../lib/kits.js";
 import { getPrisma } from "../../lib/prisma.js";
 import { atributosNoNivel } from "../../regras/progressao.js";
 import { apresentarCriatura } from "../criaturas/criaturas.service.js";
@@ -33,24 +34,22 @@ export async function grupoDoMestre(id: string, usuarioId: string) {
 /**
  * Confere que tudo o que o mestre marcou pode ser usado por ele e respeita a exclusividade:
  * classes fixas ou dele, raças dele, atributos fixos ou dele, perícias do catálogo dele dentro dos atributos marcados.
- * Itens exclusivos de outro grupo são recusados.
  */
-async function validarDisponiveis(d: Disponiveis, usuarioId: string, grupoId: string | null) {
+async function validarDisponiveis(d: Disponiveis, usuarioId: string) {
   const prisma = getPrisma();
-  const exclusivoOk = (g: string | null) => g === null || g === grupoId;
   const unicos = (a: string[]) => [...new Set(a)];
 
   const classes = await prisma.classe.findMany({ where: { id: { in: unicos(d.classeIds) } } });
-  if (classes.length !== unicos(d.classeIds).length || classes.some((c) => (c.donoId !== null && c.donoId !== usuarioId) || !exclusivoOk(c.grupoExclusivoId))) {
-    throw requisicaoInvalida("Alguma classe escolhida não existe, não é sua ou é exclusiva de outro grupo.");
+  if (classes.length !== unicos(d.classeIds).length || classes.some((c) => c.donoId !== null && c.donoId !== usuarioId)) {
+    throw requisicaoInvalida("Alguma classe escolhida não existe ou não é sua.");
   }
   const racas = await prisma.raca.findMany({ where: { id: { in: unicos(d.racaIds) } } });
-  if (racas.length !== unicos(d.racaIds).length || racas.some((r) => r.donoId !== usuarioId || !exclusivoOk(r.grupoExclusivoId))) {
-    throw requisicaoInvalida("Alguma raça escolhida não existe, não é sua ou é exclusiva de outro grupo.");
+  if (racas.length !== unicos(d.racaIds).length || racas.some((r) => r.donoId !== usuarioId)) {
+    throw requisicaoInvalida("Alguma raça escolhida não existe ou não é sua.");
   }
   const atributos = await prisma.atributo.findMany({ where: { id: { in: unicos(d.atributoIds) } } });
-  if (atributos.length !== unicos(d.atributoIds).length || atributos.some((a) => (a.donoId !== null && a.donoId !== usuarioId) || !exclusivoOk(a.grupoExclusivoId))) {
-    throw requisicaoInvalida("Algum atributo escolhido não existe, não é seu ou é exclusivo de outro grupo.");
+  if (atributos.length !== unicos(d.atributoIds).length || atributos.some((a) => a.donoId !== null && a.donoId !== usuarioId)) {
+    throw requisicaoInvalida("Algum atributo escolhido não existe ou não é seu.");
   }
   const pericias = await prisma.pericia.findMany({ where: { id: { in: unicos(d.periciaIds) } } });
   const atributosMarcados = new Set(d.atributoIds);
@@ -114,6 +113,7 @@ export async function detalhar(id: string, usuarioId: string) {
       },
       itens: { where: { fichaId: null, npcId: null }, orderBy: { criadoEm: "asc" }, include: comRequisitos },
       regrasProprias: { orderBy: { criadoEm: "asc" } },
+      kit: { select: { id: true, nome: true } },
       criaturas: { orderBy: { criadoEm: "asc" }, include: { besta: true, status: { include: { status: true } } } },
     },
   });
@@ -154,7 +154,8 @@ export async function detalhar(id: string, usuarioId: string) {
 
 export async function criar(usuarioId: string, dados: z.infer<typeof criarGrupoSchema>) {
   const { disponiveis, ...resto } = dados;
-  const d = disponiveis ? await validarDisponiveis(disponiveis, usuarioId, null) : null;
+  if (resto.kitId) await validarKits([resto.kitId], usuarioId);
+  const d = disponiveis ? await validarDisponiveis(disponiveis, usuarioId) : null;
   const grupo = await getPrisma().grupo.create({ data: { ...resto, mestreId: usuarioId, codigo: await novoCodigo() } });
   if (d) await gravarDisponiveis(grupo.id, d);
   return detalhar(grupo.id, usuarioId);
@@ -162,6 +163,7 @@ export async function criar(usuarioId: string, dados: z.infer<typeof criarGrupoS
 
 export async function editar(id: string, usuarioId: string, dados: z.infer<typeof editarGrupoSchema>) {
   await grupoDoMestre(id, usuarioId);
+  if (dados.kitId) await validarKits([dados.kitId], usuarioId);
   if (dados.limiteMembros !== undefined) {
     const membros = await getPrisma().ficha.count({ where: { grupoId: id } });
     if (dados.limiteMembros < membros) {
@@ -174,7 +176,7 @@ export async function editar(id: string, usuarioId: string, dados: z.infer<typeo
 
 export async function definirDisponiveis(id: string, usuarioId: string, disponiveis: Disponiveis) {
   await grupoDoMestre(id, usuarioId);
-  await gravarDisponiveis(id, await validarDisponiveis(disponiveis, usuarioId, id));
+  await gravarDisponiveis(id, await validarDisponiveis(disponiveis, usuarioId));
   return detalhar(id, usuarioId);
 }
 

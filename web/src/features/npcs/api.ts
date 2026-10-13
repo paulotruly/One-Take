@@ -3,9 +3,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../../lib/api";
 import type { NpcDetalhe, NpcInput, NpcResumo } from "./types";
 
-/** `grupoId` = só os NPCs exclusivos daquele grupo. */
-export function useNpcs(grupoId?: string) {
-  return useQuery({ queryKey: ["npcs", "lista", grupoId ?? "todos"], queryFn: () => api<NpcResumo[]>(`/api/npcs${grupoId ? `?grupoId=${grupoId}` : ""}`) });
+/** `kitId` = só os que aparecem com aquele kit (do kit + gerais). */
+export function useNpcs(kitId?: string | null) {
+  return useQuery({ queryKey: ["npcs", "lista", kitId ?? "todos"], queryFn: () => api<NpcResumo[]>(`/api/npcs${kitId ? `?kitId=${kitId}` : ""}`) });
 }
 
 export function useNpc(id: string) {

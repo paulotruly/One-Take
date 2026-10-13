@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { grupoExclusivoSchema } from "../../lib/exclusividade.js";
+import { kitIdsSchema } from "../../lib/kits.js";
 import { inteiro, texto, urlOpcional } from "../../lib/validacao.js";
 
 // Sem defaults aqui: no Zod 4 o default seria aplicado também no PATCH (partial).
@@ -15,8 +15,8 @@ const base = z.object({
   vidaBase: inteiro(1, 9999).nullable(),
   manaBase: inteiro(1, 9999).nullable(),
   esforcoBase: inteiro(1, 9999).nullable(),
-  /** Opcional: só aparece neste grupo. Nulo/ausente = geral. */
-  grupoExclusivoId: grupoExclusivoSchema,
+  /** Kits de RPG em que está (sem kit = geral). */
+  kitIds: kitIdsSchema,
 });
 
 export const criarNpcSchema = base.extend({
@@ -37,4 +37,4 @@ export const editarNpcSchema = base.partial().extend({
 
 export const npcAtributoSchema = z.object({ dados: inteiro(0, 20) });
 export const npcPericiaSchema = z.object({ pontos: inteiro(-99, 99) });
-export const filtroNpcsSchema = z.object({ grupoId: z.guid().optional() });
+export const filtroNpcsSchema = z.object({ kitId: z.guid().optional() });

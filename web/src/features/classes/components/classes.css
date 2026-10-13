@@ -215,6 +215,7 @@
 /* ---------- Arquétipos ---------- */
 .conceitos { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: var(--esp-4); margin: 0; padding: 0; list-style: none; }
 .conceito { display: flex; flex-direction: column; gap: var(--esp-3); padding: var(--esp-4); border: 1px solid var(--cor-borda); border-left: 4px solid var(--cor-primaria); }
+.conceito--ativo { background: var(--cor-superficie-2); }
 .conceito__topo { display: flex; justify-content: space-between; align-items: center; gap: var(--esp-2); }
 .conceito__topo h3 { display: flex; align-items: center; gap: var(--esp-2); }
 .conceito__subclasses { display: flex; flex-wrap: wrap; gap: var(--esp-2); align-items: center; }

@@ -3,12 +3,12 @@ import { useState, type FormEvent } from "react";
 import { Button } from "../../../components/ui/Button";
 import { Field } from "../../../components/ui/Field";
 import { ClasseImagem } from "../../classes/components/ClasseImagem";
-import { ExclusividadeField } from "../../grupos/components/ExclusividadeField";
+import { KitsField } from "../../kits/components/KitsField";
+import { kitsPadrao } from "../../kits/types";
 import type { BestaInput } from "../types";
 
 type Props = {
   inicial?: Partial<BestaInput>;
-  grupos?: { id: string; titulo: string }[];
   conceitos?: { id: string; titulo: string }[];
   rotulo?: string;
   onEnviar: (dados: BestaInput) => void;
@@ -20,7 +20,7 @@ type Props = {
 
 const inteiro = (s: string) => (s.trim() === "" ? (undefined as unknown as number) : Number(s));
 
-export function BestaForm({ inicial, grupos = [], conceitos = [], rotulo = "Salvar", onEnviar, onCancelar, enviando, erros = {}, erroGeral }: Props) {
+export function BestaForm({ inicial, conceitos = [], rotulo = "Salvar", onEnviar, onCancelar, enviando, erros = {}, erroGeral }: Props) {
   const [v, setV] = useState({
     titulo: inicial?.titulo ?? "",
     descricao: inicial?.descricao ?? "",
@@ -31,7 +31,7 @@ export function BestaForm({ inicial, grupos = [], conceitos = [], rotulo = "Salv
     deslocamento: String(inicial?.deslocamento ?? 6),
     conceitoId: inicial?.conceitoId ?? "",
   });
-  const [grupoExclusivoId, setGrupoExclusivoId] = useState<string | null>(inicial?.grupoExclusivoId ?? null);
+  const [kitIds, setKitIds] = useState<string[]>(inicial?.kitIds ?? kitsPadrao());
   const set = (campo: keyof typeof v) => (e: { target: { value: string } }) => setV({ ...v, [campo]: e.target.value });
 
   function enviar(e: FormEvent) {
@@ -45,7 +45,7 @@ export function BestaForm({ inicial, grupos = [], conceitos = [], rotulo = "Salv
       pontosEsforco: inteiro(v.pontosEsforco),
       deslocamento: inteiro(v.deslocamento),
       conceitoId: v.conceitoId || null,
-      grupoExclusivoId,
+      kitIds,
     });
   }
 
@@ -77,7 +77,7 @@ export function BestaForm({ inicial, grupos = [], conceitos = [], rotulo = "Salv
           <input type="number" min={1} step={1} inputMode="numeric" value={v.deslocamento} onChange={set("deslocamento")} />
         </Field>
       </div>
-      <ExclusividadeField valor={grupoExclusivoId} grupos={grupos} onChange={setGrupoExclusivoId} erro={erros.grupoExclusivoId} />
+      <KitsField valor={kitIds} onChange={setKitIds} erro={erros.kitIds} />
       <Field rotulo="Link da imagem" erro={erros.imagemUrl} dica="Opcional. Cole o endereço (https://...) de uma imagem.">
         <input type="url" value={v.imagemUrl} onChange={set("imagemUrl")} placeholder="https://" />
       </Field>

@@ -74,15 +74,33 @@ describe("carta e aprimoramentos", () => {
   });
 });
 
-describe("exclusividade em uso", () => {
-  it("não torna exclusiva uma classe usada por ficha de outro grupo", async () => {
+describe("kits de RPG", () => {
+  const KIT = "33333333-0000-4000-8000-0000000000e1";
+  it("só aceita kits do próprio mestre", async () => {
     prismaFalso.classe.findUnique.mockResolvedValue({ id: CLASSE, donoId: MESTRE.id });
-    prismaFalso.grupo.findUnique.mockResolvedValue({ mestreId: MESTRE.id });
-    prismaFalso.ficha.count.mockResolvedValue(2);
-    prismaFalso.npc.count.mockResolvedValue(0);
-    const res = await comoMestre(request(app).patch(`/api/classes/${CLASSE}`)).send({ grupoExclusivoId: GRUPO });
-    expect(res.status).toBe(409);
-    expect(res.body.error.code).toBe("EXCLUSIVO_EM_USO");
+    prismaFalso.kit.count.mockResolvedValue(0);
+    const res = await comoMestre(request(app).patch(`/api/classes/${CLASSE}`)).send({ kitIds: [KIT] });
+    expect(res.status).toBe(404);
+  });
+
+  it("troca os kits da classe e devolve kitIds", async () => {
+    prismaFalso.classe.findUnique.mockResolvedValue({ id: CLASSE, donoId: MESTRE.id });
+    prismaFalso.kit.count.mockResolvedValue(1);
+    prismaFalso.kitClasse.deleteMany.mockResolvedValue({ count: 0 });
+    prismaFalso.kitClasse.createMany.mockResolvedValue({ count: 1 });
+    prismaFalso.classe.update.mockResolvedValue({ id: CLASSE, donoId: MESTRE.id, kits: [{ kitId: KIT }] });
+    const res = await comoMestre(request(app).patch(`/api/classes/${CLASSE}`)).send({ kitIds: [KIT] });
+    expect(res.status).toBe(200);
+    expect(res.body.kitIds).toEqual([KIT]);
+    expect(prismaFalso.kitClasse.createMany).toHaveBeenCalledWith({ data: [{ kitId: KIT, classeId: CLASSE }] });
+  });
+
+  it("catálogo com ?kitId= mostra o do kit + o geral", async () => {
+    prismaFalso.itemModelo.findMany.mockResolvedValue([]);
+    await comoMestre(request(app).get(`/api/catalogo-itens?kitId=${KIT}`));
+    expect(prismaFalso.itemModelo.findMany.mock.calls[0]![0].where).toEqual({
+      donoId: MESTRE.id, OR: [{ kits: { none: {} } }, { kits: { some: { kitId: KIT } } }],
+    });
   });
 });
 
@@ -92,19 +110,9 @@ describe("itens de NPC", () => {
     grupo: { mestreId: MESTRE.id }, npc: { donoId: MESTRE.id }, ficha: null, categoria: null, requisitoPericia: null, requisitoClasse: null, ...x,
   });
 
-  it("NPC exclusivo não entrega item para ficha de outro grupo", async () => {
-    prismaFalso.item.findUnique.mockResolvedValue(item());
-    prismaFalso.ficha.findUnique.mockResolvedValue({ id: FICHA, grupoId: OUTRO_GRUPO, nivel: 1, grupo: { mestreId: MESTRE.id } });
-    prismaFalso.item.findMany.mockResolvedValue([]);
-    prismaFalso.npc.findUnique.mockResolvedValue({ grupoExclusivoId: GRUPO, nome: "Capitã" });
-    const res = await comoMestre(request(app).post(`/api/itens/${ITEM}/mover`)).send({ fichaId: FICHA });
-    expect(res.status).toBe(400);
-    expect(prismaFalso.item.update).not.toHaveBeenCalled();
-  });
-
-  it("item dado a NPC geral deixa de pertencer a um grupo", async () => {
+  it("item dado a NPC deixa de pertencer a um grupo", async () => {
     prismaFalso.item.findUnique.mockResolvedValue(item({ npcId: null, npc: null }));
-    prismaFalso.npc.findUnique.mockResolvedValue({ id: NPC, donoId: MESTRE.id, nivel: 1, grupoExclusivoId: null });
+    prismaFalso.npc.findUnique.mockResolvedValue({ id: NPC, donoId: MESTRE.id, nivel: 1 });
     prismaFalso.item.findMany.mockResolvedValue([]);
     prismaFalso.item.update.mockImplementation(async ({ data }) => ({ ...item(), ...data }));
     await comoMestre(request(app).post(`/api/itens/${ITEM}/mover`)).send({ fichaId: null, npcId: NPC });

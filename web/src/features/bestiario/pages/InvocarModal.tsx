@@ -6,16 +6,17 @@ import { Field } from "../../../components/ui/Field";
 import { Modal } from "../../../components/ui/Modal";
 import { EmptyState, Loading } from "../../../components/ui/States";
 import { erroDeFormulario, errosDeCampo } from "../../../lib/api";
+import { visivelNoKit } from "../../kits/types";
 import { useBestas, useInvocar } from "../api";
 
-export function InvocarModal({ grupoId, aberto, onFechar }: { grupoId: string; aberto: boolean; onFechar: () => void }) {
+export function InvocarModal({ grupoId, kitId, aberto, onFechar }: { grupoId: string; kitId: string | null; aberto: boolean; onFechar: () => void }) {
   const bestas = useBestas();
   const invocar = useInvocar(grupoId);
   const [bestaId, setBestaId] = useState("");
   const [nivel, setNivel] = useState("1");
   const [quantidade, setQuantidade] = useState("1");
-  // Só criaturas gerais ou exclusivas deste grupo.
-  const opcoes = (bestas.data ?? []).filter((b) => !b.grupoExclusivoId || b.grupoExclusivoId === grupoId);
+  // Criaturas do kit do grupo + as gerais (sem kit no grupo: todas).
+  const opcoes = (bestas.data ?? []).filter((b) => visivelNoKit(b.kitIds, kitId));
   const erros = errosDeCampo(invocar.error);
 
   function fechar() {

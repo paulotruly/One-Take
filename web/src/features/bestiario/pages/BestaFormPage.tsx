@@ -2,14 +2,12 @@ import { useNavigate, useParams, useSearchParams } from "react-router";
 import { LinkVoltar } from "../../../components/ui/LinkVoltar";
 import { ErrorState, Loading } from "../../../components/ui/States";
 import { erroDeFormulario, errosDeCampo, mensagemDeErro } from "../../../lib/api";
-import { useGrupos } from "../../grupos/api";
 import { useBesta, useConceitosBesta, useCriarBesta, useEditarBesta } from "../api";
 import { BestaForm } from "../components/BestaForm";
 
 export function NovaBestaPage() {
   const navigate = useNavigate();
   const criar = useCriarBesta();
-  const grupos = useGrupos();
   const conceitos = useConceitosBesta();
   const [params] = useSearchParams();
   if (conceitos.isPending) return <Loading />;
@@ -21,7 +19,6 @@ export function NovaBestaPage() {
       <BestaForm
         rotulo="Criar criatura"
         inicial={{ conceitoId: params.get("conceito") }}
-        grupos={grupos.data}
         conceitos={conceitos.data}
         enviando={criar.isPending}
         erros={errosDeCampo(criar.error)}
@@ -38,7 +35,6 @@ export function EditarBestaPage() {
   const navigate = useNavigate();
   const besta = useBesta(id);
   const editar = useEditarBesta(id);
-  const grupos = useGrupos();
   const conceitos = useConceitosBesta();
 
   if (besta.isPending) return <Loading />;
@@ -51,7 +47,6 @@ export function EditarBestaPage() {
       <h1>Editar criatura</h1>
       <BestaForm
         inicial={besta.data}
-        grupos={grupos.data}
         conceitos={conceitos.data}
         enviando={editar.isPending}
         erros={errosDeCampo(editar.error)}

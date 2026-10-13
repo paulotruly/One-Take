@@ -3,7 +3,6 @@ import { LinkVoltar } from "../../../components/ui/LinkVoltar";
 import { ErrorState, Loading } from "../../../components/ui/States";
 import { erroDeFormulario, errosDeCampo, mensagemDeErro } from "../../../lib/api";
 import { useClasses } from "../../classes/api";
-import { useGrupos } from "../../grupos/api";
 import { useRacas } from "../../racas/api";
 import { useCriarNpc, useEditarNpc, useNpc } from "../api";
 import { NpcForm } from "../components/NpcForm";
@@ -11,12 +10,10 @@ import { NpcForm } from "../components/NpcForm";
 function useOpcoes() {
   const racas = useRacas();
   const classes = useClasses();
-  const grupos = useGrupos();
   return {
     carregando: racas.isPending || classes.isPending,
     racas: (racas.data ?? []).map((r) => ({ id: r.id, titulo: r.conceito ? `${r.conceito.titulo}: ${r.titulo}` : r.titulo })),
     classes: (classes.data ?? []).map((c) => ({ id: c.id, titulo: c.fixa ? `${c.titulo} (fixa)` : c.titulo })),
-    grupos: (grupos.data ?? []).map((g) => ({ id: g.id, titulo: g.titulo })),
   };
 }
 
@@ -26,6 +23,7 @@ export function NovoNpcPage() {
   const opcoes = useOpcoes();
   const [params] = useSearchParams();
   const grupo = params.get("grupo");
+  const kit = params.get("kit");
   if (opcoes.carregando) return <Loading />;
   const voltar = grupo ? `/mestre/grupos/${grupo}` : "/mestre/npcs";
   return (
@@ -35,7 +33,7 @@ export function NovoNpcPage() {
       {opcoes.racas.length === 0 && <div className="aviso">Crie pelo menos uma raça antes: todo NPC tem raça.</div>}
       <NpcForm
         rotulo="Criar NPC"
-        inicial={{ grupoExclusivoId: grupo }}
+        inicial={kit ? { kitIds: [kit] } : undefined}
         {...opcoes}
         enviando={criar.isPending}
         erros={errosDeCampo(criar.error)}

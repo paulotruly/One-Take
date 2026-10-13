@@ -121,11 +121,12 @@ Atributos agrupam as perícias e recebem os dados nos testes.
 - **Permitir classes repetidas**: se desligado, dois jogadores do grupo não podem ter a mesma classe.
 - O mestre escolhe **o que vale no grupo**: classes (fixas ou dele), raças, atributos e, dentro dos atributos,
   perícias específicas. Isso permite adaptar o sistema a temas diferentes de RPG.
-- **Geral ou exclusivo**: ao criar uma classe, raça ou atributo, o mestre pode marcá-lo como exclusivo de um grupo
-  (sempre opcional). Exclusivo só pode valer naquele grupo e já entra liberado nele. Tudo pode ficar "geral" e ser
-  restringido só na hora de montar o grupo. Itens, criaturas e NPCs também podem ser exclusivos (só deixam de aparecer para os outros grupos).
-  **Só vira exclusivo o que ninguém de fora usa** (fichas de outros grupos, NPCs de fora, criaturas invocadas em outros grupos):
-  senão, 409 `EXCLUSIVO_EM_USO`. NPC exclusivo só usa raça e classe gerais ou do mesmo grupo.
+- **Kits de RPG**: o mestre junta o conteúdo de uma aventura num kit (classes, raças, atributos, perícias, status, itens do
+  catálogo, criaturas e NPCs). Sem kit = **geral** (aparece em tudo); uma coisa pode estar em **vários kits**. Com um **kit ativo**
+  (escolhido na lateral), as telas mostram **só o que é do kit** (mais o que é fixo do sistema, que não entra em kit) e o que for
+  criado já entra no kit; o geral aparece em **Todos**. O **grupo** pode ter um kit:
+  ao escolher, a tela marca o que vale (do kit + gerais; status fixos sempre), e itens, criaturas e NPCs mostrados no grupo seguem o kit.
+  Excluir um kit não apaga nada.
 - Membro = jogador com ficha no grupo. Só entra enquanto houver vaga.
 
 ## Ficha
@@ -144,7 +145,7 @@ Criada pelo jogador ao entrar no grupo com o código (**uma ficha por jogador em
 - **Catálogo de itens do mestre** (sempre disponível para lançar no grupo vago ou direto numa ficha). Cada item tem:
   título, descrição, imagem (link), **categoria**, **efeito ao usar** (texto),
   **espaços**, **consumo** (sem limite ou N usos) e **pré-requisito para saber usar**: classe, perícia (precisa ter
-  total > 0) e/ou texto livre. Geral ou exclusivo de um grupo.
+  total > 0) e/ou texto livre. Pode estar em kits de RPG (nenhum = geral).
 - **Categorias de item**: 4 fixas do sistema (Armas, Artefatos, Taverna, Sebo; somente leitura) + as que cada mestre cria
   (nome, descrição e ícone escolhido de uma lista). Excluir uma categoria deixa os itens dela sem categoria.
 - O item lançado é uma **cópia** do molde: editar o catálogo não muda itens já lançados. O mestre também cria
@@ -159,17 +160,17 @@ Criada pelo jogador ao entrar no grupo com o código (**uma ficha por jogador em
   atributo, perícias (raça + classe + pontos extras do mestre), cartas da classe no nível (com aprimoramentos) e **inventário**.
 - **NPC simples** = só raça, sem classe e sem cartas; aí o mestre define vida, mana e esforço base. Com classe, a base é a da classe.
   A progressão é a mesma das fichas (+5 por nível); mudar nível, classe ou base faz o atual acompanhar a diferença.
-- **Geral ou exclusivo de um grupo.** Os exclusivos aparecem na página do grupo; todos ficam na página NPCs.
+- **Kits de RPG**: a página do grupo mostra os NPCs do kit dele e os gerais; todos ficam na página NPCs.
 - Vida ou mana em 0 = morto (aviso na ficha; o NPC não some).
 - **Inventário**: mesma capacidade das fichas (5 + 2 por nível). O mestre lança itens do catálogo no NPC, usa, entrega a uma ficha
-  (de qualquer grupo dele; se o NPC for exclusivo, só do grupo dele), deixa vago num grupo ou exclui. Excluir o NPC apaga os itens dele.
+  (de qualquer grupo dele), deixa vago num grupo ou exclui. Excluir o NPC apaga os itens dele.
   Itens com NPC geral não pertencem a grupo nenhum; excluir um grupo não apaga itens que estão com NPCs.
 
 ## Bestiário (criaturas)
 - Criaturas do mestre, montados **como classes**: título, descrição, imagem, vida/mana/esforço base (nível 1, nenhum zero),
   **deslocamento**, perícias com modificador, **dados por atributo** (testam como personagens) e cartela com nível
   necessário e aprimoramentos.
-- **Arquétipo de criatura** com várias **formas** (ex.: Lobo > Lobo das neves). Geral ou exclusivo de um grupo.
+- **Arquétipo de criatura** com várias **formas** (ex.: Lobo > Lobo das neves). Pode estar em kits de RPG (nenhum = geral).
 - **Invocar no grupo**: o mestre escolhe a criatura, o **nível** (mesma progressão das classes: +5 vida/mana/esforço por
   nível e as cartas do nível; os pontos de perícia não se aplicam a criaturas) e a quantidade ("Lobo 1", "Lobo 2").
   Entram com recursos cheios.
@@ -187,7 +188,7 @@ O One-Take é RPG de mesa com apoio de tecnologia: o app controla fichas e avisa
     Atordoado; proposta inicial) e os criados por cada mestre.
   - Em cada grupo o mestre escolhe quais status valem (opcional). Grupo novo começa com os fixos marcados.
   - Uma carta de habilidade pode indicar o status que **ativa** (campo opcional); o mestre aplica na ficha do alvo.
-  - **NPCs e criaturas** também recebem status. Valem os ativados no grupo (NPC exclusivo e criatura invocada) ou todos os do mestre (NPC geral).
+  - **NPCs e criaturas** também recebem status. Valem os ativados no grupo (criatura invocada) ou todos os do mestre (NPC).
 
 ## Progressão de nível
 O One-Take dura um dia, então a progressão é **rápida, simples e fixa**:

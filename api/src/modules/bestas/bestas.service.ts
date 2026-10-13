@@ -2,7 +2,7 @@
 // Só o mestre dono vê e edita; de outro mestre = 404.
 import type { z } from "zod";
 import { naoEncontrado } from "../../lib/errors.js";
-import { garantirExclusividadePossivel, validarGrupoExclusivo } from "../../lib/exclusividade.js";
+import { comKitIds, comKits, definirKits } from "../../lib/kits.js";
 import { getPrisma } from "../../lib/prisma.js";
 import { previaProgressao } from "../../regras/progressao.js";
 import { notacaoDoTeste } from "../../regras/teste.js";
@@ -24,6 +24,7 @@ export const bestaCompleta = {
   pericias: { include: { pericia: { include: { atributo: true } } } },
   atributos: { include: { atributo: true } },
   conceito: { select: { id: true, titulo: true } },
+  ...comKits,
 } as const;
 
 type BestaComTudo = NonNullable<Awaited<ReturnType<typeof buscarCompleta>>>;
@@ -33,7 +34,7 @@ const buscarCompleta = (id: string) => getPrisma().besta.findUnique({ where: { i
 export function apresentarBesta({ pericias, atributos, ...b }: BestaComTudo) {
   const dados = new Map(atributos.map((a) => [a.atributoId, a.dados]));
   return {
-    ...b,
+    ...comKitIds(b),
     atributos: atributos
       .map(({ dados: n, atributo }) => ({ ...apresentarAtributo(atributo), dados: n, teste: notacaoDoTeste(n) }))
       .sort((x, y) => x.ordem - y.ordem || x.nome.localeCompare(y.nome, "pt-BR")),
@@ -50,9 +51,9 @@ export async function listar(usuarioId: string) {
   const bestas = await getPrisma().besta.findMany({
     where: { donoId: usuarioId },
     orderBy: { titulo: "asc" },
-    include: { conceito: { select: { id: true, titulo: true } }, _count: { select: { habilidades: true } } },
+    include: { conceito: { select: { id: true, titulo: true } }, _count: { select: { habilidades: true } }, ...comKits },
   });
-  return bestas.map(({ _count, ...b }) => ({ ...b, cartas: _count.habilidades }));
+  return bestas.map(({ _count, ...b }) => ({ ...comKitIds(b), cartas: _count.habilidades }));
 }
 
 export async function detalhar(id: string, usuarioId: string) {
@@ -71,18 +72,19 @@ export async function progressao(id: string, usuarioId: string) {
 }
 
 export async function criar(usuarioId: string, dados: z.infer<typeof criarBestaSchema>) {
-  await validarGrupoExclusivo(dados.grupoExclusivoId, usuarioId);
   await validarConceito("besta", dados.conceitoId, usuarioId);
-  const besta = await getPrisma().besta.create({ data: { ...dados, donoId: usuarioId } });
+  const { kitIds, ...resto } = dados;
+  const besta = await getPrisma().besta.create({ data: { ...resto, donoId: usuarioId } });
+  await definirKits("besta", besta.id, kitIds, usuarioId);
   return detalhar(besta.id, usuarioId);
 }
 
 export async function editar(id: string, usuarioId: string, dados: z.infer<typeof editarBestaSchema>) {
   await bestaEditavel(id, usuarioId);
-  await validarGrupoExclusivo(dados.grupoExclusivoId, usuarioId);
-  await garantirExclusividadePossivel("besta", id, dados.grupoExclusivoId);
   await validarConceito("besta", dados.conceitoId, usuarioId);
-  await getPrisma().besta.update({ where: { id }, data: dados });
+  const { kitIds, ...resto } = dados;
+  await getPrisma().besta.update({ where: { id }, data: resto });
+  await definirKits("besta", id, kitIds, usuarioId);
   return detalhar(id, usuarioId);
 }
 
@@ -97,7 +99,7 @@ export async function duplicar(id: string, usuarioId: string) {
   await bestaEditavel(id, usuarioId);
   const o = await getPrisma().besta.findUniqueOrThrow({
     where: { id },
-    include: { habilidades: { include: { aprimoramentos: true } }, pericias: true, atributos: true },
+    include: { habilidades: { include: { aprimoramentos: true } }, pericias: true, atributos: true, kits: true },
   });
   const copia = await getPrisma().besta.create({
     data: {
@@ -110,7 +112,7 @@ export async function duplicar(id: string, usuarioId: string) {
       pontosEsforco: o.pontosEsforco,
       deslocamento: o.deslocamento,
       conceitoId: o.conceitoId,
-      grupoExclusivoId: o.grupoExclusivoId,
+      kits: { create: o.kits.map(({ kitId }) => ({ kitId })) },
       habilidades: {
         create: o.habilidades.map(({ id: _id, classeId: _c, bestaId: _b, aprimoramentos, ...h }) => ({
           ...h,

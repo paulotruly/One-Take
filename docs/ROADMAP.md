@@ -12,7 +12,7 @@
 - Regras de progressão de nível (API, fonte única) e prévia por nível na página da classe.
 - Raças (deslocamento + perícias de base), atributos como cadastro (3 fixos + do mestre).
 - Cadastro como mestre ou jogador, perfil (nome e foto), página pública de regras e guia do mestre.
-- Login por nickname. Grupos (código de entrada, limite, classes repetidas, o que vale no grupo, exclusividade),
+- Login por nickname. Grupos (código de entrada, limite, classes repetidas, o que vale no grupo),
   fichas (raça, classe, história, imagem, dados por atributo, recursos, perícias somadas, cartas do nível),
   subir nível, pontos de perícia, inventário com itens (entregar, passar, descartar, pegar), interface do jogador.
 
@@ -21,7 +21,8 @@
   (criaturas como classes, arquétipo de criatura, invocar no grupo, morte automática); cartas em grade com pop-up; status visível na
   ficha e no grupo; ficha e inventário para celular; skill de balanceamento e scripts `fixar-classe` e `exportar`.
 
-- NPCs com ficha (raça, classe opcional, nível, dados, perícias, cartas, inventário), gerais ou exclusivos de um grupo.
+- NPCs com ficha (raça, classe opcional, nível, dados, perícias, cartas, inventário).
+- Kits de RPG (no lugar de "exclusivo de um grupo"): coleções por aventura, kit ativo que filtra a interface, kit do grupo.
 
 ## Em andamento
 - Instruções de deploy (Render, Vercel).

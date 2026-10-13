@@ -3,13 +3,12 @@ import { LinkVoltar } from "../../../components/ui/LinkVoltar";
 import { ErrorState, Loading } from "../../../components/ui/States";
 import { erroDeFormulario, errosDeCampo, mensagemDeErro } from "../../../lib/api";
 import { useClasse, useConceitos, useCriarClasse, useEditarClasse } from "../api";
-import { useGrupos } from "../../grupos/api";
 import { ClasseForm } from "../components/forms";
+import { kitsPadrao } from "../../kits/types";
 
 export function NovaClassePage() {
   const navigate = useNavigate();
   const criar = useCriarClasse();
-  const grupos = useGrupos();
   const conceitos = useConceitos();
   const [params] = useSearchParams();
   const conceitoInicial = params.get("conceito");
@@ -21,11 +20,10 @@ export function NovaClassePage() {
       <p className="pagina__subtitulo">Primeiro crie a classe; depois, na página dela, adicione habilidades e perícias.</p>
       <ClasseForm
         rotulo="Criar classe"
-        grupos={grupos.data}
         conceitos={conceitos.data}
         inicial={
           conceitoInicial
-            ? { grupo: "COMBATENTE", titulo: "", descricao: "", imagemUrl: null, pontosVida: undefined as unknown as number, pontosMana: undefined as unknown as number, pontosEsforco: undefined as unknown as number, grupoExclusivoId: null, conceitoId: conceitoInicial }
+            ? { grupo: "COMBATENTE", titulo: "", descricao: "", imagemUrl: null, pontosVida: undefined as unknown as number, pontosMana: undefined as unknown as number, pontosEsforco: undefined as unknown as number, kitIds: kitsPadrao(), conceitoId: conceitoInicial }
             : undefined
         }
         enviando={criar.isPending}
@@ -43,7 +41,6 @@ export function EditarClassePage() {
   const navigate = useNavigate();
   const classe = useClasse(id);
   const editar = useEditarClasse(id);
-  const grupos = useGrupos();
   const conceitos = useConceitos();
 
   if (classe.isPending) return <Loading />;
@@ -56,8 +53,7 @@ export function EditarClassePage() {
       <LinkVoltar to={`/mestre/classes/${id}`}>{classe.data.titulo}</LinkVoltar>
       <h1>Editar classe</h1>
       <ClasseForm
-        inicial={{ ...classe.data, grupoExclusivoId: classe.data.grupoExclusivoId ?? null, conceitoId: classe.data.conceitoId ?? null }}
-        grupos={grupos.data}
+        inicial={{ ...classe.data, kitIds: classe.data.kitIds ?? [], conceitoId: classe.data.conceitoId ?? null }}
         conceitos={conceitos.data}
         enviando={editar.isPending}
         erros={errosDeCampo(editar.error)}

@@ -48,7 +48,7 @@ export const SECOES: Secao[] = [
       { slug: "mestre-npcs", titulo: "NPCs", resumo: "Personagens do mestre com ficha e inventário.", Conteudo: mestre.MestreNpcs },
       { slug: "mestre-bestiario", titulo: "Bestiário", resumo: "Criando criaturas para invocar nos grupos.", Conteudo: mestre.MestreBestiario },
       { slug: "mestre-itens", titulo: "Itens", resumo: "O catálogo de itens e como lançar.", Conteudo: mestre.MestreItens },
-      { slug: "mestre-exclusividade", titulo: "Geral ou exclusivo", resumo: "Restringir classes, raças, atributos, itens e criaturas a um grupo.", Conteudo: mestre.MestreExclusividade },
+      { slug: "mestre-kits", titulo: "Kits de RPG", resumo: "Organizar classes, raças, perícias, status, itens, criaturas e NPCs por aventura.", Conteudo: mestre.MestreKits },
       { slug: "mestre-grupos", titulo: "Montando um grupo", Conteudo: mestre.MestreGrupos },
       { slug: "mestre-sessao", titulo: "Durante a sessão", resumo: "Testes, fichas, itens e criaturas.", Conteudo: mestre.MestreSessao },
       { slug: "mestre-status", titulo: "Status na sessão", resumo: "Catálogo, status do grupo e aplicar nas fichas.", Conteudo: mestre.MestreStatus },

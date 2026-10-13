@@ -49,9 +49,6 @@ async function criaturaDoMestre(id: string, usuarioId: string) {
 export async function invocar(grupoId: string, usuarioId: string, dados: z.infer<typeof invocarSchema>) {
   await grupoDoMestre(grupoId, usuarioId);
   const besta = await bestaEditavel(dados.bestaId, usuarioId);
-  if (besta.grupoExclusivoId && besta.grupoExclusivoId !== grupoId) {
-    throw requisicaoInvalida("Esta criatura é exclusiva de outro grupo.", [{ campo: "bestaId", mensagem: "Exclusivo de outro grupo" }]);
-  }
   const prisma = getPrisma();
   const existentes = await prisma.criatura.findMany({ where: { grupoId, bestaId: besta.id }, select: { nome: true } });
   const max = atributosNoNivel(besta, dados.nivel);

@@ -1,6 +1,11 @@
 // Catálogo de status do mestre: fixos do sistema (somente leitura) + os criados por ele.
+import { AvisoKit } from "../../kits/components/AvisoKit";
+import { useKitAtivo } from "../../kits/api";
+import { soDoKit } from "../../kits/types";
 import { Lock, Plus, Zap } from "lucide-react";
 import { useState, type FormEvent } from "react";
+import { KitsField } from "../../kits/components/KitsField";
+import { kitsPadrao } from "../../kits/types";
 import { Button } from "../../../components/ui/Button";
 import { ConfirmDialog } from "../../../components/ui/ConfirmDialog";
 import { Field } from "../../../components/ui/Field";
@@ -28,7 +33,8 @@ export function StatusPage() {
   }
   const fechar = () => setEmEdicao(undefined);
 
-  const lista = status.data ?? [];
+  const { kitId } = useKitAtivo();
+  const lista = (status.data ?? []).filter((s) => s.fixo || soDoKit(s.kitIds, kitId));
   const automaticos = lista.filter((s) => s.automatico);
   const manuais = lista.filter((s) => !s.automatico);
 
@@ -47,6 +53,7 @@ export function StatusPage() {
         </Button>
       </div>
 
+      <AvisoKit />
       {status.isPending ? (
         <Loading texto="Carregando status…" />
       ) : status.isError ? (
@@ -68,7 +75,7 @@ export function StatusPage() {
 
       <Modal aberto={emEdicao !== undefined} onFechar={fechar} titulo={emEdicao ? "Editar status" : "Novo status"}>
         <StatusForm
-          inicial={emEdicao ?? undefined}
+          inicial={emEdicao ? { ...emEdicao, kitIds: emEdicao.kitIds ?? [] } : undefined}
           enviando={salvando.isPending}
           erros={errosDeCampo(salvando.error)}
           erroGeral={erroDeFormulario(salvando.error)}
@@ -137,10 +144,11 @@ function StatusForm({
   const [tipo, setTipo] = useState<TipoStatus>(inicial?.tipo ?? "DEBUFF");
   const [efeito, setEfeito] = useState(inicial?.efeito ?? "");
   const [descricao, setDescricao] = useState(inicial?.descricao ?? "");
+  const [kitIds, setKitIds] = useState<string[]>(inicial?.kitIds ?? kitsPadrao());
 
   function enviar(e: FormEvent) {
     e.preventDefault();
-    onEnviar({ nome, tipo, efeito, descricao });
+    onEnviar({ nome, tipo, efeito, descricao, kitIds });
   }
 
   return (
@@ -161,6 +169,7 @@ function StatusForm({
       <Field rotulo="Descrição (opcional)" erro={erros.descricao} dica="O que o personagem está sentindo ou passando.">
         <textarea value={descricao} onChange={(e) => setDescricao(e.target.value)} maxLength={500} rows={2} />
       </Field>
+      <KitsField valor={kitIds} onChange={setKitIds} erro={erros.kitIds} />
       {erroGeral && <div className="aviso">{erroGeral}</div>}
       <div className="modal__acoes">
         <Button onClick={onCancelar} disabled={enviando}>Cancelar</Button>

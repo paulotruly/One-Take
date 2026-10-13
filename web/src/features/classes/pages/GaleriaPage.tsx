@@ -1,4 +1,7 @@
 import { Plus } from "lucide-react";
+import { AvisoKit } from "../../kits/components/AvisoKit";
+import { useKitAtivo } from "../../kits/api";
+import { soDoKit } from "../../kits/types";
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { Button } from "../../../components/ui/Button";
@@ -18,6 +21,8 @@ export function GaleriaPage() {
 
   const navigate = useNavigate();
   const classes = useClasses(grupo);
+  const { kitId } = useKitAtivo();
+  const classesNoKit = (classes.data ?? []).filter((x) => x.fixa || soDoKit(x.kitIds, kitId));
   const duplicar = useDuplicarClasse();
   const excluir = useExcluirClasse();
   const [aExcluir, setAExcluir] = useState<Classe | null>(null);
@@ -50,11 +55,12 @@ export function GaleriaPage() {
 
       {duplicar.isError && <div className="aviso">Não foi possível duplicar: {mensagemDeErro(duplicar.error)}</div>}
 
+      <AvisoKit />
       {classes.isPending ? (
         <Loading texto="Carregando classes…" />
       ) : classes.isError ? (
         <ErrorState mensagem={mensagemDeErro(classes.error)} onTentarNovamente={() => classes.refetch()} />
-      ) : classes.data.length === 0 ? (
+      ) : classesNoKit.length === 0 ? (
         <EmptyState
           titulo={grupo ? `Nenhuma classe do grupo ${ROTULO_GRUPO[grupo]}` : "Nenhuma classe ainda"}
           descricao="Crie uma classe do zero para começar."
@@ -66,7 +72,7 @@ export function GaleriaPage() {
         />
       ) : (
         <div className="galeria">
-          {classes.data.map((c) => (
+          {classesNoKit.map((c) => (
             <ClasseCard
               key={c.id}
               classe={c}

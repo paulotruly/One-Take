@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { GrupoClasse } from "../../generated/prisma/enums.js";
-import { grupoExclusivoSchema } from "../../lib/exclusividade.js";
+import { kitIdsSchema } from "../../lib/kits.js";
 import { inteiro, texto, urlOpcional } from "../../lib/validacao.js";
 
 // Vida, mana e esforço base: nenhuma classe começa zerada.
@@ -14,8 +14,8 @@ export const criarClasseSchema = z.object({
   pontosVida: pontos,
   pontosMana: pontos,
   pontosEsforco: pontos,
-  /** Opcional: só vale neste grupo. Nulo/ausente = geral. */
-  grupoExclusivoId: grupoExclusivoSchema,
+  /** Kits de RPG em que a classe está (sem kit = geral). */
+  kitIds: kitIdsSchema,
   /** Opcional: subclasse deste arquétipo. */
   conceitoId: z.guid("Arquétipo inválido").nullish(),
 });

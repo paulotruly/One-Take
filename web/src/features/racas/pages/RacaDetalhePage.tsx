@@ -15,7 +15,6 @@ import { PericiasPorAtributo } from "../../pericias/components/PericiasPorAtribu
 import type { PericiaDaRaca } from "../../pericias/types";
 import { useConceitosRaca, useDesvincularPericiaRaca, useEditarRaca, useExcluirRaca, useRaca, useVincularPericiaRaca } from "../api";
 import { ClasseImagem } from "../../classes/components/ClasseImagem";
-import { useGrupos } from "../../grupos/api";
 import { RacaForm } from "../components/RacaForm";
 
 type Exclusao = { tipo: "raca" } | { tipo: "pericia"; pericia: PericiaDaRaca } | null;
@@ -29,7 +28,6 @@ export function RacaDetalhePage() {
   const excluir = useExcluirRaca();
   const vincular = useVincularPericiaRaca(id);
   const desvincular = useDesvincularPericiaRaca(id);
-  const grupos = useGrupos();
   const conceitosRaca = useConceitosRaca();
 
   const [editando, setEditando] = useState(false);
@@ -141,7 +139,6 @@ export function RacaDetalhePage() {
       <Modal aberto={editando} onFechar={() => setEditando(false)} titulo="Editar raça">
         <RacaForm
           inicial={r}
-          grupos={grupos.data}
           conceitos={conceitosRaca.data}
           enviando={editar.isPending}
           erros={errosDeCampo(editar.error)}

@@ -10,7 +10,8 @@ import {
   type CategoriaPericia,
   type PericiaInput,
 } from "../types";
-import { ExclusividadeField } from "../../grupos/components/ExclusividadeField";
+import { KitsField } from "../../kits/components/KitsField";
+import { kitsPadrao } from "../../kits/types";
 import { CategoriaIcone } from "./CategoriaIcone";
 
 type BaseProps<T> = {
@@ -60,11 +61,12 @@ export function PericiaCatalogoForm({
     categoria: inicial?.categoria ?? ("FISICO" as CategoriaPericia),
     atributoId: inicial?.atributoId ?? [...atributos].sort(ordenar)[0]?.id ?? "",
   });
+  const [kitIds, setKitIds] = useState<string[]>(inicial?.kitIds ?? kitsPadrao());
   const set = (campo: keyof typeof v) => (e: { target: { value: string } }) => setV({ ...v, [campo]: e.target.value });
   const e = p.erros ?? {};
 
   return (
-    <form className="form" noValidate onSubmit={enviarCom(() => p.onEnviar(v))}>
+    <form className="form" noValidate onSubmit={enviarCom(() => p.onEnviar({ ...v, kitIds }))}>
       <Field rotulo="Nome" erro={e.nome}>
         <input value={v.nome} onChange={set("nome")} maxLength={60} autoFocus />
       </Field>
@@ -91,6 +93,7 @@ export function PericiaCatalogoForm({
       <Field rotulo="Descrição" erro={e.descricao}>
         <textarea value={v.descricao} onChange={set("descricao")} maxLength={1000} rows={3} />
       </Field>
+      <KitsField valor={kitIds} onChange={setKitIds} erro={e.kitIds} />
       <Rodape enviando={p.enviando} onCancelar={p.onCancelar} erroGeral={p.erroGeral} rotulo="Salvar perícia" />
     </form>
   );
@@ -99,22 +102,21 @@ export function PericiaCatalogoForm({
 // ---------- Atributo ----------
 export function AtributoForm({
   inicial,
-  grupos = [],
   ...p
-}: BaseProps<AtributoInput> & { inicial?: AtributoInput; grupos?: { id: string; titulo: string }[] }) {
+}: BaseProps<AtributoInput> & { inicial?: AtributoInput }) {
   const [nome, setNome] = useState(inicial?.nome ?? "");
   const [descricao, setDescricao] = useState(inicial?.descricao ?? "");
-  const [grupoExclusivoId, setGrupoExclusivoId] = useState<string | null>(inicial?.grupoExclusivoId ?? null);
+  const [kitIds, setKitIds] = useState<string[]>(inicial?.kitIds ?? kitsPadrao());
   const e = p.erros ?? {};
   return (
-    <form className="form" noValidate onSubmit={enviarCom(() => p.onEnviar({ nome, descricao, grupoExclusivoId }))}>
+    <form className="form" noValidate onSubmit={enviarCom(() => p.onEnviar({ nome, descricao, kitIds }))}>
       <Field rotulo="Nome" erro={e.nome}>
         <input value={nome} onChange={(ev) => setNome(ev.target.value)} maxLength={60} autoFocus />
       </Field>
       <Field rotulo="Descrição (opcional)" erro={e.descricao}>
         <textarea value={descricao} onChange={(ev) => setDescricao(ev.target.value)} maxLength={1000} rows={3} />
       </Field>
-      <ExclusividadeField valor={grupoExclusivoId} grupos={grupos} onChange={setGrupoExclusivoId} erro={e.grupoExclusivoId} />
+      <KitsField valor={kitIds} onChange={setKitIds} erro={e.kitIds} />
       <Rodape enviando={p.enviando} onCancelar={p.onCancelar} erroGeral={p.erroGeral} rotulo="Salvar atributo" />
     </form>
   );

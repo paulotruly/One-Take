@@ -12,8 +12,10 @@ import { ItemDetalhe, ItemLinha } from "../components/ItemCartao";
 import type { ItemModelo } from "../types";
 
 type Props = {
-  /** Grupo onde o item entra (para NPC: o grupo exclusivo dele, ou null se for geral). */
+  /** Grupo onde o item entra (null quando vai para um NPC). */
   grupoId: string | null;
+  /** Kit do grupo: o catálogo mostra o do kit + o geral. */
+  kitId?: string | null;
   /** Lançar direto no inventário deste NPC (no lugar de escolher ficha). */
   npc?: { id: string; nome: string };
   aberto: boolean;
@@ -24,8 +26,8 @@ type Props = {
   destinoInicial?: string | null;
 };
 
-export function LancarItemModal({ grupoId, npc, aberto, onFechar, destinos, destinoInicial = null }: Props) {
-  const catalogo = useCatalogoItens(grupoId ?? undefined);
+export function LancarItemModal({ grupoId, kitId = null, npc, aberto, onFechar, destinos, destinoInicial = null }: Props) {
+  const catalogo = useCatalogoItens(kitId);
   const lancar = useLancarItem();
   const categorias = useCategoriasItem();
   const [categoria, setCategoria] = useState<string | undefined>(undefined);
@@ -41,8 +43,7 @@ export function LancarItemModal({ grupoId, npc, aberto, onFechar, destinos, dest
     onFechar();
   }
 
-  // NPC geral (sem grupo) só recebe itens gerais.
-  const lista = (catalogo.data ?? []).filter((i) => (!categoria || i.categoria?.id === categoria) && (grupoId || !i.grupoExclusivoId));
+  const lista = (catalogo.data ?? []).filter((i) => !categoria || i.categoria?.id === categoria);
 
   return (
     <Modal aberto={aberto} onFechar={fechar} titulo={escolhido ? `Lançar: ${escolhido.nome}` : "Lançar item do catálogo"}>

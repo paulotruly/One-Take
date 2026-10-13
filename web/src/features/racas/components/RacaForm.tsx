@@ -2,12 +2,12 @@ import { useState, type FormEvent } from "react";
 import { Button } from "../../../components/ui/Button";
 import { Field } from "../../../components/ui/Field";
 import { ClasseImagem } from "../../classes/components/ClasseImagem";
-import { ExclusividadeField } from "../../grupos/components/ExclusividadeField";
+import { KitsField } from "../../kits/components/KitsField";
+import { kitsPadrao } from "../../kits/types";
 import type { RacaInput } from "../types";
 
 type Props = {
   inicial?: RacaInput;
-  grupos?: { id: string; titulo: string }[];
   conceitos?: { id: string; titulo: string }[];
   onEnviar: (dados: RacaInput) => void;
   onCancelar: () => void;
@@ -17,12 +17,12 @@ type Props = {
 };
 
 /** Formulário de apresentação da raça. Não fala com a API. */
-export function RacaForm({ inicial, grupos = [], conceitos = [], onEnviar, onCancelar, enviando, erros = {}, erroGeral }: Props) {
+export function RacaForm({ inicial, conceitos = [], onEnviar, onCancelar, enviando, erros = {}, erroGeral }: Props) {
   const [titulo, setTitulo] = useState(inicial?.titulo ?? "");
   const [descricao, setDescricao] = useState(inicial?.descricao ?? "");
   const [deslocamento, setDeslocamento] = useState(String(inicial?.deslocamento ?? ""));
   const [imagemUrl, setImagemUrl] = useState(inicial?.imagemUrl ?? "");
-  const [grupoExclusivoId, setGrupoExclusivoId] = useState<string | null>(inicial?.grupoExclusivoId ?? null);
+  const [kitIds, setKitIds] = useState<string[]>(inicial?.kitIds ?? kitsPadrao());
   const [conceitoId, setConceitoId] = useState(inicial?.conceitoId ?? "");
 
   function enviar(e: FormEvent) {
@@ -31,7 +31,7 @@ export function RacaForm({ inicial, grupos = [], conceitos = [], onEnviar, onCan
       titulo,
       descricao,
       imagemUrl: imagemUrl.trim() || null,
-      grupoExclusivoId,
+      kitIds,
       conceitoId: conceitoId || null,
       deslocamento: deslocamento.trim() === "" ? (undefined as unknown as number) : Number(deslocamento),
     });
@@ -54,7 +54,7 @@ export function RacaForm({ inicial, grupos = [], conceitos = [], onEnviar, onCan
       <Field rotulo="Descrição" erro={erros.descricao}>
         <textarea value={descricao} onChange={(e) => setDescricao(e.target.value)} maxLength={2000} rows={4} />
       </Field>
-      <ExclusividadeField valor={grupoExclusivoId} grupos={grupos} onChange={setGrupoExclusivoId} erro={erros.grupoExclusivoId} />
+      <KitsField valor={kitIds} onChange={setKitIds} erro={erros.kitIds} />
       <Field rotulo="Link da imagem" erro={erros.imagemUrl} dica="Opcional. Cole o endereço (https://...) de uma imagem.">
         <input type="url" value={imagemUrl} onChange={(e) => setImagemUrl(e.target.value)} placeholder="https://" />
       </Field>

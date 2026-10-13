@@ -3,11 +3,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../../lib/api";
 import type { CategoriaItem, CategoriaItemInput, Item, ItemModelo, ItemModeloInput, ItemNoGrupoInput } from "./types";
 
-/** `grupoId` = só o que pode ser lançado naquele grupo (geral + exclusivo dele). */
-export function useCatalogoItens(grupoId?: string) {
+/** `kitId` = só o que aparece com aquele kit (do kit + gerais). */
+export function useCatalogoItens(kitId?: string | null) {
   return useQuery({
-    queryKey: ["itens", "catalogo", grupoId ?? "todos"],
-    queryFn: () => api<ItemModelo[]>(`/api/catalogo-itens${grupoId ? `?grupoId=${grupoId}` : ""}`),
+    queryKey: ["itens", "catalogo", kitId ?? "todos"],
+    queryFn: () => api<ItemModelo[]>(`/api/catalogo-itens${kitId ? `?kitId=${kitId}` : ""}`),
   });
 }
 

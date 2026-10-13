@@ -1,7 +1,7 @@
 import type { z } from "zod";
 import type { Atributo, Pericia, RacaPericia } from "../../generated/prisma/client.js";
 import { naoEncontrado } from "../../lib/errors.js";
-import { aplicarExclusividade, garantirExclusividadePossivel, validarGrupoExclusivo } from "../../lib/exclusividade.js";
+import { comKitIds, comKits, definirKits } from "../../lib/kits.js";
 import { getPrisma } from "../../lib/prisma.js";
 import { apresentarAtributo, porAtributoENome } from "../atributos/atributos.service.js";
 import { validarConceito } from "../conceitos/conceitos.routes.js";
@@ -28,6 +28,7 @@ function apresentarPericias(vinculos: (RacaPericia & { pericia: Pericia & { atri
 const comPericias = {
   pericias: { include: { pericia: { include: { atributo: true } } } },
   conceito: { select: { id: true, titulo: true } },
+  ...comKits,
 } as const;
 
 export async function listar(usuarioId: string) {
@@ -36,30 +37,29 @@ export async function listar(usuarioId: string) {
     orderBy: { titulo: "asc" },
     include: comPericias,
   });
-  return racas.map(({ pericias, ...r }) => ({ ...r, pericias: apresentarPericias(pericias) }));
+  return racas.map(({ pericias, ...r }) => ({ ...comKitIds(r), pericias: apresentarPericias(pericias) }));
 }
 
 export async function detalhar(id: string, usuarioId: string) {
   await racaDoMestre(id, usuarioId);
   const { pericias, ...r } = await getPrisma().raca.findUniqueOrThrow({ where: { id }, include: comPericias });
-  return { ...r, pericias: apresentarPericias(pericias) };
+  return { ...comKitIds(r), pericias: apresentarPericias(pericias) };
 }
 
 export async function criar(usuarioId: string, dados: z.infer<typeof criarRacaSchema>) {
-  await validarGrupoExclusivo(dados.grupoExclusivoId, usuarioId);
   await validarConceito("raca", dados.conceitoId, usuarioId);
-  const raca = await getPrisma().raca.create({ data: { ...dados, donoId: usuarioId } });
-  await aplicarExclusividade("raca", raca.id, dados.grupoExclusivoId);
+  const { kitIds, ...resto } = dados;
+  const raca = await getPrisma().raca.create({ data: { ...resto, donoId: usuarioId } });
+  await definirKits("raca", raca.id, kitIds, usuarioId);
   return detalhar(raca.id, usuarioId);
 }
 
 export async function editar(id: string, usuarioId: string, dados: z.infer<typeof editarRacaSchema>) {
   await racaDoMestre(id, usuarioId);
-  await validarGrupoExclusivo(dados.grupoExclusivoId, usuarioId);
-  await garantirExclusividadePossivel("raca", id, dados.grupoExclusivoId);
   await validarConceito("raca", dados.conceitoId, usuarioId);
-  await getPrisma().raca.update({ where: { id }, data: dados });
-  await aplicarExclusividade("raca", id, dados.grupoExclusivoId);
+  const { kitIds, ...resto } = dados;
+  await getPrisma().raca.update({ where: { id }, data: resto });
+  await definirKits("raca", id, kitIds, usuarioId);
   return detalhar(id, usuarioId);
 }
 

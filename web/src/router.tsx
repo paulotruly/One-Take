@@ -22,6 +22,7 @@ import { CatalogoItensPage } from "./features/itens/pages/CatalogoItensPage";
 import { NpcDetalhePage } from "./features/npcs/pages/NpcDetalhePage";
 import { EditarNpcPage, NovoNpcPage } from "./features/npcs/pages/NpcFormPage";
 import { NpcsPage } from "./features/npcs/pages/NpcsPage";
+import { KitsPage } from "./features/kits/pages/KitsPage";
 import { AppLayout } from "./layouts/AppLayout";
 import { AtivarMestrePage } from "./pages/AtivarMestrePage";
 import { PublicLayout } from "./layouts/PublicLayout";
@@ -82,6 +83,7 @@ export const router = createBrowserRouter([
           { path: "bestiario/:id/editar", element: <EditarBestaPage /> },
           { path: "itens", element: <CatalogoItensPage /> },
           { path: "npcs", element: <NpcsPage /> },
+          { path: "kits", element: <KitsPage /> },
           { path: "npcs/novo", element: <NovoNpcPage /> },
           { path: "npcs/:id", element: <NpcDetalhePage /> },
           { path: "npcs/:id/editar", element: <EditarNpcPage /> },

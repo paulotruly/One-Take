@@ -13,7 +13,7 @@ export type NpcResumo = {
   nivel: number;
   raca: string;
   classe: string | null;
-  grupoExclusivo: { id: string; titulo: string } | null;
+  kitIds: string[];
   vida: Recurso;
   mana: Recurso;
   esforco: Recurso;
@@ -44,8 +44,7 @@ export type NpcDetalhe = {
   vidaBase: number | null;
   manaBase: number | null;
   esforcoBase: number | null;
-  grupoExclusivoId: string | null;
-  grupoExclusivo: { id: string; titulo: string } | null;
+  kitIds: string[];
   raca: { id: string; titulo: string; deslocamento: number };
   classe: { id: string; titulo: string; grupo: Grupo } | null;
   vida: Recurso;
@@ -73,5 +72,5 @@ export type NpcInput = {
   vidaBase: number | null;
   manaBase: number | null;
   esforcoBase: number | null;
-  grupoExclusivoId: string | null;
+  kitIds: string[];
 };

@@ -26,9 +26,11 @@ const base = z.object({
     .array(z.string())
     .refine((l) => l.every((s) => SLUGS_REGRAS_PADRAO.includes(s)), "Regra padrão desconhecida")
     .default([]),
+  /** Kit de RPG do grupo (opcional): o que aparece nele é o do kit + o geral. */
+  kitId: z.guid("Kit inválido").nullable(),
 });
 
-export const criarGrupoSchema = base.extend({ disponiveis: disponiveisSchema.optional() });
+export const criarGrupoSchema = base.extend({ kitId: base.shape.kitId.default(null), disponiveis: disponiveisSchema.optional() });
 export const editarGrupoSchema = base.partial().extend({
   regrasPadraoDesativadas: base.shape.regrasPadraoDesativadas.removeDefault().optional(),
 });

@@ -56,17 +56,17 @@ describe("grupos (mestre)", () => {
     expect(res.status).toBe(404);
   });
 
-  it("disponíveis: recusa raça exclusiva de outro grupo e perícia fora dos atributos marcados", async () => {
+  it("disponíveis: recusa raça de outro mestre e perícia fora dos atributos marcados", async () => {
     prismaFalso.grupo.findUnique.mockResolvedValue(grupo());
     prismaFalso.classe.findMany.mockResolvedValue([]);
-    prismaFalso.raca.findMany.mockResolvedValue([{ id: RACA, donoId: MESTRE.id, grupoExclusivoId: "outro-grupo" }]);
-    const exclusiva = await comoMestre(request(app).put(`/api/grupos/${GRUPO}/disponiveis`)).send({
+    prismaFalso.raca.findMany.mockResolvedValue([{ id: RACA, donoId: "33333333-3333-4333-8333-333333333333" }]);
+    const alheia = await comoMestre(request(app).put(`/api/grupos/${GRUPO}/disponiveis`)).send({
       classeIds: [], racaIds: [RACA], atributoIds: [], periciaIds: [],
     });
-    expect(exclusiva.status).toBe(400);
+    expect(alheia.status).toBe(400);
 
     prismaFalso.raca.findMany.mockResolvedValue([]);
-    prismaFalso.atributo.findMany.mockResolvedValue([{ id: FIS, donoId: null, grupoExclusivoId: null }]);
+    prismaFalso.atributo.findMany.mockResolvedValue([{ id: FIS, donoId: null }]);
     prismaFalso.pericia.findMany.mockResolvedValue([{ id: "p", donoId: MESTRE.id, atributoId: CAR }]);
     const foraDoAtributo = await comoMestre(request(app).put(`/api/grupos/${GRUPO}/disponiveis`)).send({
       classeIds: [], racaIds: [], atributoIds: [FIS], periciaIds: ["11111111-0000-4000-8000-0000000000aa"],

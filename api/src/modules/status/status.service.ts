@@ -3,6 +3,7 @@ import type { z } from "zod";
 import type { Status } from "../../generated/prisma/client.js";
 import { AppError, conflito, naoEncontrado } from "../../lib/errors.js";
 import { getPrisma } from "../../lib/prisma.js";
+import { comKits, definirKits } from "../../lib/kits.js";
 import type { criarStatusSchema, editarStatusSchema } from "./status.schemas.js";
 
 export function apresentarStatus({ id, nome, descricao, efeito, tipo, gatilho, ordem, donoId }: Status) {
@@ -58,19 +59,26 @@ export async function listar(usuarioId: string) {
   const status = await getPrisma().status.findMany({
     where: { OR: [{ donoId: null }, { donoId: usuarioId }] },
     orderBy: [{ ordem: "asc" }, { nome: "asc" }],
+    include: comKits,
   });
-  return status.map(apresentarStatus);
+  return status.map((s) => ({ ...apresentarStatus(s), kitIds: (s.kits ?? []).map((k) => k.kitId) }));
 }
 
 export async function criar(usuarioId: string, dados: z.infer<typeof criarStatusSchema>) {
   await garantirNomeLivre(usuarioId, dados.nome);
-  return apresentarStatus(await getPrisma().status.create({ data: { ...dados, donoId: usuarioId } }));
+  const { kitIds, ...resto } = dados;
+  const s = await getPrisma().status.create({ data: { ...resto, donoId: usuarioId } });
+  await definirKits("status", s.id, kitIds, usuarioId);
+  return { ...apresentarStatus(s), kitIds: kitIds ?? [] };
 }
 
 export async function editar(id: string, usuarioId: string, dados: z.infer<typeof editarStatusSchema>) {
   await statusEditavel(id, usuarioId);
   if (dados.nome) await garantirNomeLivre(usuarioId, dados.nome, id);
-  return apresentarStatus(await getPrisma().status.update({ where: { id }, data: dados }));
+  const { kitIds, ...resto } = dados;
+  await definirKits("status", id, kitIds, usuarioId);
+  const s = await getPrisma().status.update({ where: { id }, data: resto, include: comKits });
+  return { ...apresentarStatus(s), kitIds: (s.kits ?? []).map((k) => k.kitId) };
 }
 
 /** Sai também das fichas e grupos (cascata) e das cartas que o ativavam (fica sem status). */

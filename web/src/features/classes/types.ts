@@ -16,8 +16,8 @@ export type Classe = {
   pontosEsforco: number;
   donoId: string | null;
   origemId: string | null;
-  /** Nulo = geral; id = exclusiva daquele grupo. */
-  grupoExclusivoId?: string | null;
+  /** Kits de RPG em que a classe está (vazio = geral). */
+  kitIds?: string[];
   /** Arquétipo do qual esta é subclasse (opcional). */
   conceitoId?: string | null;
   conceito?: { id: string; titulo: string; descricao?: string } | null;
@@ -128,7 +128,7 @@ export type Progressao = {
 export type ClasseInput = Pick<
   Classe,
   "grupo" | "titulo" | "descricao" | "imagemUrl" | "pontosVida" | "pontosMana" | "pontosEsforco"
-> & { grupoExclusivoId: string | null; conceitoId: string | null };
+> & { kitIds: string[]; conceitoId: string | null };
 export type HabilidadeInput = Omit<Habilidade, "id" | "classeId" | "bestaId" | "ordem" | "status" | "pericia" | "teste" | "aprimoramentos" | "aprimoradaNoNivel" | "proximoAprimoramento">;
 
 export const GRUPOS: Grupo[] = ["COMBATENTE", "VANGUARDISTA", "SUPORTE"];

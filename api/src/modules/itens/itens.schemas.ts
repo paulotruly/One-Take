@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { grupoExclusivoSchema } from "../../lib/exclusividade.js";
+import { kitIdsSchema } from "../../lib/kits.js";
 import { inteiro, texto, textoOpcional, urlOpcional } from "../../lib/validacao.js";
 import { CATEGORIAS_FIXAS } from "./categorias.js";
 
@@ -35,8 +35,8 @@ const comDefaults = campos.extend({
 });
 
 // ---------- Catálogo do mestre (moldes) ----------
-export const criarModeloSchema = comDefaults.extend({ grupoExclusivoId: grupoExclusivoSchema });
-export const editarModeloSchema = campos.extend({ grupoExclusivoId: grupoExclusivoSchema }).partial();
+export const criarModeloSchema = comDefaults.extend({ kitIds: kitIdsSchema });
+export const editarModeloSchema = campos.extend({ kitIds: kitIdsSchema }).partial();
 
 export const lancarSchema = z.object({
   /** Grupo onde o item entra (obrigatório, a não ser que vá para um NPC). */
