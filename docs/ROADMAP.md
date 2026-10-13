@@ -1,7 +1,7 @@
 # Roadmap
 
 ## Pronto
-- Base do monorepo, schema Prisma, migration inicial (com CHECKs e RLS), seed de 3 classes fixas.
+- Base do monorepo, schema Prisma, migration inicial (com CHECKs e RLS), seed da estrutura fixa (atributos, status, categorias de item, perícias base).
 - API: autenticação (JWT Supabase via JWKS), papel MESTRE/JOGADOR, CRUD de classes,
   habilidades, catálogo de perícias por mestre (com 18 perícias base) e perícias das classes, duplicar classe, imagem por link, reordenar cartas, erros padronizados, testes.
 
@@ -16,11 +16,16 @@
   fichas (raça, classe, história, imagem, dados por atributo, recursos, perícias somadas, cartas do nível),
   subir nível, pontos de perícia, inventário com itens (entregar, passar, descartar, pegar), interface do jogador.
 
+- Regra de teste (d20 + perícia, atributo 0, esforço = dados extras, DT livre) com teste pronto na ficha; tipos de efeito fixos;
+  arquétipo de raça; uma conta para jogar e mestrar; catálogo de itens (categorias, espaços, usos, pré-requisito, usar); bestiário
+  (criaturas como classes, arquétipo de criatura, invocar no grupo, morte automática); cartas em grade com pop-up; status visível na
+  ficha e no grupo; ficha e inventário para celular; skill de balanceamento e scripts `fixar-classe` e `exportar`.
+
 ## Em andamento
 - Instruções de deploy (Render, Vercel).
 
 ## A seguir (fora do escopo atual)
-- Sessões, rolagem de dados no app, combate.
+- Sessões, rolagem de dados no app (com gasto de esforço), combate.
 
 ## Ideias em aberto
 - O que fazer ao excluir uma classe usada por fichas (bloquear? arquivar? soft delete?).
@@ -32,6 +37,7 @@
 - "Restaurar perícias base" no catálogo do mestre (hoje, base apagada só volta ao duplicar uma classe fixa que a use).
 - Definir: cartas de um nível são todas recebidas ou escolhidas? Perícia nova é escolhida ou pré-determinada?
 - Recuperar senha sem email (ex.: mestre redefine a senha de um jogador do grupo).
-- Descer de nível / desfazer gasto de pontos de perícia.
-- Mestre jogar no grupo de outro mestre (hoje cada conta tem um papel).
+- Desfazer gasto de pontos de perícia (descer de nível não existe por regra).
+- Status em criaturas invocadas.
+- "Desativar" a interface de mestre.
 - Jogador criar itens próprios (hoje só o mestre cria).

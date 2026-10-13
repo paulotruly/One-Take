@@ -1,0 +1,19 @@
+/* ---------- Lista de criaturas invocadas ---------- */
+.criaturas { display: flex; flex-direction: column; gap: var(--esp-2); margin: 0; padding: 0; list-style: none; }
+.criatura {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+  width: 100%;
+  min-height: 56px;
+  padding: var(--esp-2) var(--esp-3);
+  border: 1px solid var(--cor-borda);
+  background: var(--cor-fundo);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.criatura:hover { border-color: var(--cor-texto-suave); }
+.criatura--selecionada { border-color: var(--cor-primaria); outline: 1px solid var(--cor-primaria); }
+.criatura__info { display: flex; flex-direction: column; gap: var(--esp-1); flex: 1; min-width: 0; }

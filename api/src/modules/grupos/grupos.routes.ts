@@ -1,8 +1,9 @@
 import { Router } from "express";
 import { idDe } from "../../lib/validacao.js";
 import { usuarioDe } from "../../middleware/auth.js";
-import * as itens from "../fichas/itens.service.js";
-import { criarGrupoSchema, criarItemSchema, disponiveisSchema, editarGrupoSchema, regraDaMesaSchema } from "./grupos.schemas.js";
+import * as itens from "../itens/itens.service.js";
+import { criarItemSchema } from "../itens/itens.schemas.js";
+import { criarGrupoSchema, disponiveisSchema, editarGrupoSchema, regraDaMesaSchema } from "./grupos.schemas.js";
 import * as service from "./grupos.service.js";
 
 // Rotas do mestre (o app exige papel MESTRE antes de chegar aqui).

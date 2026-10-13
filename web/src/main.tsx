@@ -13,6 +13,8 @@ import "./features/classes/components/classes.css";
 import "./features/pericias/components/pericias.css";
 import "./features/grupos/components/grupos.css";
 import "./features/fichas/components/fichas.css";
+import "./features/itens/components/itens.css";
+import "./features/bestiario/components/bestiario.css";
 import "./features/docs/docs.css";
 
 const queryClient = new QueryClient({

@@ -27,6 +27,7 @@
   color: var(--cor-fundo);
 }
 .marca:hover { text-decoration: none; background: var(--cor-primaria); }
+/* Links no topo: só na área pública (na área logada a navegação fica na lateral). */
 .topo__nav { display: flex; align-items: stretch; gap: var(--esp-1); height: 100%; margin-right: auto; }
 .topo__link {
   display: inline-flex;
@@ -50,6 +51,38 @@
   font-size: var(--texto-sm);
 }
 .topo__perfil:hover { text-decoration: none; background: var(--cor-superficie-2); }
+button.topo__perfil { border: 0; background: transparent; font: inherit; cursor: pointer; }
+
+/* Menu do perfil (editar perfil, sair) */
+.menu-perfil { position: relative; }
+.menu-perfil__lista {
+  position: absolute;
+  top: calc(100% + var(--esp-1));
+  right: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  min-width: 180px;
+  border: 1px solid var(--cor-borda);
+  background: var(--cor-fundo);
+  box-shadow: var(--sombra);
+}
+.menu-perfil__item {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-2);
+  min-height: 44px;
+  padding: 0 var(--esp-4);
+  border: 0;
+  background: transparent;
+  color: var(--cor-texto);
+  font: inherit;
+  font-size: var(--texto-sm);
+  text-align: left;
+  cursor: pointer;
+}
+.menu-perfil__item:hover { text-decoration: none; background: var(--cor-superficie-2); }
+.menu-perfil__item + .menu-perfil__item { border-top: 1px solid var(--cor-borda); }
 .topo__nome { font-weight: var(--peso-forte); max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .topo__papel {
   padding: 0 var(--esp-2);
@@ -57,9 +90,75 @@
   color: var(--cor-texto-suave);
   font-size: var(--texto-xs);
 }
+.topo__troca {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--esp-1);
+  min-height: 32px;
+  padding: 0 var(--esp-3);
+  border: 1px solid var(--cor-primaria);
+  color: var(--cor-primaria);
+  font-size: var(--texto-sm);
+  font-weight: var(--peso-forte);
+  white-space: nowrap;
+}
+.topo__troca:hover { text-decoration: none; background: var(--cor-primaria); color: var(--cor-primaria-texto); }
 @media (max-width: 760px) {
   .topo__conteudo { gap: var(--esp-2); padding: 0 var(--esp-3); }
-  .topo__link span, .topo__nome, .topo__papel { display: none; }
+  .topo__nome, .topo__papel { display: none; }
+  .topo__troca span { display: none; }
+  .topo__troca { padding: 0 var(--esp-2); }
+}
+
+/* ---------- Navegação lateral ---------- */
+.topo__usuario { margin-left: auto; }
+/* Botão da gaveta: só no celular (seletor mais forte que .btn). */
+.topo .topo__menu { display: none; }
+.app__corpo { display: flex; align-items: flex-start; max-width: var(--largura-max); margin: 0 auto; }
+.lateral {
+  position: sticky;
+  top: 60px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-1);
+  flex-shrink: 0;
+  width: 200px;
+  height: calc(100vh - 60px);
+  padding: var(--esp-5) var(--esp-3);
+  border-right: 1px solid var(--cor-borda);
+  background: var(--cor-fundo);
+  overflow-y: auto;
+}
+.lateral__link {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+  min-height: 40px;
+  padding: 0 var(--esp-3);
+  border-left: 3px solid transparent;
+  color: var(--cor-texto-suave);
+  font-size: var(--texto-sm);
+  font-weight: var(--peso-forte);
+}
+.lateral__link:hover { text-decoration: none; color: var(--cor-texto); background: var(--cor-superficie-2); }
+.lateral__link--ativo { color: var(--cor-texto); border-left-color: var(--cor-primaria); background: var(--cor-superficie-2); }
+.lateral__fundo { display: none; }
+.app__corpo > .conteudo { flex: 1; min-width: 0; margin: 0; }
+@media (max-width: 760px) {
+  .topo .topo__menu { display: inline-flex; }
+  /* No celular a lateral vira gaveta por cima do conteúdo. */
+  .lateral {
+    position: fixed;
+    top: 60px;
+    left: 0;
+    z-index: 15;
+    width: min(260px, 80vw);
+    transform: translateX(-100%);
+    transition: transform var(--transicao);
+  }
+  .lateral--aberta { transform: none; box-shadow: var(--sombra); }
+  .lateral__fundo { display: block; position: fixed; inset: 60px 0 0; z-index: 14; background: var(--cor-overlay); }
+  .lateral__link { min-height: 48px; }
 }
 
 /* ---------- Conteúdo ---------- */

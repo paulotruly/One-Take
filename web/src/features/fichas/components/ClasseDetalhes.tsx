@@ -1,7 +1,7 @@
 // Detalhes de uma classe para o jogador decidir: dados, cartela completa e perícias.
 import { Lock } from "lucide-react";
 import { ClasseImagem } from "../../classes/components/ClasseImagem";
-import { HabilidadeCard } from "../../classes/components/HabilidadeCard";
+import { HabilidadesDeck } from "../../classes/components/HabilidadesDeck";
 import { GrupoBadge } from "../../classes/components/Selos";
 import { StatsBar } from "../../classes/components/StatsBar";
 import type { Classe, Habilidade } from "../../classes/types";
@@ -35,7 +35,7 @@ export function ClasseDetalhes({ classe: c }: Props) {
         {iniciais.length === 0 ? (
           <p className="pagina__subtitulo">Nenhuma carta no nível inicial.</p>
         ) : (
-          <div className="deck">{iniciais.map((h) => <HabilidadeCard key={h.id} habilidade={h} />)}</div>
+          <HabilidadesDeck habilidades={iniciais} />
         )}
       </section>
 
@@ -44,7 +44,7 @@ export function ClasseDetalhes({ classe: c }: Props) {
           <h3>
             <Lock size={16} aria-hidden /> Liberadas ao subir de nível ({depois.length})
           </h3>
-          <div className="deck">{depois.map((h) => <HabilidadeCard key={h.id} habilidade={h} />)}</div>
+          <HabilidadesDeck habilidades={depois} />
         </section>
       )}
 

@@ -7,11 +7,13 @@ Base local: `http://localhost:3333`. JSON em tudo.
 |---|---|---|
 | GET | `/api/nicknames/:nickname` | `{ disponivel, motivo? }` |
 | POST | `/api/entrar` | corpo `{ login, senha }` (login = nickname, com ou sem @, ou email antigo) → `{ access_token, refresh_token }` do Supabase; erro = 401 "Nickname ou senha incorretos." |
-| GET | `/api/regras` | `{ progressao, ficha: { pontosAtributoIniciais, inventarioInicial, inventarioPorNivel }, atributosFixos: [{ nome, descricao }], statusFixos: [{ nome, descricao, efeito, tipo, gatilho }] }` |
+| GET | `/api/regras` | `{ progressao, ficha: { pontosAtributoIniciais, inventarioInicial, inventarioPorNivel }, teste: { ladosDoDado, dadosComAtributoZero, divisorComAtributoZero, esforcoPorDadoExtra, esforcoComAtributoZero, chances: [{ dt, chances: [{ pontos, chance }] }] }, atributosFixos, statusFixos, regrasPadrao }` |
 
 ## Autenticação
 Todas as rotas sob `/api` exigem `Authorization: Bearer <access_token do Supabase>`.
-Rotas de classes, habilidades e perícias exigem papel **MESTRE**. No primeiro acesso a elas, o catálogo de perícias do mestre é criado a partir das perícias base.
+Rotas de gestão (classes, habilidades, perícias, raças, atributos, grupos, status, conceitos, bestiário, criaturas invocadas, catálogo de itens)
+exigem a **interface de mestre ativada** (papel MESTRE). No primeiro acesso a elas, o catálogo de perícias do mestre é criado a partir das perícias base.
+Fichas, convites e itens valem para qualquer conta.
 
 ## Erros
 Formato único:
@@ -24,7 +26,9 @@ Formato único:
 | 400 | `VALIDACAO` | corpo/query inválido (Zod); `details` por campo |
 | 400 | `JSON_INVALIDO`, `REQUISICAO_INVALIDA` | JSON malformado, lista de ordem errada |
 | 401 | `NAO_AUTENTICADO` | sem token, token inválido/expirado |
-| 403 | `PROIBIDO` | usuário não é MESTRE |
+| 403 | `PROIBIDO` | interface de mestre não ativada (ou ação só do mestre do grupo) |
+| 403 | `NAO_SABE_USAR` | jogador tenta usar item sem cumprir o pré-requisito |
+| 409 | `INVENTARIO_CHEIO` | o item (com seus espaços) não cabe |
 | 403 | `CLASSE_FIXA` | tentativa de alterar classe fixa (ou seus filhos) |
 | 404 | `NAO_ENCONTRADO` | não existe, id malformado, ou pertence a outro mestre |
 | 409 | `NOME_EM_USO` | já existe perícia/atributo com esse nome |
@@ -36,7 +40,8 @@ Formato único:
 ## Tipos de resposta
 **Classe (resumo)**: `{ id, grupo, titulo, descricao, imagemUrl, pontosVida, pontosMana, pontosEsforco, donoId, origemId, fixa, criadoEm, atualizadoEm }`
 **Classe (detalhe)**: resumo + `habilidades: Habilidade[]` (a cartela, por `ordem`) + `pericias: PericiaDaClasse[]` (por atributo e nome).
-**Habilidade**: `{ id, classeId, titulo, descricao, condicao, tipoEfeito, descricaoEfeito, limite, nivelNecessario, custoMana, ordem }`
+**Habilidade**: `{ id, classeId, bestaId, titulo, descricao, condicao, tipoEfeito, descricaoEfeito, limite, nivelNecessario, custoMana, ordem }`
+`tipoEfeito`: `DANO | DEFESA | CURA | SUPORTE | FORTALECIMENTO | ENFRAQUECIMENTO | CONTROLE | MOBILIDADE | INVOCACAO | UTILIDADE` (obrigatório; outro valor = 400 "Escolha um tipo de efeito").
 **PericiaCatalogo**: `{ id, nome, descricao, categoria, atributoId, atributo: Atributo, donoId, origemId, criadoEm, usosClasses, usosRacas }`
 **PericiaDaClasse**: `{ id, nome, descricao, categoria, atributo: Atributo, modificador }` (`id` = id da perícia no catálogo)
 **PericiaDaRaca**: `{ id, nome, descricao, categoria, atributo: Atributo, pontos }`
@@ -49,6 +54,7 @@ Formato único:
 |---|---|---|---|
 | GET | `/health` | — (público) | `200 { status: "ok", banco: "ok" }` ou `503` |
 | GET | `/api/me` | — (qualquer papel) | `{ id, nickname, papel, nome, fotoUrl }` (email nunca é exposto). No 1º acesso cria o perfil com `papel` e `nome` do `user_metadata` do cadastro (papel inválido = JOGADOR); conta recriada herda o perfil antigo |
+| POST | `/api/me/mestre` | — | ativa a interface de mestre (papel MESTRE) → perfil |
 | PATCH | `/api/me` | `{ nickname?, nome?, fotoUrl? }` (`""` = limpar; nickname 3–20 `[a-z0-9_.-]`, único: 409 `NICKNAME_EM_USO`) | perfil |
 | GET | `/api/classes?grupo=SUPORTE` | — | `Classe[]` (fixas primeiro, depois as do mestre; por título) |
 | POST | `/api/classes` | `{ grupo, titulo, descricao, imagemUrl?, pontosVida, pontosMana, pontosEsforco }` | `201 Classe` (só a classe; habilidades e perícias vêm depois) |
@@ -77,7 +83,7 @@ Formato único:
 | PUT | `/api/classes/:classeId/pericias/:periciaId` | `{ modificador }` | adiciona a perícia do catálogo à classe ou atualiza o modificador → `{ classeId, periciaId, modificador }` |
 | DELETE | `/api/classes/:classeId/pericias/:periciaId` | — | `204` (só tira da classe; a perícia continua no catálogo) |
 
-Limites: título 80, tipo de efeito 60 (texto livre, obrigatório), descrição 2000, condição 500, limite 200, nome de perícia 60, descrição de perícia 1000; pontos de vida/mana/esforço 1–9999 (nenhum pode ser zero); custo de mana 0–999;
+Limites: título 80, descrição 2000, condição 500, limite 200, nome de perícia 60, descrição de perícia 1000; pontos de vida/mana/esforço 1–9999 (nenhum pode ser zero); custo de mana 0–999;
 nível 1–100; modificador −99 a 99. `imagemUrl`: link http(s) até 2000 caracteres.
 Em campos de texto opcionais (inclusive `imagemUrl`), `""` é salvo como `null`.
 
@@ -91,7 +97,7 @@ Em campos de texto opcionais (inclusive `imagemUrl`), `""` é salvo como `null`.
 Habilidades aceitam `statusId` (ou `null`) no POST/PATCH e devolvem `status: { id, nome, tipo }`.
 Grupos: `disponiveis.statusIds` (status ativados). Membros do grupo trazem `status[]`.
 
-## Classes-conceito e aprimoramentos (mestre)
+## Arquétipos e aprimoramentos (mestre)
 | Método | Rota | Corpo | Resposta |
 |---|---|---|---|
 | GET | `/api/conceitos` | — | conceitos do mestre com `subclasses[]` |
@@ -109,12 +115,13 @@ A prévia de progressão tem `aprimoradas[]` por nível.
 |---|---|---|---|
 | GET | `/api/grupos` | — | grupos do mestre com `membros` (nº de fichas) |
 | POST | `/api/grupos` | `{ titulo, sinopse, genero, imagemUrl?, limiteMembros, permitirClassesRepetidas, disponiveis? }` | `201 GrupoDetalhe` (código gerado) |
-| GET | `/api/grupos/:id` | — | `GrupoDetalhe`: grupo + `disponiveis { classeIds, racaIds, atributoIds, periciaIds }` + `membros[]` (ficha, jogador, classe, raça, nível, vida/mana/esforço atual/max) + `itensVagos[]` |
+| GET | `/api/grupos/:id` | — | `GrupoDetalhe`: grupo + `disponiveis { classeIds, racaIds, atributoIds, periciaIds, statusIds }` + `membros[]` (ficha, jogador, classe, raça, nível, vida/mana/esforço atual/max, status) + `statusAtivos[]` + `itensVagos: Item[]` + `criaturas: Criatura[]` |
 | PATCH | `/api/grupos/:id` | subconjunto (limite não pode ficar abaixo dos membros) | `GrupoDetalhe` |
 | PUT | `/api/grupos/:id/disponiveis` | `{ classeIds, racaIds, atributoIds, periciaIds }` (perícias do catálogo, dentro dos atributos; nada exclusivo de outro grupo) | `GrupoDetalhe` |
 | POST | `/api/grupos/:id/codigo` | — | `GrupoDetalhe` com código novo |
 | DELETE | `/api/grupos/:id` | — | `204` (apaga fichas e itens) |
-| POST | `/api/grupos/:id/itens` | `{ nome, descricao?, fichaId? }` | `201 Item` (sem ficha = vago) |
+| POST | `/api/grupos/:id/itens` | campos de item + `fichaId?` (item avulso) | `201 Item` (sem ficha = vago) |
+| POST | `/api/grupos/:id/criaturas` | `{ bestaId, nivel? (1), quantidade? (1, máx 20) }` | `201 Criatura[]` (todas do grupo). Criatura exclusivo de outro grupo = 400 |
 
 Classes, raças e atributos aceitam `grupoExclusivoId` (id de um grupo do mestre ou `null` = geral) no POST/PATCH.
 
@@ -124,7 +131,7 @@ Classes, raças e atributos aceitam `grupoExclusivoId` (id de um grupo do mestre
 | GET | `/api/convites/:codigo` | — | prévia: grupo, mestre, vagas, `classes[]` (com `ocupada`, `habilidades[]` completas e `pericias[]` com modificador, para o jogador ver os detalhes), `racas[]`, `atributos[]`, `pontosAtributo`, `minhaFichaId`, `souMestre` |
 | POST | `/api/fichas` | `{ codigo, nome, classeId, racaId, historia?, imagemUrl?, dados: { [atributoId]: n } }` | `201 FichaDetalhe`. Erros: 404 código; 403 mestre do grupo; 409 `JA_TEM_FICHA`, `GRUPO_CHEIO`, `CLASSE_REPETIDA`; 400 classe/raça fora do grupo ou dados ≠ 3 |
 | GET | `/api/fichas` | — | minhas fichas (resumo) |
-| GET | `/api/fichas/:id` | — | `FichaDetalhe` (dono ou mestre do grupo): máximos, atuais, atributos com dados, perícias somadas (raça/classe/nível/total), cartas do nível, inventário (capacidade + itens), opções de perícia, outras fichas do grupo, `morto`, `status[]` (automáticos + aplicados), `statusAplicaveis[]` |
+| GET | `/api/fichas/:id` | — | `FichaDetalhe` (dono ou mestre do grupo): máximos, atuais, atributos com dados e `teste` ("2d20"), perícias somadas (raça/classe/nível/total) com `teste` ("2d20 + 5"), cartas do nível, inventário `{ capacidade, usados, itens: (Item & { podeUsar, motivoNaoPodeUsar })[] }`, opções de perícia, outras fichas do grupo, `morto`, `status[]`, `statusAplicaveis[]` |
 | PATCH | `/api/fichas/:id` | `{ nome?, historia?, imagemUrl?, vidaAtual?, manaAtual?, esforcoAtual? }` (atuais limitados a 0..máx) | `FichaDetalhe` |
 | POST | `/api/fichas/:id/subir-nivel` | — (só mestre) | `FichaDetalhe` (+1 nível, +5 nos atuais, +5 pontos de perícia) |
 | POST | `/api/fichas/:id/pericias` | `{ periciaId }` | gasta 5 pontos (+5 na perícia) · 409 `SEM_PONTOS` |
@@ -132,6 +139,55 @@ Classes, raças e atributos aceitam `grupoExclusivoId` (id de um grupo do mestre
 | DELETE | `/api/fichas/:id/status/:statusId` | — (só mestre) | `FichaDetalhe` |
 | DELETE | `/api/fichas/:id` | — | `204` (dono sai / mestre remove; itens ficam vagos) |
 | POST | `/api/itens/:id/mover` | `{ fichaId \| null }` | jogador: do próprio inventário para outra ficha do grupo, descartar (null) ou pegar item vago; mestre: qualquer. 409 `INVENTARIO_CHEIO` |
-| PATCH / DELETE | `/api/itens/:id` | `{ nome?, descricao? }` | só mestre |
+| POST | `/api/itens/:id/usar` | — | dono da ficha (com pré-requisito) ou mestre → `{ consumido, item \| null }`. Usos limitados perdem 1; no último o item é apagado. Item vago = 400 |
+| PATCH / DELETE | `/api/itens/:id` | campos de item (parciais) + `usosRestantes?` | só mestre. Mudar `usosMaximos` limita os restantes ao novo máximo |
 
 Erro genérico de exclusão bloqueada: `409 EM_USO` (ex.: classe/raça usada por ficha).
+
+## Itens (formato)
+**Item**: `{ id, categoria: { id, nome, icone } | null, nome, descricao, imagemUrl, efeito, espacos, usosMaximos, usosRestantes, requisito, requisitoPericia: { id, nome } | null, requisitoClasse: { id, titulo } | null, fichaId?, modeloId? }`
+Campos de item no corpo: `{ categoriaId? (Artefatos; null = sem categoria), nome, descricao? (""), imagemUrl?, efeito?, espacos? (1), usosMaximos? (null = sem limite), requisito?, requisitoPericiaId?, requisitoClasseId? }`
+(perícia do catálogo do mestre; classe fixa ou do mestre). Limites: nome 80, descrição/efeito 1000, requisito 200, espaços 1–99, usos 1–999.
+
+## Catálogo de itens (mestre)
+| Método | Rota | Corpo | Resposta |
+|---|---|---|---|
+| GET | `/api/catalogo-itens?grupoId=` | — | moldes do mestre (com `grupoExclusivoId`); com `grupoId`, só os que podem ir para aquele grupo |
+| POST | `/api/catalogo-itens` | campos de item + `grupoExclusivoId?` | `201` |
+| PATCH / DELETE | `/api/catalogo-itens/:id` | parcial | itens já lançados não mudam (são cópias) |
+| POST | `/api/catalogo-itens/:id/lancar` | `{ grupoId, fichaId?, quantidade? (1–20) }` | `201 { lancados }`; sem ficha = vago. 409 `INVENTARIO_CHEIO` |
+
+## Conceitos de raça e de besta (mestre)
+`/api/conceitos-raca` e `/api/conceitos-besta`: mesmas rotas de `/api/conceitos` (GET, POST, PATCH/DELETE `/:id`, corpo `{ titulo, descricao }`),
+com `subracas[]` e `formas[]`. Raças e bestas aceitam `conceitoId` (do próprio mestre) e devolvem `conceito: { id, titulo }`.
+
+## Bestiário (mestre)
+| Método | Rota | Corpo | Resposta |
+|---|---|---|---|
+| GET | `/api/bestas` | — | bestas do mestre com `conceito` e `cartas` (nº) |
+| POST | `/api/bestas` | `{ titulo, descricao, imagemUrl?, pontosVida, pontosMana, pontosEsforco (≥1), deslocamento (≥1), conceitoId?, grupoExclusivoId? }` | `201 BestaDetalhe` |
+| GET / PATCH / DELETE | `/api/bestas/:id` | parcial no PATCH | `BestaDetalhe` / `204` (apaga cartela e criaturas invocadas dela). De outro mestre = 404 |
+| GET | `/api/bestas/:id/progressao` | — | igual à prévia da classe |
+| POST | `/api/bestas/:id/duplicar` | — | `201 BestaDetalhe` "(cópia)" com cartas, aprimoramentos, perícias e atributos |
+| PUT / DELETE | `/api/bestas/:id/pericias/:periciaId` | `{ modificador }` (−99..99) | `BestaDetalhe` |
+| PUT | `/api/bestas/:id/atributos/:atributoId` | `{ dados }` (0..20; 0 tira) | `BestaDetalhe` |
+| POST | `/api/bestas/:bestaId/habilidades` | igual ao das classes | `201 Habilidade` |
+| PUT | `/api/bestas/:bestaId/habilidades/ordem` | `{ ids }` | `Habilidade[]` |
+**BestaDetalhe**: besta + `habilidades[]` + `pericias: { id, nome, descricao, categoria, atributo, modificador, teste }[]` + `atributos: (Atributo & { dados, teste })[]`.
+Cartas de besta usam as mesmas rotas `/api/habilidades/:id` e `/api/aprimoramentos/:id` das classes.
+
+## Criaturas invocadas (mestre)
+| Método | Rota | Corpo | Resposta |
+|---|---|---|---|
+| GET | `/api/criaturas/:id` | — | `Criatura` + `descricao`, `atributos`, `pericias` (com `teste`), `habilidades` do nível (aprimoradas), `proximasHabilidades` |
+| PATCH | `/api/criaturas/:id` | `{ nome?, vidaAtual?, manaAtual?, esforcoAtual? }` (atuais limitados a 0..máx) | `{ removida: false, criatura }`; vida ou mana em 0 = `{ removida: true, motivo: "morreu" }` (a criatura é apagada) |
+| DELETE | `/api/criaturas/:id` | — | `204` (fugiu/sumiu) |
+**Criatura**: `{ id, bestaId, nome, nivel, besta: { titulo, imagemUrl, deslocamento }, vida, mana, esforco: { atual, max } }`.
+
+## Categorias de item (mestre)
+| Método | Rota | Corpo | Resposta |
+|---|---|---|---|
+| GET | `/api/categorias-item` | — | fixas + do mestre: `{ id, nome, descricao, icone, ordem, fixa, usos }` |
+| POST | `/api/categorias-item` | `{ nome (até 40), descricao? (""), icone? ("pacote") }` | `201`; nome igual a outra (fixa ou sua, sem diferenciar maiúsculas) = 409 `NOME_EM_USO` |
+| PATCH / DELETE | `/api/categorias-item/:id` | parcial | fixa = 403 `CATEGORIA_FIXA`; excluir deixa os itens sem categoria |
+`icone`: `pacote | espada | machado | arco | escudo | joia | anel | coroa | varinha | caneca | pocao | comida | livro | pergaminho | mapa | chave | moeda | roupa | martelo | bomba`.

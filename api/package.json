@@ -17,6 +17,8 @@
     "db:seed": "prisma db seed",
     "db:studio": "prisma studio",
     "promover": "tsx scripts/promover-mestre.ts",
+    "fixar-classe": "tsx scripts/fixar-classe.ts",
+    "exportar": "tsx scripts/exportar-conteudo.ts",
     "postinstall": "prisma generate"
   },
   "dependencies": {

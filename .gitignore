@@ -5,3 +5,6 @@ dist/
 *.log
 api/src/generated/
 .vercel/
+
+# Exportação para balanceamento (npm run exportar)
+conteudo.json

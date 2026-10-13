@@ -244,7 +244,7 @@ describe("classes", () => {
     expect(prismaFalso.classe.update).not.toHaveBeenCalled();
   });
 
-  it("subclasse só entra em classe-conceito do próprio mestre", async () => {
+  it("subclasse só entra em arquétipo do próprio mestre", async () => {
     prismaFalso.classeConceito.findUnique.mockResolvedValue({ donoId: OUTRO_MESTRE_ID });
     const corpo = { grupo: "SUPORTE", titulo: "Bruxa elemental", descricao: "D", pontosVida: 10, pontosMana: 20, pontosEsforco: 5 };
     const res = await comoMestre(request(app).post("/api/classes")).send({ ...corpo, conceitoId: "77777777-7777-4777-8777-777777777777" });
@@ -327,7 +327,7 @@ describe("habilidades", () => {
   it("só cria habilidade em classe existente (404)", async () => {
     prismaFalso.classe.findUnique.mockResolvedValue(null);
     const res = await comoMestre(request(app).post(`/api/classes/${classeId}/habilidades`)).send({
-      titulo: "Golpe", descricao: "d", tipoEfeito: "Dano", descricaoEfeito: "e",
+      titulo: "Golpe", descricao: "d", tipoEfeito: "DANO", descricaoEfeito: "e",
     });
     expect(res.status).toBe(404);
     expect(prismaFalso.habilidade.create).not.toHaveBeenCalled();
@@ -336,7 +336,7 @@ describe("habilidades", () => {
   it("não cria habilidade em classe fixa (403)", async () => {
     prismaFalso.classe.findUnique.mockResolvedValue(classeFake({ donoId: null }));
     const res = await comoMestre(request(app).post(`/api/classes/${classeId}/habilidades`)).send({
-      titulo: "Golpe", descricao: "d", tipoEfeito: "Dano", descricaoEfeito: "e",
+      titulo: "Golpe", descricao: "d", tipoEfeito: "DANO", descricaoEfeito: "e",
     });
     expect(res.status).toBe(403);
   });
@@ -345,16 +345,16 @@ describe("habilidades", () => {
     prismaFalso.habilidade.aggregate.mockResolvedValue({ _max: { ordem: 2 } });
     prismaFalso.habilidade.create.mockImplementation(async ({ data }) => data);
     const res = await comoMestre(request(app).post(`/api/classes/${classeId}/habilidades`)).send({
-      titulo: "Golpe", descricao: "d", tipoEfeito: "  Cura em área ", descricaoEfeito: "e", condicao: "",
+      titulo: "Golpe", descricao: "d", tipoEfeito: "CURA", descricaoEfeito: "e", condicao: "",
     });
     expect(res.status).toBe(201);
-    expect(res.body).toMatchObject({ classeId, ordem: 3, nivelNecessario: 1, custoMana: 0, condicao: null, tipoEfeito: "Cura em área" });
+    expect(res.body).toMatchObject({ classeId, ordem: 3, nivelNecessario: 1, custoMana: 0, condicao: null, tipoEfeito: "CURA" });
   });
 
   it("custo de mana é opcional, inteiro e não negativo", async () => {
     prismaFalso.habilidade.aggregate.mockResolvedValue({ _max: { ordem: null } });
     prismaFalso.habilidade.create.mockImplementation(async ({ data }) => data);
-    const corpo = { titulo: "Bola de Fogo", descricao: "d", tipoEfeito: "Dano", descricaoEfeito: "e" };
+    const corpo = { titulo: "Bola de Fogo", descricao: "d", tipoEfeito: "DANO", descricaoEfeito: "e" };
 
     const ok = await comoMestre(request(app).post(`/api/classes/${classeId}/habilidades`)).send({ ...corpo, custoMana: 4 });
     expect(ok.status).toBe(201);
@@ -365,12 +365,13 @@ describe("habilidades", () => {
     expect(negativo.body.error.details).toEqual([{ campo: "custoMana", mensagem: "Deve ser no mínimo 0" }]);
   });
 
-  it("tipo de efeito é texto livre obrigatório", async () => {
-    const res = await comoMestre(request(app).post(`/api/classes/${classeId}/habilidades`)).send({
-      titulo: "Golpe", descricao: "d", tipoEfeito: "", descricaoEfeito: "e",
-    });
-    expect(res.status).toBe(400);
-    expect(res.body.error.details).toEqual([{ campo: "tipoEfeito", mensagem: "Obrigatório" }]);
+  it("tipo de efeito é obrigatório e vem da lista fixa (Dano, Defesa, Cura...)", async () => {
+    const corpo = { titulo: "Golpe", descricao: "d", descricaoEfeito: "e" };
+    const ausente = await comoMestre(request(app).post(`/api/classes/${classeId}/habilidades`)).send(corpo);
+    expect(ausente.body.error.details).toEqual([{ campo: "tipoEfeito", mensagem: "Escolha um tipo de efeito" }]);
+    const livre = await comoMestre(request(app).post(`/api/classes/${classeId}/habilidades`)).send({ ...corpo, tipoEfeito: "Cura em área" });
+    expect(livre.status).toBe(400);
+    expect(livre.body.error.details).toEqual([{ campo: "tipoEfeito", mensagem: "Escolha um tipo de efeito" }]);
   });
 
   it("aprimoramento precisa de nível maior que o da carta e de pelo menos uma mudança", async () => {
@@ -536,6 +537,8 @@ describe("raças", () => {
     expect(invalida.body.error.details).toEqual([{ campo: "deslocamento", mensagem: "Deve ser no mínimo 1" }]);
 
     prismaFalso.raca.create.mockImplementation(async ({ data }) => ({ id: RACA_ID, ...data }));
+    prismaFalso.raca.findUnique.mockResolvedValue(raca({ imagemUrl: "https://x.com/humano.png" }));
+    prismaFalso.raca.findUniqueOrThrow.mockResolvedValue({ ...raca({ imagemUrl: "https://x.com/humano.png" }), pericias: [], conceito: null });
     const ok = await comoMestre(request(app).post("/api/racas")).send({
       titulo: "Humano", descricao: "Versátil", deslocamento: 8, imagemUrl: "https://x.com/humano.png",
     });

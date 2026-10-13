@@ -78,11 +78,11 @@ export async function progressao(id: string, usuarioId: string) {
 }
 
 /** Cria só a classe; habilidades e perícias são adicionadas depois, com a classe já existente. */
-/** A classe-conceito precisa ser do próprio mestre. */
+/** O arquétipo precisa ser do próprio mestre. */
 async function validarConceito(conceitoId: string | null | undefined, usuarioId: string) {
   if (!conceitoId) return;
   const c = await getPrisma().classeConceito.findUnique({ where: { id: conceitoId }, select: { donoId: true } });
-  if (!c || c.donoId !== usuarioId) throw naoEncontrado("Classe-conceito não encontrada");
+  if (!c || c.donoId !== usuarioId) throw naoEncontrado("Arquétipo não encontrado");
 }
 
 export async function criar(usuarioId: string, dados: z.infer<typeof criarClasseSchema>) {

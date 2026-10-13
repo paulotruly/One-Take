@@ -6,17 +6,28 @@ import { Modal } from "../../../components/ui/Modal";
 import { EmptyState, ErrorState, Loading } from "../../../components/ui/States";
 import { erroDeFormulario, errosDeCampo, mensagemDeErro } from "../../../lib/api";
 import { ClasseImagem } from "../../classes/components/ClasseImagem";
+import { ConceitosBloco } from "../../classes/components/ConceitosBloco";
 import { formatarModificador } from "../../pericias/types";
 import { useGrupos } from "../../grupos/api";
-import { useCriarRaca, useRacas } from "../api";
+import { useConceitosRaca, useCriarConceitoRaca, useCriarRaca, useEditarConceitoRaca, useExcluirConceitoRaca, useRacas } from "../api";
 import { RacaForm } from "../components/RacaForm";
 
 export function RacasPage() {
   const racas = useRacas();
+  const conceitos = useConceitosRaca();
   const criar = useCriarRaca();
+  const criarConceito = useCriarConceitoRaca();
+  const editarConceito = useEditarConceitoRaca();
+  const excluirConceito = useExcluirConceitoRaca();
   const navigate = useNavigate();
-  const [criando, setCriando] = useState(false);
+  // undefined = fechado; string = conceito já escolhido ("" = avulsa)
+  const [criando, setCriando] = useState<string | undefined>(undefined);
   const grupos = useGrupos();
+
+  function novaRaca(conceitoId = "") {
+    criar.reset();
+    setCriando(conceitoId);
+  }
 
   return (
     <div className="pagina">
@@ -25,17 +36,29 @@ export function RacasPage() {
           <h1>Raças</h1>
           <p className="pagina__subtitulo">Cada raça define o deslocamento e as perícias que o personagem já recebe de base.</p>
         </div>
-        <Button
-          variante="primario"
-          onClick={() => {
-            criar.reset();
-            setCriando(true);
-          }}
-        >
+        <Button variante="primario" onClick={() => novaRaca()}>
           <Plus size={16} aria-hidden /> Nova raça
         </Button>
       </div>
 
+      <ConceitosBloco
+        titulo="Arquétipos de raça"
+        nome="arquétipo de raça"
+        explicacao="Uma raça generalista (ex.: Elfo) com sub-raças (Elfo da floresta, Elfo sombrio). O jogador escolhe a sub-raça."
+        exemplo="Ex.: Elfo"
+        rotuloFilho="Sub-raça"
+        conceitos={conceitos.data?.map((c) => ({ ...c, filhos: c.subracas }))}
+        carregando={conceitos.isPending}
+        erro={conceitos.error}
+        onTentarNovamente={() => conceitos.refetch()}
+        hrefFilho={(id) => `/mestre/racas/${id}`}
+        onNovoFilho={(id) => novaRaca(id)}
+        criar={criarConceito}
+        editar={editarConceito}
+        excluir={excluirConceito}
+      />
+
+      <h2>Todas as raças</h2>
       {racas.isPending ? (
         <Loading texto="Carregando raças…" />
       ) : racas.isError ? (
@@ -51,7 +74,10 @@ export function RacasPage() {
                   <ClasseImagem url={r.imagemUrl} titulo={r.titulo} />
                 </div>
                 <div className="card-link__topo">
-                  <h3>{r.titulo}</h3>
+                  <div>
+                    {r.conceito && <span className="classe-card__conceito">{r.conceito.titulo}</span>}
+                    <h3>{r.titulo}</h3>
+                  </div>
                   <span className="stat" title="Deslocamento por turno">
                     <Footprints size={14} aria-hidden /> {r.deslocamento} quadrados
                   </span>
@@ -68,13 +94,16 @@ export function RacasPage() {
         </ul>
       )}
 
-      <Modal aberto={criando} onFechar={() => setCriando(false)} titulo="Nova raça">
+      <Modal aberto={criando !== undefined} onFechar={() => setCriando(undefined)} titulo="Nova raça">
         <RacaForm
+          key={criando ?? "fechado"}
+          inicial={criando ? { titulo: "", descricao: "", imagemUrl: null, deslocamento: undefined as unknown as number, grupoExclusivoId: null, conceitoId: criando } : undefined}
           grupos={grupos.data}
+          conceitos={conceitos.data}
           enviando={criar.isPending}
           erros={errosDeCampo(criar.error)}
           erroGeral={erroDeFormulario(criar.error)}
-          onCancelar={() => setCriando(false)}
+          onCancelar={() => setCriando(undefined)}
           onEnviar={(dados) => criar.mutate(dados, { onSuccess: (r) => navigate(`/mestre/racas/${r.id}`) })}
         />
       </Modal>

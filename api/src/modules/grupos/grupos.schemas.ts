@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { inteiro, texto, textoOpcional, urlOpcional } from "../../lib/validacao.js";
+import { inteiro, texto, urlOpcional } from "../../lib/validacao.js";
 import { SLUGS_REGRAS_PADRAO } from "../../regras/combate.js";
 
 const ids = z.array(z.guid()).max(500);
@@ -31,23 +31,6 @@ const base = z.object({
 export const criarGrupoSchema = base.extend({ disponiveis: disponiveisSchema.optional() });
 export const editarGrupoSchema = base.partial().extend({
   regrasPadraoDesativadas: base.shape.regrasPadraoDesativadas.removeDefault().optional(),
-});
-
-export const criarItemSchema = z.object({
-  nome: texto(80),
-  descricao: z.string().trim().max(1000).default(""),
-  /** Ficha que recebe o item; ausente/nulo = fica vago no grupo. */
-  fichaId: z.guid().nullish(),
-});
-
-export const editarItemSchema = z.object({
-  nome: texto(80).optional(),
-  descricao: textoOpcional(1000).transform((v) => (v === undefined ? undefined : v ?? "")),
-});
-
-export const moverItemSchema = z.object({
-  /** Ficha de destino; nulo = descartar (fica vago no grupo). */
-  fichaId: z.guid().nullable(),
 });
 
 /** Regra própria do mestre para o grupo. */

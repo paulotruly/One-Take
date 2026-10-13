@@ -4,6 +4,7 @@ import { naoEncontrado } from "../../lib/errors.js";
 import { aplicarExclusividade, validarGrupoExclusivo } from "../../lib/exclusividade.js";
 import { getPrisma } from "../../lib/prisma.js";
 import { apresentarAtributo, porAtributoENome } from "../atributos/atributos.service.js";
+import { validarConceito } from "../conceitos/conceitos.routes.js";
 import { periciaDoMestre } from "../pericias/pericias.service.js";
 import type { criarRacaSchema, editarRacaSchema } from "./racas.schemas.js";
 
@@ -24,7 +25,10 @@ function apresentarPericias(vinculos: (RacaPericia & { pericia: Pericia & { atri
     .sort(porAtributoENome);
 }
 
-const comPericias = { pericias: { include: { pericia: { include: { atributo: true } } } } } as const;
+const comPericias = {
+  pericias: { include: { pericia: { include: { atributo: true } } } },
+  conceito: { select: { id: true, titulo: true } },
+} as const;
 
 export async function listar(usuarioId: string) {
   const racas = await getPrisma().raca.findMany({
@@ -43,14 +47,16 @@ export async function detalhar(id: string, usuarioId: string) {
 
 export async function criar(usuarioId: string, dados: z.infer<typeof criarRacaSchema>) {
   await validarGrupoExclusivo(dados.grupoExclusivoId, usuarioId);
+  await validarConceito("raca", dados.conceitoId, usuarioId);
   const raca = await getPrisma().raca.create({ data: { ...dados, donoId: usuarioId } });
   await aplicarExclusividade("raca", raca.id, dados.grupoExclusivoId);
-  return { ...raca, pericias: [] };
+  return detalhar(raca.id, usuarioId);
 }
 
 export async function editar(id: string, usuarioId: string, dados: z.infer<typeof editarRacaSchema>) {
   await racaDoMestre(id, usuarioId);
   await validarGrupoExclusivo(dados.grupoExclusivoId, usuarioId);
+  await validarConceito("raca", dados.conceitoId, usuarioId);
   await getPrisma().raca.update({ where: { id }, data: dados });
   await aplicarExclusividade("raca", id, dados.grupoExclusivoId);
   return detalhar(id, usuarioId);

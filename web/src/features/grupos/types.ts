@@ -29,12 +29,27 @@ export type Membro = {
   status: { id: string; nome: string; tipo: "BUFF" | "DEBUFF" | "MISTO"; automatico: boolean }[];
 };
 
-export type Item = { id: string; nome: string; descricao: string };
+import type { Item } from "../itens/types";
+import type { Status } from "../status/types";
+
+/** Criatura invocada no grupo (resumo para a lista). */
+export type Criatura = {
+  id: string;
+  bestaId: string;
+  nome: string;
+  nivel: number;
+  besta: { titulo: string; imagemUrl: string | null; deslocamento: number };
+  vida: Recurso;
+  mana: Recurso;
+  esforco: Recurso;
+};
 
 export type GrupoDetalhe = Omit<Grupo, "membros"> & {
   disponiveis: Disponiveis;
   membros: Membro[];
+  statusAtivos: Status[];
   itensVagos: Item[];
+  criaturas: Criatura[];
 };
 
 export type GrupoInput = Pick<Grupo, "titulo" | "sinopse" | "genero" | "imagemUrl" | "limiteMembros" | "permitirClassesRepetidas">;

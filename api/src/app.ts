@@ -17,6 +17,10 @@ import { racasRouter } from "./modules/racas/racas.routes.js";
 import { atributosRouter } from "./modules/atributos/atributos.routes.js";
 import { statusRouter } from "./modules/status/status.routes.js";
 import { conceitosRouter } from "./modules/conceitos/conceitos.routes.js";
+import { bestasRouter } from "./modules/bestas/bestas.routes.js";
+import { criaturasRouter } from "./modules/criaturas/criaturas.routes.js";
+import { catalogoItensRouter } from "./modules/itens/catalogo.routes.js";
+import { categoriasItemRouter } from "./modules/itens/categorias.js";
 
 export function criarApp({ corsOrigin }: { corsOrigin: string[] }) {
   const app = express();
@@ -42,14 +46,17 @@ export function criarApp({ corsOrigin }: { corsOrigin: string[] }) {
   // Qualquer usuário autenticado (permissões finas ficam nos services).
   api.use(meRouter, fichasRouter);
 
-  // Gestão de classes: só MESTRE. Futuras rotas do jogador entram antes desta linha.
+  // Interface de mestre: só quem ativou (papel MESTRE). Rotas de jogador entram antes desta linha.
   const mestre = Router();
   mestre.use(exigirPapel("MESTRE"));
   mestre.use(async (req, _res, next) => {
     await garantirCatalogo(usuarioDe(req)); // 1º acesso do mestre: copia as perícias base
     next();
   });
-  mestre.use(classesRouter, habilidadesRouter, periciasRouter, racasRouter, atributosRouter, gruposRouter, statusRouter, conceitosRouter);
+  mestre.use(
+    classesRouter, habilidadesRouter, periciasRouter, racasRouter, atributosRouter, gruposRouter, statusRouter, conceitosRouter,
+    bestasRouter, criaturasRouter, catalogoItensRouter, categoriasItemRouter,
+  );
   api.use(mestre);
 
   app.use("/api", api);

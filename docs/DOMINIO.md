@@ -5,9 +5,12 @@ One-Take é RPG de mesa para **uma sessão só**: a história começa e termina 
 Para a preparação ser quase zero, ninguém monta personagem do zero: como num hero shooter, cada
 jogador **escolhe uma classe pronta**, com habilidades já definidas.
 
-Há dois papéis, escolhidos no cadastro:
-- **Mestre** — cria o mundo (classes, raças, perícias, atributos) e conduz os grupos.
-- **Jogador** — cria fichas e entra nos grupos com o código do mestre.
+Uma conta faz as duas coisas; no cadastro a pessoa escolhe a **interface** com que começa:
+- **Jogador** — interface simples: cria fichas e entra nos grupos com o código do mestre. **Toda conta joga**
+  (inclusive quem é mestre, nos grupos de outros mestres; no próprio grupo, não).
+- **Mestre** — também carrega a interface de mestre: cria o mundo (classes, raças, perícias, atributos, status, itens,
+  bestiário) e conduz os grupos. Pode ser ativada depois ("Mestrar" no topo). O catálogo de perícias do mestre só é
+  copiado no primeiro acesso à interface de mestre, para não ocupar espaço de quem nunca mestra.
 Cada usuário tem um **perfil** com **nickname** (único, usado para entrar; exibido como @nickname), nome opcional e foto (link).
 Ninguém informa email: o cadastro e o login são por nickname e senha.
 
@@ -24,14 +27,14 @@ Ninguém informa email: o cadastro e o login são por nickname e senha.
 - Uma **cartela de habilidades** (única por classe).
 - **Perícias**, escolhidas do catálogo do mestre, cada uma com o **modificador** daquela classe.
 
-### Classes-conceito e subclasses
-Uma **classe-conceito** é uma classe generalista (só título e descrição) que agrupa **subclasses** (ex.: Bruxa > Bruxa
-elemental, Bruxa assombrosa). Cada subclasse é uma classe normal; o jogador escolhe a subclasse, nunca o conceito.
-Classes sem conceito continuam valendo (avulsas). Só o mestre dono cria conceitos e liga classes dele a eles.
+### Arquétipos e subclasses
+Um **arquétipo** é uma classe generalista (só título e descrição) que agrupa **subclasses** (ex.: Bruxa > Bruxa
+elemental, Bruxa assombrosa). Cada subclasse é uma classe normal; o jogador escolhe a subclasse, nunca o arquétipo.
+Classes sem arquétipo continuam valendo (avulsas). Só o mestre dono cria arquétipos e liga classes dele a eles.
 
 ### Classes fixas x classes do mestre
-- **Fixas**: vêm com o sistema, todo mestre vê, ninguém edita. Servem de base: o mestre pode
-  **duplicar** uma e editar a cópia.
+- **Fixas**: todo mestre vê, ninguém edita; servem de base e podem ser **duplicadas**. O sistema **começa sem classes fixas**:
+  uma classe de mestre vira fixa com `npm run fixar-classe -- "Título"` (e volta com `--devolver nick`).
 - **Do mestre**: criadas (ou duplicadas) por um mestre. Só ele vê e edita.
 
 ## Cartela de habilidades
@@ -43,7 +46,10 @@ Habilidades só existem dentro de uma classe: primeiro se cria a classe, depois 
 Cada carta da cartela:
 - **Título** e **descrição** (o "sabor" da carta).
 - **Condição** (opcional): o que precisa acontecer para poder usar. Ex.: "Ter acertado dois ataques seguidos".
-- **Tipo de efeito**: texto livre e apenas descritivo (ex.: "Dano", "Cura em área", "Controle").
+- **Tipo de efeito** (lista fixa do sistema): **Dano** (tira vida), **Defesa** (evita/reduz/anula dano), **Cura** (devolve
+  vida ou recurso), **Suporte** (ajuda aliados sem curar), **Fortalecimento** (bônus temporário), **Enfraquecimento**
+  (penalidade temporária), **Controle** (prende, derruba, atordoa, força ação), **Mobilidade** (movimento extra),
+  **Invocação** (traz criaturas/objetos), **Utilidade** (fora de combate ou o resto).
 - **Descrição do efeito**: o que a carta causa, em texto livre.
 - **Limite** (opcional): "1 vez por sessão", "apenas em combate".
 - **Nível necessário** (padrão 1): a carta só fica disponível a partir desse nível (ver Progressão).
@@ -76,7 +82,7 @@ delas e pode editar, excluir e criar novas à vontade — 100% personalizável, 
 As classes fixas usam as perícias base do sistema; ao duplicar uma classe fixa, as perícias dela passam
 a apontar para as cópias do catálogo do mestre.
 
-O sistema de dados ainda não foi definido; o modificador é só um número.
+O modificador (classe) e os pontos (raça, níveis) somam o **bônus** da perícia, usado nos testes (ver "Atributos e testes").
 
 ## Raça
 Define de onde o personagem vem. Criada pelo mestre (só ele vê e edita). Tem:
@@ -84,6 +90,8 @@ Define de onde o personagem vem. Criada pelo mestre (só ele vê e edita). Tem:
 - **Deslocamento**: quantos quadrados do grid o personagem anda por turno (ex.: humano = 8). Mínimo 1.
 - **Perícias de base**: perícias do catálogo do mestre que a raça dá ao personagem, cada uma com uma
   quantidade de **pontos** (mínimo 1).
+- **Arquétipo de raça** (opcional): como no arquétipo, uma raça generalista (só título e descrição) que agrupa
+  **sub-raças** (ex.: Elfo > Elfo da floresta). O jogador escolhe a sub-raça. Excluir o arquétipo não apaga as sub-raças.
 
 ## Atributos e testes (dados)
 Atributos agrupam as perícias e recebem os dados nos testes.
@@ -91,10 +99,19 @@ Atributos agrupam as perícias e recebem os dados nos testes.
 - O **mestre pode criar atributos** próprios (ex.: "Sorte", "Tecnologia") para o tema do RPG dele, e mover
   perícias entre atributos. Atributo com perícias não pode ser excluído (mova as perícias antes).
 - Ao criar a ficha, o personagem recebe **3 pontos de atributo** para distribuir. **Cada ponto é um d20.**
-  Quando uma ação exige teste, o jogador rola tantos d20 quanto tem no atributo relacionado e usa o **maior**
-  resultado. Ex.: 2 pontos em Capacidade física para desviar de uma flecha = rola 2d20 e fica com o maior.
-- Valores baixos tendem a falha, altos a sucesso, intermediários a consequências mistas. Os detalhes
-  (faixas, como as perícias entram no teste) ainda serão definidos.
+
+### Como o mestre guia uma ação (teste)
+1. O mestre diz o **atributo + perícia** que a ação exige (ex.: Capacidade física + Atletismo) e a **DT**.
+2. O jogador rola **1 d20 por ponto** no atributo e fica com o **maior** resultado.
+3. Soma o **bônus da perícia** (total da ficha), se tiver. Qualquer personagem testa qualquer perícia; sem ela, soma 0.
+4. Total ≥ DT = sucesso. Ex.: 2 pontos + Atletismo +5, rolou 10 e 15 → 15 + 5 = **20**.
+- **Atributo com 0 pontos**: rola sempre **1 d20** e o resultado vale a **metade** (arredondada para baixo), antes do bônus.
+  Com 0, o dado nunca passa de 10.
+- **Esforço = dados extras**: cada **1 ponto de esforço** gasto antes da rolagem dá **+1 d20** (2d20 vira 3d20).
+  Interpretação: com atributo 0 o esforço não compra dados ("sempre apenas 1 dado"). Não há limite de esforço por teste.
+- **DT (faixa de sucesso e falha)**: livre, o mestre define durante a sessão. Não há tabela obrigatória; a documentação
+  mostra a chance de cada DT por quantidade de dados (calculada em `regras/teste.ts`).
+- O app ainda não rola dados: a ficha mostra o teste pronto de cada perícia (ex.: "2d20 + 5"). Regras em `api/src/regras/teste.ts`.
 
 ## Grupo (o RPG do mestre)
 - Título, sinopse, gênero, imagem (link), **limite de membros** e um **código de entrada** de 6 caracteres
@@ -117,11 +134,31 @@ Criada pelo jogador ao entrar no grupo com o código (**uma ficha por jogador em
 - **Cartas**: as da classe com nível necessário até o nível da ficha.
 - O jogador pode sair do grupo (apaga a ficha) e o mestre pode remover o membro; os itens da ficha ficam vagos no grupo.
 
-## Inventário
-- Todo personagem começa com **5 espaços** e ganha **+2 por nível**.
-- **Itens** têm nome e descrição e são criados pelo **mestre**, que entrega a um personagem ou deixa vago no grupo.
-- O jogador pode passar um item para outro membro do grupo, **descartar** (o item fica **vago no grupo**) ou pegar
-  um item vago. O mestre pode mover, editar e excluir qualquer item. Ninguém passa do limite de espaços.
+## Inventário e itens
+- Todo personagem começa com **5 espaços** e ganha **+2 por nível**. Cada item ocupa **1 ou mais espaços**.
+- **Catálogo de itens do mestre** (sempre disponível para lançar no grupo vago ou direto numa ficha). Cada item tem:
+  título, descrição, imagem (link), **categoria**, **efeito ao usar** (texto),
+  **espaços**, **consumo** (sem limite ou N usos) e **pré-requisito para saber usar**: classe, perícia (precisa ter
+  total > 0) e/ou texto livre. Geral ou exclusivo de um grupo.
+- **Categorias de item**: 4 fixas do sistema (Armas, Artefatos, Taverna, Sebo; somente leitura) + as que cada mestre cria
+  (nome, descrição e ícone escolhido de uma lista). Excluir uma categoria deixa os itens dela sem categoria.
+- O item lançado é uma **cópia** do molde: editar o catálogo não muda itens já lançados. O mestre também cria
+  **itens avulsos** direto no grupo.
+- **Usar**: o dono da ficha (se cumprir o pré-requisito) ou o mestre. O app conta os usos; ao chegar a 0 o item é
+  consumido (some). O efeito é aplicado pela mesa. Pré-requisito em texto é só informativo.
+- O jogador pode passar um item para outro membro do grupo, **descartar** (fica **vago no grupo**) ou pegar um item
+  vago. O mestre pode mover, editar e excluir qualquer item. Ninguém passa do limite de espaços.
+
+## Bestiário (criaturas)
+- Criaturas do mestre, montados **como classes**: título, descrição, imagem, vida/mana/esforço base (nível 1, nenhum zero),
+  **deslocamento**, perícias com modificador, **dados por atributo** (testam como personagens) e cartela com nível
+  necessário e aprimoramentos.
+- **Arquétipo de criatura** com várias **formas** (ex.: Lobo > Lobo das neves). Geral ou exclusivo de um grupo.
+- **Invocar no grupo**: o mestre escolhe a criatura, o **nível** (mesma progressão das classes: +5 vida/mana/esforço por
+  nível e as cartas do nível; os pontos de perícia não se aplicam a criaturas) e a quantidade ("Lobo 1", "Lobo 2").
+  Entram com recursos cheios.
+- O **grid de batalha é físico** (na mesa): o app não guarda posições, só a ficha de cada criatura.
+- A criatura some quando o mestre remove (fugiu) ou **sozinho quando morre**: vida ou mana em 0.
 
 ## Recursos e status
 O One-Take é RPG de mesa com apoio de tecnologia: o app controla fichas e avisa; a mesa narra e aplica os efeitos.
@@ -149,7 +186,8 @@ Ainda em aberto (o designer vai definir): se as cartas de um nível são todas r
 nova é escolhida pelo jogador ou já determinada. Por ora: recebe todas as cartas; a escolha da perícia fica para a ficha.
 
 O mestre sobe o nível na ficha do membro; cada classe também mostra uma **prévia** da progressão.
+**Descer de nível não é possível** (regra do jogo): subir é definitivo, o mestre confirma com cuidado.
 Os +5 pontos de perícia de cada nível são usados na ficha (perícia nova do grupo com +5, ou +5 numa que já tem).
 
 ## Ainda não existe
-Sessões, rolagem de dados no app, combate, descer de nível, mestre jogar no grupo de outro mestre.
+Sessões, rolagem de dados no app (e gastar esforço pelo app ao rolar). O grid de batalha não terá versão no app (é físico).

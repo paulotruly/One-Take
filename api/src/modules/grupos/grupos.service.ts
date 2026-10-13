@@ -4,7 +4,10 @@ import type { z } from "zod";
 import { naoEncontrado, requisicaoInvalida } from "../../lib/errors.js";
 import { getPrisma } from "../../lib/prisma.js";
 import { atributosNoNivel } from "../../regras/progressao.js";
+import { apresentarCriatura } from "../criaturas/criaturas.service.js";
 import { statusDaFicha } from "../fichas/status-da-ficha.js";
+import { apresentarItem, comRequisitos } from "../itens/itens.apresentar.js";
+import { apresentarStatus } from "../status/status.service.js";
 import type { criarGrupoSchema, disponiveisSchema, editarGrupoSchema } from "./grupos.schemas.js";
 
 type Disponiveis = z.infer<typeof disponiveisSchema>;
@@ -109,11 +112,12 @@ export async function detalhar(id: string, usuarioId: string) {
           raca: { select: { titulo: true } },
         },
       },
-      itens: { where: { fichaId: null }, orderBy: { criadoEm: "asc" } },
+      itens: { where: { fichaId: null }, orderBy: { criadoEm: "asc" }, include: comRequisitos },
       regrasProprias: { orderBy: { criadoEm: "asc" } },
+      criaturas: { orderBy: { criadoEm: "asc" }, include: { besta: true } },
     },
   });
-  const { classes, racas, atributos, pericias, status, fichas, itens, ...grupo } = g;
+  const { classes, racas, atributos, pericias, status, fichas, itens, criaturas, ...grupo } = g;
   const ativos = status.map((s) => s.status);
   return {
     ...grupo,
@@ -140,7 +144,11 @@ export async function detalhar(id: string, usuarioId: string) {
         status: statusDaFicha(f, ativos, f.status.map((fs) => fs.status)).map(({ id, nome, tipo, automatico }) => ({ id, nome, tipo, automatico })),
       };
     }),
-    itensVagos: itens,
+    /** Status ativados no grupo (o mestre aplica os manuais nas fichas). */
+    statusAtivos: ativos.map(apresentarStatus).sort((a, b) => a.ordem - b.ordem || a.nome.localeCompare(b.nome, "pt-BR")),
+    itensVagos: itens.map(apresentarItem),
+    /** Criaturas invocadas pelo mestre. */
+    criaturas: criaturas.map(apresentarCriatura),
   };
 }
 

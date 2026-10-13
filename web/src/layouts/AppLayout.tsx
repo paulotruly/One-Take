@@ -1,6 +1,7 @@
-import { Activity, BookOpen, Layers, ListChecks, LogOut, ScrollText, Shield, Users, type LucideIcon } from "lucide-react";
+import { Activity, Backpack, ChevronDown, Crown, Gamepad2, Layers, ListChecks, LogOut, Menu, PawPrint, ScrollText, Shield, UserPen, Users, X, type LucideIcon } from "lucide-react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, Outlet, useLocation } from "react-router";
-import { useAuth, useMe, type Papel } from "../auth/AuthProvider";
+import { lembrarInterface, useAuth, useMe, type Papel } from "../auth/AuthProvider";
 import { Avatar } from "../components/ui/Avatar";
 import { Button } from "../components/ui/Button";
 import { Marca } from "../components/ui/Marca";
@@ -12,56 +13,153 @@ const LINKS: Record<Papel, LinkTopo[]> = {
     { to: "/mestre/grupos", rotulo: "Grupos", Icone: Shield, ativoEm: /^\/mestre\/(grupos|fichas)/ },
     { to: "/mestre", rotulo: "Classes", Icone: Layers, ativoEm: /^\/mestre(\/classes.*)?\/?$/ },
     { to: "/mestre/racas", rotulo: "Raças", Icone: Users, ativoEm: /^\/mestre\/racas/ },
+    { to: "/mestre/bestiario", rotulo: "Bestiário", Icone: PawPrint, ativoEm: /^\/mestre\/bestiario/ },
+    { to: "/mestre/itens", rotulo: "Itens", Icone: Backpack, ativoEm: /^\/mestre\/itens/ },
     { to: "/mestre/pericias", rotulo: "Perícias", Icone: ListChecks, ativoEm: /^\/mestre\/pericias/ },
     { to: "/mestre/status", rotulo: "Status", Icone: Activity, ativoEm: /^\/mestre\/status/ },
-    { to: "/docs/mestre-visao-geral", rotulo: "Documentação", Icone: BookOpen, ativoEm: /^\/docs/ },
   ],
   JOGADOR: [
     { to: "/jogador", rotulo: "Minhas fichas", Icone: ScrollText, ativoEm: /^\/jogador/ },
-    { to: "/docs/jogador-entrar", rotulo: "Documentação", Icone: BookOpen, ativoEm: /^\/docs/ },
   ],
 };
 
-/** Layout das áreas logadas: barra com marca, navegação do papel, perfil e sair. */
+/**
+ * Layout das áreas logadas: marca, navegação da interface atual, troca mestre/jogador, perfil e sair.
+ * Toda conta joga; quem ativou a interface de mestre alterna entre as duas.
+ */
 export function AppLayout() {
   const { sair } = useAuth();
   const me = useMe();
   const { pathname } = useLocation();
-  const links = me.data ? LINKS[me.data.papel] : [];
+  const area: Papel = pathname.startsWith("/mestre") ? "MESTRE" : "JOGADOR";
+  const links = me.data ? LINKS[area] : [];
+  const ehMestre = me.data?.papel === "MESTRE";
+
+  // Gaveta do celular: fecha ao trocar de página.
+  const [menuAberto, setMenuAberto] = useState(false);
+  const [caminhoDoMenu, setCaminhoDoMenu] = useState(pathname);
+  if (caminhoDoMenu !== pathname) {
+    setCaminhoDoMenu(pathname);
+    setMenuAberto(false);
+  }
+
+  useEffect(() => {
+    if (pathname.startsWith("/mestre")) lembrarInterface("MESTRE");
+    else if (pathname.startsWith("/jogador")) lembrarInterface("JOGADOR");
+  }, [pathname]);
+
+  const troca =
+    area === "MESTRE"
+      ? { to: "/jogador", rotulo: "Jogar", Icone: Gamepad2, titulo: "Ir para a interface de jogador (suas fichas)" }
+      : { to: ehMestre ? "/mestre/grupos" : "/ativar-mestre", rotulo: "Mestrar", Icone: Crown, titulo: ehMestre ? "Ir para a interface de mestre" : "Ativar a interface de mestre" };
 
   return (
     <div className="app">
       <header className="topo">
         <div className="topo__conteudo">
+          <Button
+            pequeno
+            variante="fantasma"
+            className="topo__menu"
+            aria-label={menuAberto ? "Fechar menu" : "Abrir menu"}
+            aria-expanded={menuAberto}
+            aria-controls="navegacao-lateral"
+            onClick={() => setMenuAberto((a) => !a)}
+          >
+            {menuAberto ? <X size={20} aria-hidden /> : <Menu size={20} aria-hidden />}
+          </Button>
           <Marca />
-          <nav className="topo__nav" aria-label="Principal">
-            {links.map(({ to, rotulo, Icone, ativoEm }) => {
-              const ativo = ativoEm.test(pathname);
-              return (
-                <Link key={to} to={to} className={`topo__link ${ativo ? "topo__link--ativo" : ""}`} aria-current={ativo ? "page" : undefined}>
-                  <Icone size={16} aria-hidden />
-                  <span>{rotulo}</span>
-                </Link>
-              );
-            })}
-          </nav>
           <div className="topo__usuario">
             {me.data && (
-              <Link to="/perfil" className={`topo__perfil ${pathname === "/perfil" ? "topo__link--ativo" : ""}`} title="Meu perfil">
-                <Avatar url={me.data.fotoUrl} nome={me.data.nome} tamanho={28} />
-                <span className="topo__nome">{me.data.nome || `@${me.data.nickname}`}</span>
-                <span className="topo__papel">{me.data.papel === "MESTRE" ? "Mestre" : "Jogador"}</span>
+              <Link to={troca.to} className="topo__troca" title={troca.titulo}>
+                <troca.Icone size={16} aria-hidden />
+                <span>{troca.rotulo}</span>
               </Link>
             )}
-            <Button pequeno variante="fantasma" onClick={sair} aria-label="Sair" title="Sair">
-              <LogOut size={16} aria-hidden />
-            </Button>
+            {me.data ? (
+              <MenuPerfil
+                ativo={pathname === "/perfil"}
+                onSair={sair}
+                rotulo={
+                  <>
+                    <Avatar url={me.data.fotoUrl} nome={me.data.nome} tamanho={28} />
+                    <span className="topo__nome">{me.data.nome || `@${me.data.nickname}`}</span>
+                    <span className="topo__papel">{area === "MESTRE" ? "Mestre" : "Jogador"}</span>
+                    <ChevronDown size={14} aria-hidden />
+                  </>
+                }
+              />
+            ) : (
+              <Button pequeno variante="fantasma" onClick={sair} aria-label="Sair" title="Sair">
+                <LogOut size={16} aria-hidden />
+              </Button>
+            )}
           </div>
         </div>
       </header>
-      <main className="conteudo">
-        <Outlet />
-      </main>
+      <div className="app__corpo">
+        {/* Navegação lateral; no celular vira uma gaveta aberta pelo botão de menu. */}
+        <nav id="navegacao-lateral" className={`lateral ${menuAberto ? "lateral--aberta" : ""}`} aria-label="Principal">
+          {links.map(({ to, rotulo, Icone, ativoEm }) => {
+            const ativo = ativoEm.test(pathname);
+            return (
+              <Link key={to} to={to} className={`lateral__link ${ativo ? "lateral__link--ativo" : ""}`} aria-current={ativo ? "page" : undefined}>
+                <Icone size={18} aria-hidden />
+                <span>{rotulo}</span>
+              </Link>
+            );
+          })}
+        </nav>
+        {menuAberto && <div className="lateral__fundo" aria-hidden onClick={() => setMenuAberto(false)} />}
+        <main className="conteudo">
+          <Outlet />
+        </main>
+      </div>
+    </div>
+  );
+}
+
+/** Botão do perfil no topo: abre um menu com "Editar perfil" e "Sair". Fecha com clique fora ou Esc. */
+function MenuPerfil({ rotulo, ativo, onSair }: { rotulo: ReactNode; ativo: boolean; onSair: () => void }) {
+  const [aberto, setAberto] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!aberto) return;
+    const fora = (e: PointerEvent) => {
+      if (!ref.current?.contains(e.target as Node)) setAberto(false);
+    };
+    const esc = (e: KeyboardEvent) => e.key === "Escape" && setAberto(false);
+    document.addEventListener("pointerdown", fora);
+    document.addEventListener("keydown", esc);
+    return () => {
+      document.removeEventListener("pointerdown", fora);
+      document.removeEventListener("keydown", esc);
+    };
+  }, [aberto]);
+
+  return (
+    <div className="menu-perfil" ref={ref}>
+      <button
+        type="button"
+        className={`topo__perfil ${ativo ? "topo__link--ativo" : ""}`}
+        aria-haspopup="menu"
+        aria-expanded={aberto}
+        title="Meu perfil"
+        onClick={() => setAberto((a) => !a)}
+      >
+        {rotulo}
+      </button>
+      {aberto && (
+        <div className="menu-perfil__lista" role="menu">
+          <Link to="/perfil" role="menuitem" className="menu-perfil__item" onClick={() => setAberto(false)}>
+            <UserPen size={16} aria-hidden /> Editar perfil
+          </Link>
+          <button type="button" role="menuitem" className="menu-perfil__item" onClick={() => { setAberto(false); onSair(); }}>
+            <LogOut size={16} aria-hidden /> Sair
+          </button>
+        </div>
+      )}
     </div>
   );
 }

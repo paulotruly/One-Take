@@ -12,7 +12,11 @@ Perfil 1 ──< Raca 1 ──< RacaPericia (pontos) >── 1 Pericia
 Perfil(mestre) 1 ──< Grupo ──< ClasseNoGrupo / RacaNoGrupo / AtributoNoGrupo / PericiaNoGrupo
 Grupo 1 ──< Ficha >── Perfil(jogador), Classe, Raca     (unique grupoId+jogadorId)
 Ficha 1 ──< FichaAtributo (dados) / FichaPericia (pontos de nível) / Item ;  Grupo 1 ──< Item (fichaId nulo = vago)
-Classe / Raca / Atributo .grupoExclusivoId? >── Grupo   (nulo = geral)
+Classe / Raca / Atributo / ItemModelo / Besta .grupoExclusivoId? >── Grupo   (nulo = geral)
+Perfil 1 ──< RacaConceito 1 ──< Raca (conceitoId?) ;  Perfil 1 ──< BestaConceito 1 ──< Besta (conceitoId?)
+Perfil 1 ──< ItemModelo 1 ──< Item (modeloId?, cópia dos campos)
+Perfil 1 ──< Besta 1 ──< Habilidade (bestaId) / BestaPericia (modificador) / BestaAtributo (dados)
+Grupo 1 ──< Criatura >── Besta   (criatura invocada: nível e recursos atuais)
 ```
 
 ## Entidades
@@ -20,18 +24,26 @@ Classe / Raca / Atributo .grupoExclusivoId? >── Grupo   (nulo = geral)
 |---|---|---|
 | `Perfil` | `id` (= `auth.users.id`), `email` (interno `<nick>@one-take.local` para contas do app), `nickname` (único), `papel`, `nome?`, `fotoUrl?` | Criado no 1º acesso à API com o papel e nome escolhidos no cadastro |
 | `Classe` | `grupo`, `titulo`, `descricao`, `imagemUrl?`, `pontosVida`, `pontosMana`, `pontosEsforco`, `donoId?`, `origemId?` | `donoId` nulo = fixa |
-| `Habilidade` | `classeId`, `titulo`, `descricao`, `condicao?`, `tipoEfeito` (texto livre), `descricaoEfeito`, `limite?`, `nivelNecessario` (≥1, padrão 1), `custoMana` (≥0, padrão 0 = sem custo), `ordem` | |
+| `Habilidade` | `classeId?` **ou** `bestaId?` (CHECK: exatamente um), `titulo`, `descricao`, `condicao?`, `tipoEfeito` (enum `TipoEfeito`), `descricaoEfeito`, `limite?`, `nivelNecessario` (≥1, padrão 1), `custoMana` (≥0, padrão 0 = sem custo), `ordem` | Cartela de classe ou de criatura |
 | `Pericia` | `nome`, `descricao`, `categoria`, `atributoId`, `donoId?`, `origemId?` | Catálogo. `donoId` nulo = base do sistema. Nome único por dono |
 | `ClassePericia` | `classeId`, `periciaId`, `modificador` | Perícia que a classe tem. PK composta |
 | `Atributo` | `nome`, `descricao`, `ordem`, `donoId?` | `donoId` nulo = fixo (Capacidade física, Carisma, Conhecimento). Nome único por dono |
-| `Raca` | `donoId`, `titulo`, `descricao`, `imagemUrl?`, `deslocamento` (≥1) | Do mestre |
+| `Raca` | `donoId`, `titulo`, `descricao`, `imagemUrl?`, `deslocamento` (≥1), `conceitoId?` | Do mestre; `conceitoId` = sub-raça (SetNull ao excluir o conceito) |
+| `RacaConceito` | `donoId`, `titulo`, `descricao` | raça generalista que agrupa sub-raças |
 | `RacaPericia` | `racaId`, `periciaId`, `pontos` (≥1) | Perícia de base da raça. PK composta |
 | `Grupo` | `mestreId`, `titulo`, `sinopse`, `genero`, `imagemUrl?`, `limiteMembros` (1–50), `codigo` (único), `permitirClassesRepetidas` | O RPG do mestre |
 | `ClasseNoGrupo`, `RacaNoGrupo`, `AtributoNoGrupo`, `PericiaNoGrupo` | `grupoId` + id do item | O que vale no grupo |
 | `Ficha` | `grupoId`, `jogadorId`, `nome`, `historia?`, `imagemUrl?`, `classeId`, `racaId`, `nivel`, `vidaAtual`, `manaAtual`, `esforcoAtual`, `pontosPericiaDisponiveis` | 1 por jogador por grupo |
 | `FichaAtributo` | `fichaId`, `atributoId`, `dados` | d20 por atributo |
 | `FichaPericia` | `fichaId`, `periciaId`, `pontos` | pontos de nível gastos |
-| `Item` | `grupoId`, `fichaId?`, `nome`, `descricao` | `fichaId` nulo = vago no grupo |
+| `CategoriaItem` | `nome`, `descricao`, `icone` (chave da lista `ICONES_ITEM`), `ordem`, `donoId?` | `donoId` nulo = fixa (ids `...8004-1..4`); nome único por dono |
+| `ItemModelo` | `donoId`, `categoriaId?`, `nome`, `descricao`, `imagemUrl?`, `efeito?`, `espacos` (≥1), `usosMaximos?` (≥1; nulo = sem limite), `requisito?`, `requisitoPericiaId?`, `requisitoClasseId?`, `grupoExclusivoId?` | Catálogo de itens do mestre (molde) |
+| `Item` | `grupoId`, `fichaId?`, `modeloId?`, mesmos campos do molde + `usosRestantes?` | `fichaId` nulo = vago no grupo. Cópia do molde ao lançar |
+| `Besta` | `donoId`, `titulo`, `descricao`, `imagemUrl?`, `pontosVida/Mana/Esforco` (≥1), `deslocamento` (≥1), `conceitoId?`, `grupoExclusivoId?` | Criatura do bestiário |
+| `BestaConceito` | `donoId`, `titulo`, `descricao` | criatura generalista com formas |
+| `BestaPericia` | `bestaId`, `periciaId`, `modificador` | PK composta |
+| `BestaAtributo` | `bestaId`, `atributoId`, `dados` (≥0) | d20 da criatura por atributo |
+| `Criatura` | `grupoId`, `bestaId`, `nome`, `nivel` (≥1), `vidaAtual`, `manaAtual`, `esforcoAtual` | Criatura invocada no grupo; apagado ao morrer ou ser removido |
 | `Status` | `nome`, `descricao`, `efeito`, `tipo` (BUFF/DEBUFF/MISTO), `gatilho?` (VIDA_ZERO/MANA_ZERO/ESFORCO_ZERO), `ordem`, `donoId?` | `donoId` nulo = fixo; só fixos têm gatilho |
 | `StatusNoGrupo` | `grupoId`, `statusId` | status ativados no grupo |
 | `FichaStatus` | `fichaId`, `statusId`, `aplicadoEm` | status aplicados pelo mestre |
@@ -39,7 +51,11 @@ Classe / Raca / Atributo .grupoExclusivoId? >── Grupo   (nulo = geral)
 | `ClasseConceito` | `donoId`, `titulo`, `descricao` | classe generalista; `Classe.conceitoId?` liga as subclasses (SetNull ao excluir) |
 | `HabilidadeAprimoramento` | `habilidadeId`, `nivel` (≥2, único por carta), `titulo?`, `descricaoEfeito?`, `condicao?`, `limite?`, `custoMana?`, `statusId?` | nulos = não mudam |
 
-Enums: `Papel`, `GrupoClasse` (COMBATENTE, VANGUARDISTA, SUPORTE), `CategoriaPericia` (CORPO_A_CORPO, MAGIA, PONTARIA, FISICO, DEFESA, SOCIAL, CONHECIMENTO, PERCEPCAO).
+Enums: `Papel`, `GrupoClasse` (COMBATENTE, VANGUARDISTA, SUPORTE), `CategoriaPericia` (CORPO_A_CORPO, MAGIA, PONTARIA, FISICO, DEFESA, SOCIAL, CONHECIMENTO, PERCEPCAO),
+`TipoEfeito` (DANO, DEFESA, CURA, SUPORTE, FORTALECIMENTO, ENFRAQUECIMENTO, CONTROLE, MOBILIDADE, INVOCACAO, UTILIDADE).
+Nomes no código x na interface: `ClasseConceito`/`RacaConceito`/`BestaConceito` = **Arquétipo** (de classe, de raça, de criatura);
+`Besta` = criatura do bestiário; `Criatura` = criatura invocada num grupo.
+`Perfil.papel = MESTRE` significa "interface de mestre ativada"; toda conta joga.
 `Perfil.catalogoIniciado` marca que o mestre já recebeu a cópia das perícias base.
 
 ## Por que assim
@@ -52,7 +68,8 @@ Enums: `Papel`, `GrupoClasse` (COMBATENTE, VANGUARDISTA, SUPORTE), `CategoriaPer
 - **`ordem` inteira** em Habilidade: reordenar reescreve as posições das cartas da classe numa transação (decks são pequenos).
 - **`nivelNecessario`** com CHECK ≥ 1; será consumido pelas fichas.
 - **`custoMana` inteiro com 0 = sem custo** (em vez de nulo): mais simples de somar/comparar quando as fichas gastarem mana. CHECK ≥ 0.
-- **`tipoEfeito` é texto livre**, só descritivo: nenhuma regra depende dele. Se um dia o sistema precisar agir pelo tipo, vira enum de novo.
+- **`tipoEfeito` é enum** (lista fixa, decisão do produto de 2026-10-12). A migration `itens_bestiario_tipo_efeito` converteu os textos
+  antigos (Dano, Defesa, Suporte, Buff→Fortalecimento, Debuff→Enfraquecimento; o resto→Utilidade). Rótulos e descrições ficam no front.
 - **Perícia como catálogo + vínculo.** A definição (nome, descrição, categoria, atributo) vive em `Pericia`;
   o número específico da classe vive em `ClassePericia.modificador`. Editar a perícia no catálogo reflete em todas as classes que a usam.
 - **Um catálogo por mestre**, copiado das perícias base (`donoId` nulo) uma única vez (`catalogoIniciado`), para cada mestre
@@ -83,3 +100,15 @@ Enums: `Papel`, `GrupoClasse` (COMBATENTE, VANGUARDISTA, SUPORTE), `CategoriaPer
   e só aparecem se o status estiver ativado no grupo. Os aplicados pelo mestre ficam em `FichaStatus`.
 - **Aprimoramento guarda só o que muda**; a carta final é calculada por `aplicarAprimoramentos` (`api/src/regras/progressao.ts`)
   com o nível da ficha. Duplicar classe copia os aprimoramentos.
+- **Cartela polimórfica** (`Habilidade.classeId` ou `bestaId`): criaturas reaproveitam cartas, aprimoramentos, telas e regras de nível.
+  O CHECK `Habilidade_dono` garante exatamente um dono.
+- **Item lançado = cópia do molde** (não referência): o item na mão do jogador não muda se o mestre editar o catálogo, e o
+  catálogo pode ser apagado sem quebrar inventários (`modeloId` SetNull). `usosRestantes` só existe na cópia.
+- **Capacidade do inventário soma `espacos`** (`espacosUsados` em `regras/ficha.ts`), não a quantidade de itens.
+- **Pré-requisito do item** é conferido por `motivoParaNaoUsar` (`regras/ficha.ts`): classe igual e/ou perícia com total > 0
+  (perícia base de classe fixa conta como a cópia do catálogo do mestre).
+- **Criatura guarda só o que muda** (nível e atuais; o posicionamento é no grid físico da mesa); máximos e cartas vêm da besta + `regras/progressao.ts`. Morte (vida
+  ou mana 0, `estaMorto`) apaga a linha: não há "criatura morto" guardado.
+- **Categoria de item como tabela** (era enum até a migration `categorias_de_item`, que converteu os valores para as 4 fixas).
+  `categoriaId` é SetNull: apagar a categoria não apaga itens.
+- **Itens e criaturas não têm tabelas `*NoGrupo`**: ficam sempre disponíveis ao mestre; só a exclusividade (`grupoExclusivoId`) restringe.

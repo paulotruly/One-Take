@@ -203,7 +203,7 @@ describe("ficha: permissões e progressão", () => {
 
 describe("itens", () => {
   const item = (x: Record<string, unknown> = {}) => ({
-    id: ITEM, grupoId: GRUPO, fichaId: FICHA, nome: "Espada", descricao: "", grupo: { mestreId: MESTRE.id }, ficha: { jogadorId: JOGADOR.id }, ...x,
+    id: ITEM, grupoId: GRUPO, fichaId: FICHA, nome: "Espada", descricao: "", espacos: 1, usosMaximos: null, usosRestantes: null, grupo: { mestreId: MESTRE.id }, ficha: { jogadorId: JOGADOR.id }, ...x,
   });
 
   it("jogador passa o próprio item para outra ficha do grupo, se houver espaço", async () => {
@@ -211,17 +211,17 @@ describe("itens", () => {
     prismaFalso.ficha.findUnique
       .mockResolvedValueOnce({ id: FICHA }) // minha ficha no grupo (após auth, que usa perfil)
       .mockResolvedValueOnce({ grupoId: GRUPO, nivel: 1 }); // destino
-    prismaFalso.item.count.mockResolvedValue(4);
+    prismaFalso.item.findMany.mockResolvedValue(Array.from({ length: 4 }, () => ({ espacos: 1 })));
     prismaFalso.item.update.mockImplementation(async ({ data }) => ({ ...item(), ...data }));
     const res = await comoJogador(request(app).post(`/api/itens/${ITEM}/mover`)).send({ fichaId: OUTRA_FICHA });
     expect(res.status).toBe(200);
-    expect(prismaFalso.item.update.mock.calls[0]![0]).toEqual({ where: { id: ITEM }, data: { fichaId: OUTRA_FICHA } });
+    expect(prismaFalso.item.update.mock.calls[0]![0]).toMatchObject({ where: { id: ITEM }, data: { fichaId: OUTRA_FICHA } });
   });
 
   it("inventário cheio = 409 (5 espaços no nível 1)", async () => {
     prismaFalso.item.findUnique.mockResolvedValue(item());
     prismaFalso.ficha.findUnique.mockResolvedValueOnce({ id: FICHA }).mockResolvedValueOnce({ grupoId: GRUPO, nivel: 1 });
-    prismaFalso.item.count.mockResolvedValue(5);
+    prismaFalso.item.findMany.mockResolvedValue([{ espacos: 3 }, { espacos: 2 }]);
     const res = await comoJogador(request(app).post(`/api/itens/${ITEM}/mover`)).send({ fichaId: OUTRA_FICHA });
     expect(res.status).toBe(409);
     expect(res.body.error.code).toBe("INVENTARIO_CHEIO");

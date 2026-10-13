@@ -41,10 +41,10 @@ export function useProgressao(id: string) {
   });
 }
 
-/** Invalida tudo de classes (listas e detalhes). Simples e suficiente para o volume atual. */
+/** Invalida tudo de classes (listas e detalhes) e do bestiário, que usa as mesmas cartas. */
 function useInvalidar() {
   const qc = useQueryClient();
-  return () => qc.invalidateQueries({ queryKey: ["classes"] });
+  return () => Promise.all([qc.invalidateQueries({ queryKey: ["classes"] }), qc.invalidateQueries({ queryKey: ["bestas"] })]);
 }
 
 function useEscrita<V, R>(fn: (v: V) => Promise<R>) {
@@ -95,7 +95,7 @@ export const useEditarAprimoramento = () =>
 
 export const useExcluirAprimoramento = () => useEscrita((id: string) => api<void>(`/api/aprimoramentos/${id}`, { method: "DELETE" }));
 
-// ---------- Classes-conceito ----------
+// ---------- Arquétipos ----------
 export function useConceitos() {
   return useQuery({ queryKey: ["classes", "conceitos"], queryFn: () => api<Conceito[]>("/api/conceitos") });
 }

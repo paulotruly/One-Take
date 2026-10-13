@@ -2,8 +2,9 @@
 
 Sistema de RPG de mesa para sessões únicas (one-shots). Classes prontas no estilo hero shooter:
 o jogador escolhe uma classe com kit de habilidades já definido. Etapa atual: interface do **mestre**
-para criar classes, raças, perícias e atributos e conduzir grupos; interface do jogador com fichas e
-inventário; login por nickname; regras públicas. Sessões e rolagens ainda não existem.
+para criar classes, raças, perícias, atributos, itens e bestiário e conduzir grupos (status, itens, criaturas);
+interface do jogador com fichas e inventário (uma conta joga e, se ativar, mestra); login por nickname; regras públicas.
+Sessões e rolagem de dados no app ainda não existem (a ficha mostra o teste pronto).
 
 ## Stack
 - `api/` — Node 22 + TypeScript (ESM) + Express 5 + Prisma 7 (driver adapter `pg`) + Zod 4. Deploy: Render.
@@ -18,8 +19,10 @@ npm run install:all          # instala api/ e web/ (na raiz)
 npm run dev                  # servidor com reload (porta 3333)
 npm run db:migrate           # cria/aplica migrations em dev (usa DIRECT_URL)
 npm run db:deploy            # aplica migrations em produção
-npm run db:seed              # classes fixas do sistema (idempotente)
+npm run db:seed              # estrutura fixa: atributos, status, categorias, perícias base (idempotente; não cria classes)
 npm run promover -- email@x  # muda o papel de uma conta pelo email do Supabase Auth (padrão MESTRE)
+npm run fixar-classe -- "Título"   # classe de um mestre vira fixa do sistema (--devolver nick desfaz)
+npm run exportar -- > ../conteudo.json  # classes e bestas em JSON para a skill de balanceamento (/balancear)
 npm test                     # vitest (Prisma mockado, sem banco)
 npm run typecheck && npm run build
 # Web (dentro de web/)

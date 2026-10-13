@@ -2,12 +2,14 @@
 import { ChevronLeft, ChevronRight, Menu } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, Navigate, useLocation, useParams } from "react-router";
+import { BuscaDocs } from "./BuscaDocs";
 import { SECOES, TODOS } from "./topicos";
 
 export function DocsPage() {
   const { slug } = useParams();
   const { pathname } = useLocation();
   const [menuAberto, setMenuAberto] = useState(false);
+  const [busca, setBusca] = useState("");
 
   // Volta ao topo e fecha o menu (celular) ao trocar de tópico.
   useEffect(() => {
@@ -31,7 +33,8 @@ export function DocsPage() {
       </button>
 
       <aside className={`docs__lateral ${menuAberto ? "docs__lateral--aberta" : ""}`} aria-label="Navegação da documentação">
-        {SECOES.map((s) => (
+        <BuscaDocs busca={busca} onBusca={setBusca} />
+        {!busca.trim() && SECOES.map((s) => (
           <div key={s.titulo} className="docs__secao">
             <p className="docs__secao-titulo">
               <s.Icone size={14} aria-hidden /> {s.titulo}

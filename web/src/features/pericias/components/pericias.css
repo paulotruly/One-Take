@@ -43,3 +43,4 @@
   .pericia--com-mod .pericia__mod { grid-column: 1; }
   .pericia__acoes { grid-column: 1 / -1; justify-content: flex-end; }
 }
+.pericia__teste { display: inline-flex; align-items: center; gap: var(--esp-1); color: var(--cor-texto); }

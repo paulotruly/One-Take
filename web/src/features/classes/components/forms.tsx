@@ -5,10 +5,13 @@ import { Button } from "../../../components/ui/Button";
 import { Field } from "../../../components/ui/Field";
 import {
   GRUPOS,
+  LISTA_TIPOS_EFEITO,
   ROTULO_GRUPO,
+  TIPOS_EFEITO,
   type ClasseInput,
   type Grupo,
   type HabilidadeInput,
+  type TipoEfeito,
 } from "../types";
 import { ExclusividadeField } from "../../grupos/components/ExclusividadeField";
 import { ClasseImagem } from "./ClasseImagem";
@@ -103,7 +106,7 @@ export function ClasseForm({
       <Field rotulo="Título" erro={e.titulo}>
         <input value={v.titulo} onChange={set("titulo")} maxLength={80} autoFocus />
       </Field>
-      <Field rotulo="Classe-conceito (opcional)" erro={e.conceitoId} dica="Se esta classe é uma subclasse, escolha o conceito dela (ex.: Bruxa).">
+      <Field rotulo="Arquétipo (opcional)" erro={e.conceitoId} dica="Se esta classe é uma subclasse, escolha o arquétipo dela (ex.: Bruxa).">
         <select value={conceitoId} onChange={(ev) => setConceitoId(ev.target.value)}>
           <option value="">Nenhuma (classe avulsa)</option>
           {conceitos.map((c) => <option key={c.id} value={c.id}>{c.titulo}</option>)}
@@ -156,7 +159,7 @@ export function HabilidadeForm({
     titulo: inicial?.titulo ?? "",
     descricao: inicial?.descricao ?? "",
     condicao: inicial?.condicao ?? "",
-    tipoEfeito: inicial?.tipoEfeito ?? "",
+    tipoEfeito: inicial?.tipoEfeito ?? ("" as TipoEfeito | ""),
     descricaoEfeito: inicial?.descricaoEfeito ?? "",
     limite: inicial?.limite ?? "",
     nivelNecessario: String(inicial?.nivelNecessario ?? 1),
@@ -173,7 +176,7 @@ export function HabilidadeForm({
           titulo: v.titulo,
           descricao: v.descricao,
           condicao: v.condicao.trim() || null,
-          tipoEfeito: v.tipoEfeito,
+          tipoEfeito: v.tipoEfeito as TipoEfeito,
           descricaoEfeito: v.descricaoEfeito,
           limite: v.limite.trim() || null,
           nivelNecessario: inteiro(v.nivelNecessario),
@@ -189,8 +192,13 @@ export function HabilidadeForm({
         <textarea value={v.descricao} onChange={set("descricao")} maxLength={2000} rows={2} />
       </Field>
       <div className="form__linha">
-        <Field rotulo="Tipo de efeito" erro={e.tipoEfeito} dica="Texto livre.">
-          <input value={v.tipoEfeito} onChange={set("tipoEfeito")} maxLength={60} placeholder="Ex.: Dano, Cura, Controle" />
+        <Field rotulo="Tipo de efeito" erro={e.tipoEfeito} dica={v.tipoEfeito ? TIPOS_EFEITO[v.tipoEfeito].descricao : "Lista fixa do sistema."}>
+          <select value={v.tipoEfeito} onChange={set("tipoEfeito")}>
+            <option value="">Escolha…</option>
+            {LISTA_TIPOS_EFEITO.map((t) => (
+              <option key={t} value={t}>{TIPOS_EFEITO[t].rotulo}</option>
+            ))}
+          </select>
         </Field>
         <Field rotulo="Nível necessário" erro={e.nivelNecessario} dica="1 = disponível desde o início">
           <input type="number" min={1} step={1} inputMode="numeric" value={v.nivelNecessario} onChange={set("nivelNecessario")} />

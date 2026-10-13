@@ -45,3 +45,15 @@
 .membro__info { display: flex; flex-direction: column; gap: var(--esp-1); flex: 1; min-width: 200px; }
 .membro__status { display: flex; gap: var(--esp-1); flex-wrap: wrap; }
 .select-pequeno { min-height: 30px; padding: 0 var(--esp-2); border: 1px solid var(--cor-borda); background: var(--cor-fundo); font-size: var(--texto-xs); }
+
+/* Membro + botão de status ao lado (no celular o botão vai para baixo). */
+.membro-linha { display: flex; gap: var(--esp-2); align-items: stretch; }
+.membro-linha > .membro { flex: 1; min-width: 0; }
+.membro-linha > .btn { align-self: center; }
+@media (max-width: 640px) {
+  .membro-linha { flex-direction: column; }
+  .membro-linha > .btn { align-self: stretch; min-height: 40px; }
+  .membro__info { min-width: 0; }
+}
+.lista-simples { display: flex; flex-direction: column; gap: var(--esp-2); margin: 0; padding: 0; list-style: none; font-size: var(--texto-sm); }
+.status-linha { display: flex; align-items: center; gap: var(--esp-2); }

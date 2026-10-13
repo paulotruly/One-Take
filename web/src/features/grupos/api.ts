@@ -1,7 +1,7 @@
 // Hooks dos grupos do mestre.
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../../lib/api";
-import type { Disponiveis, Grupo, GrupoDetalhe, GrupoInput, Item } from "./types";
+import type { Disponiveis, Grupo, GrupoDetalhe, GrupoInput } from "./types";
 
 export function useGrupos(habilitado = true) {
   return useQuery({ queryKey: ["grupos", "lista"], queryFn: () => api<Grupo[]>("/api/grupos"), enabled: habilitado });
@@ -24,7 +24,7 @@ export const useCriarGrupo = () =>
   useEscrita((dados: GrupoInput & { disponiveis: Disponiveis }) => api<GrupoDetalhe>("/api/grupos", { method: "POST", body: dados }));
 
 export const useEditarGrupo = (id: string) =>
-  useEscrita((dados: GrupoInput) => api<GrupoDetalhe>(`/api/grupos/${id}`, { method: "PATCH", body: dados }));
+  useEscrita((dados: Partial<GrupoInput>) => api<GrupoDetalhe>(`/api/grupos/${id}`, { method: "PATCH", body: dados }));
 
 export const useDefinirDisponiveis = (id: string) =>
   useEscrita((dados: Disponiveis) => api<GrupoDetalhe>(`/api/grupos/${id}/disponiveis`, { method: "PUT", body: dados }));
@@ -32,8 +32,3 @@ export const useDefinirDisponiveis = (id: string) =>
 export const useNovoCodigo = (id: string) => useEscrita(() => api<GrupoDetalhe>(`/api/grupos/${id}/codigo`, { method: "POST" }));
 
 export const useExcluirGrupo = () => useEscrita((id: string) => api<void>(`/api/grupos/${id}`, { method: "DELETE" }));
-
-export const useCriarItem = (grupoId: string) =>
-  useEscrita((dados: { nome: string; descricao: string; fichaId: string | null }) =>
-    api<Item>(`/api/grupos/${grupoId}/itens`, { method: "POST", body: dados }),
-  );

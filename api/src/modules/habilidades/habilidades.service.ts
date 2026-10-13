@@ -1,27 +1,34 @@
 import type { z } from "zod";
 import { conflito, naoEncontrado, requisicaoInvalida } from "../../lib/errors.js";
 import { getPrisma } from "../../lib/prisma.js";
+import { bestaEditavel } from "../bestas/bestas.service.js";
 import { classeEditavel } from "../classes/classes.service.js";
 import { comStatus, resumoStatus } from "./habilidades.include.js";
 import { statusUsavel } from "../status/status.service.js";
 import type { aprimoramentoSchema, criarHabilidadeSchema, editarHabilidadeSchema } from "./habilidades.schemas.js";
 
+/** Dono da cartela: uma classe ou uma besta do bestiário. */
+export type DonoCartela = { classeId: string } | { bestaId: string };
 
+async function donoEditavel(dono: DonoCartela, usuarioId: string) {
+  if ("classeId" in dono) await classeEditavel(dono.classeId, usuarioId);
+  else await bestaEditavel(dono.bestaId, usuarioId);
+}
 
 async function habilidadeEditavel(id: string, usuarioId: string) {
   const habilidade = await getPrisma().habilidade.findUnique({ where: { id } });
   if (!habilidade) throw naoEncontrado("Habilidade não encontrada");
-  await classeEditavel(habilidade.classeId, usuarioId);
+  await donoEditavel(habilidade.classeId ? { classeId: habilidade.classeId } : { bestaId: habilidade.bestaId! }, usuarioId);
   return habilidade;
 }
 
-/** A classe precisa existir (e ser do mestre). Nova habilidade entra no fim da cartela da classe. */
-export async function criar(classeId: string, usuarioId: string, dados: z.infer<typeof criarHabilidadeSchema>) {
-  await classeEditavel(classeId, usuarioId);
+/** A classe (ou besta) precisa existir e ser do mestre. Nova habilidade entra no fim da cartela. */
+export async function criar(dono: DonoCartela, usuarioId: string, dados: z.infer<typeof criarHabilidadeSchema>) {
+  await donoEditavel(dono, usuarioId);
   if (dados.statusId) await statusUsavel(dados.statusId, usuarioId);
   const prisma = getPrisma();
-  const { _max } = await prisma.habilidade.aggregate({ where: { classeId }, _max: { ordem: true } });
-  return prisma.habilidade.create({ data: { ...dados, classeId, ordem: (_max.ordem ?? -1) + 1 }, include: comStatus });
+  const { _max } = await prisma.habilidade.aggregate({ where: dono, _max: { ordem: true } });
+  return prisma.habilidade.create({ data: { ...dados, ...dono, ordem: (_max.ordem ?? -1) + 1 }, include: comStatus });
 }
 
 export async function editar(id: string, usuarioId: string, dados: z.infer<typeof editarHabilidadeSchema>) {
@@ -35,17 +42,17 @@ export async function excluir(id: string, usuarioId: string) {
   await getPrisma().habilidade.delete({ where: { id } });
 }
 
-/** Recebe a ordem completa: `ids` precisa conter exatamente as habilidades da classe. */
-export async function ordenar(classeId: string, usuarioId: string, ids: string[]) {
-  await classeEditavel(classeId, usuarioId);
+/** Recebe a ordem completa: `ids` precisa conter exatamente as habilidades da cartela. */
+export async function ordenar(dono: DonoCartela, usuarioId: string, ids: string[]) {
+  await donoEditavel(dono, usuarioId);
   const prisma = getPrisma();
-  const atuais = await prisma.habilidade.findMany({ where: { classeId }, select: { id: true } });
+  const atuais = await prisma.habilidade.findMany({ where: dono, select: { id: true } });
   const conjunto = new Set(atuais.map((h) => h.id));
   if (ids.length !== conjunto.size || new Set(ids).size !== ids.length || !ids.every((id) => conjunto.has(id))) {
-    throw requisicaoInvalida("A lista deve conter exatamente as habilidades da classe, sem repetição.");
+    throw requisicaoInvalida("A lista deve conter exatamente as habilidades da cartela, sem repetição.");
   }
   await prisma.$transaction(ids.map((id, ordem) => prisma.habilidade.update({ where: { id }, data: { ordem } })));
-  return prisma.habilidade.findMany({ where: { classeId }, orderBy: { ordem: "asc" }, include: comStatus });
+  return prisma.habilidade.findMany({ where: dono, orderBy: { ordem: "asc" }, include: comStatus });
 }
 
 // ---------- Aprimoramentos: a mesma carta muda a partir de um nível ----------

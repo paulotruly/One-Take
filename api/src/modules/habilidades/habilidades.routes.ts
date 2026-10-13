@@ -9,13 +9,26 @@ export const habilidadesRouter = Router();
 habilidadesRouter.post("/classes/:classeId/habilidades", async (req, res) => {
   const dados = criarHabilidadeSchema.parse(req.body);
   const classeId = idDe(req.params.classeId, "Classe não encontrada");
-  res.status(201).json(await service.criar(classeId, usuarioDe(req).id, dados));
+  res.status(201).json(await service.criar({ classeId }, usuarioDe(req).id, dados));
 });
 
 habilidadesRouter.put("/classes/:classeId/habilidades/ordem", async (req, res) => {
   const { ids } = ordenarHabilidadesSchema.parse(req.body);
   const classeId = idDe(req.params.classeId, "Classe não encontrada");
-  res.json(await service.ordenar(classeId, usuarioDe(req).id, ids));
+  res.json(await service.ordenar({ classeId }, usuarioDe(req).id, ids));
+});
+
+// Cartela das criaturas do bestiário: mesmas cartas, mesmas regras.
+habilidadesRouter.post("/bestas/:bestaId/habilidades", async (req, res) => {
+  const dados = criarHabilidadeSchema.parse(req.body);
+  const bestaId = idDe(req.params.bestaId, "Besta não encontrada");
+  res.status(201).json(await service.criar({ bestaId }, usuarioDe(req).id, dados));
+});
+
+habilidadesRouter.put("/bestas/:bestaId/habilidades/ordem", async (req, res) => {
+  const { ids } = ordenarHabilidadesSchema.parse(req.body);
+  const bestaId = idDe(req.params.bestaId, "Besta não encontrada");
+  res.json(await service.ordenar({ bestaId }, usuarioDe(req).id, ids));
 });
 
 habilidadesRouter.patch("/habilidades/:id", async (req, res) => {

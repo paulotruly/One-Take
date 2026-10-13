@@ -10,6 +10,12 @@ export type Raca = {
   pericias: PericiaDaRaca[];
   /** Nulo = geral; id = exclusiva daquele grupo. */
   grupoExclusivoId: string | null;
+  /** Arquétipo de raça do qual esta é sub-raça (opcional). */
+  conceitoId: string | null;
+  conceito: { id: string; titulo: string } | null;
 };
 
-export type RacaInput = Pick<Raca, "titulo" | "descricao" | "imagemUrl" | "deslocamento" | "grupoExclusivoId">;
+export type RacaInput = Pick<Raca, "titulo" | "descricao" | "imagemUrl" | "deslocamento" | "grupoExclusivoId" | "conceitoId">;
+
+/** Arquétipo de raça: raça generalista que agrupa sub-raças (o jogador escolhe a sub-raça). */
+export type RacaConceito = { id: string; titulo: string; descricao: string; subracas: { id: string; titulo: string; imagemUrl: string | null; deslocamento: number }[] };

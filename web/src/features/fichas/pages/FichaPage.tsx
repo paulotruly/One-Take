@@ -1,8 +1,8 @@
 // Ficha do personagem. Usada pelo jogador (/jogador/fichas/:id) e pelo mestre do grupo (/mestre/fichas/:id).
 // Jogador e mestre mexem em vida/mana/esforço, inventário e pontos de perícia; só o mestre sobe o nível.
-import { ArrowUp, Backpack, Dices, Droplet, Footprints, Heart, Package, Skull, Trash2, TriangleAlert, X, Zap } from "lucide-react";
+import { Activity, ArrowUp, Backpack, Dices, Droplet, Footprints, Heart, Plus, Skull, Trash2, TriangleAlert, X, Zap } from "lucide-react";
 import { useState, type FormEvent } from "react";
-import { useNavigate, useParams } from "react-router";
+import { Link, useNavigate, useParams } from "react-router";
 import { Avatar } from "../../../components/ui/Avatar";
 import { Button } from "../../../components/ui/Button";
 import { ConfirmDialog } from "../../../components/ui/ConfirmDialog";
@@ -12,12 +12,15 @@ import { Modal } from "../../../components/ui/Modal";
 import { EmptyState, ErrorState, Loading } from "../../../components/ui/States";
 import { erroDeFormulario, errosDeCampo, mensagemDeErro } from "../../../lib/api";
 import { ClasseImagem } from "../../classes/components/ClasseImagem";
-import { HabilidadeCard } from "../../classes/components/HabilidadeCard";
+import { HabilidadesDeck } from "../../classes/components/HabilidadesDeck";
 import { GrupoBadge } from "../../classes/components/Selos";
 import { PericiaItem } from "../../pericias/components/PericiaItem";
 import { PericiasPorAtributo } from "../../pericias/components/PericiasPorAtributo";
 import { StatusBadge } from "../../status/components/StatusBadge";
 import { ROTULO_TIPO } from "../../status/types";
+import { useUsarItem } from "../../itens/api";
+import { ItemDetalhe, ItemLinha } from "../../itens/components/ItemCartao";
+import { LancarItemModal } from "../../itens/pages/LancarItemModal";
 import { useAplicarStatus, useEditarFicha, useExcluirFicha, useFicha, useGastarPericia, useMoverItem, useRemoverStatus, useSubirNivel } from "../api";
 import { BarraRecurso } from "../components/BarraRecurso";
 import type { FichaDetalhe } from "../types";
@@ -46,6 +49,11 @@ function Ficha({ f }: { f: FichaDetalhe }) {
   const aplicarStatus = useAplicarStatus(f.id);
   const removerStatus = useRemoverStatus(f.id);
   const [statusEscolhido, setStatusEscolhido] = useState("");
+  const usar = useUsarItem();
+  const [itemAbertoId, setItemAbertoId] = useState<string | null>(null);
+  const [aviso, setAviso] = useState<string | null>(null);
+  const [lancandoItem, setLancandoItem] = useState(false);
+  const itemAberto = f.inventario.itens.find((i) => i.id === itemAbertoId) ?? null;
 
   const [confirmarNivel, setConfirmarNivel] = useState(false);
   const [confirmarSaida, setConfirmarSaida] = useState(false);
@@ -53,10 +61,11 @@ function Ficha({ f }: { f: FichaDetalhe }) {
   const [periciaEscolhida, setPericiaEscolhida] = useState("");
 
   const voltar = f.souMestre ? `/mestre/grupos/${f.grupo.id}` : "/jogador";
-  const cheio = f.inventario.itens.length >= f.inventario.capacidade;
+  const cheio = f.inventario.usados >= f.inventario.capacidade;
   // A morte já tem o aviso grande; os demais status viram alertas.
   const alertas = f.status.filter((st) => st.gatilho !== "VIDA_ZERO" && st.gatilho !== "MANA_ZERO");
   const erroAcao = editar.error ?? gastar.error ?? mover.error ?? subir.error ?? aplicarStatus.error ?? removerStatus.error;
+  const destinosItem = [{ id: f.id, rotulo: f.nome }, ...f.outrasFichas.map((o) => ({ id: o.id, rotulo: `${o.nome} (@${o.jogador})` }))];
 
   return (
     <div className="pagina">
@@ -129,16 +138,27 @@ function Ficha({ f }: { f: FichaDetalhe }) {
           ))}
         </section>
       )}
-      {f.souMestre && f.statusAplicaveis.length > 0 && (
-        <div className="painel entrar-codigo__linha">
-          <select value={statusEscolhido} onChange={(e) => setStatusEscolhido(e.target.value)} aria-label="Status para aplicar">
-            <option value="">Aplicar status…</option>
-            {f.statusAplicaveis.map((st) => <option key={st.id} value={st.id}>{st.nome} ({ROTULO_TIPO[st.tipo]})</option>)}
-          </select>
-          <Button disabled={!statusEscolhido || aplicarStatus.isPending} onClick={() => aplicarStatus.mutate(statusEscolhido, { onSuccess: () => setStatusEscolhido("") })}>
-            Aplicar
-          </Button>
-        </div>
+      {/* Mestre: aplicar status manualmente (morte e cansaço aparecem sozinhos pelos recursos). */}
+      {f.souMestre && (
+        <section className="painel" aria-label="Aplicar status">
+          <h2 className="painel__titulo"><Activity size={18} aria-hidden /> Status</h2>
+          {f.statusAplicaveis.length > 0 ? (
+            <div className="entrar-codigo__linha">
+              <select value={statusEscolhido} onChange={(e) => setStatusEscolhido(e.target.value)} aria-label="Status para aplicar">
+                <option value="">Escolha um status…</option>
+                {f.statusAplicaveis.map((st) => <option key={st.id} value={st.id}>{st.nome} ({ROTULO_TIPO[st.tipo]})</option>)}
+              </select>
+              <Button variante="primario" disabled={!statusEscolhido || aplicarStatus.isPending} onClick={() => aplicarStatus.mutate(statusEscolhido, { onSuccess: () => setStatusEscolhido("") })}>
+                Aplicar status
+              </Button>
+            </div>
+          ) : (
+            <p className="pagina__subtitulo">
+              Nenhum status para aplicar. Ative status no grupo em <Link to={`/mestre/grupos/${f.grupo.id}/editar`}>Editar grupo</Link> (seção Status).
+            </p>
+          )}
+          <p className="pagina__subtitulo">Para tirar um status, use o X no alerta dele.</p>
+        </section>
       )}
 
       {/* ---------- Recursos ---------- */}
@@ -157,7 +177,10 @@ function Ficha({ f }: { f: FichaDetalhe }) {
       {/* ---------- Atributos ---------- */}
       <section className="secao">
         <h2>Atributos</h2>
-        <p className="pagina__subtitulo">Nos testes, role os d20 do atributo e use o maior resultado.</p>
+        <p className="pagina__subtitulo">
+          Nos testes, role os d20 do atributo, fique com o maior e some o bônus da perícia. Cada ponto de esforço gasto dá +1 d20.
+          Atributo em 0: 1 d20 e o resultado vale a metade.
+        </p>
         <ul className="dados-atributos">
           {f.atributos.map((a) => (
             <li key={a.id} className="dados-atributo">
@@ -165,7 +188,7 @@ function Ficha({ f }: { f: FichaDetalhe }) {
                 <strong>{a.nome}</strong>
                 {a.descricao && <p className="pericia__descricao">{a.descricao}</p>}
               </div>
-              <span className="contador__valor"><Dices size={16} aria-hidden /> {a.dados}d20</span>
+              <span className="contador__valor" title="Teste sem perícia"><Dices size={16} aria-hidden /> {a.teste}</span>
             </li>
           ))}
         </ul>
@@ -209,6 +232,7 @@ function Ficha({ f }: { f: FichaDetalhe }) {
                 tituloValor="Total"
                 rodape={
                   <span className="pericia__usos">
+                    <strong className="pericia__teste" title="Como rolar"><Dices size={12} aria-hidden /> {p.teste}</strong>{" "}
                     {[p.raca && `raça +${p.raca}`, p.classe && `classe ${p.classe >= 0 ? "+" : ""}${p.classe}`, p.nivel && `níveis +${p.nivel}`]
                       .filter(Boolean)
                       .join(" · ")}
@@ -226,51 +250,94 @@ function Ficha({ f }: { f: FichaDetalhe }) {
         <p className="pagina__subtitulo">
           Cartas disponíveis no nível {f.nivel}.{f.proximasHabilidades > 0 && ` Mais ${f.proximasHabilidades} liberam em níveis maiores.`}
         </p>
-        {f.habilidades.length === 0 ? (
-          <EmptyState compacto titulo="Nenhuma carta neste nível" />
-        ) : (
-          <div className="deck">
-            {f.habilidades.map((h) => <HabilidadeCard key={h.id} habilidade={h} />)}
-          </div>
-        )}
+        <HabilidadesDeck habilidades={f.habilidades} vazio="Nenhuma carta neste nível" />
       </section>
 
       {/* ---------- Inventário ---------- */}
       <section className="secao">
         <div className="secao__cabecalho">
           <h2><Backpack size={20} aria-hidden /> Inventário</h2>
-          <span className="selo">{f.inventario.itens.length} / {f.inventario.capacidade} espaços</span>
+          <span className="selo">{f.inventario.usados} / {f.inventario.capacidade} espaços</span>
         </div>
+        <div className="inventario__barra" aria-hidden>
+          <div
+            className={`inventario__preenchido ${cheio ? "inventario__preenchido--cheio" : ""}`}
+            style={{ width: `${Math.min(100, (f.inventario.usados / f.inventario.capacidade) * 100)}%` }}
+          />
+        </div>
+        {aviso && <p className="sucesso">{aviso}</p>}
+        {f.souMestre && (
+          <div>
+            <Button onClick={() => setLancandoItem(true)}>
+              <Plus size={16} aria-hidden /> Dar item do catálogo
+            </Button>
+          </div>
+        )}
         {f.inventario.itens.length === 0 ? (
           <EmptyState compacto titulo="Inventário vazio" descricao="O mestre entrega os itens durante a sessão." />
         ) : (
-          <ul className="pericias">
+          <ul className="itens">
             {f.inventario.itens.map((item) => (
-              <li key={item.id} className="pericia pericia--atributo">
-                <div>
-                  <div className="pericia__nome"><Package size={16} aria-hidden /> <strong>{item.nome}</strong></div>
-                  {item.descricao && <p className="pericia__descricao">{item.descricao}</p>}
-                </div>
-                <div className="pericia__acoes">
-                  {f.outrasFichas.length > 0 && (
-                    <select className="select-pequeno" value="" aria-label={`Passar ${item.nome}`}
-                      onChange={(e) => e.target.value && mover.mutate({ itemId: item.id, fichaId: e.target.value })}>
-                      <option value="">Passar para…</option>
-                      {f.outrasFichas.map((o) => (
-                        <option key={o.id} value={o.id}>{o.nome} (@{o.jogador})</option>
-                      ))}
-                    </select>
-                  )}
-                  <Button pequeno variante="fantasma" title="Descartar: o item fica vago no grupo" onClick={() => mover.mutate({ itemId: item.id, fichaId: null })}>
-                    <Trash2 size={14} aria-hidden /> Descartar
-                  </Button>
-                </div>
-              </li>
+              <ItemLinha
+                key={item.id}
+                item={item}
+                naoSabeUsar={!item.podeUsar}
+                onAbrir={() => {
+                  usar.reset();
+                  mover.reset();
+                  setItemAbertoId(item.id);
+                }}
+              />
             ))}
           </ul>
         )}
         {cheio && <p className="pagina__subtitulo">Inventário cheio. Cada nível dá mais espaço.</p>}
       </section>
+
+      <Modal aberto={!!itemAberto} onFechar={() => setItemAbertoId(null)} titulo={itemAberto?.nome ?? ""}>
+        {itemAberto && (
+          <div className="form">
+            <ItemDetalhe item={itemAberto} motivoNaoPodeUsar={itemAberto.motivoNaoPodeUsar} />
+            {(usar.isError || mover.isError) && <div className="aviso">{mensagemDeErro(usar.error ?? mover.error)}</div>}
+            <div className="acoes-item">
+              <Button
+                variante="primario"
+                disabled={usar.isPending || (!itemAberto.podeUsar && !f.souMestre)}
+                onClick={() =>
+                  usar.mutate(itemAberto.id, {
+                    onSuccess: (r) => {
+                      const efeito = itemAberto.efeito ? ` Efeito: ${itemAberto.efeito}` : "";
+                      setAviso(r.consumido ? `${itemAberto.nome} foi usado e acabou.${efeito}` : `${itemAberto.nome} usado.${efeito}`);
+                      setItemAbertoId(null);
+                    },
+                  })
+                }
+              >
+                {usar.isPending ? "Usando…" : "Usar"}
+              </Button>
+              {f.outrasFichas.length > 0 && (
+                <select
+                  value=""
+                  aria-label={`Passar ${itemAberto.nome}`}
+                  onChange={(e) => e.target.value && mover.mutate({ itemId: itemAberto.id, fichaId: e.target.value }, { onSuccess: () => setItemAbertoId(null) })}
+                >
+                  <option value="">Passar para…</option>
+                  {f.outrasFichas.map((o) => (
+                    <option key={o.id} value={o.id}>{o.nome} (@{o.jogador})</option>
+                  ))}
+                </select>
+              )}
+              <Button onClick={() => mover.mutate({ itemId: itemAberto.id, fichaId: null }, { onSuccess: () => setItemAbertoId(null) })}>
+                <Trash2 size={16} aria-hidden /> Descartar (fica vago no grupo)
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {f.souMestre && (
+        <LancarItemModal grupoId={f.grupo.id} aberto={lancandoItem} onFechar={() => setLancandoItem(false)} destinos={destinosItem} destinoInicial={f.id} />
+      )}
 
       <EditarPersonagem aberto={editando} f={f} onFechar={() => setEditando(false)} editar={editar} />
 
@@ -278,7 +345,12 @@ function Ficha({ f }: { f: FichaDetalhe }) {
         aberto={confirmarNivel}
         titulo="Subir nível"
         rotuloConfirmar="Subir nível"
-        mensagem={<>{f.nome} vai para o nível {f.nivel + 1}: +5 de vida, mana e esforço, +5 pontos de perícia, novas cartas e +2 espaços no inventário.</>}
+        mensagem={
+          <>
+            {f.nome} vai para o nível {f.nivel + 1}: +5 de vida, mana e esforço, +5 pontos de perícia, novas cartas e +2 espaços no inventário.{" "}
+            <strong>Não dá para descer de nível depois.</strong>
+          </>
+        }
         processando={subir.isPending}
         erro={subir.isError ? mensagemDeErro(subir.error) : null}
         onCancelar={() => setConfirmarNivel(false)}

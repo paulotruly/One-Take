@@ -13,7 +13,7 @@ import { VinculoPericiaForm } from "../../pericias/components/forms";
 import { PericiaItem } from "../../pericias/components/PericiaItem";
 import { PericiasPorAtributo } from "../../pericias/components/PericiasPorAtributo";
 import type { PericiaDaRaca } from "../../pericias/types";
-import { useDesvincularPericiaRaca, useEditarRaca, useExcluirRaca, useRaca, useVincularPericiaRaca } from "../api";
+import { useConceitosRaca, useDesvincularPericiaRaca, useEditarRaca, useExcluirRaca, useRaca, useVincularPericiaRaca } from "../api";
 import { ClasseImagem } from "../../classes/components/ClasseImagem";
 import { useGrupos } from "../../grupos/api";
 import { RacaForm } from "../components/RacaForm";
@@ -30,6 +30,7 @@ export function RacaDetalhePage() {
   const vincular = useVincularPericiaRaca(id);
   const desvincular = useDesvincularPericiaRaca(id);
   const grupos = useGrupos();
+  const conceitosRaca = useConceitosRaca();
 
   const [editando, setEditando] = useState(false);
   // undefined = fechado; null = adicionar; PericiaDaRaca = editando pontos
@@ -141,6 +142,7 @@ export function RacaDetalhePage() {
         <RacaForm
           inicial={r}
           grupos={grupos.data}
+          conceitos={conceitosRaca.data}
           enviando={editar.isPending}
           erros={errosDeCampo(editar.error)}
           erroGeral={erroDeFormulario(editar.error)}

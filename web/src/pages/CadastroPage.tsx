@@ -9,8 +9,8 @@ import { Loading } from "../components/ui/States";
 import { mensagemDeErro } from "../lib/api";
 
 const OPCOES: { papel: Papel; titulo: string; descricao: string; Icone: typeof Crown }[] = [
-  { papel: "JOGADOR", titulo: "Sou jogador", descricao: "Crio fichas e entro nos grupos com o código do mestre.", Icone: User },
-  { papel: "MESTRE", titulo: "Sou mestre", descricao: "Crio classes, raças, perícias e conduzo os grupos.", Icone: Crown },
+  { papel: "JOGADOR", titulo: "Jogador", descricao: "Interface simples: crio fichas e entro nos grupos com o código do mestre.", Icone: User },
+  { papel: "MESTRE", titulo: "Mestre", descricao: "Também carrega a interface de mestre: crio o mundo e conduzo os grupos. Continuo podendo jogar.", Icone: Crown },
 ];
 
 export function CadastroPage() {
@@ -50,7 +50,7 @@ export function CadastroPage() {
           <Marca />
           <div>
             <h1>Criar conta</h1>
-            <p className="pagina__subtitulo">Escolha como você vai usar o One-Take.</p>
+            <p className="pagina__subtitulo">Escolha a interface. Dá para ativar a de mestre depois, quando quiser.</p>
           </div>
         </div>
 

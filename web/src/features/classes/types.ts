@@ -1,3 +1,4 @@
+import { Anchor, HandHelping, HeartPulse, Ghost, Shield, Swords, TrendingDown, TrendingUp, Wind, Wrench, type LucideIcon } from "lucide-react";
 import type { PericiaDaClasse } from "../pericias/types";
 
 // Tipos espelhando as respostas da API (ver docs/API.md) e rótulos de exibição.
@@ -17,13 +18,13 @@ export type Classe = {
   origemId: string | null;
   /** Nulo = geral; id = exclusiva daquele grupo. */
   grupoExclusivoId?: string | null;
-  /** Classe-conceito da qual esta é subclasse (opcional). */
+  /** Arquétipo do qual esta é subclasse (opcional). */
   conceitoId?: string | null;
   conceito?: { id: string; titulo: string; descricao?: string } | null;
   fixa: boolean;
 };
 
-/** Classe-conceito: classe generalista que agrupa subclasses (o jogador escolhe a subclasse). */
+/** Arquétipo: classe generalista que agrupa subclasses (o jogador escolhe a subclasse). */
 export type Conceito = {
   id: string;
   titulo: string;
@@ -47,15 +48,42 @@ export type Aprimoramento = {
 };
 export type AprimoramentoInput = Omit<Aprimoramento, "id" | "habilidadeId" | "status">;
 
-/** Carta da cartela (única) da classe. */
+/** Tipo de efeito de uma carta: lista fixa do sistema (espelha o enum da API). */
+export type TipoEfeito =
+  | "DANO"
+  | "DEFESA"
+  | "CURA"
+  | "SUPORTE"
+  | "FORTALECIMENTO"
+  | "ENFRAQUECIMENTO"
+  | "CONTROLE"
+  | "MOBILIDADE"
+  | "INVOCACAO"
+  | "UTILIDADE";
+
+export const TIPOS_EFEITO: Record<TipoEfeito, { rotulo: string; descricao: string; Icone: LucideIcon }> = {
+  DANO: { rotulo: "Dano", descricao: "Tira vida do alvo.", Icone: Swords },
+  DEFESA: { rotulo: "Defesa", descricao: "Evita, reduz ou anula dano recebido.", Icone: Shield },
+  CURA: { rotulo: "Cura", descricao: "Devolve vida (ou outro recurso) a quem recebe.", Icone: HeartPulse },
+  SUPORTE: { rotulo: "Suporte", descricao: "Ajuda aliados sem curar: protege, reposiciona, dá ações.", Icone: HandHelping },
+  FORTALECIMENTO: { rotulo: "Fortalecimento", descricao: "Melhora alguém por um tempo (bônus, vantagem).", Icone: TrendingUp },
+  ENFRAQUECIMENTO: { rotulo: "Enfraquecimento", descricao: "Piora o alvo por um tempo (penalidade, desvantagem).", Icone: TrendingDown },
+  CONTROLE: { rotulo: "Controle", descricao: "Prende, derruba, atordoa ou força o alvo a agir.", Icone: Anchor },
+  MOBILIDADE: { rotulo: "Mobilidade", descricao: "Movimento extra: avanço, salto, recuo, teleporte.", Icone: Wind },
+  INVOCACAO: { rotulo: "Invocação", descricao: "Traz criaturas, objetos ou espíritos para a cena.", Icone: Ghost },
+  UTILIDADE: { rotulo: "Utilidade", descricao: "Fora de combate ou efeitos que não se encaixam nos outros.", Icone: Wrench },
+};
+export const LISTA_TIPOS_EFEITO = Object.keys(TIPOS_EFEITO) as TipoEfeito[];
+
+/** Carta da cartela de uma classe ou de uma besta. */
 export type Habilidade = {
   id: string;
-  classeId: string;
+  classeId: string | null;
+  bestaId?: string | null;
   titulo: string;
   descricao: string;
   condicao: string | null;
-  /** Texto livre (ex.: "Dano", "Cura em área"). */
-  tipoEfeito: string;
+  tipoEfeito: TipoEfeito;
   descricaoEfeito: string;
   limite: string | null;
   nivelNecessario: number;
@@ -96,7 +124,7 @@ export type ClasseInput = Pick<
   Classe,
   "grupo" | "titulo" | "descricao" | "imagemUrl" | "pontosVida" | "pontosMana" | "pontosEsforco"
 > & { grupoExclusivoId: string | null; conceitoId: string | null };
-export type HabilidadeInput = Omit<Habilidade, "id" | "classeId" | "ordem" | "status" | "aprimoramentos" | "aprimoradaNoNivel" | "proximoAprimoramento">;
+export type HabilidadeInput = Omit<Habilidade, "id" | "classeId" | "bestaId" | "ordem" | "status" | "aprimoramentos" | "aprimoradaNoNivel" | "proximoAprimoramento">;
 
 export const GRUPOS: Grupo[] = ["COMBATENTE", "VANGUARDISTA", "SUPORTE"];
 export const ROTULO_GRUPO: Record<Grupo, string> = {

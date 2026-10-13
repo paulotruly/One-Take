@@ -1,5 +1,5 @@
 import { Droplet, Lock } from "lucide-react";
-import { ROTULO_GRUPO, type Grupo } from "../types";
+import { ROTULO_GRUPO, TIPOS_EFEITO, type Grupo, type TipoEfeito } from "../types";
 
 export function GrupoBadge({ grupo }: { grupo: Grupo }) {
   return <span className={`selo selo--grupo-${grupo}`}>{ROTULO_GRUPO[grupo]}</span>;
@@ -17,8 +17,13 @@ export function OrigemBadge({ fixa }: { fixa: boolean }) {
   );
 }
 
-export function EfeitoBadge({ tipo }: { tipo: string }) {
-  return <span className="selo selo--efeito">{tipo}</span>;
+export function EfeitoBadge({ tipo }: { tipo: TipoEfeito }) {
+  const t = TIPOS_EFEITO[tipo] ?? TIPOS_EFEITO.UTILIDADE;
+  return (
+    <span className={`selo selo--efeito selo--efeito-${tipo}`} title={t.descricao}>
+      <t.Icone size={12} aria-hidden /> {t.rotulo}
+    </span>
+  );
 }
 
 export function CustoManaBadge({ custo }: { custo: number }) {

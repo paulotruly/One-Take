@@ -97,3 +97,67 @@ Formato: data — decisão. Motivo.
   conceito não apaga as subclasses.
 - **Aprimoramento de carta — decisão do produto.** A mesma carta muda a partir de um nível; o aprimoramento guarda só os campos que
   mudam (título, efeito, condição, limite, custo de mana, status) e eles se acumulam por nível. Cálculo em `aplicarAprimoramentos`.
+
+## 2026-10-12
+- **Regra de teste — decisão do produto.** Mestre diz atributo + perícia; jogador rola 1 d20 por ponto, fica com o maior e soma o
+  bônus da perícia (sem a perícia, 0). Atributo 0 = 1 d20 com resultado pela metade. Fonte única: `api/src/regras/teste.ts`.
+  Interpretações: metade **arredondada para baixo** e **antes** de somar o bônus; atributo 0 **não** compra dados com esforço
+  ("sempre apenas 1 dado"); sem limite de esforço por teste. A ficha mostra o teste pronto ("2d20 + 5"); rolar no app continua fora.
+- **Esforço = dados extras — decisão do produto.** 1 ponto de esforço = +1 d20 no teste.
+- **DT livre — decisão do produto.** "Faixa de sucesso e falha" = DT, definida pelo mestre na sessão. Sem tabela de DT oficial;
+  a documentação mostra só a matemática (chance por DT e dados).
+- **Descer de nível não existe — decisão do produto** (deixa de ser "ideia em aberto"). A confirmação de subir nível avisa.
+- **Uma conta, duas interfaces — decisão do produto.** Toda conta joga; a interface de mestre é ativada no cadastro ou depois
+  (`POST /api/me/mestre`). Reaproveita `Perfil.papel` (MESTRE = ativada), sem coluna nova; o catálogo de perícias continua sendo
+  copiado só no 1º acesso à área de mestre. Mestre pode jogar nos grupos de outros mestres (já era permitido pela API; o front bloqueava).
+  Não há "desativar mestre" por enquanto.
+- **Tipo de efeito volta a ser lista fixa — decisão do produto** (desfaz a de 2026-10-11). Dano, Defesa, Cura, Suporte, Fortalecimento,
+  Enfraquecimento, Controle, Mobilidade, Invocação, Utilidade (nomes em português, propostos por mim). Buff/Debuff viraram
+  Fortalecimento/Enfraquecimento. Cada tipo tem ícone lucide e descrição no front.
+- **Raça-conceito — decisão do produto**, igual à classe-conceito (`RacaConceito`, `Raca.conceitoId`).
+- **Itens com catálogo — decisão do produto.** Categorias Armas, Artefatos, Taverna, Sebo; efeito, espaços, consumo e pré-requisito.
+  Interpretações: item lançado é **cópia** do molde; pré-requisito = classe e/ou perícia com total > 0 (conferidos) + texto
+  (informativo); quem não cumpre carrega mas não usa; o mestre pode usar por qualquer um; item esgotado é apagado;
+  inventário conta **espaços**, não itens; "Taverna" = consumíveis de comer/beber, "Sebo" = livros/mapas/achados.
+- **Bestiário — decisão do produto.** Bichos como classes (com dados por atributo), besta-conceito com formas, invocação no grupo,
+  grid, morte automática. Interpretações: o **nível é escolhido ao invocar** (a besta guarda valores de nível 1, como a classe);
+  bichos não ganham pontos de perícia por nível; morte = vida **ou mana** em 0 (mesma regra das fichas); uma casa do grid por
+  bicho; só bichos no grid (fichas no grid ficam para depois); cartela polimórfica (`Habilidade.bestaId`) para reaproveitar tudo.
+- **Itens e bichos sem "o que vale no grupo".** O mestre tem o catálogo sempre disponível; só a exclusividade restringe.
+- **Cartas pequenas em grade, detalhes em pop-up — decisão do produto.** Corrige os botões que saíam da carta: a barra virou ícones
+  (mover, editar, aprimorar, excluir) que quebram linha; os detalhes completos abrem num modal com as mesmas ações.
+- **Status na ficha visível sempre para o mestre.** O seletor só aparecia se o grupo tivesse status ativados e não tinha título;
+  virou o quadro "Status" (com aviso e link quando não há status ativados) e um botão Status em cada membro na página do grupo.
+- **Fichas e inventário pensados para celular.** Itens em linhas grandes e tocáveis com ações num pop-up; barra do topo rola de lado.
+- **Classe fixa a partir de classe do mestre**: script `npm run fixar-classe` (troca perícias pelas base, tira status próprios das cartas,
+  conceito e exclusividade). Escolhido em vez de colocar no seed para não congelar a classe enquanto o designer ainda edita;
+  `--devolver nick` desfaz. Em produção, rodar o script lá também (ou mover a classe para o seed quando estiver pronta).
+- **Skill de balanceamento** em `.claude/skills/balancear` (método + calculadora `calc.mjs`) e `npm run exportar` para gerar o JSON.
+  Referências de equilíbrio ("3 a 5 turnos para derrubar a vida mediana" etc.) são proposta inicial, ajustáveis pelo designer.
+- **Navegação lateral e menu do perfil — decisão do produto.** Na área logada, os links da interface (mestre ou jogador) ficam numa
+  barra lateral; no celular ela vira gaveta (botão de menu no topo, fecha ao trocar de página ou tocar fora). Clicar no perfil abre um
+  menu com Editar perfil e Sair (o botão de sair separado saiu). A área pública continua com links no topo.
+
+## 2026-10-13
+- **"Conceito" vira "Arquétipo" na interface — decisão do produto.** Arquétipo (de classe), arquétipo de raça e arquétipo de criatura;
+  as variações continuam subclasse, sub-raça e forma. Tabelas e rotas mantêm os nomes antigos (`ClasseConceito`, `/api/conceitos`...)
+  para não mexer no banco por causa de um rótulo.
+- **"Bicho" vira "criatura" — decisão do produto** (escolhida entre Criatura, Ameaça, Fera e Adversário). O menu continua "Bestiário".
+- **Categorias de item personalizáveis — decisão do produto.** As 4 categorias viram tabela: fixas do sistema (somente leitura, como os
+  status fixos) + criadas pelo mestre com nome, descrição e ícone de uma lista fechada (sem upload). Escolhido o modelo dos status
+  (fixas + próprias) em vez do das perícias (cópia por mestre) para não duplicar linhas para cada mestre.
+- **A migration `itens_bestiario_tipo_efeito` já estava aplicada** quando o arquivo foi regenerado por engano; o arquivo foi restaurado
+  byte a byte (checksum igual ao de `_prisma_migrations`) e as categorias foram para uma migration nova (`categorias_de_item`).
+- **Documentação só na área pública — decisão do produto.** O link Documentação saiu da barra lateral das interfaces (ele levava para
+  fora do app); a documentação fica na home. Ganhou **busca por palavras** (sem IA): ignora acentos e maiúsculas, o tópico precisa ter
+  todas as palavras, e o texto é lido renderizando os tópicos escondidos na primeira busca.
+- **Botão de menu só no celular.** A regra `.topo__menu { display: none }` perdia para `.btn` (CSS carregado depois); usa `.topo .topo__menu`.
+- **Seed de teste** (`npm run db:seed-teste`): conteúdo para testar tudo na conta de um mestre (padrão @paulo), com ids fixos
+  (`00000000-0000-4000-9xxx-...`), idempotente e sem apagar nada do mestre. Jogadores de teste são perfis sem login (@teste_ana,
+  @teste_bruno, @teste_caio), só para o mestre ver fichas. Grupo "Mesa de teste", código `TESTEA`.
+- **Sem grid no sistema — decisão do produto.** O grid de batalha é totalmente físico. Saíram a seção Campo de batalha, o tamanho do grid
+  do grupo e a posição das criaturas (migration `remove_grid`). As criaturas continuam: invocar, ficha, recursos, remover, morte automática.
+- **Sem conteúdo pronto no banco — decisão do produto.** Apagados o conteúdo do seed de teste, as 3 classes fixas de exemplo
+  (Lâmina Rubra, Bastião, Tecelã de Luz) e a conta @teste com a ficha dela (usava a Lâmina Rubra). Ficaram a estrutura do sistema
+  (atributos, perícias base, status e categorias fixas) e tudo o que @paulo criou. O `db:seed` não cria mais classes e o
+  `db:seed-teste` foi removido.

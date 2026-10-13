@@ -99,6 +99,33 @@ export function useMe() {
   });
 }
 
+/** Interface usada por último neste navegador (só conveniência; a fonte é o papel da conta). */
+const CHAVE_INTERFACE = "one-take:interface";
+export function lembrarInterface(i: Papel) {
+  try {
+    localStorage.setItem(CHAVE_INTERFACE, i);
+  } catch {
+    /* sem armazenamento: tudo bem */
+  }
+}
+export function interfaceLembrada(): Papel | null {
+  try {
+    const v = localStorage.getItem(CHAVE_INTERFACE);
+    return v === "MESTRE" || v === "JOGADOR" ? v : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Ativa a interface de mestre nesta conta (a de jogador continua). */
+export function useAtivarMestre() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => api<Me>("/api/me/mestre", { method: "POST" }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["me"] }),
+  });
+}
+
 export function useEditarPerfil() {
   const qc = useQueryClient();
   return useMutation({

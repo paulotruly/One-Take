@@ -13,6 +13,15 @@ meRouter.get("/me", async (req, res) => {
   res.json(await getPrisma().perfil.findUniqueOrThrow({ where: { id: usuarioDe(req).id }, select: publico }));
 });
 
+/**
+ * Ativa a interface de mestre nesta conta (papel MESTRE). Toda conta joga; só quem ativa ganha a área do mestre,
+ * e o catálogo de perícias dele só é criado no primeiro acesso a ela (não gasta espaço de quem nunca mestra).
+ */
+meRouter.post("/me/mestre", async (req, res) => {
+  const usuario = usuarioDe(req);
+  res.json(await getPrisma().perfil.update({ where: { id: usuario.id }, data: { papel: "MESTRE" }, select: publico }));
+});
+
 meRouter.patch("/me", async (req, res) => {
   const dados = editarPerfilSchema.parse(req.body);
   const prisma = getPrisma();

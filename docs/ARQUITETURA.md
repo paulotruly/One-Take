@@ -3,9 +3,11 @@
 ## Pastas
 ```
 api/
-  prisma/schema.prisma, migrations/, seed.ts
+  prisma/schema.prisma, migrations/, seed.ts (estrutura fixa: atributos, status, categorias, perícias base; sem classes)
   prisma.config.ts           # CLI do Prisma usa DIRECT_URL
-  scripts/promover-mestre.ts
+  scripts/promover-mestre.ts   # npm run promover
+  scripts/fixar-classe.ts      # npm run fixar-classe -- "Título" [--devolver nick]: classe do mestre vira fixa (e volta)
+  scripts/exportar-conteudo.ts # npm run exportar: classes e bestas em JSON para o balanceamento
   src/
     index.ts                 # lê env e sobe o servidor
     app.ts                   # monta Express: cors, json, /health, /api (auth → papel → módulos), erros
@@ -13,7 +15,8 @@ api/
     lib/                     # prisma (adapter pg), errors (AppError), validacao (helpers Zod)
     middleware/              # auth (autenticar, exigirPapel), error-handler
     modules/<recurso>/       # routes → service → schemas
-    regras/progressao.ts     # regras de jogo puras (progressão de nível): FONTE ÚNICA, usada pela prévia e pelas futuras fichas
+    regras/                  # regras de jogo puras e testadas (FONTE ÚNICA): progressao, ficha (inventário, pré-requisito de item),
+                             # teste (d20, atributo 0, esforço, chances), status, combate (regras padrão da mesa)
     generated/prisma/        # client gerado (gitignored)
   tests/                     # vitest + supertest com Prisma mockado
 web/
@@ -26,14 +29,18 @@ web/
     auth/                    # AuthProvider (sessão, useMe) e guards (RequirePapel)
     components/ui/           # Button, Field, Modal, ConfirmDialog, Loading/EmptyState/ErrorState, Avatar, Marca
     components/texto/        # blocos da documentação: Destaque, Passos, Cartoes, Tabela
-    features/docs/           # documentação: DocsLayout (lateral + tópico + anterior/próximo), topicos.tsx, conteudo/
+    features/docs/           # documentação: DocsLayout (lateral + tópico + anterior/próximo), BuscaDocs (filtro por palavras), topicos.tsx, conteudo/
     features/classes/
       types.ts               # tipos espelhando a API + rótulos
       api.ts                 # hooks TanStack Query (leitura e mutações)
       components/            # APRESENTAÇÃO: só props → JSX (cards, deck, forms, selos)
       pages/                 # CONTAINERS: dados, modais e navegação
     features/pericias/       # catálogo de perícias e atributos (types com categorias e ícones, api, components, pages)
-    features/racas/          # raças do mestre (types, api, components, pages)
+    features/racas/          # raças do mestre e arquétipos de raça
+    features/itens/          # catálogo de itens (CatalogoItensPage), ItemLinha/ItemDetalhe/ItemForm, LancarItemModal
+    features/bestiario/      # bestiário (páginas de criatura), GridBatalha, InvocarModal, CriaturaModal
+    features/classes/pages/CartelaEditor.tsx  # editor de cartas usado por classes e criaturas
+.claude/skills/balancear/    # skill de balanceamento: SKILL.md (método e referências) + calc.mjs (calculadora)
     layouts/AppLayout.tsx    # topo com navegação (Classes | Perícias), email e "Sair"
     pages/                   # Login, Jogador (placeholder), 404
 docs/
@@ -93,8 +100,12 @@ exibido direto pelo front. Não há upload nem uso do Supabase Storage.
   `/mestre` (galeria, `?grupo=` no filtro), `/mestre/racas`, `/mestre/racas/:id`, `/mestre/classes/nova` (só a classe),
   `/mestre/classes/:id` (dados, resumo das habilidades, perícias), `/mestre/classes/:id/editar`,
   `/mestre/classes/:id/habilidades` (criar/editar/reordenar/excluir cartas), `/mestre/pericias` (catálogo); `/jogador` (reservada, tela vazia); `/` redireciona conforme o papel.
-- `RequirePapel` exige sessão e papel (busca `/api/me`). Jogador em `/mestre` vai para `/jogador`.
-- Layouts: `PublicLayout` (regras, guia; botões Entrar/Criar conta) e `AppLayout` (barra com navegação do papel, avatar e sair).
+- `RequirePapel` exige sessão; com `papel="MESTRE"`, exige a interface de mestre ativada (senão vai para `/ativar-mestre`).
+  `/jogador` vale para qualquer conta. O topo alterna **Mestrar**/**Jogar**; `/area` volta à última interface usada (localStorage).
+- Mestre também: `/mestre/bestiario`, `/mestre/bestiario/novo`, `/mestre/bestiario/:id`, `/mestre/bestiario/:id/editar`, `/mestre/itens`.
+  Logado: `/ativar-mestre`.
+- Layouts: `PublicLayout` (regras, guia; botões Entrar/Criar conta; links no topo) e `AppLayout` (topo com marca, troca Mestrar/Jogar
+  e menu do perfil com Editar perfil e Sair; navegação da interface numa **barra lateral**, que no celular vira gaveta aberta pelo botão de menu).
 - Se a API responder 401, o front faz `signOut` e volta ao login.
 - Dados: TanStack Query; toda mutação invalida as queries `["classes", ...]`.
 - Erros de validação da API (`details`) aparecem embaixo de cada campo dos formulários.

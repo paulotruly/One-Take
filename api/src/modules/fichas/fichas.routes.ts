@@ -1,11 +1,11 @@
 import { Router } from "express";
 import { idDe } from "../../lib/validacao.js";
 import { usuarioDe } from "../../middleware/auth.js";
-import { editarItemSchema, moverItemSchema } from "../grupos/grupos.schemas.js";
+import { editarItemSchema, moverItemSchema } from "../itens/itens.schemas.js";
 import { aplicarStatusSchema } from "../status/status.schemas.js";
 import { criarFichaSchema, editarFichaSchema, gastarPericiaSchema } from "./fichas.schemas.js";
 import * as service from "./fichas.service.js";
-import * as itens from "./itens.service.js";
+import * as itens from "../itens/itens.service.js";
 
 // Rotas para qualquer usuário logado (jogador ou mestre). As permissões ficam nos services.
 export const fichasRouter = Router();
@@ -63,6 +63,10 @@ fichasRouter.delete("/fichas/:id/status/:statusId", async (req, res) => {
 fichasRouter.post("/itens/:id/mover", async (req, res) => {
   const { fichaId: destino } = moverItemSchema.parse(req.body);
   res.json(await itens.mover(itemId(req.params.id), usuarioDe(req).id, destino));
+});
+
+fichasRouter.post("/itens/:id/usar", async (req, res) => {
+  res.json(await itens.usar(itemId(req.params.id), usuarioDe(req).id));
 });
 
 fichasRouter.patch("/itens/:id", async (req, res) => {

@@ -1,0 +1,16 @@
+{"classes":[
+{"titulo":"Espadachim","grupo":"COMBATENTE","vida":25,"mana":5,"esforco":8,
+ "pericias":[{"nome":"Luta","atributo":"Capacidade física","modificador":5},{"nome":"Reflexos","atributo":"Capacidade física","modificador":5}],
+ "cartas":[
+  {"titulo":"Corte horizontal","tipoEfeito":"DANO","efeito":"Causa 1d10 + 2 de dano físico ao acertar.","limite":null,"nivelNecessario":1,"custoMana":0},
+  {"titulo":"Estocada direta","tipoEfeito":"DANO","efeito":"Causa 2d8 + 2 de dano físico ao acertar.","limite":null,"nivelNecessario":1,"custoMana":0},
+  {"titulo":"Aparada precisa","tipoEfeito":"DEFESA","efeito":"anula todo o dano do ataque aparado e contra-ataque que causa 1d8 + 2 de dano físico.","limite":null,"nivelNecessario":1,"custoMana":0},
+  {"titulo":"Corte amplo","tipoEfeito":"DANO","efeito":"Causa 1d8 + 1 de dano físico a cada inimigo atingido.","limite":"1 uso por combate.","nivelNecessario":1,"custoMana":0},
+  {"titulo":"Guarda firme","tipoEfeito":"DEFESA","efeito":"o primeiro ataque frontal tem seu dano reduzido em 1d8 pontos.","limite":"2 usos por combate.","nivelNecessario":1,"custoMana":0},
+  {"titulo":"Fatiamento frenético","tipoEfeito":"DANO","efeito":"O espadachim realiza 4 ataques consecutivos, cada um causando 1d6 de dano físico.","limite":"1 uso por combate.","nivelNecessario":2,"custoMana":0},
+  {"titulo":"Investida cortante","tipoEfeito":"DANO","efeito":"avança até 4 quadrados e realiza um ataque que causa 2d8 + 2 de dano físico se acertar.","limite":"2 usos por combate.","nivelNecessario":2,"custoMana":0}
+ ]},
+{"titulo":"Lâmina Rubra","grupo":"COMBATENTE","vida":30,"mana":10,"esforco":20,"pericias":[{"nome":"Luta","modificador":2}],"cartas":[{"titulo":"Corte Rápido","tipoEfeito":"DANO","efeito":"Causa dano leve a um inimigo adjacente.","nivelNecessario":1,"custoMana":0}]},
+{"titulo":"Bastião","grupo":"VANGUARDISTA","vida":40,"mana":5,"esforco":15,"pericias":[],"cartas":[]},
+{"titulo":"Tecelã de Luz","grupo":"SUPORTE","vida":20,"mana":30,"esforco":10,"pericias":[{"nome":"Domínio","modificador":3}],"cartas":[]}
+],"bestas":[]}

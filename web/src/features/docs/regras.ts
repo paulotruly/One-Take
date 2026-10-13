@@ -8,6 +8,15 @@ export type Regras = {
     ganhoPorNivel: { pontosVida: number; pontosMana: number; pontosEsforco: number; pontosPericia: number };
   };
   ficha: { pontosAtributoIniciais: number; inventarioInicial: number; inventarioPorNivel: number };
+  /** Regras de teste (api/src/regras/teste.ts) e tabela de chances por DT, sem bônus. */
+  teste: {
+    ladosDoDado: number;
+    dadosComAtributoZero: number;
+    divisorComAtributoZero: number;
+    esforcoPorDadoExtra: number;
+    esforcoComAtributoZero: boolean;
+    chances: { dt: number; chances: { pontos: number; chance: number }[] }[];
+  };
   atributosFixos: { nome: string; descricao: string }[];
   statusFixos: { nome: string; descricao: string; efeito: string; tipo: "BUFF" | "DEBUFF" | "MISTO"; gatilho: string | null }[];
 };
@@ -16,6 +25,7 @@ export type Regras = {
 const PADRAO: Regras = {
   progressao: { nivelInicial: 1, ganhoPorNivel: { pontosVida: 5, pontosMana: 5, pontosEsforco: 5, pontosPericia: 5 } },
   ficha: { pontosAtributoIniciais: 3, inventarioInicial: 5, inventarioPorNivel: 2 },
+  teste: { ladosDoDado: 20, dadosComAtributoZero: 1, divisorComAtributoZero: 2, esforcoPorDadoExtra: 1, esforcoComAtributoZero: false, chances: [] },
   atributosFixos: [
     { nome: "Capacidade física", descricao: "Utilizada sempre que o corpo é levado ao limite." },
     { nome: "Carisma", descricao: "A presença do personagem e sua capacidade de lidar com outras pessoas." },

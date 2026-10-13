@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { TipoEfeito } from "../../generated/prisma/enums.js";
 import { inteiro, texto, textoOpcional } from "../../lib/validacao.js";
 
 // Sem defaults aqui: no Zod 4 o default seria aplicado também no PATCH (partial),
@@ -7,7 +8,8 @@ const base = z.object({
   titulo: texto(80),
   descricao: texto(2000),
   condicao: textoOpcional(500),
-  tipoEfeito: texto(60),
+  /** Lista fixa do sistema (Dano, Defesa, Cura…). */
+  tipoEfeito: z.enum(TipoEfeito, "Escolha um tipo de efeito"),
   descricaoEfeito: texto(2000),
   limite: textoOpcional(200),
   nivelNecessario: inteiro(1, 100),

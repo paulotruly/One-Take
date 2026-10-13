@@ -1,6 +1,7 @@
 import type { Classe, Habilidade } from "../classes/types";
 import type { AtributoResumo, CategoriaPericia, PericiaDaClasse } from "../pericias/types";
-import type { Item, Recurso } from "../grupos/types";
+import type { Recurso } from "../grupos/types";
+import type { ItemDaFicha } from "../itens/types";
 import type { Status } from "../status/types";
 
 export type FichaResumo = {
@@ -23,6 +24,8 @@ export type PericiaDaFicha = {
   classe: number;
   nivel: number;
   total: number;
+  /** Como rolar: "2d20 + 5" (d20 do atributo + total da perícia). */
+  teste: string;
 };
 
 export type FichaDetalhe = {
@@ -40,14 +43,14 @@ export type FichaDetalhe = {
   vida: Recurso;
   mana: Recurso;
   esforco: Recurso;
-  atributos: (AtributoResumo & { dados: number })[];
+  atributos: (AtributoResumo & { dados: number; teste: string })[];
   pericias: PericiaDaFicha[];
   pontosPericiaDisponiveis: number;
   custoPericia: number;
   opcoesPericia: { id: string; nome: string; atributo: string; tem: boolean }[];
   habilidades: Habilidade[];
   proximasHabilidades: number;
-  inventario: { capacidade: number; itens: Item[] };
+  inventario: { capacidade: number; usados: number; itens: ItemDaFicha[] };
   outrasFichas: { id: string; nome: string; jogador: string }[];
   /** Vida ou mana em 0. */
   morto: boolean;
@@ -79,6 +82,7 @@ export type Convite = {
     imagemUrl: string | null;
     deslocamento: number;
     pericias: { nome: string; pontos: number; atributo: string }[];
+    conceito: { id: string; titulo: string } | null;
   }[];
   atributos: AtributoResumo[];
 };

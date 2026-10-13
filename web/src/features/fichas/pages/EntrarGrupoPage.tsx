@@ -86,7 +86,7 @@ function CriarFicha({ codigo, c }: { codigo: string; c: Convite }) {
   const [dados, setDados] = useState<Record<string, number>>({});
   const [detalheId, setDetalheId] = useState<string | null>(null);
   const detalhe = c.classes.find((cl) => cl.id === detalheId);
-  // Subclasses agrupadas pela classe-conceito; classes avulsas no fim.
+  // Subclasses agrupadas pelo arquétipo; classes avulsas no fim.
   const gruposDeClasses = Object.values(
     c.classes.reduce<Record<string, { conceito: (typeof c.classes)[number]["conceito"]; classes: typeof c.classes }>>((acc, cl) => {
       const chave = cl.conceito?.id ?? "~avulsas";
@@ -145,6 +145,7 @@ function CriarFicha({ codigo, c }: { codigo: string; c: Convite }) {
               onClick={() => setRacaId(r.id)}
             >
               <div className="opcao__imagem"><ClasseImagem url={r.imagemUrl} titulo={r.titulo} /></div>
+              {r.conceito && <span className="classe-card__conceito">{r.conceito.titulo}</span>}
               <strong>{r.titulo}</strong>
               <span className="stat"><Footprints size={12} aria-hidden /> {r.deslocamento} quadrados</span>
               <span className="opcao__texto">{r.descricao}</span>

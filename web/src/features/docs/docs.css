@@ -80,3 +80,15 @@
   background: var(--cor-texto);
   color: var(--cor-fundo);
 }
+
+/* ---------- Busca ---------- */
+.docs__busca { display: flex; flex-direction: column; gap: var(--esp-3); }
+.docs__campo-busca { display: flex; align-items: center; gap: var(--esp-2); min-height: 40px; padding: 0 var(--esp-3); border: 1px solid var(--cor-borda); background: var(--cor-fundo); color: var(--cor-texto-suave); }
+.docs__campo-busca:focus-within { border-color: var(--cor-primaria); }
+.docs__campo-busca input { flex: 1; min-width: 0; border: 0; background: transparent; color: var(--cor-texto); font: inherit; font-size: var(--texto-sm); outline: none; }
+.docs__limpar { display: inline-flex; padding: var(--esp-1); border: 0; background: transparent; color: var(--cor-texto-suave); cursor: pointer; }
+.docs__resultados ul { display: flex; flex-direction: column; gap: var(--esp-2); margin: 0; padding: 0; list-style: none; }
+.docs__resultado { display: flex; flex-direction: column; gap: var(--esp-1); padding: var(--esp-2) var(--esp-3); border-left: 2px solid var(--cor-borda); color: var(--cor-texto); font-size: var(--texto-sm); }
+.docs__resultado:hover { text-decoration: none; border-left-color: var(--cor-primaria); background: var(--cor-superficie-2); }
+.docs__resultado-secao { color: var(--cor-primaria); font-size: var(--texto-xs); font-weight: var(--peso-forte); text-transform: uppercase; letter-spacing: 0.06em; }
+.docs__resultado-trecho { color: var(--cor-texto-suave); font-size: var(--texto-xs); line-height: 1.5; }

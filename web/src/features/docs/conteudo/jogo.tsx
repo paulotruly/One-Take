@@ -1,13 +1,13 @@
 // Tópicos da documentação: começando e regras do jogo.
-import { Backpack, Crown, Dices, Droplet, Footprints, Heart, Layers, ListChecks, Package, Sparkles, User, Zap } from "lucide-react";
+import { Backpack, Crown, Dices, Droplet, Footprints, Heart, Layers, ListChecks, Package, PawPrint, Repeat, Sparkles, User, Zap } from "lucide-react";
 import { Link } from "react-router";
 import { Cartoes, Destaque, Passos, Tabela } from "../../../components/texto/Manual";
 import { CategoriaIcone } from "../../pericias/components/CategoriaIcone";
 import { CATEGORIAS, LISTA_CATEGORIAS } from "../../pericias/types";
+import { LISTA_TIPOS_EFEITO, TIPOS_EFEITO } from "../../classes/types";
+import { iconeDe } from "../../itens/types";
 import { useRegras } from "../regras";
 
-/** Chance de o maior de n d20 ser pelo menos `alvo`. */
-const chance = (n: number, alvo: number) => 1 - Math.pow((alvo - 1) / 20, n);
 const pct = (x: number) => `${Math.round(x * 100)}%`;
 
 // ---------- Começando ----------
@@ -60,18 +60,24 @@ export function Contas() {
   return (
     <>
       <p>
-        Ao <Link to="/cadastro">criar a conta</Link>, você escolhe um papel. A conta usa só <strong>nickname e senha</strong>: ninguém
-        precisa informar email.
+        Uma conta serve para as duas coisas: <strong>jogar e mestrar</strong>. Ao <Link to="/cadastro">criar a conta</Link>, você escolhe a
+        interface com que começa. A conta usa só <strong>nickname e senha</strong>: ninguém precisa informar email.
       </p>
       <Cartoes
         itens={[
-          { Icone: Crown, titulo: "Mestre", texto: "Cria classes, raças, perícias e atributos, monta grupos, entrega itens e é o único que sobe o nível dos personagens." },
-          { Icone: User, titulo: "Jogador", texto: "Entra nos grupos com o código do mestre e cria uma ficha em cada um. Cuida do próprio personagem." },
+          { Icone: User, titulo: "Jogador", texto: "Interface simples: entra nos grupos com o código do mestre e cria uma ficha em cada um. Toda conta joga." },
+          { Icone: Crown, titulo: "Mestre", texto: "Carrega também a interface de mestre: classes, raças, perícias, itens, bestiário e grupos. Quem é mestre continua podendo jogar nos grupos de outros mestres." },
         ]}
       />
+      <ul>
+        <li>Começou como jogador e quer mestrar? Toque em <strong>Mestrar</strong> no topo da tela e ative a interface de mestre.</li>
+        <li>Quem já é mestre alterna entre <strong>Mestrar</strong> e <strong>Jogar</strong> no topo da tela.</li>
+        <li>O catálogo do mestre só é criado no primeiro acesso à interface de mestre: quem nunca mestra não ocupa espaço à toa.</li>
+      </ul>
       <h2>Perfil</h2>
       <ul>
-        <li>Clique no seu nome, no topo, para abrir o perfil.</li>
+        <li>Toque no seu nome, no topo, para abrir o menu do perfil: <strong>Editar perfil</strong> ou <strong>Sair</strong>.</li>
+        <li>As páginas da interface ficam na <strong>barra lateral</strong>; no celular, abra pelo botão de menu no canto do topo.</li>
         <li>Dá para mudar o <strong>nickname</strong> (usado para entrar e exibido como @nickname), o nome de exibição e a foto (link de uma imagem).</li>
         <li>Se trocar o nickname, passe a entrar com o novo.</li>
       </ul>
@@ -116,13 +122,13 @@ export function Classes() {
           [<strong key="s">Suporte</strong>, "Cura, fortalece os aliados e atrapalha os inimigos."],
         ]}
       />
-      <h2>Classes-conceito e subclasses</h2>
+      <h2>Arquétipos e subclasses</h2>
       <p>
-        Algumas classes são <strong>subclasses</strong> de uma <strong>classe-conceito</strong>: uma ideia geral que se divide em
-        caminhos diferentes. A classe-conceito só tem nome e descrição; quem o jogador escolhe é a subclasse.
+        Algumas classes são <strong>subclasses</strong> de um <strong>arquétipo</strong>: uma ideia geral que se divide em
+        caminhos diferentes. O arquétipo só tem nome e descrição; quem o jogador escolhe é a subclasse.
       </p>
       <Destaque titulo="Exemplo">
-        Classe-conceito <strong>Bruxa</strong>, com as subclasses <strong>Bruxa elemental</strong> e <strong>Bruxa assombrosa</strong>.
+        Arquétipo <strong>Bruxa</strong>, com as subclasses <strong>Bruxa elemental</strong> e <strong>Bruxa assombrosa</strong>.
         Cada subclasse tem os próprios recursos, cartas e perícias.
       </Destaque>
       <h2>O que a classe define</h2>
@@ -151,6 +157,12 @@ export function Racas() {
         Um Humano com deslocamento 8 e Atletismo +2 anda até 8 quadrados por turno e começa com 2 pontos em Atletismo, somados ao que a
         classe der.
       </Destaque>
+      <h2>Arquétipos de raça e sub-raças</h2>
+      <p>
+        Como nas classes, um <strong>arquétipo de raça</strong> é uma ideia geral (só nome e descrição) que se divide em{" "}
+        <strong>sub-raças</strong>. O jogador escolhe a sub-raça. Ex.: <strong>Elfo</strong>, com Elfo da floresta e Elfo sombrio, cada
+        uma com seu deslocamento e suas perícias.
+      </p>
     </>
   );
 }
@@ -169,7 +181,11 @@ export function Recursos() {
             "A energia vital do personagem, em qualquer universo. Sustenta o vigor e paga as cartas com custo de mana.",
             <strong key="m0">Morte: sem energia vital não há vida.</strong>,
           ],
-          [<span key="e" className="regra__inline"><Zap size={14} aria-hidden /> Esforço</span>, "A disposição para agir sem cansar.", <strong key="e0">Cansaço (status Cansado).</strong>],
+          [
+            <span key="e" className="regra__inline"><Zap size={14} aria-hidden /> Esforço</span>,
+            "A disposição para ir além: cada ponto gasto antes de um teste vale um dado extra.",
+            <strong key="e0">Cansaço (status Cansado).</strong>,
+          ],
         ]}
       />
       <Destaque tipo="aviso" titulo="Cuidado com a mana">
@@ -220,25 +236,62 @@ export function Atributos() {
       <p>Atributos são as capacidades gerais do personagem e agrupam as perícias. Os atributos fixos do sistema são:</p>
       <Tabela cabecalho={["Atributo", "Descrição"]} linhas={r.atributosFixos.map((a) => [<strong key={a.nome}>{a.nome}</strong>, a.descricao])} />
       <p>O mestre pode criar outros atributos para o tema do RPG dele (por exemplo, Sanidade num jogo de terror) e escolher quais valem em cada grupo.</p>
-      <h2>Como funciona um teste</h2>
+      <h2>Pontos de atributo</h2>
+      <ul>
+        <li>Ao criar a ficha, o jogador distribui <strong>{f.pontosAtributoIniciais} pontos</strong> entre os atributos do grupo. Um atributo pode ficar com 0.</li>
+        <li>Cada ponto é um <strong>dado de {r.teste.ladosDoDado} faces</strong> nos testes daquele atributo.</li>
+      </ul>
+      <p>
+        Como os dados viram resultado está em <Link to="/docs/testes">Testes, DT e esforço</Link>.
+      </p>
+    </>
+  );
+}
+
+export function Testes() {
+  const t = useRegras().teste;
+  const d = "d" + t.ladosDoDado;
+  const maxComZero = Math.floor(t.ladosDoDado / t.divisorComAtributoZero);
+  const custo = t.esforcoPorDadoExtra === 1 ? "1 ponto" : t.esforcoPorDadoExtra + " pontos";
+  return (
+    <>
+      <p>Toda ação arriscada vira um <strong>teste</strong>. O mestre guia assim:</p>
       <Passos
         passos={[
-          { titulo: `Ao criar a ficha, distribua ${f.pontosAtributoIniciais} pontos`, texto: "Os pontos vão nos atributos que o grupo usa. Um atributo pode ficar com 0." },
-          { titulo: "Cada ponto é um dado de 20 faces (d20)", texto: "2 pontos em Capacidade física = 2d20 nesse atributo." },
-          { titulo: "Quando uma ação pede teste, role os dados do atributo", texto: "O mestre diz qual atributo a ação usa." },
-          { titulo: "Fique com o maior resultado", texto: "Valores baixos tendem a falha, altos a sucesso, e os do meio podem trazer consequências mistas." },
+          { titulo: "O mestre diz o atributo, a perícia e a DT", texto: "Ex.: pular o muro é Capacidade física + Atletismo, DT 15. A DT é o número que precisa ser alcançado." },
+          { titulo: "O jogador rola 1 " + d + " por ponto no atributo", texto: "2 pontos em Capacidade física = 2" + d + "." },
+          { titulo: "Fica com o maior dado", texto: "Os outros dados não somam: servem para aumentar a chance de um resultado alto." },
+          { titulo: "Soma o bônus da perícia, se tiver", texto: "Qualquer personagem pode testar qualquer perícia; quem não tem a perícia soma 0." },
+          { titulo: "Total maior ou igual à DT = sucesso", texto: "Abaixo da DT, a ação falha (ou sai com consequências, se o mestre quiser)." },
         ]}
       />
       <Destaque titulo="Exemplo">
-        Com 2 pontos em Capacidade física, para desviar de uma flecha o jogador rola 2d20 e tira 7 e 16. O resultado da ação é <strong>16</strong>.
+        Capacidade física 2 e Atletismo +5. O jogador rola 2{d} e tira 10 e 15. Fica com o 15 e soma 5: total <strong>20</strong>.
       </Destaque>
-      <h2>Quanto vale ter mais dados</h2>
-      <p>Mais dados não aumentam o número máximo (continua 20), mas aumentam muito a chance de um resultado bom:</p>
+      <h2>Atributo com 0 pontos</h2>
+      <p>
+        Quem tem 0 no atributo rola sempre <strong>apenas {t.dadosComAtributoZero} {d}</strong>, e o resultado vale a <strong>metade</strong>{" "}
+        (arredondada para baixo), antes de somar a perícia. Ex.: tirou 15, vale 7. Com 0 pontos o dado nunca passa de {maxComZero}.
+      </p>
+      <h2>Esforço: dados extras</h2>
+      <p>
+        Antes de rolar, o jogador pode gastar <strong>pontos de esforço</strong>: cada {custo} dá <strong>+1 {d}</strong>. Quem rolaria 2{d}{" "}
+        rola 3{d} gastando {custo} de esforço.
+        {!t.esforcoComAtributoZero && " Com 0 no atributo não dá para comprar dados: continua sendo 1 dado pela metade."}
+      </p>
+      <Destaque tipo="aviso" titulo="Esforço acaba">
+        Esforço em 0 deixa o personagem <strong>Cansado</strong>. Guarde para os testes que importam.
+      </Destaque>
+      <h2>DT: a faixa de sucesso e falha</h2>
+      <p>
+        A <strong>DT</strong> (dificuldade do teste) é livre: o mestre define na hora, conforme a cena. Não existe tabela obrigatória. A
+        tabela abaixo mostra a chance de alcançar cada DT só com os dados (sem bônus de perícia), para ajudar a escolher:
+      </p>
       <Tabela
-        cabecalho={["Dados", "10 ou mais", "15 ou mais", "Tirar 20"]}
-        linhas={[1, 2, 3].map((n) => [`${n}d20`, pct(chance(n, 10)), pct(chance(n, 15)), pct(chance(n, 20))])}
+        cabecalho={["DT", ...(t.chances[0]?.chances ?? []).map((c) => (c.pontos === 0 ? "0 pontos" : c.pontos + d))]}
+        linhas={t.chances.map((linha) => ["DT " + linha.dt, ...linha.chances.map((c) => pct(c.chance))])}
       />
-      <p className="pagina__subtitulo">As faixas exatas de sucesso e falha, e como as perícias entram no teste, ainda serão definidas.</p>
+      <p className="pagina__subtitulo">Cada ponto de bônus de perícia funciona como 1 a menos na DT.</p>
     </>
   );
 }
@@ -280,7 +333,7 @@ export function Habilidades() {
         cabecalho={["Campo", "O que significa"]}
         linhas={[
           ["Título e descrição", "O nome e o sabor da carta."],
-          ["Tipo de efeito", "Uma etiqueta livre: Dano, Cura, Controle."],
+          ["Tipo de efeito", "Escolhido de uma lista fixa (veja abaixo)."],
           ["Efeito", "O que a carta causa."],
           ["Condição (opcional)", "O que precisa acontecer para poder usar. Ex.: ter acertado dois ataques seguidos."],
           ["Limite (opcional)", "Quantas vezes ou quando pode ser usada. Ex.: 1 vez por sessão."],
@@ -289,6 +342,14 @@ export function Habilidades() {
         ]}
       />
       <p>No nível N o personagem tem <strong>todas</strong> as cartas da classe com nível necessário até N.</p>
+      <h2>Tipos de efeito</h2>
+      <Tabela
+        cabecalho={["Tipo", "O que faz"]}
+        linhas={LISTA_TIPOS_EFEITO.map((t) => {
+          const { Icone, rotulo, descricao } = TIPOS_EFEITO[t];
+          return [<span key={t} className="regra__inline"><Icone size={14} aria-hidden /> {rotulo}</span>, descricao];
+        })}
+      />
       <h2>Cartas que melhoram com o nível</h2>
       <p>
         Uma mesma carta pode ter <strong>aprimoramentos</strong>: a partir de um nível, ela muda (efeito mais forte, custo de mana
@@ -319,6 +380,9 @@ export function Progressao() {
         <li>todas as cartas daquele nível;</li>
         <li>+{f.inventarioPorNivel} espaços no inventário.</li>
       </ul>
+      <Destaque tipo="aviso" titulo="Não existe descer de nível">
+        Subir de nível é definitivo. O mestre deve ter cuidado antes de confirmar.
+      </Destaque>
       <Tabela
         cabecalho={["Nível", "Vida / mana / esforço", "Pontos de perícia", "Espaços no inventário"]}
         linhas={[1, 2, 3, 4, 5].map((n) => [
@@ -338,14 +402,63 @@ export function Inventario() {
     <>
       <ul>
         <li>Todo personagem começa com <strong>{f.inventarioInicial} espaços</strong> e ganha +{f.inventarioPorNivel} por nível: quanto mais experiente, mais bagagem aguenta.</li>
-        <li>Cada item ocupa um espaço e tem nome e descrição. Os itens são criados pelo <strong>mestre</strong>, que entrega a um personagem ou deixa no grupo.</li>
-        <li>O jogador pode <strong>passar</strong> um item para outro membro do mesmo grupo, se ele tiver espaço.</li>
-        <li>O jogador pode <strong>descartar</strong> um item: ele fica <strong>vago no grupo</strong>, e qualquer membro com espaço pode pegá-lo.</li>
+        <li>Cada item ocupa <strong>1 ou mais espaços</strong> (um arco longo pode ocupar 2, uma poção 1).</li>
+        <li>Os itens são criados pelo <strong>mestre</strong>, que entrega a um personagem ou deixa vago no grupo.</li>
+        <li>O jogador pode <strong>passar</strong> um item para outro membro do grupo (se couber), <strong>descartar</strong> (fica vago no grupo) ou pegar um item vago.</li>
+      </ul>
+      <h2>Categorias</h2>
+      <p>O sistema traz 4 categorias, e cada mestre pode criar as suas (com nome, descrição e ícone), como Relíquias, Munição ou Ervas.</p>
+      <Tabela
+        cabecalho={["Categoria do sistema", "O que costuma ser"]}
+        linhas={[
+          ["espada", "Armas", "Espadas, arcos, cajados: o que se usa para lutar."],
+          ["joia", "Artefatos", "Objetos especiais, mágicos ou raros."],
+          ["caneca", "Taverna", "Comidas, bebidas, poções e outros consumíveis."],
+          ["livro", "Sebo", "Livros, mapas, pergaminhos e achados usados."],
+        ].map(([icone, nome, descricao]) => {
+          const Icone = iconeDe(icone);
+          return [<span key={nome} className="regra__inline"><Icone size={14} aria-hidden /> {nome}</span>, descricao];
+        })}
+      />
+      <h2>Usar um item</h2>
+      <ul>
+        <li>Cada item pode ter um <strong>efeito ao usar</strong> (ex.: recupera 2d4 de vida). O app registra o uso; a mesa aplica o efeito.</li>
+        <li>
+          <span className="regra__inline"><Repeat size={14} aria-hidden /> Itens com <strong>usos limitados</strong></span> perdem 1 uso a cada vez
+          e somem quando os usos acabam. Itens sem limite podem ser usados à vontade.
+        </li>
+        <li>
+          Alguns itens têm <strong>pré-requisito para saber usar</strong>: uma classe (só arqueiros), uma perícia (só quem tem Pontaria) ou
+          uma condição em texto. Quem não cumpre pode carregar o item, mas não usa.
+        </li>
       </ul>
       <Destaque tipo="dica" titulo="Na prática">
-        <span className="regra__inline"><Package size={14} aria-hidden /> O mestre cria "Chave de bronze" e entrega ao ladino.</span> O
-        ladino passa para o guerreiro, que a descarta quando não precisa mais; a chave fica no grupo para quem quiser.
+        <span className="regra__inline"><Package size={14} aria-hidden /> O mestre lança "Poção de vida" (2 usos) para o ladino.</span> O
+        ladino usa uma vez (resta 1), passa para o guerreiro, que usa a última: a poção acaba.
       </Destaque>
+    </>
+  );
+}
+
+export function Criaturas() {
+  const { ganhoPorNivel: g } = useRegras().progressao;
+  return (
+    <>
+      <p>
+        <span className="regra__inline"><PawPrint size={14} aria-hidden /> Criaturas</span> (monstros, animais, inimigos) ficam no{" "}
+        <strong>bestiário</strong> do mestre e funcionam como classes:
+      </p>
+      <ul>
+        <li>vida, mana e esforço base, perícias com modificador e <strong>dados por atributo</strong> (testam como os personagens);</li>
+        <li>cartas de habilidade com nível necessário e aprimoramentos;</li>
+        <li>a mesma progressão: cada nível acima do 1 dá +{g.pontosVida} de vida, +{g.pontosMana} de mana, +{g.pontosEsforco} de esforço e as cartas daquele nível.</li>
+      </ul>
+      <p>
+        Durante a sessão, o mestre <strong>invoca</strong> criaturas no grupo, no nível que quiser, e acompanha a ficha de cada
+        uma (o posicionamento fica no grid físico da mesa). Uma criatura some do grupo quando o mestre remove (fugiu, sumiu) ou sozinha quando{" "}
+        <strong>morre</strong>: vida ou mana em 0, a mesma regra dos personagens.
+      </p>
+      <p>Como as classes, uma criatura pode ser uma <strong>forma</strong> de um arquétipo de criatura (ex.: Lobo, com Lobo das neves e Lobo alfa).</p>
     </>
   );
 }

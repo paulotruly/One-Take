@@ -10,6 +10,8 @@ const base = z.object({
   deslocamento: inteiro(1, 99),
   /** Opcional: só vale neste grupo. Nulo/ausente = geral. */
   grupoExclusivoId: grupoExclusivoSchema,
+  /** Opcional: sub-raça deste arquétipo de raça. */
+  conceitoId: z.guid("Arquétipo de raça inválido").nullish(),
 });
 
 export const criarRacaSchema = base;

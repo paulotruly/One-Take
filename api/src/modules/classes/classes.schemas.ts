@@ -16,8 +16,8 @@ export const criarClasseSchema = z.object({
   pontosEsforco: pontos,
   /** Opcional: só vale neste grupo. Nulo/ausente = geral. */
   grupoExclusivoId: grupoExclusivoSchema,
-  /** Opcional: subclasse desta classe-conceito. */
-  conceitoId: z.guid("Classe-conceito inválida").nullish(),
+  /** Opcional: subclasse deste arquétipo. */
+  conceitoId: z.guid("Arquétipo inválido").nullish(),
 });
 
 export const editarClasseSchema = criarClasseSchema.partial();

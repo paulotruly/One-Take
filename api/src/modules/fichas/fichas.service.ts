@@ -5,7 +5,9 @@ import type { Atributo, Pericia } from "../../generated/prisma/client.js";
 import { AppError, conflito, naoEncontrado, proibido, requisicaoInvalida } from "../../lib/errors.js";
 import { getPrisma } from "../../lib/prisma.js";
 import { regrasPadraoAtivas } from "../../regras/combate.js";
-import { capacidadeInventario, FICHA } from "../../regras/ficha.js";
+import { capacidadeInventario, espacosUsados, FICHA, motivoParaNaoUsar } from "../../regras/ficha.js";
+import { notacaoDoTeste } from "../../regras/teste.js";
+import { apresentarItem, comRequisitos } from "../itens/itens.apresentar.js";
 import { aplicarAprimoramentos, atributosNoNivel, habilidadesNoNivel, PROGRESSAO } from "../../regras/progressao.js";
 import { comStatus } from "../habilidades/habilidades.include.js";
 import { apresentarAtributo, porAtributoENome } from "../atributos/atributos.service.js";
@@ -51,7 +53,7 @@ export async function convite(codigo: string, usuarioId: string) {
           },
         },
       },
-      racas: { include: { raca: { include: { pericias: { include: { pericia: { include: { atributo: true } } } } } } } },
+      racas: { include: { raca: { include: { pericias: { include: { pericia: { include: { atributo: true } } } }, conceito: { select: { id: true, titulo: true } } } } } },
       atributos: { include: { atributo: true } },
       fichas: { select: { jogadorId: true, classeId: true, id: true } },
       regrasProprias: { orderBy: { criadoEm: "asc" }, select: { id: true, titulo: true, texto: true } },
@@ -81,6 +83,7 @@ export async function convite(codigo: string, usuarioId: string) {
     racas: g.racas
       .map(({ raca }) => ({
         id: raca.id, titulo: raca.titulo, descricao: raca.descricao, imagemUrl: raca.imagemUrl, deslocamento: raca.deslocamento,
+        conceito: raca.conceito,
         pericias: raca.pericias.map((rp) => ({ nome: rp.pericia.nome, pontos: rp.pontos, atributo: rp.pericia.atributo.nome })),
       }))
       .sort((a, b) => a.titulo.localeCompare(b.titulo, "pt-BR")),
@@ -188,7 +191,7 @@ export async function detalhar(id: string, usuarioId: string) {
       raca: { include: { pericias: { include: { pericia: { include: { atributo: true } } } } } },
       atributos: { include: { atributo: true } },
       pericias: { include: { pericia: { include: { atributo: true } } } },
-      itens: { orderBy: { criadoEm: "asc" } },
+      itens: { orderBy: { criadoEm: "asc" }, include: comRequisitos },
     },
   });
 
@@ -209,7 +212,12 @@ export async function detalhar(id: string, usuarioId: string) {
   f.raca.pericias.forEach((rp) => somar(rp.pericia, "raca", rp.pontos));
   f.classe.pericias.forEach((cp) => somar(cp.pericia, "classe", cp.modificador));
   f.pericias.forEach((fp) => somar(fp.pericia, "nivel", fp.pontos));
-  const pericias = [...linhas.values()].sort(porAtributoENome);
+  const dadosPorAtributo = new Map(f.atributos.map((fa) => [fa.atributoId, fa.dados]));
+  // Teste de cada perícia: d20 do atributo dela + total da perícia (regras/teste.ts).
+  const pericias = [...linhas.values()]
+    .sort(porAtributoENome)
+    .map((p) => ({ ...p, teste: notacaoDoTeste(dadosPorAtributo.get(p.atributo.id) ?? 0, p.total) }));
+  const periciasComPontos = new Set(pericias.filter((p) => p.total > 0).map((p) => p.id));
 
   // Onde gastar pontos de nível: perícias do grupo + as que a ficha já tem.
   const opcoes = new Map(pericias.map((p) => [p.id, { id: p.id, nome: p.nome, atributo: p.atributo.nome, tem: true }]));
@@ -222,7 +230,7 @@ export async function detalhar(id: string, usuarioId: string) {
     ...f.grupo.atributos.map(({ atributo }) => atributo),
     ...f.atributos.map((fa) => fa.atributo).filter((a) => !f.grupo.atributos.some((ga) => ga.atributoId === a.id)),
   ]
-    .map((a) => ({ ...apresentarAtributo(a), dados: dados.get(a.id) ?? 0 }))
+    .map((a) => ({ ...apresentarAtributo(a), dados: dados.get(a.id) ?? 0, teste: notacaoDoTeste(dados.get(a.id) ?? 0) }))
     .sort((a, b) => a.ordem - b.ordem || a.nome.localeCompare(b.nome, "pt-BR"));
 
   const max = atributosNoNivel(f.classe, f.nivel);
@@ -258,7 +266,12 @@ export async function detalhar(id: string, usuarioId: string) {
     proximasHabilidades: habilidades.filter((h) => h.nivelNecessario > f.nivel).length,
     inventario: {
       capacidade: capacidadeInventario(f.nivel),
-      itens: f.itens.map(({ id, nome, descricao }) => ({ id, nome, descricao })),
+      usados: espacosUsados(f.itens),
+      /** Cada item diz se este personagem sabe usar (pré-requisito de classe/perícia). */
+      itens: f.itens.map((i) => {
+        const motivo = motivoParaNaoUsar(i, { classeId: f.classeId, pericias: periciasComPontos });
+        return { ...apresentarItem(i), podeUsar: motivo === null, motivoNaoPodeUsar: motivo };
+      }),
     },
     morto: estaMorto(atuais),
     /** Regras que valem nesta mesa: padrão ligadas + próprias do mestre. */

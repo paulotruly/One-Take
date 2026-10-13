@@ -15,7 +15,12 @@ import { PericiasPage } from "./features/pericias/pages/PericiasPage";
 import { RacaDetalhePage } from "./features/racas/pages/RacaDetalhePage";
 import { RacasPage } from "./features/racas/pages/RacasPage";
 import { StatusPage } from "./features/status/pages/StatusPage";
+import { BestaDetalhePage } from "./features/bestiario/pages/BestaDetalhePage";
+import { EditarBestaPage, NovaBestaPage } from "./features/bestiario/pages/BestaFormPage";
+import { BestiarioPage } from "./features/bestiario/pages/BestiarioPage";
+import { CatalogoItensPage } from "./features/itens/pages/CatalogoItensPage";
 import { AppLayout } from "./layouts/AppLayout";
+import { AtivarMestrePage } from "./pages/AtivarMestrePage";
 import { PublicLayout } from "./layouts/PublicLayout";
 import { CadastroPage } from "./pages/CadastroPage";
 import { HomePage } from "./pages/HomePage";
@@ -36,13 +41,21 @@ export const router = createBrowserRouter([
   },
   { path: "/login", element: <LoginPage /> },
   { path: "/cadastro", element: <CadastroPage /> },
-  /** Depois do login: manda mestre para /mestre e jogador para /jogador. */
+  /** Depois do login: volta à interface usada por último (mestre ou jogador). */
   { path: "/area", element: <RedirecionarPorPapel /> },
 
   // Qualquer usuário logado
   {
     element: <RequirePapel />,
-    children: [{ element: <AppLayout />, children: [{ path: "/perfil", element: <PerfilPage /> }] }],
+    children: [
+      {
+        element: <AppLayout />,
+        children: [
+          { path: "/perfil", element: <PerfilPage /> },
+          { path: "/ativar-mestre", element: <AtivarMestrePage /> },
+        ],
+      },
+    ],
   },
 
   // Mestre
@@ -60,6 +73,11 @@ export const router = createBrowserRouter([
           { path: "classes/:id/habilidades", element: <HabilidadesPage /> },
           { path: "racas", element: <RacasPage /> },
           { path: "racas/:id", element: <RacaDetalhePage /> },
+          { path: "bestiario", element: <BestiarioPage /> },
+          { path: "bestiario/novo", element: <NovaBestaPage /> },
+          { path: "bestiario/:id", element: <BestaDetalhePage /> },
+          { path: "bestiario/:id/editar", element: <EditarBestaPage /> },
+          { path: "itens", element: <CatalogoItensPage /> },
           { path: "pericias", element: <PericiasPage /> },
           { path: "status", element: <StatusPage /> },
           { path: "grupos", element: <GruposPage /> },
@@ -72,9 +90,9 @@ export const router = createBrowserRouter([
     ],
   },
 
-  // Jogador
+  // Jogador: toda conta joga (inclusive quem também é mestre, nos grupos de outros mestres)
   {
-    element: <RequirePapel papel="JOGADOR" />,
+    element: <RequirePapel />,
     children: [
       {
         path: "/jogador",

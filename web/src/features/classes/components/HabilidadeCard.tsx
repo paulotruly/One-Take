@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Pencil, Sparkles, Trash2 } from "lucide-react";
 import { Button } from "../../../components/ui/Button";
 import type { Habilidade } from "../types";
 import { StatusBadge } from "../../status/components/StatusBadge";
@@ -15,19 +15,65 @@ export type AcoesCarta = {
   ocupado?: boolean;
 };
 
-/** Uma carta do deck. Sem `acoes` = somente leitura. */
-export function HabilidadeCard({ habilidade: h, acoes }: { habilidade: Habilidade; acoes?: AcoesCarta }) {
+/**
+ * Carta pequena do deck: tipo, custo, nível e título. Clicar abre os detalhes (onAbrir).
+ * Com `acoes`, mostra uma barra de ícones (mover, editar, aprimorar, excluir) que cabe na carta.
+ */
+export function HabilidadeCard({ habilidade: h, onAbrir, acoes }: { habilidade: Habilidade; onAbrir: () => void; acoes?: AcoesCarta }) {
   return (
     <article className="carta">
-      <div className="carta__topo">
-        <EfeitoBadge tipo={h.tipoEfeito} />
+      <button type="button" className="carta__abrir" onClick={onAbrir} title="Ver detalhes da carta">
+        <span className="carta__topo">
+          <EfeitoBadge tipo={h.tipoEfeito} />
+        </span>
+        <strong className="carta__titulo">{h.titulo}</strong>
         <span className="carta__selos">
-          {h.aprimoradaNoNivel && <span className="selo selo--novo" title="Esta carta já mudou por causa do nível">Aprimorada</span>}
           <CustoManaBadge custo={h.custoMana} />
           <NivelBadge nivel={h.nivelNecessario} />
+          {h.aprimoradaNoNivel && <span className="selo selo--novo" title="Esta carta já mudou por causa do nível">Aprimorada</span>}
+          {!h.aprimoradaNoNivel && (h.aprimoramentos?.length ?? 0) > 0 && (
+            <span className="selo selo--novo" title="Muda em níveis maiores">+{h.aprimoramentos!.length} nv</span>
+          )}
         </span>
+        {h.limite && <span className="carta__limite">{h.limite}</span>}
+      </button>
+      {acoes && (
+        <div className="carta__rodape">
+          <Button pequeno variante="fantasma" aria-label="Mover para a esquerda" title="Mover para a esquerda"
+            disabled={!acoes.podeEsquerda || acoes.ocupado} onClick={() => acoes.onMover(-1)}>
+            <ChevronLeft size={14} aria-hidden />
+          </Button>
+          <Button pequeno variante="fantasma" aria-label="Mover para a direita" title="Mover para a direita"
+            disabled={!acoes.podeDireita || acoes.ocupado} onClick={() => acoes.onMover(1)}>
+            <ChevronRight size={14} aria-hidden />
+          </Button>
+          <Button pequeno variante="fantasma" aria-label={`Editar ${h.titulo}`} title="Editar" onClick={acoes.onEditar}>
+            <Pencil size={14} aria-hidden />
+          </Button>
+          {acoes.onAprimorar && (
+            <Button pequeno variante="fantasma" aria-label={`Aprimorar ${h.titulo}`} title="Aprimorar: mudanças em níveis maiores" onClick={acoes.onAprimorar}>
+              <Sparkles size={14} aria-hidden />
+            </Button>
+          )}
+          <Button pequeno variante="fantasma" aria-label={`Excluir ${h.titulo}`} title="Excluir" onClick={acoes.onExcluir}>
+            <Trash2 size={14} aria-hidden />
+          </Button>
+        </div>
+      )}
+    </article>
+  );
+}
+
+/** Conteúdo completo da carta (usado no pop-up). */
+export function HabilidadeDetalhe({ habilidade: h }: { habilidade: Habilidade }) {
+  return (
+    <div className="carta-detalhe">
+      <div className="carta__selos carta__selos--esquerda">
+        <EfeitoBadge tipo={h.tipoEfeito} />
+        <CustoManaBadge custo={h.custoMana} />
+        <NivelBadge nivel={h.nivelNecessario} />
+        {h.aprimoradaNoNivel && <span className="selo selo--novo">Aprimorada no nível {h.aprimoradaNoNivel}</span>}
       </div>
-      <h3>{h.titulo}</h3>
       <p className="carta__descricao">{h.descricao}</p>
       {h.condicao && (
         <p className="carta__linha">
@@ -53,33 +99,6 @@ export function HabilidadeCard({ habilidade: h, acoes }: { habilidade: Habilidad
         </ul>
       )}
       {h.proximoAprimoramento && <p className="carta__linha pagina__subtitulo">Muda no nível {h.proximoAprimoramento}.</p>}
-      {acoes && (
-        <div className="carta__rodape">
-          <div>
-            <Button pequeno variante="fantasma" aria-label="Mover para a esquerda" title="Mover para a esquerda"
-              disabled={!acoes.podeEsquerda || acoes.ocupado} onClick={() => acoes.onMover(-1)}>
-              <ChevronLeft size={16} aria-hidden />
-            </Button>
-            <Button pequeno variante="fantasma" aria-label="Mover para a direita" title="Mover para a direita"
-              disabled={!acoes.podeDireita || acoes.ocupado} onClick={() => acoes.onMover(1)}>
-              <ChevronRight size={16} aria-hidden />
-            </Button>
-          </div>
-          <div>
-            <Button pequeno variante="fantasma" onClick={acoes.onEditar}>
-              Editar
-            </Button>
-            {acoes.onAprimorar && (
-              <Button pequeno variante="fantasma" onClick={acoes.onAprimorar} title="Mudanças da carta em níveis maiores">
-                Aprimorar
-              </Button>
-            )}
-            <Button pequeno variante="fantasma" onClick={acoes.onExcluir} aria-label={`Excluir ${h.titulo}`}>
-              Excluir
-            </Button>
-          </div>
-        </div>
-      )}
-    </article>
+    </div>
   );
 }

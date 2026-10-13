@@ -37,7 +37,7 @@ function FormularioPerfil({ me }: { me: Me }) {
         <div>
           <h1>{nome.trim() || `@${normalizarNickname(nickname)}`}</h1>
           <p className="pagina__subtitulo">
-            @{me.nickname} · {me.papel === "MESTRE" ? "Mestre" : "Jogador"}
+            @{me.nickname} · {me.papel === "MESTRE" ? "Mestre e jogador" : "Jogador"}
           </p>
         </div>
       </div>
