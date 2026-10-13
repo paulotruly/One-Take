@@ -1,4 +1,6 @@
 // Página da criatura: dados, dados por atributo, perícias (com o teste montado), cartela e prévia de progressão.
+import { AlternarVerificado } from "../../verificados/pages/AlternarVerificado";
+import { VerificadoBadge } from "../../verificados/components/VerificadoBadge";
 import { Copy, Dices, Footprints, Minus, Plus } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
@@ -57,6 +59,7 @@ export function BestaDetalhePage() {
     );
   }
   const b = besta.data;
+  const editavel = b.editavel ?? true;
   const dados = new Map(b.atributos.map((a) => [a.id, a.dados]));
   const disponiveis = (catalogo.data ?? []).filter((p) => !b.pericias.some((bp) => bp.id === p.id));
   const fecharPericia = () => setPericiaEmEdicao(undefined);
@@ -75,12 +78,14 @@ export function BestaDetalhePage() {
           <StatsBar vida={b.pontosVida} mana={b.pontosMana} esforco={b.pontosEsforco} />
           <span className="stat"><Footprints size={14} aria-hidden /> Deslocamento: {b.deslocamento} quadrados</span>
           <p className="classe-cabecalho__descricao">{b.descricao}</p>
+          {b.verificado && <p className="pagina__subtitulo"><VerificadoBadge /> {b.deOutro ? "Criatura verificada de outra pessoa: somente leitura. Duplique para ter a sua." : "Todo mestre vê esta criatura."}</p>}
           <div className="classe-cabecalho__acoes">
-            <Link to={`/mestre/bestiario/${id}/editar`} className="btn">Editar criatura</Link>
+            {editavel && <Link to={`/mestre/bestiario/${id}/editar`} className="btn">Editar criatura</Link>}
             <Button disabled={duplicar.isPending} onClick={() => duplicar.mutate(id, { onSuccess: (c) => navigate(`/mestre/bestiario/${c.id}`) })}>
               <Copy size={16} aria-hidden /> Duplicar
             </Button>
-            <Button variante="perigo" onClick={() => { excluir.reset(); setConfirmarExclusao(true); }}>Excluir criatura</Button>
+            {editavel && <Button variante="perigo" onClick={() => { excluir.reset(); setConfirmarExclusao(true); }}>Excluir criatura</Button>}
+            <AlternarVerificado tipo="besta" item={b} />
           </div>
         </div>
       </header>
@@ -102,12 +107,12 @@ export function BestaDetalhePage() {
                     <p className="pericia__descricao">Teste: {b.atributos.find((x) => x.id === a.id)?.teste ?? "1d20 ÷ 2"}</p>
                   </div>
                   <div className="contador">
-                    <Button pequeno aria-label={`Menos um dado em ${a.nome}`} disabled={n === 0 || definirAtributo.isPending}
+                    <Button pequeno aria-label={`Menos um dado em ${a.nome}`} disabled={!editavel || n === 0 || definirAtributo.isPending}
                       onClick={() => definirAtributo.mutate({ atributoId: a.id, dados: n - 1 })}>
                       <Minus size={14} aria-hidden />
                     </Button>
                     <span className="contador__valor"><Dices size={16} aria-hidden /> {n}d20</span>
-                    <Button pequeno aria-label={`Mais um dado em ${a.nome}`} disabled={n >= 20 || definirAtributo.isPending}
+                    <Button pequeno aria-label={`Mais um dado em ${a.nome}`} disabled={!editavel || n >= 20 || definirAtributo.isPending}
                       onClick={() => definirAtributo.mutate({ atributoId: a.id, dados: n + 1 })}>
                       <Plus size={14} aria-hidden />
                     </Button>
@@ -122,7 +127,7 @@ export function BestaDetalhePage() {
       <section className="secao">
         <div className="secao__cabecalho">
           <h2>Perícias</h2>
-          <Button onClick={() => { vincular.reset(); setPericiaEmEdicao(null); }} disabled={catalogo.isPending || disponiveis.length === 0}>
+          <Button onClick={() => { vincular.reset(); setPericiaEmEdicao(null); }} disabled={catalogo.isPending || disponiveis.length === 0} hidden={!editavel}>
             <Plus size={16} aria-hidden /> Adicionar perícia
           </Button>
         </div>
@@ -139,7 +144,7 @@ export function BestaDetalhePage() {
                 valor={p.modificador}
                 tituloValor="Modificador"
                 rodape={<span className="pericia__usos"><strong className="pericia__teste"><Dices size={12} aria-hidden /> {p.teste}</strong></span>}
-                acoes={
+                acoes={!editavel ? undefined :
                   <>
                     <Button pequeno variante="fantasma" onClick={() => { vincular.reset(); setPericiaEmEdicao(p); }}>Modificador</Button>
                     <Button pequeno variante="fantasma" onClick={() => desvincular.mutate(p.id)} aria-label={`Remover ${p.nome}`}>Remover</Button>
@@ -154,7 +159,7 @@ export function BestaDetalhePage() {
       <section className="secao">
         <h2>Habilidades</h2>
         <p className="pagina__subtitulo">Mesmas regras das classes: cartas com nível necessário e aprimoramentos. Toque numa carta para ver tudo.</p>
-        <CartelaEditor habilidades={b.habilidades} editavel criar={criarCarta} ordenar={ordenar} />
+        <CartelaEditor habilidades={b.habilidades} editavel={editavel} criar={criarCarta} ordenar={ordenar} />
       </section>
 
       <section className="secao">

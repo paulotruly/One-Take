@@ -289,7 +289,7 @@ describe("classes", () => {
     prismaFalso.classe.findUnique.mockResolvedValue(fixa);
     prismaFalso.classe.findUniqueOrThrow.mockResolvedValueOnce({
       ...fixa,
-      habilidades: [{ id: "h1", classeId: fixa.id, titulo: "Carta", descricao: "d", condicao: null, tipoEfeito: "Dano", descricaoEfeito: "e", limite: null, nivelNecessario: 3, ordem: 0, aprimoramentos: [{ id: "a1", habilidadeId: "h1", criadoEm: new Date(), nivel: 5, titulo: null, descricaoEfeito: "mais forte", condicao: null, limiteUsos: null, limitePor: null, custoMana: 2, statusId: null }] }],
+      habilidades: [{ id: "h1", classeId: fixa.id, titulo: "Carta", descricao: "d", condicao: null, tipoEfeito: "Dano", descricaoEfeito: "e", limiteUsos: null, limitePor: null, nivelNecessario: 3, ordem: 0, periciasDefesa: [], aprimoramentos: [{ id: "a1", habilidadeId: "h1", criadoEm: new Date(), nivel: 5, titulo: null, descricaoEfeito: "mais forte", condicao: null, limiteUsos: null, limitePor: null, custoMana: 2, statusId: null }] }],
       pericias: [
         { modificador: 2, pericia: { id: "base-luta", nome: "Luta", donoId: null, origemId: null } },
         { modificador: 1, pericia: { id: "base-vontade", nome: "Vontade", donoId: null, origemId: null } },
@@ -367,6 +367,26 @@ describe("habilidades", () => {
     const negativo = await comoMestre(request(app).post(`/api/classes/${classeId}/habilidades`)).send({ ...corpo, custoMana: -1 });
     expect(negativo.status).toBe(400);
     expect(negativo.body.error.details).toEqual([{ campo: "custoMana", mensagem: "Deve ser no mínimo 0" }]);
+  });
+
+  it("perícias de defesa são opcionais, várias e do catálogo do mestre", async () => {
+    prismaFalso.habilidade.aggregate.mockResolvedValue({ _max: { ordem: null } });
+    prismaFalso.habilidade.create.mockImplementation(async ({ data }) => data);
+    const corpo = { titulo: "Golpe", descricao: "d", tipoEfeito: "DANO", descricaoEfeito: "e" };
+    const url = `/api/classes/${classeId}/habilidades`;
+    const REFLEXOS = "66666666-0000-4000-8000-0000000000d1";
+
+    await comoMestre(request(app).post(url)).send(corpo);
+    expect(prismaFalso.habilidade.create.mock.calls[0]![0].data.periciasDefesa).toEqual({ create: [] });
+
+    prismaFalso.pericia.findUnique.mockResolvedValue({ id: REFLEXOS, donoId: MESTRE.id });
+    const VONTADE = "66666666-0000-4000-8000-0000000000d2";
+    const ok = await comoMestre(request(app).post(url)).send({ ...corpo, periciasDefesaIds: [REFLEXOS, VONTADE, REFLEXOS] });
+    expect(ok.status).toBe(201);
+    expect(prismaFalso.habilidade.create.mock.calls[1]![0].data.periciasDefesa).toEqual({ create: [{ periciaId: REFLEXOS }, { periciaId: VONTADE }] });
+
+    prismaFalso.pericia.findUnique.mockResolvedValue({ id: REFLEXOS, donoId: OUTRO_MESTRE_ID });
+    expect((await comoMestre(request(app).post(url)).send({ ...corpo, periciasDefesaIds: [REFLEXOS] })).status).toBe(404);
   });
 
   it("limite de uso: vezes (1 a 99) e período (combate ou sessão) juntos, ou nenhum", async () => {
@@ -613,7 +633,7 @@ describe("atributos", () => {
       { id: ATR, nome: "Sorte", descricao: "", ordem: 100, donoId: MESTRE.id, _count: { pericias: 0 } },
     ]);
     const res = await comoMestre(request(app).get("/api/atributos"));
-    expect(prismaFalso.atributo.findMany.mock.calls[0]![0].where).toEqual({ OR: [{ donoId: null }, { donoId: MESTRE.id }] });
+    expect(prismaFalso.atributo.findMany.mock.calls[0]![0].where).toEqual({ OR: [{ donoId: MESTRE.id }, { donoId: null }, { verificado: true }, { kits: { some: { kit: { verificado: true } } } }] });
     expect(res.body.map((a: { nome: string; fixo: boolean }) => [a.nome, a.fixo])).toEqual([["Carisma", true], ["Sorte", false]]);
   });
 

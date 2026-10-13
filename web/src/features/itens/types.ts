@@ -33,7 +33,7 @@ export const LISTA_ICONES_ITEM = Object.keys(ICONES_ITEM);
 export const iconeDe = (chave: string | undefined | null) => (ICONES_ITEM[chave ?? ""] ?? ICONES_ITEM.pacote!).Icone;
 
 /** Categoria de item: fixa do sistema (somente leitura) ou criada pelo mestre. */
-export type CategoriaItem = { id: string; nome: string; descricao: string; icone: string; ordem: number; fixa: boolean; usos?: number };
+export type CategoriaItem = { id: string; nome: string; descricao: string; icone: string; ordem: number; fixa: boolean; usos?: number; editavel?: boolean; verificado?: boolean; deOutro?: boolean; podeVerificar?: boolean; seloProprio?: boolean; verificadoPorKit?: boolean };
 export type CategoriaItemInput = { nome: string; descricao: string; icone: string };
 
 /** Campos comuns ao molde do catálogo e ao item no grupo. */
@@ -64,7 +64,7 @@ export type Item = Omit<CamposItem, "categoriaId" | "requisitoPericiaId" | "requ
 export type ItemDaFicha = Item & { podeUsar: boolean; motivoNaoPodeUsar: string | null };
 
 /** Molde do catálogo do mestre. */
-export type ItemModelo = Item & { kitIds: string[] };
+export type ItemModelo = Item & { kitIds: string[]; editavel?: boolean; verificado?: boolean; deOutro?: boolean; podeVerificar?: boolean; seloProprio?: boolean; verificadoPorKit?: boolean };
 
 export type ItemModeloInput = CamposItem & { kitIds: string[] };
 export type ItemNoGrupoInput = CamposItem & { fichaId: string | null };

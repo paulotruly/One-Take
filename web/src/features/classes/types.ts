@@ -1,3 +1,4 @@
+import type { Visao } from "../verificados/types";
 import { Anchor, HandHelping, HeartPulse, Ghost, Shield, Swords, TrendingDown, TrendingUp, Wind, Wrench, type LucideIcon } from "lucide-react";
 import type { PericiaDaClasse } from "../pericias/types";
 
@@ -22,10 +23,22 @@ export type Classe = {
   conceitoId?: string | null;
   conceito?: { id: string; titulo: string; descricao?: string } | null;
   fixa: boolean;
+  /** Para quem vê: pode editar (é dele, ou é fixo e ele é administrador). */
+  editavel?: boolean;
+  /** Selo verificado: todo mestre vê e usa. */
+  verificado?: boolean;
+  /** Verificado de outra pessoa: só leitura, dá para duplicar. */
+  deOutro?: boolean;
+  /** Quem vê é ADMIN e dono: pode pôr ou tirar o selo. */
+  podeVerificar?: boolean;
+  /** Selo marcado nesta coisa (sem contar o do kit). */
+  seloProprio?: boolean;
+  /** Verificado por estar num kit verificado. */
+  verificadoPorKit?: boolean;
 };
 
 /** Arquétipo: classe generalista que agrupa subclasses (o jogador escolhe a subclasse). */
-export type Conceito = {
+export type Conceito = Visao & {
   id: string;
   titulo: string;
   descricao: string;
@@ -97,6 +110,9 @@ export type Habilidade = {
   /** Perícia que o personagem testa para usar a carta (opcional). */
   periciaId: string | null;
   pericia?: { id: string; nome: string; atributo: { id: string; nome: string } } | null;
+  /** Perícias que o alvo pode usar para se defender da carta (opcional). Nas respostas vêm em `periciasDefesa`. */
+  periciasDefesaIds?: string[];
+  periciasDefesa?: { periciaId: string; pericia: { id: string; nome: string; atributo: { id: string; nome: string } } }[];
   /** Na ficha (personagem, NPC ou criatura): o teste pronto para usar a carta. */
   teste?: { pericia: string; atributo: string; teste: string } | null;
   status?: { id: string; nome: string; tipo: "BUFF" | "DEBUFF" | "MISTO" } | null;
@@ -132,7 +148,7 @@ export type ClasseInput = Pick<
   Classe,
   "grupo" | "titulo" | "descricao" | "imagemUrl" | "pontosVida" | "pontosMana" | "pontosEsforco"
 > & { kitIds: string[]; conceitoId: string | null };
-export type HabilidadeInput = Omit<Habilidade, "id" | "classeId" | "bestaId" | "ordem" | "status" | "pericia" | "teste" | "aprimoramentos" | "aprimoradaNoNivel" | "proximoAprimoramento">;
+export type HabilidadeInput = Omit<Habilidade, "id" | "classeId" | "bestaId" | "ordem" | "status" | "pericia" | "periciasDefesa" | "teste" | "aprimoramentos" | "aprimoradaNoNivel" | "proximoAprimoramento">;
 
 export const GRUPOS: Grupo[] = ["COMBATENTE", "VANGUARDISTA", "SUPORTE"];
 export const ROTULO_GRUPO: Record<Grupo, string> = {

@@ -82,6 +82,11 @@ export function HabilidadeDetalhe({ habilidade: h }: { habilidade: Habilidade })
           <strong>Teste:</strong> {h.teste ? <>{h.teste.pericia} ({h.teste.atributo}): <b>{h.teste.teste}</b></> : <>{h.pericia!.nome} ({h.pericia!.atributo.nome})</>}
         </p>
       )}
+      {(h.periciasDefesa?.length ?? 0) > 0 && (
+        <p className="carta__linha">
+          <strong>Defesa do alvo:</strong> {h.periciasDefesa!.map((d) => `${d.pericia.nome} (${d.pericia.atributo.nome})`).join(" ou ")}
+        </p>
+      )}
       {h.condicao && (
         <p className="carta__linha">
           <strong>Condição:</strong> {h.condicao}

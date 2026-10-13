@@ -1,5 +1,5 @@
 // Seções de Configurações da conta: código de recuperação, seus dados e (discreta, no fim) excluir a conta.
-import { Download, KeyRound } from "lucide-react";
+import { BadgeCheck, Download, KeyRound } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { useAuth, type Me } from "../../../auth/AuthProvider";
@@ -7,7 +7,7 @@ import { Button } from "../../../components/ui/Button";
 import { Field } from "../../../components/ui/Field";
 import { Modal } from "../../../components/ui/Modal";
 import { errosDeCampo, mensagemDeErro } from "../../../lib/api";
-import { useExcluirConta, useExportarDados, useGerarCodigo } from "../api";
+import { useExcluirConta, useExportarDados, useGerarCodigo, useOcultarVerificados } from "../api";
 import { CodigoRecuperacao } from "../components/CodigoRecuperacao";
 
 const dataPorExtenso = (iso: string) => new Date(iso.length === 10 ? `${iso}T12:00:00` : iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
@@ -55,6 +55,26 @@ export function SecaoRecuperacao({ me }: { me: Me }) {
           </form>
         )}
       </Modal>
+    </section>
+  );
+}
+
+/** Mostrar ou esconder o conteúdo verificado (classes, raças, itens, criaturas, NPCs... prontos do One-Take). */
+export function SecaoVerificados({ me }: { me: Me }) {
+  const ocultar = useOcultarVerificados();
+  const oculto = !!me.ocultarVerificados;
+  return (
+    <section className="secao secao-conta">
+      <h2><BadgeCheck size={18} aria-hidden /> Conteúdo verificado</h2>
+      <p className="pagina__subtitulo">
+        O conteúdo verificado do One-Take aparece para todo mestre, só leitura: dá para usar nos grupos e duplicar.
+        Se preferir trabalhar só com o que é seu, esconda. O que já está em uso nos seus grupos e fichas continua funcionando.
+      </p>
+      <label className="checklist__item">
+        <input type="checkbox" checked={oculto} disabled={ocultar.isPending} onChange={(e) => ocultar.mutate(e.target.checked)} />
+        <span>Ocultar o conteúdo verificado da minha interface</span>
+      </label>
+      {ocultar.isError && <div className="aviso">{mensagemDeErro(ocultar.error)}</div>}
     </section>
   );
 }

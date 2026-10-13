@@ -106,3 +106,20 @@
 
 /* ---------- Link de voltar ---------- */
 .link-voltar { display: inline-flex; align-items: center; gap: var(--esp-1); font-size: var(--texto-sm); }
+
+/* Selo verificado: como o das redes sociais, check branco dentro do selo azul. */
+.selo-verificado {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--esp-1);
+  color: var(--cor-verificado);
+  font-weight: 600;
+  font-size: 0.85em;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+.selo-verificado__icone {
+  fill: var(--cor-verificado);
+  stroke: var(--cor-sobre-verificado);
+  flex-shrink: 0;
+}

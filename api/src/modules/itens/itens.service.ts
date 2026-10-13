@@ -2,6 +2,7 @@
 // Mestre: cria, lança do catálogo, edita, exclui e move qualquer item seu, inclusive de e para NPCs. Jogador: passa o próprio
 // item para outra ficha do grupo, descarta (fica vago no grupo), pega um item vago e usa os itens do seu inventário.
 // Sempre respeitando os espaços do inventário (cada item ocupa `espacos`).
+import { podeUsar } from "../../lib/sistema.js";
 import type { z } from "zod";
 import { AppError, naoEncontrado, proibido, requisicaoInvalida } from "../../lib/errors.js";
 import { getPrisma } from "../../lib/prisma.js";
@@ -52,8 +53,10 @@ export async function criar(grupoId: string, usuarioId: string, dados: z.infer<t
 /** Lança um item do catálogo: vago num grupo, direto numa ficha, ou no inventário de um NPC. */
 export async function lancar(modeloId: string, usuarioId: string, dados: z.infer<typeof lancarSchema>) {
   const prisma = getPrisma();
-  const modelo = await prisma.itemModelo.findUnique({ where: { id: modeloId } });
-  if (!modelo || modelo.donoId !== usuarioId) throw naoEncontrado("Item não encontrado no catálogo");
+  const achado = await prisma.itemModelo.findUnique({ where: { id: modeloId } });
+  if (!achado || !(await podeUsar("itemModelo", achado, usuarioId, { semFixos: true }))) throw naoEncontrado("Item não encontrado no catálogo");
+  // Item verificado: o pré-requisito de perícia passa a ser a perícia equivalente do catálogo de quem lança.
+  const modelo = achado.donoId === usuarioId || !achado.requisitoPericiaId ? achado : { ...achado, requisitoPericiaId: await periciaEquivalente(achado.requisitoPericiaId, usuarioId) };
   const total = modelo.espacos * dados.quantidade;
 
   let destino: { grupoId: string | null; fichaId: string | null; npcId: string | null };
@@ -222,4 +225,14 @@ export async function periciasComPontos(fichaId: string) {
     ...f.pericias.map((fp) => ({ pericia: fp.pericia, fonte: "nivel" as const, valor: fp.pontos })),
   ], await copiasDoCatalogo(f.grupo.mestreId));
   return new Set(linhas.filter((l) => l.total > 0).map((l) => l.id));
+}
+
+/** Perícia do catálogo do mestre equivalente a outra (mesma origem ou mesmo nome); null se ele não tiver. */
+async function periciaEquivalente(periciaId: string, usuarioId: string) {
+  const prisma = getPrisma();
+  const p = await prisma.pericia.findUnique({ where: { id: periciaId } });
+  if (!p) return null;
+  if (p.donoId === usuarioId) return p.id;
+  const igual = await prisma.pericia.findFirst({ where: { donoId: usuarioId, OR: [{ origemId: p.origemId ?? p.id }, { nome: p.nome }] }, select: { id: true } });
+  return igual?.id ?? null;
 }

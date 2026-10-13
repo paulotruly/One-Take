@@ -6,4 +6,6 @@ export const editarPerfilSchema = z.object({
   nickname: nicknameSchema.optional(),
   nome: textoOpcional(60),
   fotoUrl: urlOpcional(),
+  /** Esconde da própria interface o conteúdo verificado de outras pessoas. */
+  ocultarVerificados: z.boolean().optional(),
 });

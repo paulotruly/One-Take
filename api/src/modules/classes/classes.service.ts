@@ -4,14 +4,20 @@ import type { Atributo, Classe, ClassePericia, GrupoClasse, Pericia } from "../.
 import { classeFixa, naoEncontrado } from "../../lib/errors.js";
 import { comKits, definirKits } from "../../lib/kits.js";
 import { getPrisma } from "../../lib/prisma.js";
+import { comVisao, ehAdmin, podeUsar, quemVe, visivelPara, type Quem } from "../../lib/sistema.js";
 import { previaProgressao } from "../../regras/progressao.js";
 import { apresentarAtributo, porAtributoENome } from "../atributos/atributos.service.js";
 import { comStatus } from "../habilidades/habilidades.include.js";
 import type { criarClasseSchema, editarClasseSchema } from "./classes.schemas.js";
 
-/** Formato público de uma classe: acrescenta `fixa` e, se vierem os kits, `kitIds`. */
-export function apresentarClasse<T extends Classe & { kits?: { kitId: string }[] }>({ kits, ...c }: T) {
-  return { ...c, fixa: c.donoId === null, ...(kits && { kitIds: kits.map((k) => k.kitId) }) };
+/**
+ * Formato público de uma classe: acrescenta `fixa` e, se vierem os kits, `kitIds`.
+ * Com `quem`, também `editavel`, `verificado`, `deOutro` e `podeVerificar` (e os kits só aparecem para o dono).
+ */
+export function apresentarClasse<T extends Classe & { kits?: { kitId: string }[] }>(c: T, quem?: Quem) {
+  if (quem) return { ...comVisao(c, quem), fixa: c.donoId === null };
+  const { kits, ...resto } = c;
+  return { ...resto, fixa: c.donoId === null, ...(kits && { kitIds: kits.map((k) => k.kitId) }) };
 }
 
 /** Perícias da classe achatadas: dados do catálogo + modificador da classe, por atributo e nome. */
@@ -24,33 +30,35 @@ export function apresentarPericias(vinculos: (ClassePericia & { pericia: Pericia
 }
 
 // ---------- Regras de acesso ----------
-// Leitura: classe fixa ou do próprio mestre. Classe de outro mestre = 404 (não revela que existe).
-// Escrita: só classe do próprio mestre; fixa = 403 CLASSE_FIXA.
+// Leitura: classe fixa, verificado ou do próprio mestre. Classe de outro mestre = 404 (não revela que existe).
+// Escrita: só classe do próprio mestre; fixa = 403 CLASSE_FIXA (o administrador do sistema edita as fixas);
+// verificado de outra pessoa também é 403 (duplique para editar).
 
 export async function classeLegivel(id: string, usuarioId: string) {
   const classe = await getPrisma().classe.findUnique({ where: { id } });
-  if (!classe || (classe.donoId !== null && classe.donoId !== usuarioId)) throw naoEncontrado("Classe não encontrada");
+  if (!classe || !(await podeUsar("classe", classe, usuarioId))) throw naoEncontrado("Classe não encontrada");
   return classe;
 }
 
 export async function classeEditavel(id: string, usuarioId: string) {
   const classe = await classeLegivel(id, usuarioId);
-  if (classe.donoId === null) throw classeFixa();
-  return classe;
+  if (classe.donoId === usuarioId) return classe;
+  if (classe.donoId === null && (await ehAdmin(usuarioId))) return classe;
+  throw classeFixa();
 }
 
 // ---------- Casos de uso ----------
 
 export async function listar(usuarioId: string, grupo?: GrupoClasse) {
+  const quem = await quemVe(usuarioId);
   const classes = await getPrisma().classe.findMany({
-    where: { OR: [{ donoId: null }, { donoId: usuarioId }], ...(grupo && { grupo }) },
+    where: { ...(await visivelPara(usuarioId)), ...(grupo && { grupo }) },
     orderBy: [{ titulo: "asc" }],
     include: { conceito: { select: { id: true, titulo: true } }, ...comKits },
   });
-  // Fixas primeiro, depois as próprias.
-  return classes
-    .sort((a, b) => Number(a.donoId !== null) - Number(b.donoId !== null))
-    .map(apresentarClasse);
+  // Fixas primeiro, depois as verificadas, depois as próprias.
+  const ordem = (c: { donoId: string | null }) => (c.donoId === null ? 0 : c.donoId === usuarioId ? 2 : 1);
+  return classes.sort((a, b) => ordem(a) - ordem(b)).map((c) => apresentarClasse(c, quem));
 }
 
 export async function detalhar(id: string, usuarioId: string) {
@@ -65,7 +73,7 @@ export async function detalhar(id: string, usuarioId: string) {
     },
   });
   const { pericias, ...resto } = classe;
-  return { ...apresentarClasse(resto), pericias: apresentarPericias(pericias) };
+  return { ...apresentarClasse(resto, await quemVe(usuarioId)), pericias: apresentarPericias(pericias) };
 }
 
 /** Prévia de progressão: atributos, pontos de perícia e cartas disponíveis em cada nível. */
@@ -117,12 +125,14 @@ export async function duplicar(id: string, usuarioId: string) {
   const prisma = getPrisma();
   const origem = await prisma.classe.findUniqueOrThrow({
     where: { id },
-    include: { habilidades: { include: { aprimoramentos: true, pericia: true } }, pericias: { include: { pericia: true } } },
+    include: { habilidades: { include: { aprimoramentos: true, pericia: true, periciasDefesa: { include: { pericia: true } } } }, pericias: { include: { pericia: true } } },
   });
   // Perícias testadas pelas cartas também passam a apontar para o catálogo do mestre.
   const periciaDaCarta = new Map<string, string>();
   for (const h of origem.habilidades) {
-    if (h.pericia && !periciaDaCarta.has(h.pericia.id)) periciaDaCarta.set(h.pericia.id, await periciaNoCatalogo(h.pericia, usuarioId));
+    for (const p of [h.pericia, ...h.periciasDefesa.map((d) => d.pericia)]) {
+      if (p && !periciaDaCarta.has(p.id)) periciaDaCarta.set(p.id, await periciaNoCatalogo(p, usuarioId));
+    }
   }
 
   const vinculos: { periciaId: string; modificador: number }[] = [];
@@ -145,9 +155,10 @@ export async function duplicar(id: string, usuarioId: string) {
       origemId: origem.id,
       conceitoId: origem.donoId === usuarioId ? origem.conceitoId : null,
       habilidades: {
-        create: origem.habilidades.map(({ id: _id, classeId: _c, aprimoramentos, pericia: _p, ...h }) => ({
+        create: origem.habilidades.map(({ id: _id, classeId: _c, aprimoramentos, pericia: _p, periciasDefesa, ...h }) => ({
           ...h,
           periciaId: h.periciaId ? (periciaDaCarta.get(h.periciaId) ?? null) : null,
+          periciasDefesa: { create: periciasDefesa.map((d) => ({ periciaId: periciaDaCarta.get(d.periciaId)! })) },
           aprimoramentos: { create: aprimoramentos.map(({ id: _a, habilidadeId: _h, criadoEm: _d, ...a }) => a) },
         })),
       },
@@ -159,7 +170,7 @@ export async function duplicar(id: string, usuarioId: string) {
 }
 
 /** Id da perícia equivalente no catálogo do mestre (criando uma cópia se ele não tiver). */
-async function periciaNoCatalogo(pericia: Pericia, usuarioId: string) {
+export async function periciaNoCatalogo(pericia: Pericia, usuarioId: string) {
   if (pericia.donoId === usuarioId) return pericia.id;
   const prisma = getPrisma();
   const equivalente = await prisma.pericia.findFirst({

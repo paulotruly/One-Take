@@ -1,4 +1,6 @@
 // Página da raça: dados (título, descrição, deslocamento) e perícias de base escolhidas do catálogo.
+import { AlternarVerificado } from "../../verificados/pages/AlternarVerificado";
+import { VerificadoBadge } from "../../verificados/components/VerificadoBadge";
 import { Footprints, Plus } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
@@ -64,7 +66,8 @@ export function RacaDetalhePage() {
             <Footprints size={14} aria-hidden /> Deslocamento: {r.deslocamento} quadrados por turno
           </span>
           <p className="classe-cabecalho__descricao">{r.descricao}</p>
-          <div className="classe-cabecalho__acoes">
+          {r.verificado && <p className="pagina__subtitulo"><VerificadoBadge /> {r.deOutro ? "Raça verificada de outra pessoa: somente leitura." : "Todo mestre vê esta raça."}</p>}
+          <div className="classe-cabecalho__acoes" hidden={!(r.editavel ?? true)}>
           <Button
             onClick={() => {
               editar.reset();
@@ -82,6 +85,7 @@ export function RacaDetalhePage() {
           >
             Excluir raça
           </Button>
+          <AlternarVerificado tipo="raca" item={r} />
           </div>
         </div>
       </header>
@@ -95,6 +99,7 @@ export function RacaDetalhePage() {
               setPericiaEmEdicao(null);
             }}
             disabled={catalogo.isPending || disponiveis.length === 0}
+            hidden={!(r.editavel ?? true)}
           >
             <Plus size={16} aria-hidden /> Adicionar perícia
           </Button>
@@ -115,7 +120,7 @@ export function RacaDetalhePage() {
                 pericia={p}
                 valor={p.pontos}
                 tituloValor="Pontos de base da raça"
-                acoes={
+                acoes={!(r.editavel ?? true) ? undefined :
                   <>
                     <Button pequeno variante="fantasma" onClick={() => { vincular.reset(); setPericiaEmEdicao(p); }}>
                       Pontos
@@ -139,7 +144,7 @@ export function RacaDetalhePage() {
       <Modal aberto={editando} onFechar={() => setEditando(false)} titulo="Editar raça">
         <RacaForm
           inicial={r}
-          conceitos={conceitosRaca.data}
+          conceitos={conceitosRaca.data?.filter((c) => !c.deOutro)}
           enviando={editar.isPending}
           erros={errosDeCampo(editar.error)}
           erroGeral={erroDeFormulario(editar.error)}

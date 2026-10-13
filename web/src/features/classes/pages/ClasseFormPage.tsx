@@ -20,7 +20,7 @@ export function NovaClassePage() {
       <p className="pagina__subtitulo">Primeiro crie a classe; depois, na página dela, adicione habilidades e perícias.</p>
       <ClasseForm
         rotulo="Criar classe"
-        conceitos={conceitos.data}
+        conceitos={conceitos.data?.filter((c) => !c.deOutro)}
         inicial={
           conceitoInicial
             ? { grupo: "COMBATENTE", titulo: "", descricao: "", imagemUrl: null, pontosVida: undefined as unknown as number, pontosMana: undefined as unknown as number, pontosEsforco: undefined as unknown as number, kitIds: kitsPadrao(), conceitoId: conceitoInicial }
@@ -45,7 +45,7 @@ export function EditarClassePage() {
 
   if (classe.isPending) return <Loading />;
   if (classe.isError) return <ErrorState mensagem={mensagemDeErro(classe.error)} onTentarNovamente={() => classe.refetch()} />;
-  if (classe.data.fixa) return <Navigate to={`/mestre/classes/${id}`} replace />;
+  if (!(classe.data.editavel ?? !classe.data.fixa)) return <Navigate to={`/mestre/classes/${id}`} replace />;
 
   const voltar = () => navigate(`/mestre/classes/${id}`);
   return (
@@ -54,7 +54,7 @@ export function EditarClassePage() {
       <h1>Editar classe</h1>
       <ClasseForm
         inicial={{ ...classe.data, kitIds: classe.data.kitIds ?? [], conceitoId: classe.data.conceitoId ?? null }}
-        conceitos={conceitos.data}
+        conceitos={conceitos.data?.filter((c) => !c.deOutro)}
         enviando={editar.isPending}
         erros={errosDeCampo(editar.error)}
         erroGeral={erroDeFormulario(editar.error)}

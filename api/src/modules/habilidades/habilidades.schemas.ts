@@ -31,6 +31,8 @@ const base = z.object({
   statusId: z.guid("Status inválido").nullable(),
   /** Perícia que o personagem testa para usar a carta (opcional). */
   periciaId: z.guid("Perícia inválida").nullable(),
+  /** Perícias que o alvo pode usar para se defender (opcional, sem repetir). */
+  periciasDefesaIds: z.array(z.guid("Perícia inválida")).max(10, "No máximo 10 perícias de defesa"),
 });
 
 export const criarHabilidadeSchema = base
@@ -39,6 +41,7 @@ export const criarHabilidadeSchema = base
     custoMana: base.shape.custoMana.default(0),
     statusId: base.shape.statusId.default(null),
     periciaId: base.shape.periciaId.default(null),
+    periciasDefesaIds: base.shape.periciasDefesaIds.default([]),
     limiteUsos: limiteUsos.default(null),
     limitePor: limitePor.default(null),
   })

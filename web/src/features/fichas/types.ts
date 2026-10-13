@@ -36,7 +36,7 @@ export type FichaArquivada = FichaArquivadaResumo & {
     pericias: { nome: string; atributo: string; total: number; teste: string }[];
     habilidades: {
       titulo: string; descricao: string; tipoEfeito: string; descricaoEfeito: string; condicao: string | null; limite: string | null;
-      custoMana: number; nivelNecessario: number; teste: string | null;
+      custoMana: number; nivelNecessario: number; teste: string | null; defesa?: string[] | string | null;
     }[];
     inventario: { nome: string; descricao: string; efeito: string | null; espacos: number; categoria: string | null; usosRestantes: number | null }[];
   };

@@ -99,7 +99,7 @@ describe("kits de RPG", () => {
     prismaFalso.itemModelo.findMany.mockResolvedValue([]);
     await comoMestre(request(app).get(`/api/catalogo-itens?kitId=${KIT}`));
     expect(prismaFalso.itemModelo.findMany.mock.calls[0]![0].where).toEqual({
-      donoId: MESTRE.id, OR: [{ kits: { none: {} } }, { kits: { some: { kitId: KIT } } }],
+      AND: [{ OR: [{ donoId: MESTRE.id }, { verificado: true }, { kits: { some: { kit: { verificado: true } } } }] }, { OR: [{ kits: { none: {} } }, { kits: { some: { kitId: KIT } } }] }],
     });
   });
 });

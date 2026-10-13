@@ -1,6 +1,7 @@
 import type { z } from "zod";
 import type { Atributo, Pericia, RacaPericia } from "../../generated/prisma/client.js";
-import { naoEncontrado } from "../../lib/errors.js";
+import { AppError, naoEncontrado } from "../../lib/errors.js";
+import { comVisao, podeUsar, quemVe, visivelParaSemFixos } from "../../lib/sistema.js";
 import { comKitIds, comKits, definirKits } from "../../lib/kits.js";
 import { getPrisma } from "../../lib/prisma.js";
 import { apresentarAtributo, porAtributoENome } from "../atributos/atributos.service.js";
@@ -8,11 +9,17 @@ import { validarConceito } from "../conceitos/conceitos.routes.js";
 import { periciaDoMestre } from "../pericias/pericias.service.js";
 import type { criarRacaSchema, editarRacaSchema } from "./racas.schemas.js";
 
-// Raças pertencem ao mestre que as criou; de outro mestre = 404.
+// Raças pertencem ao mestre que as criou; as verificadas todo mestre vê (só leitura). De outro mestre = 404.
+
+async function racaLegivel(id: string, usuarioId: string) {
+  const raca = await getPrisma().raca.findUnique({ where: { id } });
+  if (!raca || !(await podeUsar("raca", raca, usuarioId, { semFixos: true }))) throw naoEncontrado("Raça não encontrada");
+  return raca;
+}
 
 async function racaDoMestre(id: string, usuarioId: string) {
-  const raca = await getPrisma().raca.findUnique({ where: { id } });
-  if (!raca || raca.donoId !== usuarioId) throw naoEncontrado("Raça não encontrada");
+  const raca = await racaLegivel(id, usuarioId);
+  if (raca.donoId !== usuarioId) throw new AppError(403, "VERIFICADO", "Esta raça é verificado (de outra pessoa): só leitura.");
   return raca;
 }
 
@@ -32,18 +39,19 @@ const comPericias = {
 } as const;
 
 export async function listar(usuarioId: string) {
+  const quem = await quemVe(usuarioId);
   const racas = await getPrisma().raca.findMany({
-    where: { donoId: usuarioId },
+    where: await visivelParaSemFixos(usuarioId),
     orderBy: { titulo: "asc" },
     include: comPericias,
   });
-  return racas.map(({ pericias, ...r }) => ({ ...comKitIds(r), pericias: apresentarPericias(pericias) }));
+  return racas.map(({ pericias, ...r }) => ({ ...comVisao(r, quem), pericias: apresentarPericias(pericias) }));
 }
 
 export async function detalhar(id: string, usuarioId: string) {
-  await racaDoMestre(id, usuarioId);
+  await racaLegivel(id, usuarioId);
   const { pericias, ...r } = await getPrisma().raca.findUniqueOrThrow({ where: { id }, include: comPericias });
-  return { ...comKitIds(r), pericias: apresentarPericias(pericias) };
+  return { ...comVisao(r, await quemVe(usuarioId)), pericias: apresentarPericias(pericias) };
 }
 
 export async function criar(usuarioId: string, dados: z.infer<typeof criarRacaSchema>) {

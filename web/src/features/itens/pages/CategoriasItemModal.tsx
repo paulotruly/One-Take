@@ -1,4 +1,6 @@
 // Container: gerenciar categorias de item. As fixas do sistema só aparecem; as do mestre podem ser criadas, editadas e excluídas.
+import { AlternarVerificado } from "../../verificados/pages/AlternarVerificado";
+import { VerificadoBadge } from "../../verificados/components/VerificadoBadge";
 import { Lock, Pencil, Plus, Trash2 } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { Button } from "../../../components/ui/Button";
@@ -61,15 +63,18 @@ export function CategoriasItemModal({ aberto, onFechar }: { aberto: boolean; onF
                       <strong>{c.nome}</strong>
                       <span className="pagina__subtitulo">{c.descricao || "Sem descrição"}{c.usos ? ` · ${c.usos} itens` : ""}</span>
                     </span>
-                    {c.fixa ? (
-                      <span className="selo selo--fixa" title="Categoria do sistema"><Lock size={12} aria-hidden /> Fixa</span>
-                    ) : (
+                    {c.fixa && <span className="selo selo--fixa" title="Categoria do sistema"><Lock size={12} aria-hidden /> Fixa</span>}
+                    {c.verificado && <VerificadoBadge />}
+                    {(c.editavel ?? !c.fixa) && (
                       <span className="pericia__acoes">
                         <Button pequeno variante="fantasma" aria-label={`Editar ${c.nome}`} onClick={() => abrir(c)}><Pencil size={14} aria-hidden /></Button>
-                        <Button pequeno variante="fantasma" aria-label={`Excluir ${c.nome}`} title="Os itens dela ficam sem categoria" disabled={excluir.isPending}
-                          onClick={() => excluir.mutate(c.id)}>
-                          <Trash2 size={14} aria-hidden />
-                        </Button>
+                        {!c.fixa && (
+                          <Button pequeno variante="fantasma" aria-label={`Excluir ${c.nome}`} title="Os itens dela ficam sem categoria" disabled={excluir.isPending}
+                            onClick={() => excluir.mutate(c.id)}>
+                            <Trash2 size={14} aria-hidden />
+                          </Button>
+                        )}
+                        <AlternarVerificado tipo="categoriaItem" item={c} pequeno />
                       </span>
                     )}
                   </li>

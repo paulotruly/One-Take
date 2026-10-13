@@ -28,7 +28,7 @@ Perfil(jogador) 1 ──< FichaArquivada (cópia somente leitura)
 | `Perfil` | `id` (= `auth.users.id`), `email` (do login no Auth: interno `<nick>@one-take.local` nas contas do app), `nickname` (único), `papel`, `nome?`, `fotoUrl?`, `dataNascimento?` (DATE; obrigatória em cadastros novos), `codigoRecuperacaoHash?` (SHA-256), `codigoRecuperacaoEm?`, `sessoesValidasDesde?`, `exclusaoIniciadaEm?` | Criado no cadastro (`POST /api/cadastro`) ou no 1º acesso de uma conta criada fora do app |
 | `FichaArquivada` | `jogadorId`, `nome`, `nivel`, `classe`, `raca`, `grupo` (textos), `motivo`, `conteudo` (JSON), `arquivadaEm` | Cópia da ficha que saiu do grupo; sem FK para o conteúdo do mestre |
 | `Classe` | `grupo`, `titulo`, `descricao`, `imagemUrl?`, `pontosVida`, `pontosMana`, `pontosEsforco`, `donoId?`, `origemId?` | `donoId` nulo = fixa |
-| `Habilidade` | `classeId?` **ou** `bestaId?` (CHECK: exatamente um), `titulo`, `descricao`, `condicao?`, `tipoEfeito` (enum `TipoEfeito`), `periciaId?` (perícia do teste, SetNull), `descricaoEfeito`, `limiteUsos?` + `limitePor?` (enum `LimiteUso`: COMBATE, SESSAO; os dois juntos ou nulos, CHECK), `nivelNecessario` (≥1, padrão 1), `custoMana` (≥0, padrão 0 = sem custo), `ordem` | Cartela de classe ou de criatura |
+| `Habilidade` | `classeId?` **ou** `bestaId?` (CHECK: exatamente um), `titulo`, `descricao`, `condicao?`, `tipoEfeito` (enum `TipoEfeito`), `periciaId?` (perícia do teste, SetNull), perícias de defesa em `HabilidadeDefesa` (habilidadeId + periciaId, Cascade), `descricaoEfeito`, `limiteUsos?` + `limitePor?` (enum `LimiteUso`: COMBATE, SESSAO; os dois juntos ou nulos, CHECK), `nivelNecessario` (≥1, padrão 1), `custoMana` (≥0, padrão 0 = sem custo), `ordem` | Cartela de classe ou de criatura |
 | `Pericia` | `nome`, `descricao`, `categoria`, `atributoId`, `donoId?`, `origemId?` | Catálogo. `donoId` nulo = base do sistema. Nome único por dono |
 | `ClassePericia` | `classeId`, `periciaId`, `modificador` | Perícia que a classe tem. PK composta |
 | `Atributo` | `nome`, `descricao`, `ordem`, `donoId?` | `donoId` nulo = fixo (Capacidade física, Carisma, Conhecimento). Nome único por dono |
@@ -66,6 +66,13 @@ Nomes no código x na interface: `ClasseConceito`/`RacaConceito`/`BestaConceito`
 `Besta` = criatura do bestiário; `Criatura` = criatura invocada num grupo.
 `Perfil.papel = MESTRE` significa "interface de mestre ativada"; toda conta joga.
 `Perfil.catalogoIniciado` marca que o mestre já recebeu a cópia das perícias base.
+`Perfil.cargo` (enum `Cargo`: USUARIO, ADMIN; trocado só por `npm run cargo`) e `Perfil.ocultarVerificados` (preferência).
+`verificado` (booleano, índice) em Classe, Raca, Atributo, Pericia, Status, CategoriaItem, ItemModelo, Besta, Npc, Kit,
+ClasseConceito, RacaConceito e BestaConceito (o do Kit vale para tudo ligado a ele, calculado na consulta, sem copiar o booleano): o ADMIN marca as
+coisas dele; todo mestre vê e usa, só leitura. Visibilidade das listas: dele + fixo (`donoId` nulo) + verificado (sem o verificado se a
+pessoa oculta). Quem não é o dono não recebe os `kitIds`. Migrations `20261013120000_kit_basico_admin` (cargo inicial e tabela
+`Sistema`, já removida), `20261013130000_verificado_e_cargo` (o que estava no kit básico virou verificado) e
+`20261013140000_verificado_em_tudo` e `20261013150000_verificado_kits_arquetipos`.
 
 ## Por que assim
 - **Fixa = `donoId` nulo.** Uma única fonte da verdade; impossível ter "fixa com dono". A API expõe `fixa: boolean`.

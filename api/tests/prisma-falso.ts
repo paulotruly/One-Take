@@ -51,6 +51,7 @@ export const prismaFalso = {
   kitItemModelo: modelo(),
   kitBesta: modelo(),
   kitNpc: modelo(),
+  habilidadeDefesa: modelo(),
   fichaArquivada: modelo(),
   $transaction: vi.fn(async (ops: unknown) => (Array.isArray(ops) ? Promise.all(ops) : ops)),
   $queryRaw: vi.fn(),

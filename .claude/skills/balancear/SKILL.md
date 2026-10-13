@@ -16,18 +16,27 @@ Nunca altere classes, cartas ou criaturas sem o usuário aprovar: entregue um re
 - Personagem começa com 3 pontos de atributo (normalmente 1 a 2 no atributo de ataque); criaturas têm os dados que o mestre definir.
 - Progressão: +5 vida, +5 mana, +5 esforço e +5 pontos de perícia por nível; cartas com nível necessário ≤ nível; aprimoramentos mudam a carta.
 - Vida 0 ou mana 0 = morte. Esforço 0 = cansado.
+- Limite de uso das cartas: N vezes por combate ou por sessão (lista fixa); dano de dados é somado (2d10 = soma dos dois).
 - Tipos de efeito fixos: Dano, Defesa, Cura, Suporte, Fortalecimento, Enfraquecimento, Controle, Mobilidade, Invocação, Utilidade.
 
 ## Passo a passo
 1. **Pegar os dados.** Na pasta `api/`: `npm run exportar -- > ../conteudo.json`
    (ou `npm run exportar -- --titulo Espadachim > ../conteudo.json` para uma só). Precisa do `api/.env` e da migration aplicada.
    Sem banco: monte o JSON à mão no mesmo formato (veja `exemplo.json` nesta pasta).
-2. **Rodar o relatório.** `node .claude/skills/balancear/calc.mjs relatorio conteudo.json --niveis 3 --dt 12` e de novo com `--dt 15`.
+2. **Rodar o ranking (tudo junto).** `node .claude/skills/balancear/calc.mjs ranking conteudo.json --niveis 5`
+   Junta vida, mana, esforço, acerto (atributo + perícia da carta + pontos de nível; esforço como dados extras), plano de turnos com as
+   cartas (limite por combate/sessão, custo de mana; mana 0 mata, então guarda 1), cura e defesa (vida efetiva). Nota de poder =
+   dano por turno x vida efetiva; **100 = mediana das classes do nível**; >= 150 APELÃO, 120 forte, 80 a 120 equilibrado, < 60 muito fraco.
+   Também mostra duelos (quem derruba quem e em quantos turnos) e alertas: defesa que anula tudo sem custo nem limite, carta dominada,
+   carta que testa perícia que a classe não tem, criatura que derruba um personagem mediano em menos de 2 turnos.
+   Opções: `--dt 12`, `--turnos 5`, `--combates 3` (combates por sessão), `--alvos 2` (área), `--falha 0.5` (chance de o alvo falhar).
+   Rode também com `--dt 15`. Os números são de um modelo: confira as cartas da lista "avaliar no texto" à mão.
+3. **Rodar o relatório antigo** (detalhe por classe). `node .claude/skills/balancear/calc.mjs relatorio conteudo.json --niveis 3 --dt 12` e de novo com `--dt 15`.
    Outras ferramentas: `calc.mjs dados "2d8+2"`, `calc.mjs teste --pontos 2 --bonus 5 --dt 15 --esforco 1`, `calc.mjs tabela`.
-3. **Ler as cartas uma a uma** (o script só entende efeitos com dados escritos, tipo "2d8 + 2", "4 ataques ... 1d6").
+4. **Ler as cartas uma a uma** (o script só entende efeitos com dados escritos, tipo "2d8 + 2", "4 ataques ... 1d6").
    Para cartas sem números (controle, suporte, "anula todo o dano"), avalie pelo texto usando os critérios abaixo.
-4. **Comparar com os pares** do mesmo nível e do mesmo grupo (Combatente, Vanguardista, Suporte) e com as criaturas.
-5. **Escrever o relatório** (formato no fim). Mostre a conta de cada número que justificar uma sugestão.
+5. **Comparar com os pares** do mesmo nível e do mesmo grupo (Combatente, Vanguardista, Suporte) e com as criaturas.
+6. **Escrever o relatório** (formato no fim). Mostre a conta de cada número que justificar uma sugestão.
 
 ## Referências (alvos, não leis)
 Valores médios úteis: 1d4 = 2,5 · 1d6 = 3,5 · 1d8 = 4,5 · 1d10 = 5,5 · 1d12 = 6,5 · 2d6 = 7 · 2d8 = 9.
@@ -51,6 +60,7 @@ Sinais de problema que a matemática não pega sozinha:
 - Recursos: mana muito baixa com cartas que custam mana; esforço alto = muitos dados extras (cada 1 de esforço vale +1 d20).
 
 ## Formato do relatório
+Comece pelo **rank de apelões** do ranking (nível a nível), depois o detalhe.
 Para cada classe/criatura:
 - **Resumo** em uma linha: equilibrado / forte / fraco / apelativo, e em que nível.
 - **Números** (tabela do script, DT 12 e 15).

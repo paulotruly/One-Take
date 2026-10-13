@@ -4,7 +4,8 @@ import { useKits } from "../api";
 
 export function KitsField({ valor, onChange, erro }: { valor: string[]; onChange: (kitIds: string[]) => void; erro?: string }) {
   const kits = useKits();
-  const lista = kits.data ?? [];
+  // Só os kits do mestre: um kit verificado de outra pessoa é só leitura.
+  const lista = (kits.data ?? []).filter((k) => !k.deOutro);
   const alternar = (id: string, marcar: boolean) => onChange(marcar ? [...new Set([...valor, id])] : valor.filter((k) => k !== id));
   return (
     <fieldset className="form__grupo">

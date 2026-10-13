@@ -347,10 +347,11 @@ export function Habilidades() {
       <Tabela
         cabecalho={["Campo", "O que significa"]}
         linhas={[
-          ["Título e descrição", "O nome e o sabor da carta."],
+          ["Título e descrição", "O nome e o sabor da carta. Texto entre **dois asteriscos** aparece em negrito."],
           ["Tipo de efeito", "Escolhido de uma lista fixa (veja abaixo)."],
           ["Efeito", "O que a carta causa."],
           ["Perícia do teste (opcional)", "Qual perícia o personagem testa para usar a carta. A ficha mostra o teste pronto daquele personagem (ex.: Luta 2d20 + 5)."],
+          ["Defesa do alvo (opcional)", "Perícias que o alvo pode usar para se defender da carta (uma ou mais). Ex.: Reflexos ou Resistência."],
           ["Condição (opcional)", "O que precisa acontecer para poder usar. Ex.: ter acertado dois ataques seguidos."],
           ["Limite (opcional)", "Quantas vezes pode ser usada: N vezes por combate ou N vezes por sessão. Sem limite, à vontade."],
           [<span key="m" className="regra__inline"><Droplet size={14} aria-hidden /> Custo de mana</span>, "Quanta mana gasta. Muitas cartas não custam nada."],

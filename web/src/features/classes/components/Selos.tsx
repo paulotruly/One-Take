@@ -1,11 +1,22 @@
 import { Droplet, Lock } from "lucide-react";
+import { VerificadoBadge } from "../../verificados/components/VerificadoBadge";
 import { ROTULO_GRUPO, TIPOS_EFEITO, type Grupo, type TipoEfeito } from "../types";
 
 export function GrupoBadge({ grupo }: { grupo: Grupo }) {
   return <span className={`selo selo--grupo-${grupo}`}>{ROTULO_GRUPO[grupo]}</span>;
 }
 
-export function OrigemBadge({ fixa }: { fixa: boolean }) {
+/** Fixa, verificada de outra pessoa ou minha (com o selo, se for verificada). */
+export function OrigemBadge({ fixa, verificado = false, deOutro = false }: { fixa: boolean; verificado?: boolean; deOutro?: boolean }) {
+  if (deOutro) return <VerificadoBadge />;
+  if (!fixa && verificado) {
+    return (
+      <>
+        <span className="selo selo--propria" title="Classe criada por você">Minha</span>
+        <VerificadoBadge />
+      </>
+    );
+  }
   return fixa ? (
     <span className="selo selo--fixa" title="Classe do sistema: somente leitura">
       <Lock size={12} aria-hidden /> Fixa

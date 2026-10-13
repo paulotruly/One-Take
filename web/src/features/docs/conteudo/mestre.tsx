@@ -165,6 +165,30 @@ export function MestreKits() {
   );
 }
 
+export function MestreVerificados() {
+  return (
+    <>
+      <p>
+        O <strong>conteúdo verificado</strong> é o material pronto do One-Take: classes, raças, atributos, perícias, status, categorias de
+        item, itens, criaturas, NPCs, arquétipos e kits de RPG com o selo <strong>Verificado</strong>. Ele aparece para todo mestre, só
+        leitura e sempre atualizado. Num <strong>kit verificado</strong>, tudo o que está dentro dele também é verificado.
+      </p>
+      <Tabela
+        cabecalho={["Você quer", "Como"]}
+        linhas={[
+          ["Usar", "Libere no grupo, lance o item, invoque a criatura ou escolha a raça e a classe num NPC, como faria com o que é seu."],
+          ["Usar um kit verificado", "Em Kits de RPG, escolha Usar este kit (as telas mostram só o conteúdo dele) ou escolha o kit ao montar o grupo. O que você criar fica fora dele."],
+          ["Mudar", "Duplique a classe, a criatura ou o NPC para ter a sua versão. Perícias: Copiar para o meu catálogo, em Perícias."],
+          ["Não ver", "Em Configurações da conta, marque Ocultar o conteúdo verificado. O que já está nos seus grupos e fichas continua funcionando."],
+        ]}
+      />
+      <Destaque tipo="dica" titulo="Com um kit ativo">
+        As telas mostram o que está no kit ativo, verificado ou não. Para ver todo o conteúdo verificado, escolha Todos.
+      </Destaque>
+    </>
+  );
+}
+
 export function MestreBestiario() {
   return (
     <>

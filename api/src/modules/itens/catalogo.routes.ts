@@ -5,6 +5,7 @@ import { z } from "zod";
 import { naoEncontrado } from "../../lib/errors.js";
 import { comKitIds, comKits, definirKits, visivelNoKit } from "../../lib/kits.js";
 import { getPrisma } from "../../lib/prisma.js";
+import { comVisao, quemVe, visivelParaSemFixos, type Quem } from "../../lib/sistema.js";
 import { idDe } from "../../lib/validacao.js";
 import { usuarioDe } from "../../middleware/auth.js";
 import { apresentarItem, comRequisitos, validarRequisitos } from "./itens.apresentar.js";
@@ -21,21 +22,28 @@ async function modeloDoMestre(id: string, usuarioId: string) {
   return m;
 }
 
-const apresentar = <T extends Parameters<typeof apresentarItem>[0] & { kits?: { kitId: string }[] }>(m: T) => ({
-  ...apresentarItem(m),
-  kitIds: comKitIds(m).kitIds,
-});
+/** Com `quem`: editável só pelo dono; itens verificado de outra pessoa vêm marcados e sem os kits dela. */
+const apresentar = <T extends Parameters<typeof apresentarItem>[0] & { donoId: string; kits?: { kitId: string }[] }>(m: T, quem?: Quem) => {
+  const v = quem ? comVisao(m, quem) : null;
+  return {
+    ...apresentarItem(m),
+    kitIds: !quem || m.donoId === quem.usuarioId ? comKitIds(m).kitIds : [],
+    ...(v && { editavel: v.editavel, verificado: v.verificado, deOutro: v.deOutro, podeVerificar: v.podeVerificar }),
+  };
+};
 const incluir = { ...comRequisitos, ...comKits } as const;
 
 /** `?kitId=` mostra só o que aparece com aquele kit (do kit + gerais). */
 catalogoItensRouter.get("/catalogo-itens", async (req, res) => {
   const { kitId } = z.object({ kitId: z.guid().optional() }).parse(req.query);
+  const usuarioId = usuarioDe(req).id;
+  const quem = await quemVe(usuarioId);
   const modelos = await getPrisma().itemModelo.findMany({
-    where: { donoId: usuarioDe(req).id, ...visivelNoKit(kitId) },
+    where: { AND: [await visivelParaSemFixos(usuarioId), visivelNoKit(kitId)] },
     orderBy: [{ categoria: { ordem: "asc" } }, { nome: "asc" }],
     include: incluir,
   });
-  res.json(modelos.map(apresentar));
+  res.json(modelos.map((m) => apresentar(m, quem)));
 });
 
 catalogoItensRouter.post("/catalogo-itens", async (req, res) => {

@@ -13,7 +13,7 @@ const MINUTO = 60_000;
 
 /** O que a própria pessoa vê da conta. */
 export const camposDaConta = {
-  id: true, nickname: true, papel: true, nome: true, fotoUrl: true, dataNascimento: true, codigoRecuperacaoEm: true,
+  id: true, nickname: true, papel: true, nome: true, fotoUrl: true, dataNascimento: true, codigoRecuperacaoEm: true, cargo: true, ocultarVerificados: true,
 } as const;
 
 export function apresentarConta(p: { dataNascimento?: Date | null; codigoRecuperacaoEm?: Date | null } & Record<string, unknown>) {

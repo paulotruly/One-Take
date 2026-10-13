@@ -1,7 +1,10 @@
 // Bestiário do mestre: criaturas montadas como classes (vida/mana/esforço base, cartela, perícias) e com dados por atributo.
 // Só o mestre dono vê e edita; de outro mestre = 404.
+import type { Pericia } from "../../generated/prisma/client.js";
+import { comVisao, kitIdsPara, podeUsar, quemVe, visao, visivelParaSemFixos } from "../../lib/sistema.js";
+import { periciaNoCatalogo } from "../classes/classes.service.js";
 import type { z } from "zod";
-import { naoEncontrado } from "../../lib/errors.js";
+import { AppError, naoEncontrado } from "../../lib/errors.js";
 import { comKitIds, comKits, definirKits } from "../../lib/kits.js";
 import { getPrisma } from "../../lib/prisma.js";
 import { previaProgressao } from "../../regras/progressao.js";
@@ -12,9 +15,17 @@ import { comStatus } from "../habilidades/habilidades.include.js";
 import { periciaDoMestre } from "../pericias/pericias.service.js";
 import type { criarBestaSchema, editarBestaSchema } from "./bestas.schemas.js";
 
-export async function bestaEditavel(id: string, usuarioId: string) {
+/** Ver, invocar e duplicar: do mestre ou verificado. */
+export async function bestaLegivel(id: string, usuarioId: string) {
   const besta = await getPrisma().besta.findUnique({ where: { id } });
-  if (!besta || besta.donoId !== usuarioId) throw naoEncontrado("Besta não encontrada");
+  if (!besta || !(await podeUsar("besta", besta, usuarioId, { semFixos: true }))) throw naoEncontrado("Besta não encontrada");
+  return besta;
+}
+
+/** Editar: só o dono (a verificado de outra pessoa é só leitura: duplique). */
+export async function bestaEditavel(id: string, usuarioId: string) {
+  const besta = await bestaLegivel(id, usuarioId);
+  if (besta.donoId !== usuarioId) throw new AppError(403, "VERIFICADO", "Esta criatura é verificado (de outra pessoa): só leitura. Duplique para editar.");
   return besta;
 }
 
@@ -48,22 +59,26 @@ export function apresentarBesta({ pericias, atributos, ...b }: BestaComTudo) {
 }
 
 export async function listar(usuarioId: string) {
+  const quem = await quemVe(usuarioId);
   const bestas = await getPrisma().besta.findMany({
-    where: { donoId: usuarioId },
+    where: await visivelParaSemFixos(usuarioId),
     orderBy: { titulo: "asc" },
     include: { conceito: { select: { id: true, titulo: true } }, _count: { select: { habilidades: true } }, ...comKits },
   });
-  return bestas.map(({ _count, ...b }) => ({ ...comKitIds(b), cartas: _count.habilidades }));
+  return bestas.map(({ _count, ...b }) => ({ ...comVisao(b, quem), cartas: _count.habilidades }));
 }
 
 export async function detalhar(id: string, usuarioId: string) {
-  await bestaEditavel(id, usuarioId);
-  return apresentarBesta((await buscarCompleta(id))!);
+  await bestaLegivel(id, usuarioId);
+  const b = apresentarBesta((await buscarCompleta(id))!);
+  const quem = await quemVe(usuarioId);
+  const kits = b.kitIds.map((kitId) => ({ kitId }));
+  return { ...b, ...visao({ ...b, kits }, quem), kitIds: kitIdsPara({ donoId: b.donoId, kits }, quem) };
 }
 
 /** Mesma progressão das classes: o mestre escolhe o nível ao invocar a criatura no grupo. */
 export async function progressao(id: string, usuarioId: string) {
-  await bestaEditavel(id, usuarioId);
+  await bestaLegivel(id, usuarioId);
   const besta = await getPrisma().besta.findUniqueOrThrow({
     where: { id },
     include: { habilidades: { select: { id: true, nivelNecessario: true, aprimoramentos: { select: { nivel: true } } }, orderBy: { ordem: "asc" } } },
@@ -94,13 +109,36 @@ export async function excluir(id: string, usuarioId: string) {
   await getPrisma().besta.delete({ where: { id } });
 }
 
-/** Cópia "(cópia)" com cartela, aprimoramentos, perícias e atributos. */
+/**
+ * Cópia "(cópia)" com cartela, aprimoramentos, perícias e atributos. Duplicar uma verificado: as perícias passam a ser as do
+ * catálogo de quem duplica, sem arquétipo nem kits de outra pessoa.
+ */
 export async function duplicar(id: string, usuarioId: string) {
-  await bestaEditavel(id, usuarioId);
+  await bestaLegivel(id, usuarioId);
   const o = await getPrisma().besta.findUniqueOrThrow({
     where: { id },
-    include: { habilidades: { include: { aprimoramentos: true } }, pericias: true, atributos: true, kits: true },
+    include: {
+      habilidades: { include: { aprimoramentos: true, periciasDefesa: { include: { pericia: true } }, pericia: true } },
+      pericias: { include: { pericia: true } },
+      atributos: true,
+      kits: true,
+    },
   });
+  const deOutro = o.donoId !== usuarioId;
+  const mapa = new Map<string, string>();
+  const minha = async (p: Pericia | null) => {
+    if (!p) return null;
+    if (!deOutro) return p.id;
+    if (!mapa.has(p.id)) mapa.set(p.id, await periciaNoCatalogo(p, usuarioId));
+    return mapa.get(p.id)!;
+  };
+  const pericias = await Promise.all(o.pericias.map(async ({ pericia, modificador }) => ({ periciaId: (await minha(pericia))!, modificador })));
+  const cartas = await Promise.all(o.habilidades.map(async ({ id: _id, classeId: _c, bestaId: _b, aprimoramentos, periciasDefesa, pericia, ...h }) => ({
+    ...h,
+    periciaId: await minha(pericia),
+    periciasDefesa: { create: await Promise.all(periciasDefesa.map(async (d) => ({ periciaId: (await minha(d.pericia))! }))) },
+    aprimoramentos: { create: aprimoramentos.map(({ id: _a, habilidadeId: _h, criadoEm: _d, ...a }) => a) },
+  })));
   const copia = await getPrisma().besta.create({
     data: {
       donoId: usuarioId,
@@ -111,15 +149,10 @@ export async function duplicar(id: string, usuarioId: string) {
       pontosMana: o.pontosMana,
       pontosEsforco: o.pontosEsforco,
       deslocamento: o.deslocamento,
-      conceitoId: o.conceitoId,
-      kits: { create: o.kits.map(({ kitId }) => ({ kitId })) },
-      habilidades: {
-        create: o.habilidades.map(({ id: _id, classeId: _c, bestaId: _b, aprimoramentos, ...h }) => ({
-          ...h,
-          aprimoramentos: { create: aprimoramentos.map(({ id: _a, habilidadeId: _h, criadoEm: _d, ...a }) => a) },
-        })),
-      },
-      pericias: { create: o.pericias.map(({ periciaId, modificador }) => ({ periciaId, modificador })) },
+      conceitoId: deOutro ? null : o.conceitoId,
+      kits: { create: deOutro ? [] : o.kits.map(({ kitId }) => ({ kitId })) },
+      habilidades: { create: cartas },
+      pericias: { create: pericias },
       atributos: { create: o.atributos.map(({ atributoId, dados }) => ({ atributoId, dados })) },
     },
   });

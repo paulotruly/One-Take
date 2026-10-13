@@ -78,7 +78,7 @@ export function GaleriaPage() {
               classe={c}
               href={`/mestre/classes/${c.id}`}
               acoes={
-                c.fixa ? (
+                !(c.editavel ?? !c.fixa) ? (
                   <Button pequeno onClick={() => duplicarClasse(c)} disabled={duplicar.isPending}>
                     {duplicar.isPending && duplicar.variables === c.id ? "Duplicando…" : "Duplicar"}
                   </Button>

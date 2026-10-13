@@ -15,6 +15,12 @@ enum Papel {
   JOGADOR
 }
 
+/// Cargo da conta no sistema (independe de jogar ou mestrar). ADMIN edita o que é fixo (não automático) e marca o que é verificado.
+enum Cargo {
+  USUARIO
+  ADMIN
+}
+
 enum GrupoClasse {
   COMBATENTE
   VANGUARDISTA
@@ -45,6 +51,10 @@ model Perfil {
   nome                  String?
   /// Link externo da foto de perfil.
   fotoUrl               String?
+  /// Cargo no sistema. Trocado só por `npm run cargo` (nunca pela interface).
+  cargo                 Cargo            @default(USUARIO)
+  /// Preferência: esconder da própria interface o conteúdo verificado de outras pessoas.
+  ocultarVerificados    Boolean          @default(false)
   /// true depois que o catálogo de perícias base foi copiado para este mestre.
   catalogoIniciado      Boolean          @default(false)
   /// Data de nascimento informada no cadastro (idade mínima: 12 anos). Nula em contas anteriores a essa regra. Só o dono vê.
@@ -105,10 +115,13 @@ model Classe {
   criadoEm             DateTime        @default(now())
   atualizadoEm         DateTime        @updatedAt
 
-  kits KitClasse[]
+  kits       KitClasse[]
+  /// Verificado pelo administrador: todo mestre vê e usa (só leitura; duplica para mudar).
+  verificado Boolean     @default(false)
 
   @@index([donoId])
   @@index([grupo])
+  @@index([verificado])
 }
 
 /// Tipo de efeito de uma carta. Lista fixa do sistema; rótulos e descrições ficam no front.
@@ -138,7 +151,9 @@ model Habilidade {
   tipoEfeito      TipoEfeito
   /// Perícia que o personagem testa para usar a carta (opcional). A ficha mostra o teste pronto ("2d20 + 5").
   periciaId       String?                   @db.Uuid
-  pericia         Pericia?                  @relation(fields: [periciaId], references: [id], onDelete: SetNull)
+  pericia         Pericia?                  @relation("HabilidadePericia", fields: [periciaId], references: [id], onDelete: SetNull)
+  /// Perícias que o alvo pode usar para se defender da carta (opcional, informativas).
+  periciasDefesa  HabilidadeDefesa[]
   descricaoEfeito String
   /// Limite de uso: quantas vezes (1 a 99) por combate ou por sessão. Os dois nulos = sem limite.
   limiteUsos      Int?
@@ -159,32 +174,36 @@ model Habilidade {
 /// Perícia do catálogo: habilidade passiva usada em rolagens.
 /// donoId nulo = perícia base do sistema (usada pelas classes fixas e copiada para cada mestre).
 model Pericia {
-  id                   String           @id @default(uuid()) @db.Uuid
+  id                   String             @id @default(uuid()) @db.Uuid
   nome                 String
   descricao            String
   categoria            CategoriaPericia
-  atributoId           String           @db.Uuid
-  atributo             Atributo         @relation(fields: [atributoId], references: [id])
-  donoId               String?          @db.Uuid
-  dono                 Perfil?          @relation(fields: [donoId], references: [id], onDelete: Cascade)
+  atributoId           String             @db.Uuid
+  atributo             Atributo           @relation(fields: [atributoId], references: [id])
+  donoId               String?            @db.Uuid
+  dono                 Perfil?            @relation(fields: [donoId], references: [id], onDelete: Cascade)
   /// Perícia base da qual esta é cópia (informativo, sem FK).
-  origemId             String?          @db.Uuid
+  origemId             String?            @db.Uuid
   classes              ClassePericia[]
   racas                RacaPericia[]
   grupos               PericiaNoGrupo[]
   fichas               FichaPericia[]
   npcs                 NpcPericia[]
   bestas               BestaPericia[]
-  habilidades          Habilidade[]
-  itensModeloQueExigem ItemModelo[]     @relation("ItemModeloPericia")
-  itensQueExigem       Item[]           @relation("ItemPericia")
-  criadoEm             DateTime         @default(now())
+  habilidades          Habilidade[]       @relation("HabilidadePericia")
+  defesasDeCartas      HabilidadeDefesa[]
+  itensModeloQueExigem ItemModelo[]       @relation("ItemModeloPericia")
+  itensQueExigem       Item[]             @relation("ItemPericia")
+  criadoEm             DateTime           @default(now())
 
-  kits KitPericia[]
+  kits       KitPericia[]
+  /// Verificado pelo administrador: todo mestre vê e usa (só leitura; duplica para mudar).
+  verificado Boolean      @default(false)
 
   @@unique([donoId, nome])
   @@index([donoId])
   @@index([atributoId])
+  @@index([verificado])
 }
 
 /// Atributo que agrupa perícias (e, nas fichas, recebe dados d20).
@@ -205,10 +224,13 @@ model Atributo {
   bestas    BestaAtributo[]
   criadoEm  DateTime          @default(now())
 
-  kits KitAtributo[]
+  kits       KitAtributo[]
+  /// Verificado pelo administrador: todo mestre vê e usa (só leitura; duplica para mudar).
+  verificado Boolean       @default(false)
 
   @@unique([donoId, nome])
   @@index([donoId])
+  @@index([verificado])
 }
 
 /// Perícia que uma classe possui, com o modificador daquela classe.
@@ -244,9 +266,12 @@ model Raca {
   criadoEm     DateTime      @default(now())
   atualizadoEm DateTime      @updatedAt
 
-  kits KitRaca[]
+  kits       KitRaca[]
+  /// Verificado pelo administrador: todo mestre vê e usa (só leitura; duplica para mudar).
+  verificado Boolean   @default(false)
 
   @@index([donoId])
+  @@index([verificado])
 }
 
 /// Perícia que a raça concede, com a quantidade de pontos base para o jogador.
@@ -392,19 +417,22 @@ model FichaPericia {
 /// Categoria de item. donoId nulo = categoria fixa do sistema (Armas, Artefatos, Taverna, Sebo; não editável).
 /// Com dono = criada pelo mestre. `icone` é uma chave da lista de ícones permitidos (api/src/modules/itens/icones.ts).
 model CategoriaItem {
-  id        String       @id @default(uuid()) @db.Uuid
-  nome      String
-  descricao String       @default("")
-  icone     String       @default("pacote")
-  ordem     Int          @default(100)
-  donoId    String?      @db.Uuid
-  dono      Perfil?      @relation(fields: [donoId], references: [id], onDelete: Cascade)
-  modelos   ItemModelo[]
-  itens     Item[]
-  criadoEm  DateTime     @default(now())
+  id         String       @id @default(uuid()) @db.Uuid
+  nome       String
+  descricao  String       @default("")
+  icone      String       @default("pacote")
+  ordem      Int          @default(100)
+  donoId     String?      @db.Uuid
+  dono       Perfil?      @relation(fields: [donoId], references: [id], onDelete: Cascade)
+  modelos    ItemModelo[]
+  itens      Item[]
+  criadoEm   DateTime     @default(now())
+  /// Verificado pelo administrador: todo mestre vê e usa (só leitura; duplica para mudar).
+  verificado Boolean      @default(false)
 
   @@unique([donoId, nome])
   @@index([donoId])
+  @@index([verificado])
 }
 
 /// Item do catálogo do mestre (molde). Lançar no grupo cria um Item com uma cópia destes campos.
@@ -436,9 +464,12 @@ model ItemModelo {
   criadoEm           DateTime       @default(now())
   atualizadoEm       DateTime       @updatedAt
 
-  kits KitItemModelo[]
+  kits       KitItemModelo[]
+  /// Verificado pelo administrador: todo mestre vê e usa (só leitura; duplica para mudar).
+  verificado Boolean         @default(false)
 
   @@index([donoId])
+  @@index([verificado])
 }
 
 /// Item. Com fichaId = no inventário daquela ficha; com npcId = no inventário daquele NPC; nenhum dos dois = vago no grupo.
@@ -512,10 +543,13 @@ model Status {
   aprimoramentos HabilidadeAprimoramento[]
   criadoEm       DateTime                  @default(now())
 
-  kits KitStatus[]
+  kits       KitStatus[]
+  /// Verificado pelo administrador: todo mestre vê e usa (só leitura; duplica para mudar).
+  verificado Boolean     @default(false)
 
   @@unique([donoId, nome])
   @@index([donoId])
+  @@index([verificado])
 }
 
 /// Status ativados no grupo (os demais não aparecem nem podem ser aplicados ali).
@@ -550,8 +584,11 @@ model ClasseConceito {
   subclasses   Classe[]
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
+  /// Verificado pelo administrador: todo mestre vê (só leitura).
+  verificado   Boolean  @default(false)
 
   @@index([donoId])
+  @@index([verificado])
 }
 
 /// A mesma carta muda a partir de um nível. Campos nulos = continuam como na carta.
@@ -598,8 +635,11 @@ model RacaConceito {
   subracas     Raca[]
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
+  /// Verificado pelo administrador: todo mestre vê (só leitura).
+  verificado   Boolean  @default(false)
 
   @@index([donoId])
+  @@index([verificado])
 }
 
 /// Arquétipo de criatura: criatura generalista que agrupa sub-formas (ex.: "Lobo" > "Lobo das neves").
@@ -612,8 +652,11 @@ model BestaConceito {
   formas       Besta[]
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
+  /// Verificado pelo administrador: todo mestre vê (só leitura).
+  verificado   Boolean  @default(false)
 
   @@index([donoId])
+  @@index([verificado])
 }
 
 /// Criatura do bestiário do mestre. Como a classe: valores BASE (nível 1), cartela e perícias; e também dados por atributo.
@@ -639,9 +682,12 @@ model Besta {
   criadoEm      DateTime        @default(now())
   atualizadoEm  DateTime        @updatedAt
 
-  kits KitBesta[]
+  kits       KitBesta[]
+  /// Verificado pelo administrador: todo mestre vê e usa (só leitura; duplica para mudar).
+  verificado Boolean    @default(false)
 
   @@index([donoId])
+  @@index([verificado])
 }
 
 /// Perícia que a besta possui, com o modificador dela.
@@ -714,9 +760,12 @@ model Npc {
   criadoEm     DateTime      @default(now())
   atualizadoEm DateTime      @updatedAt
 
-  kits KitNpc[]
+  kits       KitNpc[]
+  /// Verificado pelo administrador: todo mestre vê e usa (só leitura; duplica para mudar).
+  verificado Boolean  @default(false)
 
   @@index([donoId])
+  @@index([verificado])
 }
 
 /// Dados (d20) do NPC em cada atributo.
@@ -782,8 +831,11 @@ model Kit {
   grupos       Grupo[]
   criadoEm     DateTime        @default(now())
   atualizadoEm DateTime        @updatedAt
+  /// Verificado pelo administrador: todo mestre vê e usa o kit, e tudo o que está nele conta como verificado.
+  verificado   Boolean         @default(false)
 
   @@index([donoId])
+  @@index([verificado])
 }
 
 model KitClasse {
@@ -894,4 +946,15 @@ model FichaArquivada {
 enum LimiteUso {
   COMBATE
   SESSAO
+}
+
+/// Perícia de defesa de uma carta (o alvo usa uma delas para se defender).
+model HabilidadeDefesa {
+  habilidadeId String     @db.Uuid
+  habilidade   Habilidade @relation(fields: [habilidadeId], references: [id], onDelete: Cascade)
+  periciaId    String     @db.Uuid
+  pericia      Pericia    @relation(fields: [periciaId], references: [id], onDelete: Cascade)
+
+  @@id([habilidadeId, periciaId])
+  @@index([periciaId])
 }

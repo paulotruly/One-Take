@@ -1,7 +1,8 @@
 // Kits de RPG: coleções do mestre (classes, raças, atributos, perícias, status, itens, criaturas, NPCs).
+import type { Visao } from "../verificados/types";
 // Sem kit = geral. Uma coisa pode estar em vários kits.
 
-export type Kit = {
+export type Kit = Visao & {
   id: string;
   nome: string;
   descricao: string;
@@ -30,17 +31,28 @@ export function lerKitAtivo(): string | null {
     return null;
   }
 }
-export function gravarKitAtivo(id: string | null) {
+/** Marca se o kit ativo é de outra pessoa (verificado): o que o mestre cria não pode entrar nele. */
+const CHAVE_DE_OUTRO = "one-take:kit-ativo-de-outro";
+export function gravarKitAtivo(id: string | null, deOutro = false) {
   try {
     if (id) localStorage.setItem(CHAVE, id);
     else localStorage.removeItem(CHAVE);
+    if (id && deOutro) localStorage.setItem(CHAVE_DE_OUTRO, "1");
+    else localStorage.removeItem(CHAVE_DE_OUTRO);
   } catch {
     /* sem armazenamento: tudo bem */
   }
 }
+function kitAtivoDeOutro() {
+  try {
+    return localStorage.getItem(CHAVE_DE_OUTRO) === "1";
+  } catch {
+    return false;
+  }
+}
 
-/** Kits que um registro novo recebe: o kit ativo, se houver. */
+/** Kits que um registro novo recebe: o kit ativo, se houver e for do mestre. */
 export const kitsPadrao = () => {
   const k = lerKitAtivo();
-  return k ? [k] : [];
+  return k && !kitAtivoDeOutro() ? [k] : [];
 };

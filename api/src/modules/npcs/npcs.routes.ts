@@ -24,6 +24,10 @@ npcsRouter.get("/npcs/:id", async (req, res) => {
   res.json(await service.detalhar(npcId(req.params.id), usuarioDe(req).id));
 });
 
+npcsRouter.post("/npcs/:id/duplicar", async (req, res) => {
+  res.status(201).json(await service.duplicar(npcId(req.params.id), usuarioDe(req).id));
+});
+
 npcsRouter.patch("/npcs/:id", async (req, res) => {
   const dados = editarNpcSchema.parse(req.body);
   res.json(await service.editar(npcId(req.params.id), usuarioDe(req).id, dados));

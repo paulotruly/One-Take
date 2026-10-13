@@ -21,6 +21,7 @@ npm run db:migrate           # cria/aplica migrations em dev (usa DIRECT_URL)
 npm run db:deploy            # aplica migrations em produção
 npm run db:seed              # estrutura fixa: atributos, status, categorias, perícias base (idempotente; não cria classes)
 npm run promover -- email@x  # muda o papel de uma conta pelo email do Supabase Auth (padrão MESTRE)
+npm run cargo -- nick ADMIN  # cargo da conta (ADMIN | USUARIO), no banco: ADMIN edita o fixo e marca o que é verificado
 npm run fixar-classe -- "Título"   # classe de um mestre vira fixa do sistema (--devolver nick desfaz)
 npm run exportar -- > ../conteudo.json  # classes e bestas em JSON para a skill de balanceamento (/balancear)
 npm run concluir-exclusoes   # retoma exclusões de conta que pararam no meio (idempotente)

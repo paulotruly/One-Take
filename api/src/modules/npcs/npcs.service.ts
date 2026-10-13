@@ -1,6 +1,7 @@
 // NPCs do mestre: personagens com ficha completa (raça, classe opcional, nível, dados, perícias, cartas e inventário).
 // Só o mestre dono vê e edita; de outro mestre = 404. Gerais ou exclusivos de um grupo.
 // Sem imports do serviço de itens (ele importa este arquivo).
+import { kitIdsPara, podeUsar, quemVe, visao, visivelParaSemFixos } from "../../lib/sistema.js";
 import type { z } from "zod";
 import { naoEncontrado, requisicaoInvalida } from "../../lib/errors.js";
 import { comKits, definirKits, visivelNoKit } from "../../lib/kits.js";
@@ -11,7 +12,7 @@ import { estaMorto } from "../../regras/status.js";
 import { notacaoDoTeste } from "../../regras/teste.js";
 import { apresentarAtributo, atributoUsavel } from "../atributos/atributos.service.js";
 import { copiasDoCatalogo, somarPericias, testeDaCarta } from "../pericias/soma.js";
-import { classeLegivel } from "../classes/classes.service.js";
+import { classeLegivel, periciaNoCatalogo } from "../classes/classes.service.js";
 import { comStatus } from "../habilidades/habilidades.include.js";
 import { statusDaFicha } from "../fichas/status-da-ficha.js";
 import { apresentarItem, comRequisitos } from "../itens/itens.apresentar.js";
@@ -22,6 +23,13 @@ import type { criarNpcSchema, editarNpcSchema } from "./npcs.schemas.js";
 export async function npcDoMestre(id: string, usuarioId: string) {
   const npc = await getPrisma().npc.findUnique({ where: { id } });
   if (!npc || npc.donoId !== usuarioId) throw naoEncontrado("NPC não encontrado");
+  return npc;
+}
+
+/** Ver e duplicar: do mestre ou verificado. Editar, mexer em itens e status: só o dono (`npcDoMestre`). */
+async function npcLegivel(id: string, usuarioId: string) {
+  const npc = await getPrisma().npc.findUnique({ where: { id } });
+  if (!npc || !(await podeUsar("npc", npc, usuarioId, { semFixos: true }))) throw naoEncontrado("NPC não encontrado");
   return npc;
 }
 
@@ -40,8 +48,8 @@ async function validar(
   atual?: { racaId: string; classeId: string | null; vidaBase: number | null; manaBase: number | null; esforcoBase: number | null },
 ) {
   if (d.racaId) {
-    const raca = await getPrisma().raca.findUnique({ where: { id: d.racaId }, select: { donoId: true } });
-    if (!raca || raca.donoId !== usuarioId) throw naoEncontrado("Raça não encontrada");
+    const raca = await getPrisma().raca.findUnique({ where: { id: d.racaId }, select: { id: true, donoId: true, verificado: true } });
+    if (!raca || !(await podeUsar("raca", raca, usuarioId, { semFixos: true }))) throw naoEncontrado("Raça não encontrada");
   }
   if (d.classeId) await classeLegivel(d.classeId, usuarioId);
   const classeId = d.classeId !== undefined ? d.classeId : atual?.classeId ?? null;
@@ -71,8 +79,9 @@ const completo = {
 
 /** `kitId` = só os que aparecem com aquele kit (do kit + gerais). */
 export async function listar(usuarioId: string, kitId?: string) {
+  const quem = await quemVe(usuarioId);
   const npcs = await getPrisma().npc.findMany({
-    where: { donoId: usuarioId, ...visivelNoKit(kitId) },
+    where: { AND: [await visivelParaSemFixos(usuarioId), visivelNoKit(kitId)] },
     orderBy: { nome: "asc" },
     include: { raca: { select: { titulo: true } }, classe: { select: { titulo: true, pontosVida: true, pontosMana: true, pontosEsforco: true } }, ...comKits },
   });
@@ -80,7 +89,8 @@ export async function listar(usuarioId: string, kitId?: string) {
     const max = atributosNoNivel(baseDo(n, n.classe), n.nivel);
     return {
       id: n.id, nome: n.nome, descricao: n.descricao, imagemUrl: n.imagemUrl, nivel: n.nivel,
-      raca: n.raca.titulo, classe: n.classe?.titulo ?? null, kitIds: n.kits.map((k) => k.kitId),
+      raca: n.raca.titulo, classe: n.classe?.titulo ?? null, kitIds: kitIdsPara(n, quem),
+      ...visao(n, quem),
       vida: { atual: Math.min(n.vidaAtual, max.pontosVida), max: max.pontosVida },
       mana: { atual: Math.min(n.manaAtual, max.pontosMana), max: max.pontosMana },
       esforco: { atual: Math.min(n.esforcoAtual, max.pontosEsforco), max: max.pontosEsforco },
@@ -91,7 +101,8 @@ export async function listar(usuarioId: string, kitId?: string) {
 
 /** Ficha completa do NPC, calculada pelas mesmas regras das fichas. */
 export async function detalhar(id: string, usuarioId: string) {
-  await npcDoMestre(id, usuarioId);
+  await npcLegivel(id, usuarioId);
+  const quem = await quemVe(usuarioId);
   const prisma = getPrisma();
   const n = await prisma.npc.findUniqueOrThrow({ where: { id }, include: completo });
 
@@ -115,7 +126,7 @@ export async function detalhar(id: string, usuarioId: string) {
   const aplicados = n.status.map((s) => s.status);
 
   // Para onde os itens do NPC podem ir: fichas e grupos do mestre.
-  const grupos = await prisma.grupo.findMany({
+  const grupos = n.donoId !== usuarioId ? [] : await prisma.grupo.findMany({
     where: { mestreId: usuarioId },
     orderBy: { titulo: "asc" },
     select: { id: true, titulo: true, fichas: { orderBy: { nome: "asc" }, select: { id: true, nome: true, jogador: { select: { nickname: true } } } } },
@@ -132,7 +143,8 @@ export async function detalhar(id: string, usuarioId: string) {
     vidaBase: n.vidaBase,
     manaBase: n.manaBase,
     esforcoBase: n.esforcoBase,
-    kitIds: n.kits.map((k) => k.kitId),
+    kitIds: kitIdsPara(n, quem),
+    ...visao(n, quem),
     raca: { id: n.raca.id, titulo: n.raca.titulo, deslocamento: n.raca.deslocamento },
     classe: n.classe ? { id: n.classe.id, titulo: n.classe.titulo, grupo: n.classe.grupo } : null,
     vida: { atual: atuais.vidaAtual, max: max.pontosVida },
@@ -199,6 +211,39 @@ export async function editar(id: string, usuarioId: string, dados: z.infer<typeo
   });
   await definirKits("npc", id, kitIds, usuarioId);
   return detalhar(id, usuarioId);
+}
+
+/**
+ * Cópia "(cópia)" do NPC com raça, classe, nível, atributos e perícias, com vida, mana e esforço cheios, sem status, itens nem kits.
+ * Serve para o verificado de outra pessoa: as perícias passam a ser as do catálogo de quem duplica.
+ */
+export async function duplicar(id: string, usuarioId: string) {
+  await npcLegivel(id, usuarioId);
+  const o = await getPrisma().npc.findUniqueOrThrow({ where: { id }, include: { atributos: true, pericias: { include: { pericia: true } } } });
+  const max = await maximoAtual(o);
+  const pericias = await Promise.all(
+    o.pericias.map(async ({ pericia, pontos }) => ({ periciaId: o.donoId === usuarioId ? pericia.id : await periciaNoCatalogo(pericia, usuarioId), pontos })),
+  );
+  const npc = await getPrisma().npc.create({
+    data: {
+      donoId: usuarioId,
+      nome: `${o.nome} (cópia)`.slice(0, 80),
+      descricao: o.descricao,
+      imagemUrl: o.imagemUrl,
+      racaId: o.racaId,
+      classeId: o.classeId,
+      nivel: o.nivel,
+      vidaBase: o.vidaBase,
+      manaBase: o.manaBase,
+      esforcoBase: o.esforcoBase,
+      vidaAtual: max.pontosVida,
+      manaAtual: max.pontosMana,
+      esforcoAtual: max.pontosEsforco,
+      atributos: { create: o.atributos.map(({ atributoId, dados }) => ({ atributoId, dados })) },
+      pericias: { create: pericias },
+    },
+  });
+  return detalhar(npc.id, usuarioId);
 }
 
 /** Apaga o NPC e os itens que estão com ele. */

@@ -4,6 +4,9 @@ import { GitBranch, Plus } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router";
 import type { UseMutationResult } from "@tanstack/react-query";
+import type { ReactNode } from "react";
+import type { Visao } from "../../verificados/types";
+import { VerificadoBadge } from "../../verificados/components/VerificadoBadge";
 import { Button } from "../../../components/ui/Button";
 import { ConfirmDialog } from "../../../components/ui/ConfirmDialog";
 import { Field } from "../../../components/ui/Field";
@@ -11,7 +14,7 @@ import { Modal } from "../../../components/ui/Modal";
 import { ErrorState, Loading } from "../../../components/ui/States";
 import { erroDeFormulario, errosDeCampo, mensagemDeErro } from "../../../lib/api";
 
-export type ConceitoVisao = { id: string; titulo: string; descricao: string; filhos: { id: string; titulo: string }[] };
+export type ConceitoVisao = Visao & { id: string; titulo: string; descricao: string; filhos: { id: string; titulo: string }[] };
 type Dados = { titulo: string; descricao: string };
 
 type Props = {
@@ -34,6 +37,8 @@ type Props = {
   criar: UseMutationResult<unknown, Error, Dados>;
   editar: UseMutationResult<unknown, Error, { id: string; dados: Dados }>;
   excluir: UseMutationResult<unknown, Error, string>;
+  /** Ações extras por arquétipo (ex.: o botão de verificar). */
+  acoesExtra?: (c: ConceitoVisao) => ReactNode;
 };
 
 export function ConceitosBloco(p: Props) {
@@ -82,27 +87,30 @@ export function ConceitosBloco(p: Props) {
           {p.conceitos.map((c) => (
             <li key={c.id} className="conceito">
               <div className="conceito__topo">
-                <h3><GitBranch size={18} aria-hidden /> {c.titulo}</h3>
-                <div className="pericia__acoes">
-                  <Button pequeno variante="fantasma" onClick={() => abrir(c)}>Editar</Button>
-                  <Button pequeno variante="fantasma" onClick={() => { p.excluir.reset(); setAExcluir(c); }}>Excluir</Button>
-                </div>
+                <h3><GitBranch size={18} aria-hidden /> {c.titulo} {c.verificado && <VerificadoBadge compacto />}</h3>
+                {!c.deOutro && (
+                  <div className="pericia__acoes">
+                    <Button pequeno variante="fantasma" onClick={() => abrir(c)}>Editar</Button>
+                    <Button pequeno variante="fantasma" onClick={() => { p.excluir.reset(); setAExcluir(c); }}>Excluir</Button>
+                    {p.acoesExtra?.(c)}
+                  </div>
+                )}
               </div>
               <p className="pericia__descricao">{c.descricao}</p>
               <div className="conceito__subclasses">
-                {c.filhos.length === 0 ? (
+                {c.filhos.length === 0 && !c.deOutro ? (
                   <span className="aviso-inline">Sem {p.rotuloFilho.toLowerCase()} ainda: crie pelo menos uma.</span>
                 ) : (
                   c.filhos.map((s) => (
                     <Link key={s.id} to={p.hrefFilho(s.id)} className="conceito__subclasse">{s.titulo}</Link>
                   ))
                 )}
-                {p.hrefNovoFilho && (
+                {p.hrefNovoFilho && !c.deOutro && (
                   <Link to={p.hrefNovoFilho(c.id)} className="btn btn--pequeno">
                     <Plus size={14} aria-hidden /> {p.rotuloFilho}
                   </Link>
                 )}
-                {p.onNovoFilho && (
+                {p.onNovoFilho && !c.deOutro && (
                   <Button pequeno onClick={() => p.onNovoFilho!(c.id)}>
                     <Plus size={14} aria-hidden /> {p.rotuloFilho}
                   </Button>

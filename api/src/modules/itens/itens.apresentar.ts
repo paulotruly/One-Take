@@ -1,5 +1,6 @@
 // Formato público de itens (molde e item lançado) e validação dos pré-requisitos.
 // Sem imports de services, para não criar dependência circular.
+import { podeUsar } from "../../lib/sistema.js";
 import { getPrisma } from "../../lib/prisma.js";
 import { naoEncontrado } from "../../lib/errors.js";
 import { validarCategoria } from "./categorias.js";
@@ -55,7 +56,7 @@ export async function validarRequisitos(d: { requisitoPericiaId?: string | null;
     if (!p || p.donoId !== mestreId) throw naoEncontrado("Perícia do pré-requisito não encontrada");
   }
   if (d.requisitoClasseId) {
-    const c = await prisma.classe.findUnique({ where: { id: d.requisitoClasseId }, select: { donoId: true } });
-    if (!c || (c.donoId !== null && c.donoId !== mestreId)) throw naoEncontrado("Classe do pré-requisito não encontrada");
+    const c = await prisma.classe.findUnique({ where: { id: d.requisitoClasseId }, select: { id: true, donoId: true, verificado: true } });
+    if (!c || !(await podeUsar("classe", c, mestreId))) throw naoEncontrado("Classe do pré-requisito não encontrada");
   }
 }

@@ -7,6 +7,18 @@ Registre só o que muda comportamento, manutenção ou entendimento do sistema. 
 Formato de cada entrada: **Resumo**, Motivo, Arquivos/módulos, Impacto (regras ou arquitetura), Procedimentos (migrations, config) e Docs.
 
 ## Não commitado (2026-10-13)
+- **Selo verificado e cargo ADMIN**: o ADMIN (cargo no banco, `npm run cargo`) edita o fixo não automático e marca qualquer coisa
+  dele como verificada (classes, raças, atributos, perícias, status, categorias de item, itens do catálogo, criaturas e NPCs); todo mestre vê e usa, só leitura, e duplica para mudar.
+  Cada pessoa pode ocultar os verificados em Configurações da conta. NPCs e perícias ganharam "duplicar".
+  Kits e arquétipos também são verificáveis; **kit verificado leva tudo o que está nele**. Kit "Kit básico do One-Take" criado
+  (verificado, vazio) para o @paulo. Selo novo: check branco no selo azul.
+  - Procedimentos: migrations `20261013120000_kit_basico_admin`, `20261013130000_verificado_e_cargo` e
+    `20261013140000_verificado_em_tudo` e `20261013150000_verificado_kits_arquetipos` (aplicadas); `npm run cargo -- paulo ADMIN` (feito).
+  - Docs: DOMINIO, DADOS, API, ARQUITETURA, DECISOES, CLAUDE.md, documentação pública (Conteúdo verificado).
+- **Perícias de defesa nas cartas** (opcionais, várias) e **ranking de balanceamento** (`calc.mjs ranking`: poder por nível juntando vida,
+  mana, esforço, acerto, cartas, limites, cura e defesa; duelos e alertas).
+  - Procedimentos: migrations `20261013100000_pericia_de_defesa` e `20261013110000_pericias_de_defesa_multiplas` (aplicadas).
+  - Docs: DOMINIO, DADOS, API, DECISOES, documentação pública (Habilidades), skill `balancear`.
 - **Limite de uso da carta padronizado** (N vezes por combate ou por sessão) e **negrito** (`**texto**`) na descrição e no efeito.
   - Arquivos: `api/src/regras/limite.ts`, `habilidades.schemas.ts`, `regras/progressao.ts`, `fichas/retrato.ts`, `scripts/exportar-conteudo.ts`;
     `web/src/features/classes/` (formulários, carta, tipos), `components/texto/ComNegrito.tsx`.

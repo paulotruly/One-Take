@@ -1,11 +1,13 @@
 // Kits de RPG do mestre: coleções para uma aventura. O conteúdo entra no kit pelo campo `kitIds` de cada coisa
 // (classe, raça, atributo, perícia, status, item do catálogo, criatura, NPC). Excluir o kit não apaga nada: as coisas só saem dele.
+// Kit verificado: todo mestre vê e usa (só leitura), e tudo o que está nele conta como verificado.
 import { Router } from "express";
 import { z } from "zod";
 import { naoEncontrado } from "../../lib/errors.js";
 import { getPrisma } from "../../lib/prisma.js";
 import { idDe, texto } from "../../lib/validacao.js";
 import { usuarioDe } from "../../middleware/auth.js";
+import { ocultaVerificados, quemVe, visao, type Quem } from "../../lib/sistema.js";
 
 export const kitsRouter = Router();
 
@@ -16,8 +18,9 @@ const contagem = {
   _count: { select: { classes: true, racas: true, atributos: true, pericias: true, status: true, itens: true, bestas: true, npcs: true, grupos: true } },
 } as const;
 
-function apresentar<T extends { _count: Record<string, number> }>({ _count, ...k }: T) {
-  return { ...k, conteudo: _count };
+/** Com `quem`: campos de visão (o kit verificado de outra pessoa vem só leitura). */
+function apresentar<T extends { donoId: string; verificado: boolean; _count: Record<string, number> }>({ _count, ...k }: T, quem?: Quem) {
+  return { ...k, conteudo: _count, ...(quem && visao(k, quem)) };
 }
 
 async function kitDoMestre(id: string, usuarioId: string) {
@@ -27,8 +30,11 @@ async function kitDoMestre(id: string, usuarioId: string) {
 }
 
 kitsRouter.get("/kits", async (req, res) => {
-  const kits = await getPrisma().kit.findMany({ where: { donoId: usuarioDe(req).id }, orderBy: { nome: "asc" }, include: contagem });
-  res.json(kits.map(apresentar));
+  // Os do mestre + os kits verificados (de outras pessoas), que dá para usar como kit ativo e no grupo.
+  const usuarioId = usuarioDe(req).id;
+  const quem = await quemVe(usuarioId);
+  const kits = await getPrisma().kit.findMany({ where: (await ocultaVerificados(usuarioId)) ? { donoId: usuarioId } : { OR: [{ donoId: usuarioId }, { verificado: true }] }, orderBy: { nome: "asc" }, include: contagem });
+  res.json(kits.sort((a, b) => Number(a.donoId !== usuarioId) - Number(b.donoId !== usuarioId)).map((k) => apresentar(k, quem)));
 });
 
 kitsRouter.post("/kits", async (req, res) => {

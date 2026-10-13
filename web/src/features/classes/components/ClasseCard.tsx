@@ -15,7 +15,7 @@ export function ClasseCard({ classe, href, acoes }: Props) {
           <ClasseImagem url={classe.imagemUrl} titulo={classe.titulo} />
           <div className="classe-card__selos">
             <GrupoBadge grupo={classe.grupo} />
-            <OrigemBadge fixa={classe.fixa} />
+            <OrigemBadge fixa={classe.fixa} verificado={classe.verificado} deOutro={classe.deOutro} />
           </div>
         </div>
         <div className="classe-card__corpo">

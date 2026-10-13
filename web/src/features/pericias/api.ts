@@ -7,8 +7,12 @@ import type { Atributo, AtributoInput, PericiaCatalogo, PericiaInput } from "./t
 const CHAVE = ["pericias"] as const;
 const CHAVE_ATRIBUTOS = ["atributos"] as const;
 
-export function useCatalogo() {
-  return useQuery({ queryKey: CHAVE, queryFn: () => api<PericiaCatalogo[]>("/api/pericias") });
+/** Só as do mestre (opções dos formulários). `comVerificados`: também as verificadas de outras pessoas (página do catálogo). */
+export function useCatalogo({ comVerificados = false } = {}) {
+  return useQuery({
+    queryKey: [...CHAVE, comVerificados ? "com-verificados" : "minhas"],
+    queryFn: () => api<PericiaCatalogo[]>(`/api/pericias${comVerificados ? "?verificados=1" : ""}`),
+  });
 }
 
 export function useAtributos() {
@@ -29,6 +33,9 @@ function useEscrita<V, R>(fn: (v: V) => Promise<R>) {
 // ---------- Catálogo ----------
 export const useCriarPericia = () =>
   useEscrita((dados: PericiaInput) => api<PericiaCatalogo>("/api/pericias", { method: "POST", body: dados }));
+
+/** Copia uma perícia verificada para o catálogo do mestre. */
+export const useDuplicarPericia = () => useEscrita((id: string) => api<PericiaCatalogo>(`/api/pericias/${id}/duplicar`, { method: "POST" }));
 
 export const useEditarPericia = () =>
   useEscrita(({ id, dados }: { id: string; dados: PericiaInput }) =>

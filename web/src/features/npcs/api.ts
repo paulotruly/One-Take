@@ -26,6 +26,8 @@ export const useEditarNpc = (id: string) =>
   useEscrita((dados: Partial<NpcInput & { vidaAtual: number; manaAtual: number; esforcoAtual: number }>) =>
     api<NpcDetalhe>(`/api/npcs/${id}`, { method: "PATCH", body: dados }),
   );
+/** Cópia do NPC (com vida cheia, sem status nem itens); serve para os verificados de outras pessoas. */
+export const useDuplicarNpc = () => useEscrita((id: string) => api<NpcDetalhe>(`/api/npcs/${id}/duplicar`, { method: "POST" }));
 export const useExcluirNpc = () => useEscrita((id: string) => api<void>(`/api/npcs/${id}`, { method: "DELETE" }));
 export const useAplicarStatusNpc = (id: string) =>
   useEscrita((statusId: string) => api<NpcDetalhe>(`/api/npcs/${id}/status`, { method: "POST", body: { statusId } }));

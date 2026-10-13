@@ -1,10 +1,12 @@
 // Catálogo de status do mestre: fixos do sistema (somente leitura) + os criados por ele.
+import { AlternarVerificado } from "../../verificados/pages/AlternarVerificado";
 import { AvisoKit } from "../../kits/components/AvisoKit";
 import { useKitAtivo } from "../../kits/api";
 import { soDoKit } from "../../kits/types";
 import { Lock, Plus, Zap } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { KitsField } from "../../kits/components/KitsField";
+import { VerificadoBadge } from "../../verificados/components/VerificadoBadge";
 import { kitsPadrao } from "../../kits/types";
 import { Button } from "../../../components/ui/Button";
 import { ConfirmDialog } from "../../../components/ui/ConfirmDialog";
@@ -108,15 +110,17 @@ function Lista({ itens, onEditar, onExcluir }: { itens: Status[]; onEditar: (s: 
               <StatusBadge nome={s.nome} tipo={s.tipo} />
               <span className="pagina__subtitulo">{ROTULO_TIPO[s.tipo]}</span>
               {s.fixo && <span className="selo selo--fixa"><Lock size={12} aria-hidden /> Fixo</span>}
+              {s.verificado && <VerificadoBadge />}
               {s.gatilho && <span className="selo"><Zap size={12} aria-hidden /> {ROTULO_GATILHO[s.gatilho]}</span>}
             </div>
             {s.descricao && <p className="pericia__descricao">{s.descricao}</p>}
             <p><strong>Efeito:</strong> {s.efeito}</p>
           </div>
-          {!s.fixo && (
+          {(s.editavel ?? !s.fixo) && (
             <div className="pericia__acoes">
               <Button pequeno variante="fantasma" onClick={() => onEditar(s)}>Editar</Button>
-              <Button pequeno variante="fantasma" onClick={() => onExcluir(s)} aria-label={`Excluir ${s.nome}`}>Excluir</Button>
+              {!s.fixo && <Button pequeno variante="fantasma" onClick={() => onExcluir(s)} aria-label={`Excluir ${s.nome}`}>Excluir</Button>}
+              <AlternarVerificado tipo="status" item={s} pequeno />
             </div>
           )}
         </li>

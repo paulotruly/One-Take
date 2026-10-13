@@ -1,4 +1,5 @@
 // Linha de NPC (lista de NPCs e página do grupo).
+import { VerificadoBadge } from "../../verificados/components/VerificadoBadge";
 import { Droplet, Heart, Skull, Zap } from "lucide-react";
 import { Link } from "react-router";
 import { Avatar } from "../../../components/ui/Avatar";
@@ -11,9 +12,9 @@ export function NpcLinha({ n }: { n: NpcResumo }) {
       <Link to={`/mestre/npcs/${n.id}`} className="membro">
         <Avatar url={n.imagemUrl} nome={n.nome} tamanho={48} />
         <div className="membro__info">
-          <strong>{n.nome} {n.morto && <span className="selo selo--status-DEBUFF"><Skull size={12} aria-hidden /> Morto</span>}</strong>
+          <strong>{n.nome} {n.morto && <span className="selo selo--status-DEBUFF"><Skull size={12} aria-hidden /> Morto</span>} {n.verificado && <VerificadoBadge />}</strong>
           <span className="pagina__subtitulo">
-            {n.raca}{n.classe ? ` · ${n.classe}` : ""} · Nível {n.nivel}{n.kitIds.length === 0 && " · Geral"}
+            {n.raca}{n.classe ? ` · ${n.classe}` : ""} · Nível {n.nivel}{n.kitIds.length === 0 && !n.deOutro && " · Geral"}
           </span>
         </div>
         <div className="stats stats--compacto">

@@ -14,7 +14,7 @@ async function main() {
   const filtro = titulo ? { titulo: { contains: titulo, mode: "insensitive" as const } } : {};
   const prisma = criarPrisma(process.env.DIRECT_URL ?? process.env.DATABASE_URL ?? "");
   try {
-    const cartas = { orderBy: { ordem: "asc" as const }, include: { pericia: { select: { nome: true } }, aprimoramentos: { orderBy: { nivel: "asc" as const } } } };
+    const cartas = { orderBy: { ordem: "asc" as const }, include: { pericia: { select: { nome: true } }, periciasDefesa: { include: { pericia: { select: { nome: true } } } }, aprimoramentos: { orderBy: { nivel: "asc" as const } } } };
     const classes = await prisma.classe.findMany({
       where: filtro,
       orderBy: { titulo: "asc" },
@@ -43,7 +43,7 @@ async function main() {
     });
     const carta = (h: (typeof classes)[number]["habilidades"][number]) => ({
       titulo: h.titulo, tipoEfeito: h.tipoEfeito, efeito: h.descricaoEfeito, condicao: h.condicao, limite: rotuloLimite(h.limiteUsos, h.limitePor),
-      nivelNecessario: h.nivelNecessario, custoMana: h.custoMana, pericia: h.pericia?.nome ?? null,
+      nivelNecessario: h.nivelNecessario, custoMana: h.custoMana, pericia: h.pericia?.nome ?? null, periciasDefesa: h.periciasDefesa.map((d) => d.pericia.nome),
       aprimoramentos: h.aprimoramentos.map((a) => ({ nivel: a.nivel, efeito: a.descricaoEfeito, custoMana: a.custoMana, limite: rotuloLimite(a.limiteUsos, a.limitePor), condicao: a.condicao })),
     });
     const saida = {

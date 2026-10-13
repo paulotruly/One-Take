@@ -33,7 +33,7 @@ export function useKitAtivo() {
   // Kit apagado: o filtro some sozinho.
   const kitId = kits.data && !kit ? null : id;
   function definir(novo: string | null) {
-    gravarKitAtivo(novo);
+    gravarKitAtivo(novo, !!kits.data?.find((k) => k.id === novo)?.deOutro);
     ouvintes.forEach((cb) => cb());
   }
   return { kitId, kit, definir };

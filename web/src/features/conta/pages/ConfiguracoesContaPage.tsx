@@ -2,7 +2,7 @@
 import { useMe } from "../../../auth/AuthProvider";
 import { ErrorState, Loading } from "../../../components/ui/States";
 import { mensagemDeErro } from "../../../lib/api";
-import { SecaoDados, SecaoExcluirConta, SecaoRecuperacao } from "./SecoesDaConta";
+import { SecaoDados, SecaoExcluirConta, SecaoRecuperacao, SecaoVerificados } from "./SecoesDaConta";
 
 export function ConfiguracoesContaPage() {
   const me = useMe();
@@ -15,6 +15,7 @@ export function ConfiguracoesContaPage() {
         <p className="pagina__subtitulo">Recuperação de senha, seus dados e acesso da conta. Nada daqui aparece para outras pessoas.</p>
       </div>
       <SecaoRecuperacao me={me.data} />
+      <SecaoVerificados me={me.data} />
       <SecaoDados me={me.data} />
       <SecaoExcluirConta me={me.data} />
     </div>

@@ -1,4 +1,6 @@
 // Kits de RPG do mestre: criar, editar, excluir e escolher o kit ativo (filtro da interface).
+import { AlternarVerificado } from "../../verificados/pages/AlternarVerificado";
+import { VerificadoBadge } from "../../verificados/components/VerificadoBadge";
 import { Check, Package, Pencil, Plus, Trash2 } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { Button } from "../../../components/ui/Button";
@@ -21,6 +23,7 @@ export function KitsPage() {
   const criar = useCriarKit();
   const editar = useEditarKit();
   const excluir = useExcluirKit();
+
   const [emEdicao, setEmEdicao] = useState<Kit | null | undefined>(undefined);
   const [aExcluir, setAExcluir] = useState<Kit | null>(null);
   const [nome, setNome] = useState("");
@@ -70,15 +73,23 @@ export function KitsPage() {
             <li key={k.id} className={`conceito ${k.id === kitId ? "conceito--ativo" : ""}`}>
               <div className="conceito__topo">
                 <h3><Package size={18} aria-hidden /> {k.nome}</h3>
-                <div className="pericia__acoes">
-                  <Button pequeno variante="fantasma" aria-label={`Editar ${k.nome}`} onClick={() => abrir(k)}><Pencil size={14} aria-hidden /></Button>
-                  <Button pequeno variante="fantasma" aria-label={`Excluir ${k.nome}`} onClick={() => { excluir.reset(); setAExcluir(k); }}><Trash2 size={14} aria-hidden /></Button>
-                </div>
+                {!k.deOutro && (
+                  <div className="pericia__acoes">
+                    <Button pequeno variante="fantasma" aria-label={`Editar ${k.nome}`} onClick={() => abrir(k)}><Pencil size={14} aria-hidden /></Button>
+                    <Button pequeno variante="fantasma" aria-label={`Excluir ${k.nome}`} onClick={() => { excluir.reset(); setAExcluir(k); }}><Trash2 size={14} aria-hidden /></Button>
+                  </div>
+                )}
               </div>
+              {k.verificado && (
+                <p className="pagina__subtitulo">
+                  <VerificadoBadge /> {k.deOutro ? "Kit verificado do One-Take: só leitura. Use como kit ativo ou num grupo." : "Todo mestre vê este kit e tudo o que está nele."}
+                </p>
+              )}
               {k.descricao && <p className="pericia__descricao">{k.descricao}</p>}
               <p className="pagina__subtitulo">
                 {ROTULOS.filter(([c]) => k.conteudo[c] > 0).map(([c, r]) => `${k.conteudo[c]} ${r}`).join(" · ") || "Vazio por enquanto."}
               </p>
+              {k.podeVerificar && <div><AlternarVerificado tipo="kit" item={k} pequeno /></div>}
               <div>
                 {k.id === kitId ? (
                   <Button pequeno onClick={() => definir(null)}><Check size={14} aria-hidden /> Kit ativo · mostrar tudo</Button>

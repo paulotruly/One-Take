@@ -14,6 +14,18 @@ export type Status = {
   automatico: boolean;
   /** Na lista do mestre: kits de RPG em que o status está (vazio = geral). */
   kitIds?: string[];
+  /** Para quem vê: pode editar (é dele, ou é fixo e ele é administrador). */
+  editavel?: boolean;
+  /** Selo verificado: todo mestre vê e usa. */
+  verificado?: boolean;
+  /** Verificado de outra pessoa: só leitura, dá para duplicar. */
+  deOutro?: boolean;
+  /** Quem vê é ADMIN e dono: pode pôr ou tirar o selo. */
+  podeVerificar?: boolean;
+  /** Selo marcado nesta coisa (sem contar o do kit). */
+  seloProprio?: boolean;
+  /** Verificado por estar num kit verificado. */
+  verificadoPorKit?: boolean;
 };
 
 export type StatusResumo = { id: string; nome: string; tipo: TipoStatus };

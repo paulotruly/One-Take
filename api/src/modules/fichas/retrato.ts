@@ -31,6 +31,7 @@ export async function fotoDaFicha(fichaId: string, jogadorId: string) {
         titulo: h.titulo, descricao: h.descricao, tipoEfeito: h.tipoEfeito, descricaoEfeito: h.descricaoEfeito,
         condicao: h.condicao, limite: rotuloLimite(h.limiteUsos, h.limitePor), custoMana: h.custoMana, nivelNecessario: h.nivelNecessario,
         teste: h.teste?.teste ?? null,
+        defesa: h.periciasDefesa.map((d) => d.pericia.nome),
       })),
       inventario: f.inventario.itens.map((i) => ({
         nome: i.nome, descricao: i.descricao, efeito: i.efeito, espacos: i.espacos, categoria: i.categoria?.nome ?? null, usosRestantes: i.usosRestantes,

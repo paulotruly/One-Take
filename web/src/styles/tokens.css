@@ -23,6 +23,8 @@
   /* Origem da classe */
   --cor-fixa: #b45309;
   --cor-propria: #4f46e5;
+  --cor-verificado: #1d9bf0; /* selo verificado (azul) */
+  --cor-sobre-verificado: #ffffff; /* check branco dentro do selo */
 
   /* Grupos */
   --cor-grupo-combatente: #dc2626;

@@ -1,8 +1,10 @@
 // Grupos: o RPG de um mestre. Só o mestre dono vê e altera o grupo.
+import type { TipoKit } from "../../lib/kits.js";
+import { podeUsar } from "../../lib/sistema.js";
 import { randomInt } from "node:crypto";
 import type { z } from "zod";
 import { naoEncontrado, requisicaoInvalida } from "../../lib/errors.js";
-import { validarKits } from "../../lib/kits.js";
+import { validarKitDoGrupo } from "../../lib/kits.js";
 import { getPrisma } from "../../lib/prisma.js";
 import { atributosNoNivel } from "../../regras/progressao.js";
 import { apresentarCriatura } from "../criaturas/criaturas.service.js";
@@ -40,25 +42,28 @@ async function validarDisponiveis(d: Disponiveis, usuarioId: string) {
   const prisma = getPrisma();
   const unicos = (a: string[]) => [...new Set(a)];
 
+  const todosPodem = async (tipo: TipoKit, lista: { id: string; donoId: string | null }[], semFixos = false) =>
+    (await Promise.all(lista.map((x) => podeUsar(tipo, x, usuarioId, { semFixos })))).every(Boolean);
+
   const classes = await prisma.classe.findMany({ where: { id: { in: unicos(d.classeIds) } } });
-  if (classes.length !== unicos(d.classeIds).length || classes.some((c) => c.donoId !== null && c.donoId !== usuarioId)) {
+  if (classes.length !== unicos(d.classeIds).length || !(await todosPodem("classe", classes))) {
     throw requisicaoInvalida("Alguma classe escolhida não existe ou não é sua.");
   }
   const racas = await prisma.raca.findMany({ where: { id: { in: unicos(d.racaIds) } } });
-  if (racas.length !== unicos(d.racaIds).length || racas.some((r) => r.donoId !== usuarioId)) {
+  if (racas.length !== unicos(d.racaIds).length || !(await todosPodem("raca", racas, true))) {
     throw requisicaoInvalida("Alguma raça escolhida não existe ou não é sua.");
   }
   const atributos = await prisma.atributo.findMany({ where: { id: { in: unicos(d.atributoIds) } } });
-  if (atributos.length !== unicos(d.atributoIds).length || atributos.some((a) => a.donoId !== null && a.donoId !== usuarioId)) {
+  if (atributos.length !== unicos(d.atributoIds).length || !(await todosPodem("atributo", atributos))) {
     throw requisicaoInvalida("Algum atributo escolhido não existe ou não é seu.");
   }
   const pericias = await prisma.pericia.findMany({ where: { id: { in: unicos(d.periciaIds) } } });
   const atributosMarcados = new Set(d.atributoIds);
-  if (pericias.length !== unicos(d.periciaIds).length || pericias.some((p) => p.donoId !== usuarioId || !atributosMarcados.has(p.atributoId))) {
+  if (pericias.length !== unicos(d.periciaIds).length || !(await todosPodem("pericia", pericias, true)) || pericias.some((p) => !atributosMarcados.has(p.atributoId))) {
     throw requisicaoInvalida("Alguma perícia escolhida não é do seu catálogo ou está fora dos atributos marcados.");
   }
   const status = await prisma.status.findMany({ where: { id: { in: unicos(d.statusIds) } } });
-  if (status.length !== unicos(d.statusIds).length || status.some((s) => s.donoId !== null && s.donoId !== usuarioId)) {
+  if (status.length !== unicos(d.statusIds).length || !(await todosPodem("status", status))) {
     throw requisicaoInvalida("Algum status escolhido não existe ou não é seu.");
   }
   return {
@@ -155,7 +160,7 @@ export async function detalhar(id: string, usuarioId: string) {
 
 export async function criar(usuarioId: string, dados: z.infer<typeof criarGrupoSchema>) {
   const { disponiveis, ...resto } = dados;
-  if (resto.kitId) await validarKits([resto.kitId], usuarioId);
+  await validarKitDoGrupo(resto.kitId, usuarioId);
   const d = disponiveis ? await validarDisponiveis(disponiveis, usuarioId) : null;
   const grupo = await getPrisma().grupo.create({ data: { ...resto, mestreId: usuarioId, codigo: await novoCodigo() } });
   if (d) await gravarDisponiveis(grupo.id, d);
@@ -164,7 +169,7 @@ export async function criar(usuarioId: string, dados: z.infer<typeof criarGrupoS
 
 export async function editar(id: string, usuarioId: string, dados: z.infer<typeof editarGrupoSchema>) {
   await grupoDoMestre(id, usuarioId);
-  if (dados.kitId) await validarKits([dados.kitId], usuarioId);
+  await validarKitDoGrupo(dados.kitId, usuarioId);
   if (dados.limiteMembros !== undefined) {
     const membros = await getPrisma().ficha.count({ where: { grupoId: id } });
     if (dados.limiteMembros < membros) {

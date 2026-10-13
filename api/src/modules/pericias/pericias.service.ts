@@ -4,7 +4,8 @@ import { conflito, naoEncontrado } from "../../lib/errors.js";
 import { getPrisma } from "../../lib/prisma.js";
 import type { Usuario } from "../../middleware/auth.js";
 import { apresentarAtributo, atributoUsavel, porAtributoENome } from "../atributos/atributos.service.js";
-import { classeEditavel } from "../classes/classes.service.js";
+import { classeEditavel, periciaNoCatalogo } from "../classes/classes.service.js";
+import { kitIdsPara, podeUsar, quemVe, visao, visivelParaSemFixos } from "../../lib/sistema.js";
 import { comKits, definirKits } from "../../lib/kits.js";
 import type { criarPericiaSchema, editarPericiaSchema } from "./pericias.schemas.js";
 
@@ -48,12 +49,31 @@ function apresentar<T extends { atributo: Atributo; _count: { classes: number; r
   return { ...p, atributo: apresentarAtributo(atributo), usosClasses: _count.classes, usosRacas: _count.racas, kitIds: (kits ?? []).map((k) => k.kitId) };
 }
 
-export async function listar(usuarioId: string) {
+/**
+ * O catálogo do mestre (com `comVerificados`, também as perícias verificadas de outras pessoas que ele ainda não tem: mesma origem ou mesmo nome = já tem). Sem a opção, só as dele (opções dos formulários de vínculo).
+ * As verificadas vêm só leitura; "duplicar" copia para o catálogo.
+ */
+export async function listar(usuarioId: string, { comVerificados = false } = {}) {
+  const quem = await quemVe(usuarioId);
   const pericias = await getPrisma().pericia.findMany({
-    where: { donoId: usuarioId },
+    where: comVerificados ? await visivelParaSemFixos(usuarioId) : { donoId: usuarioId },
     include: contarUsos,
   });
-  return pericias.map(apresentar).sort(porAtributoENome);
+  const minhas = pericias.filter((p) => p.donoId === usuarioId);
+  const origens = new Set(minhas.map((p) => p.origemId ?? p.id));
+  const nomes = new Set(minhas.map((p) => p.nome.toLocaleLowerCase("pt-BR")));
+  return pericias
+    .filter((p) => p.donoId === usuarioId || !(origens.has(p.origemId ?? p.id) || nomes.has(p.nome.toLocaleLowerCase("pt-BR"))))
+    .map((p) => ({ ...apresentar(p), ...visao(p, quem), kitIds: kitIdsPara(p, quem) }))
+    .sort(porAtributoENome);
+}
+
+/** Copia uma perícia verificada para o catálogo do mestre (ou devolve a que ele já tem igual). */
+export async function duplicar(id: string, usuarioId: string) {
+  const p = await getPrisma().pericia.findUnique({ where: { id } });
+  if (!p || !(await podeUsar("pericia", p, usuarioId, { semFixos: true }))) throw naoEncontrado("Perícia não encontrada");
+  const novaId = await periciaNoCatalogo(p, usuarioId);
+  return apresentar(await getPrisma().pericia.findUniqueOrThrow({ where: { id: novaId }, include: contarUsos }));
 }
 
 export async function criar(usuarioId: string, dados: z.infer<typeof criarPericiaSchema>) {

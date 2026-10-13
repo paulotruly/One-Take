@@ -6,6 +6,16 @@ import { getPrisma } from "../../lib/prisma.js";
 import { notacaoDoTeste } from "../../regras/teste.js";
 import { apresentarAtributo, porAtributoENome } from "../atributos/atributos.service.js";
 
+/**
+ * Chave de soma: perícia base -> cópia do mestre; cópia de outro mestre (ex.: classe verificado) com a mesma origem -> cópia do
+ * mestre; o resto conta como ela mesma.
+ */
+export function chaveDaPericia(p: { id: string; donoId: string | null; origemId?: string | null }, copiaDe: Map<string, string>) {
+  if (p.donoId === null) return copiaDe.get(p.id) ?? p.id;
+  if (p.origemId) return copiaDe.get(p.origemId) ?? p.id;
+  return p.id;
+}
+
 /** Liga cada perícia base à cópia dela no catálogo do mestre. */
 export async function copiasDoCatalogo(mestreId: string) {
   const copias = await getPrisma().pericia.findMany({ where: { donoId: mestreId, origemId: { not: null } }, select: { id: true, origemId: true } });
@@ -27,7 +37,7 @@ export type LinhaPericia<F extends string> = {
 export function somarPericias<F extends string>(fontes: readonly F[], entradas: Entrada<F>[], copiaDe: Map<string, string>): LinhaPericia<F>[] {
   const linhas = new Map<string, LinhaPericia<F>>();
   for (const { pericia: p, fonte, valor } of entradas) {
-    const chave = p.donoId === null ? (copiaDe.get(p.id) ?? p.id) : p.id;
+    const chave = chaveDaPericia(p, copiaDe);
     let l = linhas.get(chave);
     if (!l) {
       l = { id: chave, nome: p.nome, descricao: p.descricao, categoria: p.categoria, atributo: apresentarAtributo(p.atributo), total: 0 } as LinhaPericia<F>;
@@ -40,7 +50,7 @@ export function somarPericias<F extends string>(fontes: readonly F[], entradas: 
   return [...linhas.values()].sort(porAtributoENome);
 }
 
-type CartaComPericia = { pericia?: { id: string; nome: string; donoId: string | null; atributo: { id: string; nome: string } } | null };
+type CartaComPericia = { pericia?: { id: string; nome: string; donoId: string | null; origemId?: string | null; atributo: { id: string; nome: string } } | null };
 
 /**
  * Teste para usar a carta, para um personagem: dados do atributo da perícia + total dele nela (0 se não tem).
@@ -49,6 +59,6 @@ type CartaComPericia = { pericia?: { id: string; nome: string; donoId: string | 
 export function testeDaCarta(carta: CartaComPericia, totais: Map<string, number>, dadosPorAtributo: Map<string, number>, copiaDe: Map<string, string>) {
   const p = carta.pericia;
   if (!p) return null;
-  const chave = p.donoId === null ? (copiaDe.get(p.id) ?? p.id) : p.id;
+  const chave = chaveDaPericia(p, copiaDe);
   return { pericia: p.nome, atributo: p.atributo.nome, teste: notacaoDoTeste(dadosPorAtributo.get(p.atributo.id) ?? 0, totais.get(chave) ?? 0) };
 }

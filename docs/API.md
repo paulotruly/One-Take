@@ -50,7 +50,7 @@ Formato único:
 ## Tipos de resposta
 **Classe (resumo)**: `{ id, grupo, titulo, descricao, imagemUrl, pontosVida, pontosMana, pontosEsforco, donoId, origemId, fixa, criadoEm, atualizadoEm }`
 **Classe (detalhe)**: resumo + `habilidades: Habilidade[]` (a cartela, por `ordem`) + `pericias: PericiaDaClasse[]` (por atributo e nome).
-**Habilidade**: `{ id, classeId, bestaId, periciaId, pericia: { id, nome, atributo } | null, titulo, descricao, condicao, tipoEfeito, descricaoEfeito, limiteUsos, limitePor, nivelNecessario, custoMana, ordem }`
+**Habilidade**: `{ id, classeId, bestaId, periciaId, pericia: { id, nome, atributo } | null, periciasDefesa: [{ periciaId, pericia: { id, nome, atributo } }], titulo, descricao, condicao, tipoEfeito, descricaoEfeito, limiteUsos, limitePor, nivelNecessario, custoMana, ordem }`
 Nas fichas, NPCs e criaturas, cada carta vem também com `teste: { pericia, atributo, teste: "2d20 + 5" } | null`. `periciaId` no POST/PATCH = perícia do catálogo do mestre.
 `tipoEfeito`: `DANO | DEFESA | CURA | SUPORTE | FORTALECIMENTO | ENFRAQUECIMENTO | CONTROLE | MOBILIDADE | INVOCACAO | UTILIDADE` (obrigatório; outro valor = 400 "Escolha um tipo de efeito").
 **PericiaCatalogo**: `{ id, nome, descricao, categoria, atributoId, atributo: Atributo, donoId, origemId, criadoEm, usosClasses, usosRacas }`
@@ -74,7 +74,7 @@ Nas fichas, NPCs e criaturas, cada carta vem também com `teste: { pericia, atri
 | PATCH | `/api/classes/:id` | qualquer subconjunto do POST | `Classe` |
 | DELETE | `/api/classes/:id` | — | `204` (cascata) |
 | POST | `/api/classes/:id/duplicar` | — | `201 Classe (detalhe)` — cópia "(cópia)" do mestre, com habilidades, perícias e o mesmo link de imagem |
-| POST | `/api/classes/:classeId/habilidades` | `{ titulo, descricao, tipoEfeito, descricaoEfeito, condicao?, limiteUsos? (1–99), limitePor? (COMBATE \| SESSAO), nivelNecessario? (1), custoMana? (0) }` (limite: os dois juntos ou nenhum) | `201 Habilidade` (no fim da cartela). Classe inexistente = 404; fixa = 403 |
+| POST | `/api/classes/:classeId/habilidades` | `{ titulo, descricao, tipoEfeito, descricaoEfeito, condicao?, limiteUsos? (1–99), limitePor? (COMBATE \| SESSAO), periciasDefesaIds? ([], perícias do catálogo do mestre), nivelNecessario? (1), custoMana? (0) }` (limite: os dois juntos ou nenhum) | `201 Habilidade` (no fim da cartela). Classe inexistente = 404; fixa = 403 |
 | PUT | `/api/classes/:classeId/habilidades/ordem` | `{ ids: string[] }` — exatamente as habilidades da classe, na nova ordem | `Habilidade[]` |
 | PATCH | `/api/habilidades/:id` | subconjunto | `Habilidade` |
 | DELETE | `/api/habilidades/:id` | — | `204` |
@@ -139,7 +139,9 @@ O kit do grupo (`kitId`) não limita o PUT de disponíveis: a tela usa o kit par
 ## Kits de RPG (mestre)
 | Método | Rota | Corpo | Resposta |
 |---|---|---|---|
-| GET | `/api/kits` | — | kits do mestre: `{ id, nome, descricao, conteudo { classes, racas, atributos, pericias, status, itens, bestas, npcs, grupos } }` |
+| GET | `/api/sistema` | — | `{ admin }` (cargo ADMIN de quem pede) |
+| PUT | `/api/verificados/:tipo/:id` | `{ verificado: boolean }` | `{ tipo, id, verificado }`. `tipo`: classe, raca, atributo, pericia, status, categoriaItem, itemModelo, besta, npc, kit, classeConceito, racaConceito, bestaConceito (outro = 400). Só ADMIN (403) e só nas coisas dele (404) |
+| GET | `/api/kits` | — | kits do mestre: `{ id, nome, descricao, basico, conteudo { classes, racas, atributos, pericias, status, itens, bestas, npcs, grupos } }` |
 | POST | `/api/kits` | `{ nome, descricao? }` | `201 Kit` |
 | PATCH | `/api/kits/:id` | parcial | `Kit` |
 | DELETE | `/api/kits/:id` | — | `204`. Nada é apagado: as coisas saem do kit (sem outro kit, viram gerais) e os grupos ficam sem kit |
@@ -147,6 +149,18 @@ O kit do grupo (`kitId`) não limita o PUT de disponíveis: a tela usa o kit par
 Classes, raças, atributos, perícias, status, itens do catálogo, criaturas e NPCs aceitam `kitIds: string[]` (máx. 50, kits do mestre;
 outro = 404) no POST/PATCH e devolvem `kitIds` (vazio = geral). No PATCH, mandar `kitIds` troca a lista inteira; omitir mantém.
 Listas com `?kitId=` (`/api/catalogo-itens`, `/api/npcs`) devolvem o que está no kit mais o que é geral.
+
+**Verificado e cargo ADMIN.** Listas e detalhes de classes, raças, atributos, perícias, status, categorias de item, itens do catálogo, criaturas e NPCs incluem o que é
+verificado (a menos que a pessoa tenha `ocultarVerificados`) e trazem `editavel` (é seu, ou é fixo e você é ADMIN), `verificado`,
+`seloProprio`, `verificadoPorKit` (está num kit verificado), `deOutro` (de outra pessoa: só leitura; `kitIds` só com os kits
+verificados) e `podeVerificar` (ADMIN e dono). `GET /api/kits` traz os do mestre e os verificados; `GET /api/conceitos*` traz os do
+mestre, os verificados e os que têm variação verificada (das variações de outra pessoa, só as verificadas). Grupo aceita kit verificado. Editar algo verificado de
+outra pessoa = 403 (`CLASSE_FIXA`, `VERIFICADO`); usar no grupo, lançar item, invocar criatura e duplicar funcionam
+(`POST /api/classes/:id/duplicar`, `/api/bestas/:id/duplicar`, `/api/npcs/:id/duplicar` (vida cheia, sem status, itens nem kits),
+`/api/pericias/:id/duplicar` (copia para o catálogo ou devolve a igual)). `GET /api/pericias` traz só as do mestre (opções dos
+formulários); `?verificados=1` inclui as verificadas que ele ainda não tem (mesma origem ou nome). O ADMIN edita atributo, status sem
+gatilho, categoria de item e classe fixos (PATCH); DELETE de fixo continua 403. `GET /api/me` traz `cargo` e `ocultarVerificados`;
+`PATCH /api/me` aceita `ocultarVerificados: boolean`.
 
 ## Fichas, convites e itens (qualquer usuário logado)
 | Método | Rota | Corpo | Resposta |

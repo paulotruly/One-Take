@@ -91,7 +91,7 @@ export function CartelaEditor({ habilidades, editavel, criar, ordenar }: Props) 
 
       <Modal aberto={emEdicao !== undefined} onFechar={fechar} titulo={emEdicao ? "Editar habilidade" : "Nova habilidade"}>
         <HabilidadeForm
-          inicial={emEdicao ?? undefined}
+          inicial={emEdicao ? { ...emEdicao, periciasDefesaIds: emEdicao.periciasDefesa?.map((d) => d.periciaId) ?? [] } : undefined}
           opcoesStatus={status.data}
           opcoesPericias={catalogo.data}
           enviando={salvando.isPending}

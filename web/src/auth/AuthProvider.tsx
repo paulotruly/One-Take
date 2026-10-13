@@ -15,6 +15,10 @@ export type Me = {
   codigoRecuperacaoEm: string | null;
   /** "AAAA-MM-DD"; nula em contas criadas antes da idade mínima. */
   dataNascimento: string | null;
+  /** Cargo no sistema: ADMIN edita as coisas fixas e marca o que é verificado. */
+  cargo?: "USUARIO" | "ADMIN";
+  /** Esconde da interface o conteúdo verificado de outras pessoas. */
+  ocultarVerificados?: boolean;
 };
 
 /** Nome de usuário (nickname no código) guardado sem "@" e minúsculo. */

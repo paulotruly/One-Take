@@ -26,6 +26,13 @@ export async function validarKits(kitIds: string[] | undefined, mestreId: string
   if (n !== unicos.length) throw naoEncontrado("Kit não encontrado");
 }
 
+/** Kit de um grupo: do mestre ou verificado. */
+export async function validarKitDoGrupo(kitId: string | null | undefined, mestreId: string) {
+  if (!kitId) return;
+  const n = await getPrisma().kit.count({ where: { id: kitId, OR: [{ donoId: mestreId }, { verificado: true }] } });
+  if (n === 0) throw naoEncontrado("Kit não encontrado");
+}
+
 /** Liga o registro aos kits informados (troca a lista inteira). `undefined` = não mexe. */
 export async function definirKits(tipo: TipoKit, id: string, kitIds: string[] | undefined, mestreId: string) {
   if (kitIds === undefined) return;

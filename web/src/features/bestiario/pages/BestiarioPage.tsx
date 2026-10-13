@@ -1,4 +1,5 @@
 // Bestiário do mestre: criaturas montadas como classes, prontas para invocar nos grupos.
+import { AlternarVerificado } from "../../verificados/pages/AlternarVerificado";
 import { AvisoKit } from "../../kits/components/AvisoKit";
 import { useKitAtivo } from "../../kits/api";
 import { soDoKit } from "../../kits/types";
@@ -47,6 +48,7 @@ export function BestiarioPage() {
         criar={useCriarConceitoBesta()}
         editar={useEditarConceitoBesta()}
         excluir={useExcluirConceitoBesta()}
+        acoesExtra={(c) => <AlternarVerificado tipo="bestaConceito" item={c} pequeno />}
       />
 
       <h2>Todas as criaturas</h2>

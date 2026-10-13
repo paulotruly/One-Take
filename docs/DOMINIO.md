@@ -71,6 +71,8 @@ Cada carta da cartela:
   É aqui que os pontos de mana da classe são usados.
 - **Ordem** dentro da cartela (o mestre reordena).
 - **Ativa status** (opcional).
+- **Defesa do alvo** (opcional): uma ou mais perícias que o alvo pode usar para se defender da carta (informativo; o mestre
+  pede o teste ao alvo).
 - **Perícia do teste** (opcional): qual perícia o personagem testa para usar a carta. Fichas, NPCs e criaturas mostram o teste pronto
   daquele personagem (dados do atributo da perícia + total dele nela; sem a perícia, bônus 0).
 - **Aprimoramentos** (opcional): a partir de um nível, a mesma carta muda (título, efeito, condição, limite, custo de mana,
@@ -141,6 +143,18 @@ Atributos agrupam as perícias e recebem os dados nos testes.
   criado já entra no kit; o geral aparece em **Todos**. O **grupo** pode ter um kit:
   ao escolher, a tela marca o que vale (do kit + gerais; status fixos sempre), e itens, criaturas e NPCs mostrados no grupo seguem o kit.
   Excluir um kit não apaga nada.
+- **Conteúdo verificado**: qualquer coisa criada pelo ADMIN (classes, raças, atributos, perícias, status, categorias de item, itens do catálogo, criaturas e NPCs,
+  e também **kits de RPG** e **arquétipos**) pode receber o selo **verificado**. **Kit verificado leva tudo o que está nele**: cada coisa
+  do kit conta como verificada enquanto estiver lá (inclusive o que entrar depois); tirar do kit tira o selo, a menos que a coisa tenha
+  o selo próprio. O kit verificado aparece para todo mestre, que pode usá-lo como kit ativo e no grupo (o que ele cria não entra nesse
+  kit). O arquétipo aparece se for verificado ou se tiver variação verificada (só as variações verificadas aparecem para os outros). Verificado aparece para todo mestre, **só leitura** e sempre atualizado: dá para usar nos grupos, lançar os
+  itens, invocar as criaturas e **duplicar** (classe, criatura, NPC; a perícia é copiada para o catálogo). Com kit ativo, o verificado
+  de outra pessoa segue o kit como o resto (aparece se estiver no kit ativo). Perícias de uma carta verificada contam como a perícia equivalente do mestre (mesma
+  origem) na soma da ficha. Cada pessoa pode **ocultar os verificados** da própria interface (Configurações da conta); o que já está em
+  uso nos grupos e fichas continua funcionando.
+- **Cargo ADMIN** (`Perfil.cargo`, trocado por `npm run cargo -- <nome de usuário> ADMIN`): edita o que é fixo e **não automático**
+  (atributos, status sem gatilho, categorias de item, classes fixas) e põe ou tira o selo verificado nas coisas dele. Fixo nunca é
+  excluído.
 - Membro = jogador com ficha no grupo. Só entra enquanto houver vaga.
 
 ## Ficha

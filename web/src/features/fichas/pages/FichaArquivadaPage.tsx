@@ -86,6 +86,7 @@ export function FichaArquivadaPage() {
                   {h.custoMana > 0 && ` · ${h.custoMana} de mana`}{h.teste && ` · Teste ${h.teste}`}
                 </p>
                 <p><ComNegrito texto={h.descricaoEfeito} /></p>
+                {h.defesa && h.defesa.length > 0 && <p className="pagina__subtitulo">Defesa do alvo: {[h.defesa].flat().join(" ou ")}</p>}
                 {h.condicao && <p className="pagina__subtitulo">Condição: {h.condicao}</p>}
                 {h.limite && <p className="pagina__subtitulo">Limite: {h.limite}</p>}
               </li>

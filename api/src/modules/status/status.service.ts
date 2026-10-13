@@ -3,6 +3,7 @@ import type { z } from "zod";
 import type { Status } from "../../generated/prisma/client.js";
 import { AppError, conflito, naoEncontrado } from "../../lib/errors.js";
 import { getPrisma } from "../../lib/prisma.js";
+import { ehAdmin, kitIdsPara, podeUsar, quemVe, visao, visivelPara } from "../../lib/sistema.js";
 import { comKits, definirKits } from "../../lib/kits.js";
 import type { criarStatusSchema, editarStatusSchema } from "./status.schemas.js";
 
@@ -10,10 +11,10 @@ export function apresentarStatus({ id, nome, descricao, efeito, tipo, gatilho, o
   return { id, nome, descricao, efeito, tipo, gatilho, ordem, fixo: donoId === null, automatico: gatilho !== null };
 }
 
-/** Status que o mestre pode usar: fixo ou dele. Outro = 404. */
+/** Status que o mestre pode usar: fixo, verificado ou dele. Outro = 404. */
 export async function statusUsavel(id: string, usuarioId: string) {
   const status = await getPrisma().status.findUnique({ where: { id } });
-  if (!status || (status.donoId !== null && status.donoId !== usuarioId)) throw naoEncontrado("Status não encontrado");
+  if (!status || !(await podeUsar("status", status, usuarioId))) throw naoEncontrado("Status não encontrado");
   return status;
 }
 
@@ -23,7 +24,7 @@ export async function statusUsavel(id: string, usuarioId: string) {
 export async function statusDisponiveis(mestreId: string, grupoId: string | null) {
   const prisma = getPrisma();
   if (grupoId) return (await prisma.statusNoGrupo.findMany({ where: { grupoId }, include: { status: true } })).map((s) => s.status);
-  return prisma.status.findMany({ where: { OR: [{ donoId: null }, { donoId: mestreId }] } });
+  return prisma.status.findMany({ where: await visivelPara(mestreId) });
 }
 
 /** Status manuais que ainda podem ser aplicados (disponíveis, não automáticos, ainda não aplicados), ordenados. */
@@ -42,10 +43,12 @@ export async function validarAplicacao(statusId: string, mestreId: string, dispo
   return status;
 }
 
-async function statusEditavel(id: string, usuarioId: string) {
+/** Editar: o dono; o fixo não automático, só o administrador do sistema (e nunca excluir). */
+async function statusEditavel(id: string, usuarioId: string, { excluir = false } = {}) {
   const status = await statusUsavel(id, usuarioId);
-  if (status.donoId === null) throw new AppError(403, "STATUS_FIXO", "Status fixos do sistema não podem ser alterados.");
-  return status;
+  if (status.donoId === usuarioId) return status;
+  if (status.donoId === null && !status.gatilho && !excluir && (await ehAdmin(usuarioId))) return status;
+  throw new AppError(403, "STATUS_FIXO", status.donoId === null ? "Status fixos do sistema não podem ser alterados." : "Este status é verificado (de outra pessoa): só leitura.");
 }
 
 async function garantirNomeLivre(usuarioId: string, nome: string, exceto?: string) {
@@ -56,12 +59,18 @@ async function garantirNomeLivre(usuarioId: string, nome: string, exceto?: strin
 }
 
 export async function listar(usuarioId: string) {
+  const quem = await quemVe(usuarioId);
   const status = await getPrisma().status.findMany({
-    where: { OR: [{ donoId: null }, { donoId: usuarioId }] },
+    where: await visivelPara(usuarioId),
     orderBy: [{ ordem: "asc" }, { nome: "asc" }],
     include: comKits,
   });
-  return status.map((s) => ({ ...apresentarStatus(s), kitIds: (s.kits ?? []).map((k) => k.kitId) }));
+  return status.map((s) => ({
+    ...apresentarStatus(s),
+    ...visao(s, quem),
+    editavel: s.donoId === usuarioId || (s.donoId === null && !s.gatilho && quem.admin),
+    kitIds: kitIdsPara(s, quem),
+  }));
 }
 
 export async function criar(usuarioId: string, dados: z.infer<typeof criarStatusSchema>) {
@@ -73,16 +82,16 @@ export async function criar(usuarioId: string, dados: z.infer<typeof criarStatus
 }
 
 export async function editar(id: string, usuarioId: string, dados: z.infer<typeof editarStatusSchema>) {
-  await statusEditavel(id, usuarioId);
+  const atual = await statusEditavel(id, usuarioId);
   if (dados.nome) await garantirNomeLivre(usuarioId, dados.nome, id);
   const { kitIds, ...resto } = dados;
-  await definirKits("status", id, kitIds, usuarioId);
+  if (atual.donoId !== null) await definirKits("status", id, kitIds, usuarioId); // fixo não entra em kit
   const s = await getPrisma().status.update({ where: { id }, data: resto, include: comKits });
   return { ...apresentarStatus(s), kitIds: (s.kits ?? []).map((k) => k.kitId) };
 }
 
 /** Sai também das fichas e grupos (cascata) e das cartas que o ativavam (fica sem status). */
 export async function excluir(id: string, usuarioId: string) {
-  await statusEditavel(id, usuarioId);
+  await statusEditavel(id, usuarioId, { excluir: true });
   await getPrisma().status.delete({ where: { id } });
 }

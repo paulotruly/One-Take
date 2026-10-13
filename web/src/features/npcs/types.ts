@@ -14,6 +14,11 @@ export type NpcResumo = {
   raca: string;
   classe: string | null;
   kitIds: string[];
+  verificado?: boolean;
+  deOutro?: boolean;
+  podeVerificar?: boolean;
+  seloProprio?: boolean;
+  verificadoPorKit?: boolean;
   vida: Recurso;
   mana: Recurso;
   esforco: Recurso;
@@ -45,6 +50,12 @@ export type NpcDetalhe = {
   manaBase: number | null;
   esforcoBase: number | null;
   kitIds: string[];
+  editavel?: boolean;
+  verificado?: boolean;
+  deOutro?: boolean;
+  podeVerificar?: boolean;
+  seloProprio?: boolean;
+  verificadoPorKit?: boolean;
   raca: { id: string; titulo: string; deslocamento: number };
   classe: { id: string; titulo: string; grupo: Grupo } | null;
   vida: Recurso;

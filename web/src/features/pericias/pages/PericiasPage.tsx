@@ -1,5 +1,7 @@
 // Catálogo do mestre: atributos (3 fixos + os dele) e perícias (nome, descrição, categoria, atributo).
 // Classes e raças usam perícias deste catálogo.
+import { AlternarVerificado } from "../../verificados/pages/AlternarVerificado";
+import { VerificadoBadge } from "../../verificados/components/VerificadoBadge";
 import { AvisoKit } from "../../kits/components/AvisoKit";
 import { useKitAtivo } from "../../kits/api";
 import { soDoKit } from "../../kits/types";
@@ -18,6 +20,7 @@ import {
   useEditarAtributo,
   useEditarPericia,
   useExcluirAtributo,
+  useDuplicarPericia,
   useExcluirPericia,
 } from "../api";
 import { CategoriaIcone } from "../components/CategoriaIcone";
@@ -36,7 +39,7 @@ function usos(p: PericiaCatalogo) {
 type Exclusao = { tipo: "pericia"; item: PericiaCatalogo } | { tipo: "atributo"; item: Atributo } | null;
 
 export function PericiasPage() {
-  const catalogo = useCatalogo();
+  const catalogo = useCatalogo({ comVerificados: true });
   const atributos = useAtributos();
   const { kitId } = useKitAtivo();
   const atributosNoKit = (atributos.data ?? []).filter((a) => a.fixo || soDoKit(a.kitIds, kitId));
@@ -44,6 +47,7 @@ export function PericiasPage() {
   const criar = useCriarPericia();
   const editar = useEditarPericia();
   const excluirPericia = useExcluirPericia();
+  const duplicarPericia = useDuplicarPericia();
   const criarAtributo = useCriarAtributo();
   const editarAtributo = useEditarAtributo();
   const excluirAtributo = useExcluirAtributo();
@@ -111,20 +115,24 @@ export function PericiasPage() {
                         <Lock size={12} aria-hidden /> Fixo
                       </span>
                     )}
+                    {a.verificado && <VerificadoBadge />}
                   </div>
                   {a.descricao && <p className="pericia__descricao">{a.descricao}</p>}
                   <span className="pericia__usos">
                     {a.pericias} {a.pericias === 1 ? "perícia" : "perícias"} no seu catálogo
                   </span>
                 </div>
-                {!a.fixo && (
+                {(a.editavel ?? !a.fixo) && (
                   <div className="pericia__acoes">
                     <Button pequeno variante="fantasma" onClick={() => abrirAtributo(a)}>
                       Editar
                     </Button>
-                    <Button pequeno variante="fantasma" aria-label={`Excluir ${a.nome}`} onClick={() => pedirExclusao({ tipo: "atributo", item: a })}>
-                      Excluir
-                    </Button>
+                    {!a.fixo && (
+                      <Button pequeno variante="fantasma" aria-label={`Excluir ${a.nome}`} onClick={() => pedirExclusao({ tipo: "atributo", item: a })}>
+                        Excluir
+                      </Button>
+                    )}
+                    <AlternarVerificado tipo="atributo" item={a} pequeno />
                   </div>
                 )}
               </li>
@@ -163,16 +171,23 @@ export function PericiasPage() {
               <PericiaItem
                 key={p.id}
                 pericia={p}
-                rodape={<span className="pericia__usos">{usos(p)}</span>}
+                rodape={<span className="pericia__usos">{p.verificado && <VerificadoBadge />} {p.deOutro ? "De outra pessoa: copie para o seu catálogo para usar." : usos(p)}</span>}
                 acoes={
-                  <>
-                    <Button pequeno variante="fantasma" onClick={() => abrirPericia(p)}>
-                      Editar
+                  p.deOutro ? (
+                    <Button pequeno variante="fantasma" disabled={duplicarPericia.isPending} onClick={() => duplicarPericia.mutate(p.id)}>
+                      Copiar para o meu catálogo
                     </Button>
-                    <Button pequeno variante="fantasma" aria-label={`Excluir ${p.nome}`} onClick={() => pedirExclusao({ tipo: "pericia", item: p })}>
-                      Excluir
-                    </Button>
-                  </>
+                  ) : (
+                    <>
+                      <Button pequeno variante="fantasma" onClick={() => abrirPericia(p)}>
+                        Editar
+                      </Button>
+                      <Button pequeno variante="fantasma" aria-label={`Excluir ${p.nome}`} onClick={() => pedirExclusao({ tipo: "pericia", item: p })}>
+                        Excluir
+                      </Button>
+                      <AlternarVerificado tipo="pericia" item={p} pequeno />
+                    </>
+                  )
                 }
               />
             )}

@@ -23,6 +23,13 @@ async function habilidadeEditavel(id: string, usuarioId: string) {
   return habilidade;
 }
 
+/** Perícias de defesa: do catálogo do mestre, sem repetir. */
+async function defesasValidas(ids: string[], usuarioId: string) {
+  const unicos = [...new Set(ids)];
+  for (const periciaId of unicos) await periciaDoMestre(periciaId, usuarioId);
+  return unicos;
+}
+
 /** A classe (ou besta) precisa existir e ser do mestre. Nova habilidade entra no fim da cartela. */
 export async function criar(dono: DonoCartela, usuarioId: string, dados: z.infer<typeof criarHabilidadeSchema>) {
   await donoEditavel(dono, usuarioId);
@@ -30,7 +37,12 @@ export async function criar(dono: DonoCartela, usuarioId: string, dados: z.infer
   if (dados.periciaId) await periciaDoMestre(dados.periciaId, usuarioId);
   const prisma = getPrisma();
   const { _max } = await prisma.habilidade.aggregate({ where: dono, _max: { ordem: true } });
-  return prisma.habilidade.create({ data: { ...dados, ...dono, ordem: (_max.ordem ?? -1) + 1 }, include: comStatus });
+  const { periciasDefesaIds, ...resto } = dados;
+  const defesas = await defesasValidas(periciasDefesaIds, usuarioId);
+  return prisma.habilidade.create({
+    data: { ...resto, ...dono, ordem: (_max.ordem ?? -1) + 1, periciasDefesa: { create: defesas.map((periciaId) => ({ periciaId })) } },
+    include: comStatus,
+  });
 }
 
 export async function editar(id: string, usuarioId: string, dados: z.infer<typeof editarHabilidadeSchema>) {
@@ -45,7 +57,13 @@ export async function editar(id: string, usuarioId: string, dados: z.infer<typeo
   }
   if (dados.statusId) await statusUsavel(dados.statusId, usuarioId);
   if (dados.periciaId) await periciaDoMestre(dados.periciaId, usuarioId);
-  return getPrisma().habilidade.update({ where: { id }, data: dados, include: comStatus });
+  const { periciasDefesaIds, ...resto } = dados;
+  const defesas = periciasDefesaIds === undefined ? undefined : await defesasValidas(periciasDefesaIds, usuarioId);
+  return getPrisma().habilidade.update({
+    where: { id },
+    data: { ...resto, ...(defesas && { periciasDefesa: { deleteMany: {}, create: defesas.map((periciaId) => ({ periciaId })) } }) },
+    include: comStatus,
+  });
 }
 
 export async function excluir(id: string, usuarioId: string) {

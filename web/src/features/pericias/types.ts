@@ -25,7 +25,7 @@ export const CATEGORIAS: Record<CategoriaPericia, { Icone: LucideIcon; rotulo: s
 export const LISTA_CATEGORIAS = Object.keys(CATEGORIAS) as CategoriaPericia[];
 
 /** Atributo como vem embutido nas perícias. `fixo` = do sistema (não editável). */
-export type AtributoResumo = { id: string; nome: string; descricao: string; ordem: number; fixo: boolean; kitIds?: string[] };
+export type AtributoResumo = { id: string; nome: string; descricao: string; ordem: number; fixo: boolean; kitIds?: string[]; editavel?: boolean; verificado?: boolean; deOutro?: boolean; podeVerificar?: boolean; seloProprio?: boolean; verificadoPorKit?: boolean };
 
 /** Atributo na lista de atributos, com quantas perícias do mestre usam. */
 export type Atributo = AtributoResumo & { pericias: number };
@@ -46,6 +46,12 @@ export type PericiaCatalogo = PericiaBase & {
   origemId: string | null;
   usosClasses: number;
   usosRacas: number;
+  editavel?: boolean;
+  verificado?: boolean;
+  deOutro?: boolean;
+  podeVerificar?: boolean;
+  seloProprio?: boolean;
+  verificadoPorKit?: boolean;
 };
 
 /** Perícia de uma classe: dados do catálogo + modificador daquela classe. */

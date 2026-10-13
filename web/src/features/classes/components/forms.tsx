@@ -198,6 +198,8 @@ export function HabilidadeForm({
     statusId: inicial?.statusId ?? "",
     periciaId: inicial?.periciaId ?? "",
   });
+  const [defesas, setDefesas] = useState<string[]>(inicial?.periciasDefesaIds ?? []);
+  const alternarDefesa = (id: string, marcar: boolean) => setDefesas((d) => (marcar ? [...new Set([...d, id])] : d.filter((x) => x !== id)));
   const set = (campo: keyof typeof v) => (e: { target: { value: string } }) => setV({ ...v, [campo]: e.target.value });
   const e = p.erros ?? {};
 
@@ -216,6 +218,7 @@ export function HabilidadeForm({
           custoMana: inteiro(v.custoMana),
           statusId: v.statusId || null,
           periciaId: v.periciaId || null,
+          periciasDefesaIds: defesas,
         })
       }
     >
@@ -255,6 +258,23 @@ export function HabilidadeForm({
           ))}
         </select>
       </Field>
+      <fieldset className="form__grupo">
+        <legend>Defesa do alvo (opcional)</legend>
+        <p className="campo__dica">Perícias que o alvo pode usar para se defender desta carta. Marque quantas quiser.</p>
+        {opcoesPericias.length === 0 ? (
+          <p className="pagina__subtitulo">Nenhuma perícia no catálogo.</p>
+        ) : (
+          <div className="checklist">
+            {opcoesPericias.map((p) => (
+              <label key={p.id} className={`checklist__item ${defesas.includes(p.id) ? "checklist__item--marcado" : ""}`}>
+                <input type="checkbox" checked={defesas.includes(p.id)} onChange={(ev) => alternarDefesa(p.id, ev.target.checked)} />
+                <span>{p.nome} <span className="pagina__subtitulo">({p.atributo.nome})</span></span>
+              </label>
+            ))}
+          </div>
+        )}
+        {e.periciasDefesaIds && <span className="campo__erro">{e.periciasDefesaIds}</span>}
+      </fieldset>
       <Field rotulo="Ativa status (opcional)" erro={e.statusId} dica="Se a carta coloca um status no alvo ou em quem usa. O mestre aplica na ficha durante a sessão.">
         <select value={v.statusId} onChange={set("statusId")}>
           <option value="">Nenhum</option>

@@ -1,4 +1,6 @@
 // Catálogo de itens do mestre: armas, artefatos, taverna e sebo. Os itens ficam sempre à mão para lançar nos grupos.
+import { AlternarVerificado } from "../../verificados/pages/AlternarVerificado";
+import { VerificadoBadge } from "../../verificados/components/VerificadoBadge";
 import { Pencil, Plus, Send, Tags, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "../../../components/ui/Button";
@@ -109,7 +111,7 @@ export function CatalogoItensPage() {
               key={i.id}
               item={i}
               onAbrir={() => setAberto(i)}
-              extra={i.kitIds.length === 0 && <span className="selo">Geral</span>}
+              extra={i.verificado ? <VerificadoBadge /> : i.kitIds.length === 0 && <span className="selo">Geral</span>}
             />
           ))}
         </ul>
@@ -120,12 +122,17 @@ export function CatalogoItensPage() {
           <>
             <ItemDetalhe item={aberto} />
             <div className="modal__acoes modal__acoes--quebra">
-              <Button onClick={() => { excluir.reset(); setAExcluir(aberto); setAberto(null); }}>
-                <Trash2 size={16} aria-hidden /> Excluir
-              </Button>
-              <Button onClick={() => abrirForm(aberto)}>
-                <Pencil size={16} aria-hidden /> Editar
-              </Button>
+              {(aberto.editavel ?? true) && (
+                <>
+                  <Button onClick={() => { excluir.reset(); setAExcluir(aberto); setAberto(null); }}>
+                    <Trash2 size={16} aria-hidden /> Excluir
+                  </Button>
+                  <Button onClick={() => abrirForm(aberto)}>
+                    <Pencil size={16} aria-hidden /> Editar
+                  </Button>
+                  <AlternarVerificado tipo="itemModelo" item={aberto} />
+                </>
+              )}
               <Button variante="primario" onClick={() => abrirLancar(aberto)}>
                 <Send size={16} aria-hidden /> Lançar num grupo
               </Button>

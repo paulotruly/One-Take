@@ -1,6 +1,7 @@
 import { Plus } from "lucide-react";
 // Página da classe: dados, atalho para a tela de habilidades e perícias (escolhidas do catálogo).
 // Toda a lógica de dados/estado de modais fica aqui; os componentes só desenham.
+import { AlternarVerificado } from "../../verificados/pages/AlternarVerificado";
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { LinkVoltar } from "../../../components/ui/LinkVoltar";
@@ -71,7 +72,7 @@ export function ClasseDetalhePage() {
   }
 
   const c = classe.data;
-  const editavel = !c.fixa;
+  const editavel = c.editavel ?? !c.fixa;
   // Perícias do catálogo que a classe ainda não tem.
   const disponiveis = (catalogo.data ?? []).filter((p) => !c.pericias.some((cp) => cp.id === p.id));
 
@@ -90,6 +91,7 @@ export function ClasseDetalhePage() {
               <Button variante="perigo" onClick={() => pedirExclusao({ tipo: "classe" })}>
                 Excluir classe
               </Button>
+              <AlternarVerificado tipo="classe" item={c} />
             </>
           ) : (
             <>
@@ -100,7 +102,7 @@ export function ClasseDetalhePage() {
               >
                 {duplicar.isPending ? "Duplicando…" : "Duplicar para editar"}
               </Button>
-              <span className="pagina__subtitulo">Classe fixa do sistema: somente leitura.</span>
+              <span className="pagina__subtitulo">{c.deOutro ? "Classe verificada de outra pessoa" : "Classe fixa do sistema"}: somente leitura. Duplique para ter a sua.</span>
             </>
           )
         }

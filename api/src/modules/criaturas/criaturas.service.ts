@@ -6,7 +6,7 @@ import { naoEncontrado, requisicaoInvalida } from "../../lib/errors.js";
 import { getPrisma } from "../../lib/prisma.js";
 import { aplicarAprimoramentos, atributosNoNivel, habilidadesNoNivel } from "../../regras/progressao.js";
 import { estaMorto } from "../../regras/status.js";
-import { apresentarBesta, bestaCompleta, bestaEditavel } from "../bestas/bestas.service.js";
+import { apresentarBesta, bestaCompleta, bestaLegivel } from "../bestas/bestas.service.js";
 import type { editarCriaturaSchema, invocarSchema } from "../bestas/bestas.schemas.js";
 import { statusDaFicha } from "../fichas/status-da-ficha.js";
 import { grupoDoMestre } from "../grupos/grupos.service.js";
@@ -48,7 +48,7 @@ async function criaturaDoMestre(id: string, usuarioId: string) {
 /** Invoca 1 ou mais criaturas iguais no grupo, com recursos cheios no nível escolhido. */
 export async function invocar(grupoId: string, usuarioId: string, dados: z.infer<typeof invocarSchema>) {
   await grupoDoMestre(grupoId, usuarioId);
-  const besta = await bestaEditavel(dados.bestaId, usuarioId);
+  const besta = await bestaLegivel(dados.bestaId, usuarioId);
   const prisma = getPrisma();
   const existentes = await prisma.criatura.findMany({ where: { grupoId, bestaId: besta.id }, select: { nome: true } });
   const max = atributosNoNivel(besta, dados.nivel);

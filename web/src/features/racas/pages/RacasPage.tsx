@@ -1,4 +1,5 @@
 import { Footprints, Plus } from "lucide-react";
+import { AlternarVerificado } from "../../verificados/pages/AlternarVerificado";
 import { AvisoKit } from "../../kits/components/AvisoKit";
 import { useKitAtivo } from "../../kits/api";
 import { soDoKit } from "../../kits/types";
@@ -60,6 +61,7 @@ export function RacasPage() {
         criar={criarConceito}
         editar={editarConceito}
         excluir={excluirConceito}
+        acoesExtra={(c) => <AlternarVerificado tipo="racaConceito" item={c} pequeno />}
       />
 
       <h2>Todas as raças</h2>
@@ -103,7 +105,7 @@ export function RacasPage() {
         <RacaForm
           key={criando ?? "fechado"}
           inicial={criando ? { titulo: "", descricao: "", imagemUrl: null, deslocamento: undefined as unknown as number, kitIds: kitsPadrao(), conceitoId: criando } : undefined}
-          conceitos={conceitos.data}
+          conceitos={conceitos.data?.filter((c) => !c.deOutro)}
           enviando={criar.isPending}
           erros={errosDeCampo(criar.error)}
           erroGeral={erroDeFormulario(criar.error)}

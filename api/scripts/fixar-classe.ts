@@ -21,7 +21,7 @@ async function main() {
     const porId = /^[0-9a-f-]{36}$/i.test(alvo);
     const classes = await prisma.classe.findMany({
       where: porId ? { id: alvo } : { titulo: { equals: alvo, mode: "insensitive" } },
-      include: { pericias: { include: { pericia: true } }, habilidades: { include: { status: true, pericia: true, aprimoramentos: { include: { status: true } } } } },
+      include: { pericias: { include: { pericia: true } }, habilidades: { include: { status: true, pericia: true, periciasDefesa: { include: { pericia: true } }, aprimoramentos: { include: { status: true } } } } },
     });
     if (classes.length !== 1) {
       console.error(classes.length === 0 ? `Nenhuma classe "${alvo}".` : `Há ${classes.length} classes "${alvo}"; use o id.`);
@@ -43,9 +43,16 @@ async function main() {
       }
       // Perícia testada pelas cartas também volta para a cópia do catálogo.
       for (const h of c.habilidades) {
-        if (!h.pericia || h.pericia.donoId !== null) continue;
-        const copia = await prisma.pericia.findFirst({ where: { donoId: dono.id, OR: [{ origemId: h.pericia.id }, { nome: h.pericia.nome }] } });
-        await prisma.habilidade.update({ where: { id: h.id }, data: { periciaId: copia?.id ?? null } });
+        const copiaDe = async (p: { id: string; nome: string; donoId: string | null } | null) =>
+          p && p.donoId === null ? ((await prisma.pericia.findFirst({ where: { donoId: dono.id, OR: [{ origemId: p.id }, { nome: p.nome }] } }))?.id ?? null) : undefined;
+        const periciaId = await copiaDe(h.pericia);
+        if (periciaId !== undefined) await prisma.habilidade.update({ where: { id: h.id }, data: { periciaId } });
+        for (const d of h.periciasDefesa) {
+          const copia = await copiaDe(d.pericia);
+          if (copia === undefined) continue;
+          await prisma.habilidadeDefesa.delete({ where: { habilidadeId_periciaId: { habilidadeId: h.id, periciaId: d.periciaId } } });
+          if (copia) await prisma.habilidadeDefesa.create({ data: { habilidadeId: h.id, periciaId: copia } });
+        }
       }
       await prisma.classe.update({ where: { id: c.id }, data: { donoId: dono.id } });
       console.log(`ok: ${c.titulo} voltou a ser de @${devolverPara} (editável).`);
@@ -68,8 +75,15 @@ async function main() {
       }
       // Perícia testada pelas cartas: a base de origem (sem base equivalente, a carta fica sem perícia).
       for (const h of c.habilidades) {
-        if (!h.pericia || h.pericia.donoId === null) continue;
-        await tx.habilidade.update({ where: { id: h.id }, data: { periciaId: h.pericia.origemId ?? null } });
+        const base = (p: { donoId: string | null; origemId: string | null } | null) => (p && p.donoId !== null ? (p.origemId ?? null) : undefined);
+        const periciaId = base(h.pericia);
+        if (periciaId !== undefined) await tx.habilidade.update({ where: { id: h.id }, data: { periciaId } });
+        for (const d of h.periciasDefesa) {
+          const b = base(d.pericia);
+          if (b === undefined) continue;
+          await tx.habilidadeDefesa.delete({ where: { habilidadeId_periciaId: { habilidadeId: h.id, periciaId: d.periciaId } } });
+          if (b) await tx.habilidadeDefesa.create({ data: { habilidadeId: h.id, periciaId: b } });
+        }
       }
       // Status do mestre não existem para os outros: as cartas da classe fixa só ativam status do sistema.
       const statusDoMestre = c.habilidades.filter((h) => h.status && h.status.donoId !== null).map((h) => h.id);

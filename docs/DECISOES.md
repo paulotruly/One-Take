@@ -227,4 +227,23 @@ Formato: data — decisão. Motivo.
 - **Limite de uso da carta em lista fixa (2026-10-13) — decisão do produto.** Em vez de texto livre: N vezes (1 a 99) por combate ou por
   sessão, ou sem limite. Interpretado só esses dois períodos, os exemplos do responsável. No aprimoramento, o limite muda inteiro.
 - **Negrito na descrição e no efeito da carta (2026-10-13) — decisão do produto.** Sintaxe `**texto**`, desenhada sem HTML (`ComNegrito`).
-
+- **Perícias de defesa da carta (2026-10-13) — decisão do produto.** Opcionais e várias (tabela `HabilidadeDefesa`): as perícias que o
+  alvo pode usar para se defender. Só informativas: o app não calcula o teste do alvo (depende da ficha de quem é atacado).
+- **Kit básico do One-Take e administrador do sistema (2026-10-13; substituída no mesmo dia pela decisão seguinte) — decisão do produto.** O responsável quer editar o que é fixo
+  (exceto o automático) e que um kit dele seja o conteúdo inicial de todo mestre. Escolhas: **compartilhado, só leitura** (não copiado:
+  fica sempre atualizado; quem quiser mudar duplica), **um kit de RPG** como fonte (o administrador escolhe qual em Kits de RPG) e
+  **só o administrador** edita (`Perfil.admin`, ligado por script, não pela interface). NPCs não entram (guardam vida e itens).
+  Perícias base continuam sendo copiadas para cada mestre; a soma liga cópias de mestres diferentes pela origem. Riscos aceitos: excluir
+  a conta do administrador ou o kit tira o kit básico de todos; os kits pessoais dele não aparecem para os outros.
+- **Selo verificado no lugar do kit básico; cargo em vez de booleano (2026-10-13) — decisão do produto.** O responsável preferiu marcar
+  coisa por coisa: tudo pode ser verificado, inclusive NPCs; nem tudo o que ele cria é verificado; o verificado fica disponível em
+  todas as contas e cada pessoa pode ocultar da própria interface. O papel do administrador virou o enum `Perfil.cargo` (USUARIO,
+  ADMIN), guardado no banco e trocado por script, sem nada fixo no código para uma conta; o enum aceita outros cargos no futuro.
+  Ocultar só tira das listas (o que está em uso continua). Perícias verificadas só entram na página do catálogo (`?verificados=1`); para
+  usar, copia-se para o catálogo. Riscos aceitos: excluir a conta do ADMIN apaga o que ele verificou para todos; raça ou classe dele
+  usada por NPC duplicado por outra pessoa não pode ser excluída (Restrict, erro EM_USO).
+- **Kit verificado leva o conteúdo; arquétipos verificáveis (2026-10-13) — decisão do produto.** "Melhor como kit, vai tudo de uma vez":
+  kit e arquétipo também ganham o selo, e tudo o que está num kit verificado conta como verificado. Calculado na consulta (ligação com
+  kit verificado), não copiado: entrar ou sair do kit muda na hora e o selo próprio continua independente. Criado para o @paulo o kit
+  "Kit básico do One-Take", verificado e vazio. Com o kit verificado de outra pessoa como kit ativo, o que o mestre cria não entra nele.
+  Selo no estilo das redes sociais (check branco no selo azul, ícone `BadgeCheck`).

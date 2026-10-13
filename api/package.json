@@ -20,6 +20,7 @@
     "fixar-classe": "tsx scripts/fixar-classe.ts",
     "exportar": "tsx scripts/exportar-conteudo.ts",
     "concluir-exclusoes": "tsx scripts/concluir-exclusoes.ts",
+    "cargo": "tsx scripts/cargo.ts",
     "postinstall": "prisma generate"
   },
   "dependencies": {

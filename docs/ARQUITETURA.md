@@ -6,6 +6,7 @@ api/
   prisma/schema.prisma, migrations/, seed.ts (estrutura fixa: atributos, status, categorias, perícias base; sem classes)
   prisma.config.ts           # CLI do Prisma usa DIRECT_URL
   scripts/promover-mestre.ts   # npm run promover
+  scripts/cargo.ts            # npm run cargo -- nick ADMIN|USUARIO: troca o cargo da conta (nunca pela interface)
   scripts/fixar-classe.ts      # npm run fixar-classe -- "Título" [--devolver nick]: classe do mestre vira fixa (e volta)
   scripts/exportar-conteudo.ts # npm run exportar: classes e bestas em JSON para o balanceamento
   scripts/concluir-exclusoes.ts # npm run concluir-exclusoes: retoma exclusões de conta que pararam no meio
