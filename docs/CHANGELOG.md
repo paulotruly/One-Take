@@ -1,0 +1,114 @@
+# Changelog
+
+Alterações relevantes do One-Take, por data (o projeto ainda não tem versões publicadas; `web/package.json` está em `0.0.0`).
+Registre só o que muda comportamento, manutenção ou entendimento do sistema. O porquê detalhado de cada decisão fica em
+[`DECISOES.md`](DECISOES.md); as entradas abaixo foram montadas a partir do histórico do git, das migrations e de DECISOES.
+
+Formato de cada entrada: **Resumo**, Motivo, Arquivos/módulos, Impacto (regras ou arquitetura), Procedimentos (migrations, config) e Docs.
+
+## Não commitado (2026-10-13)
+- **Limite de uso da carta padronizado** (N vezes por combate ou por sessão) e **negrito** (`**texto**`) na descrição e no efeito.
+  - Arquivos: `api/src/regras/limite.ts`, `habilidades.schemas.ts`, `regras/progressao.ts`, `fichas/retrato.ts`, `scripts/exportar-conteudo.ts`;
+    `web/src/features/classes/` (formulários, carta, tipos), `components/texto/ComNegrito.tsx`.
+  - Procedimentos: migration `20261013090000_limite_de_uso` (aplicada; as 6 cartas com limite foram convertidas).
+  - Docs: DOMINIO, DADOS, API, DECISOES, documentação pública (Habilidades).
+- **Sem e-mail: recuperação de senha por código; "nickname" vira "nome de usuário" na interface.**
+  - Motivo: decisão do produto (sem depender de domínio e de serviço de e-mail; menos dados pessoais).
+  - Arquivos: `api/src/lib/codigo-recuperacao.ts` (novo), `conta.service.ts`, `conta.routes.ts`, `conta.schemas.ts`, `config.ts`, `env.ts`
+    (removidos `lib/email.ts` e `lib/tokens.ts`); `web/src/pages/ContaPages.tsx`, `CadastroPage.tsx`, `features/conta/` (código de
+    recuperação, exclusão com nome de usuário), `AppLayout.tsx`, textos de login, perfil, home e documentação pública.
+  - Procedimentos: migration `20261013080000_recuperacao_sem_email` (aplicada; apaga os e-mails guardados e a tabela de links); tirar
+    `RESEND_API_KEY`, `EMAIL_REMETENTE`, `EMAIL_MODO`, `APP_URL` e `TOKEN_*` do `api/.env` (não são mais usadas); reiniciar a API.
+  - Docs: legais (versão 0.5, com a redação do responsável), DOMINIO, DADOS, API, ARQUITETURA, DECISOES, ROADMAP.
+- **Revisão para celular.** Grades sem largura mínima maior que a tela (15 regras com `minmax(min(Npx, 100%), 1fr)`), `styles/mobile.css`
+  (botões que quebram linha, pop-ups quase em tela cheia, topo público só com ícones, cartões de login com menos margem, textos longos
+  que quebram). Docs: ARQUITETURA.
+- **Minutas legais 0.4:** prazos dos fornecedores (Render 7 dias, Supabase 1 dia e sem backups automáticos no plano gratuito, Vercel 1 hora,
+  Resend 30 dias), cláusulas contratuais-padrão na transferência internacional e dispensa de encarregado (agente de pequeno porte).
+- **Idade mínima de 12 anos, "Baixar meus dados" e página Configurações da conta.**
+  - Arquivos: `api/src/regras/conta.ts`, `conta.schemas.ts`, `conta.service.ts` (`exportarDados`), `conta.routes.ts`, `fichas/retrato.ts`
+    (`fotoDaFicha`); `web/src/features/conta/pages/ConfiguracoesContaPage.tsx`, `SecoesDaConta.tsx`, `CadastroPage.tsx`, `PerfilPage.tsx`, `AppLayout.tsx`.
+  - Procedimentos: migration `20261013070000_data_nascimento` (aplicada); reiniciar a API.
+  - Docs: legais (versão 0.3), DOMINIO, DADOS, API, ARQUITETURA, DECISOES, documentação pública (Contas).
+- **E-mail na conta, "Esqueceu a senha?", exclusão de conta confirmada por e-mail e fichas arquivadas.**
+  - Motivo: pedido do produto (recuperação de senha e direito de excluir a conta; jogadores não perdem personagens).
+  - Arquivos: `api/src/lib/{config,tokens,email,supabase-auth,limite}.ts`, `api/src/modules/conta/`, `api/src/modules/fichas/{arquivo,retrato}.ts`,
+    `middleware/auth.ts`, `fichas.service.ts`, `grupos.service.ts`, `scripts/concluir-exclusoes.ts`; `web/src/pages/ContaPages.tsx`,
+    `features/conta/`, `FichaArquivadaPage.tsx`, `CadastroPage.tsx`, `LoginPage.tsx`, `PerfilPage.tsx`, `AuthProvider.tsx`, `AppLayout.tsx`.
+  - Impacto: o cadastro passa pela API (precisa de `SUPABASE_SECRET_KEY`); sair, ser removido ou ter o grupo excluído arquiva a ficha;
+    sessões anteriores à troca de senha são recusadas.
+  - Procedimentos: migration `20261013060000_email_senha_exclusao` (aplicada); novas variáveis no `api/.env` (ver ARQUITETURA); reiniciar
+    a API e o `npm run dev` do web (o `vite.config.ts` mudou).
+  - Docs: DOMINIO, DADOS, API, ARQUITETURA, DECISOES, ROADMAP, documentação pública (Contas, guia do jogador, proteções), `PROJECT_CONTEXT.md`.
+- **Minutas de Termos de uso e Política de privacidade** em `docs/legal/` (LGPD), exibidas em `/termos` e `/privacidade` com os campos
+  pendentes destacados; pendências internas em `docs/legal/REVISAO_LEGAL_PENDENCIAS.md`.
+- **Rodapé discreto em todas as páginas.**
+  - Motivo: pedido do produto.
+  - Arquivos: `web/src/components/layout/Rodape.tsx`, `layouts/PublicLayout.tsx`, `layouts/AppLayout.tsx`, `styles/layout.css` (o `.app` passou a ocupar a altura da tela).
+  - Impacto: nenhum nas regras.
+  - Procedimentos: nenhum.
+  - Docs: `ARQUITETURA.md`.
+- **Topo público com Login e Registrar-se no lugar de "Minha área".**
+  - Motivo: pedido do produto.
+  - Arquivos: `web/src/layouts/PublicLayout.tsx`.
+  - Impacto: os botões aparecem sempre; com sessão aberta, `/login` e `/cadastro` já redirecionam para a área da conta.
+  - Procedimentos: nenhum.
+  - Docs: `ARQUITETURA.md`, `PROJECT_CONTEXT.md`.
+- **Home completa, Termos de uso e Política de privacidade.**
+  - Motivo: pedido do produto (página oficial do produto).
+  - Arquivos: `web/src/pages/HomePage.tsx`, `web/src/pages/LegalPages.tsx`, `web/src/styles/home.css`, `router.tsx`, `layouts/PublicLayout.tsx`
+    (âncoras das seções no topo, só na home e fora do celular), `components/layout/Rodape.tsx` (direitos e links legais).
+  - Impacto: rotas públicas novas `/termos` e `/privacidade`; nenhuma regra de jogo mudou (os números da home vêm de `GET /api/regras`).
+  - Procedimentos: nenhum.
+  - Docs: `CLAUDE.md` (regra da home), ARQUITETURA, DECISOES, `PROJECT_CONTEXT.md`.
+- **Documentação central.**
+  - Motivo: dar contexto completo a novas sessões e assistentes.
+  - Arquivos: `PROJECT_CONTEXT.md`, `AGENTS.md`, `docs/CHANGELOG.md`, `docs/adr/README.md`; ponteiro no `CLAUDE.md`.
+  - Impacto: nenhum no código.
+  - Procedimentos: nenhum.
+
+## 2026-10-13 (commits `26d4406` e `a4482e2`)
+- **Kits de RPG no lugar de "exclusivo de um grupo"; o kit ativo mostra só o kit.**
+  - Motivo: decisão do produto (organizar o conteúdo por aventura).
+  - Arquivos: `api/src/lib/kits.ts`, `api/src/modules/kits/`, schemas e services de classes, raças, atributos, perícias, status,
+    itens, bestas e NPCs; `web/src/features/kits/`, formulários e listas.
+  - Impacto: as regras de exclusividade (`EXCLUSIVO_EM_USO`) deixaram de existir; o grupo ganhou `kitId`.
+  - Procedimentos: migration `20261013050000_kits_de_rpg` (converte os exclusivos num kit por grupo); `npm run db:deploy` e reiniciar a API.
+  - Docs: DOMINIO, DADOS, API, ARQUITETURA, DECISOES, ROADMAP e o tópico público "Kits de RPG".
+- **Correções do mapeamento de inconsistências.**
+  - Arquivos: `itens.service.ts`, `criaturas.service.ts`, `fichas.service.ts`, `habilidades.service.ts`, `pericias/soma.ts`.
+  - Impacto: o item com NPC não pertence a grupo; nível máximo 100; o jogador só diminui a vida (`SO_MESTRE_CURA`); o nível
+    necessário da carta não alcança um aprimoramento; nomes de criatura não se repetem; a soma de perícias ficou unificada.
+  - Docs: DECISOES.
+- **Status em NPCs e criaturas.**
+  - Procedimentos: migration `20261013030000_status_npc_criatura`.
+- **Perícia do teste na habilidade** (`Habilidade.periciaId`; a ficha mostra o teste pronto da carta).
+  - Procedimentos: migration `20261013040000_pericia_da_habilidade`.
+- **NPCs com ficha e inventário.**
+  - Impacto: `Item.grupoId` ficou opcional e ganhou `npcId`.
+  - Procedimentos: migration `20261013020000_npcs`.
+- **Grid removido do sistema** (o grid é físico).
+  - Procedimentos: migration `20261013010000_remove_grid`.
+- **Categorias de item personalizáveis** (4 fixas + as do mestre).
+  - Procedimentos: migration `20261013000000_categorias_de_item`.
+- **Sem conteúdo pronto no banco.**
+  - Impacto: as classes fixas de exemplo, o seed de teste e a conta @teste foram removidos; `db:seed` cria só a estrutura fixa.
+- **"Conceito" vira "Arquétipo" e "bicho" vira "criatura"** na interface. Tabelas e rotas mantêm os nomes antigos.
+
+## 2026-10-12 (commit `444df5a`)
+- **Regra de teste com d20** (atributo 0 pela metade, esforço = +1 d20, DT livre).
+  - Arquivos: `api/src/regras/teste.ts` e o teste pronto na ficha.
+- **Uma conta para jogar e mestrar** (`POST /api/me/mestre`).
+- **Tipos de efeito voltam a ser lista fixa; catálogo de itens; bestiário com invocação e morte automática.**
+  - Procedimentos: migration `20261012000000_itens_bestiario_tipo_efeito`.
+- **Interface:** arquétipo de raça, cartas em grade com pop-up, ficha e inventário para celular, navegação lateral e menu do perfil.
+- **Documentação pública** com busca por palavras.
+- **Ferramentas:** skill de balanceamento e scripts `fixar-classe` e `exportar`.
+
+## 2026-10-11 (commit `6925e50`)
+- **Estrutura inicial.**
+  - Arquivos: `api/` (Express 5, Prisma 7, Zod 4, auth via JWKS do Supabase, RLS sem policies) e `web/` (React, Vite, TanStack Query).
+- **Primeira leva de funcionalidades:** classes, cartela única, perícias como catálogo por mestre, progressão de nível, raças,
+  atributos como cadastro, cadastro com papel, login por nickname, grupos, fichas, inventário, status, arquétipos e aprimoramentos,
+  regras da mesa.
+  - Procedimentos: migrations de `20261011000000_inicial` a `20261011150000_regras_da_mesa`.

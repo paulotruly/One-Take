@@ -308,7 +308,7 @@ export function GrupoDetalhePage() {
       <ConfirmDialog
         aberto={confirmarExclusao}
         titulo="Excluir grupo"
-        mensagem={<>Excluir <strong>{g.titulo}</strong>? As {g.membros.length} fichas, as criaturas e todos os itens do grupo serão apagados. Não dá para desfazer.</>}
+        mensagem={<>Excluir <strong>{g.titulo}</strong>? As criaturas e todos os itens do grupo serão apagados, e as {g.membros.length} fichas saem dele (cada jogador fica com uma cópia arquivada da sua). Não dá para desfazer.</>}
         processando={excluir.isPending}
         erro={excluir.isError ? mensagemDeErro(excluir.error) : null}
         onCancelar={() => setConfirmarExclusao(false)}

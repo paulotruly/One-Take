@@ -12,7 +12,7 @@
 .disponiveis__atributo { display: flex; flex-direction: column; gap: var(--esp-2); }
 .link-botao { padding: 0; border: 0; background: none; color: var(--cor-primaria); font-size: var(--texto-sm); cursor: pointer; }
 .link-botao:hover { text-decoration: underline; }
-.checklist { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: var(--esp-2); }
+.checklist { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(220px, 100%), 1fr)); gap: var(--esp-2); }
 .checklist--recuado { padding-left: var(--esp-5); }
 .checklist__item {
   display: flex;

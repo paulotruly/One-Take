@@ -8,6 +8,7 @@ import { router } from "./router";
 import "./styles/tokens.css";
 import "./styles/base.css";
 import "./styles/layout.css";
+import "./styles/home.css";
 import "./components/ui/ui.css";
 import "./features/classes/components/classes.css";
 import "./features/pericias/components/pericias.css";
@@ -16,6 +17,7 @@ import "./features/fichas/components/fichas.css";
 import "./features/itens/components/itens.css";
 import "./features/bestiario/components/bestiario.css";
 import "./features/docs/docs.css";
+import "./styles/mobile.css"; // por último: ajustes de celular
 
 const queryClient = new QueryClient({
   defaultOptions: {

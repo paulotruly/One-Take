@@ -1,14 +1,16 @@
-import { LogIn } from "lucide-react";
+import { Archive, LogIn } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router";
 import { Button } from "../../../components/ui/Button";
 import { EmptyState, ErrorState, Loading } from "../../../components/ui/States";
 import { mensagemDeErro } from "../../../lib/api";
 import { ClasseImagem } from "../../classes/components/ClasseImagem";
-import { useMinhasFichas } from "../api";
+import { useFichasArquivadas, useMinhasFichas } from "../api";
+import { ROTULO_MOTIVO } from "../types";
 
 export function MinhasFichasPage() {
   const fichas = useMinhasFichas();
+  const arquivadas = useFichasArquivadas();
   const navigate = useNavigate();
   const [codigo, setCodigo] = useState("");
 
@@ -71,6 +73,27 @@ export function MinhasFichasPage() {
             </li>
           ))}
         </ul>
+      )}
+
+      {arquivadas.data && arquivadas.data.length > 0 && (
+        <section className="secao">
+          <h2><Archive size={18} aria-hidden /> Fichas arquivadas</h2>
+          <p className="pagina__subtitulo">Personagens que saíram de um grupo. São cópias só para leitura; só você pode apagá-las.</p>
+          <ul className="lista-cards">
+            {arquivadas.data.map((f) => (
+              <li key={f.id}>
+                <Link to={`/jogador/arquivadas/${f.id}`} className="card-link">
+                  <div className="card-link__topo">
+                    <h3>{f.nome}</h3>
+                    <span className="selo">Nível {f.nivel}</span>
+                  </div>
+                  <p className="card-link__descricao">{f.raca} · {f.classe}</p>
+                  <p className="card-link__rodape">{f.grupo} · {ROTULO_MOTIVO[f.motivo]}</p>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
     </div>
   );

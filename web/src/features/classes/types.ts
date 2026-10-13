@@ -41,7 +41,8 @@ export type Aprimoramento = {
   titulo: string | null;
   descricaoEfeito: string | null;
   condicao: string | null;
-  limite: string | null;
+  limiteUsos: number | null;
+  limitePor: LimiteUso | null;
   custoMana: number | null;
   statusId: string | null;
   status?: { id: string; nome: string; tipo: "BUFF" | "DEBUFF" | "MISTO" } | null;
@@ -85,7 +86,9 @@ export type Habilidade = {
   condicao: string | null;
   tipoEfeito: TipoEfeito;
   descricaoEfeito: string;
-  limite: string | null;
+  /** Limite de uso: N vezes por combate ou por sessão. Os dois nulos = sem limite. */
+  limiteUsos: number | null;
+  limitePor: LimiteUso | null;
   nivelNecessario: number;
   /** 0 = não custa mana. */
   custoMana: number;
@@ -137,3 +140,13 @@ export const ROTULO_GRUPO: Record<Grupo, string> = {
   VANGUARDISTA: "Vanguardista",
   SUPORTE: "Suporte",
 };
+
+/** Período do limite de uso de uma carta (lista fixa, espelha o enum da API). */
+export type LimiteUso = "COMBATE" | "SESSAO";
+export const ROTULO_LIMITE: Record<LimiteUso, string> = { COMBATE: "combate", SESSAO: "sessão" };
+
+/** "1 vez por combate", "2 vezes por sessão"; null = sem limite. */
+export function rotuloLimite(usos: number | null | undefined, por: LimiteUso | null | undefined) {
+  if (!usos || !por) return null;
+  return `${usos} ${usos === 1 ? "vez" : "vezes"} por ${ROTULO_LIMITE[por]}`;
+}

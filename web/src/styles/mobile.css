@@ -1,0 +1,48 @@
+/*
+ * Ajustes para celular. Carregado por último (main.tsx): só corrige o que estoura ou aperta em telas estreitas.
+ * As grades usam minmax(min(Npx, 100%), 1fr) para nunca ficarem mais largas que a tela.
+ */
+
+/* Textos longos (links, e-mails, nomes sem espaço) quebram em vez de alargar a página. */
+p, li, td, th, dd, dt, h1, h2, h3, h4, summary, .campo__dica, .card-link__descricao { overflow-wrap: anywhere; }
+
+/* Altura real da tela no celular (a barra do navegador aparece e some). */
+@supports (height: 100dvh) {
+  .lateral { height: calc(100dvh - 60px); }
+  .login { min-height: 100dvh; }
+}
+
+@media (max-width: 640px) {
+  h1 { font-size: 1.5rem; line-height: 1.2; }
+  .pagina { gap: var(--esp-5); }
+
+  /* Botões podem quebrar linha (rótulos longos) e, nas barras de ação, dividem a largura. */
+  .btn { white-space: normal; text-align: center; }
+  .modal__acoes, .barra-acoes, .hero__acoes, .disponiveis__atalhos, .recurso__acoes, .pericia__acoes { flex-wrap: wrap; }
+  .modal__acoes > .btn, .barra-acoes > .btn { flex: 1 1 auto; }
+
+  /* Pop-ups ocupam quase a tela toda, com menos margem interna. */
+  .modal { width: calc(100vw - 2 * var(--esp-3)); max-height: calc(100vh - 2 * var(--esp-3)); }
+  @supports (height: 100dvh) { .modal { max-height: calc(100dvh - 2 * var(--esp-3)); } }
+  .modal__conteudo { gap: var(--esp-4); padding: var(--esp-4); }
+
+  /* Topo público: só os ícones dos links; os botões Login e Registrar-se ficam com o texto. */
+  .topo__nav .topo__link { padding: 0 var(--esp-2); }
+  .topo__nav .topo__link span { display: none; }
+  .topo__usuario .btn--pequeno svg { display: none; }
+  .topo__usuario { gap: var(--esp-1); }
+
+  /* Login, cadastro e páginas dos links do e-mail: cartão encostado no topo, com menos margem. */
+  .login { align-items: flex-start; padding: var(--esp-4) var(--esp-3); }
+  .login__cartao { gap: var(--esp-4); padding: var(--esp-5) var(--esp-4); }
+
+  /* Linhas que ficavam apertadas lado a lado. */
+  .dados-atributo { flex-wrap: wrap; gap: var(--esp-2); }
+  .aviso-kit span { min-width: 0; }
+  .membro__info { min-width: 0; }
+  .ficha-arquivada__imagem { width: 88px; }
+
+  /* Tabelas: letra menor; a rolagem lateral fica dentro da tabela, não na página. */
+  .tabela, .legal table { font-size: var(--texto-xs); }
+  .tabela th, .tabela td, .legal th, .legal td { padding: var(--esp-2); }
+}

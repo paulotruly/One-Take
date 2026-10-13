@@ -10,6 +10,7 @@ import { statusDaFicha } from "../fichas/status-da-ficha.js";
 import { apresentarItem, comRequisitos } from "../itens/itens.apresentar.js";
 import { apresentarStatus } from "../status/status.service.js";
 import type { criarGrupoSchema, disponiveisSchema, editarGrupoSchema } from "./grupos.schemas.js";
+import { retratos } from "../fichas/retrato.js";
 
 type Disponiveis = z.infer<typeof disponiveisSchema>;
 
@@ -186,12 +187,15 @@ export async function novoCodigoDoGrupo(id: string, usuarioId: string) {
   return detalhar(id, usuarioId);
 }
 
-/** Exclui o grupo com as fichas e itens dele. */
+/** Exclui o grupo com as fichas e itens dele. Cada jogador fica com uma cópia arquivada da própria ficha. */
 export async function excluir(id: string, usuarioId: string) {
   await grupoDoMestre(id, usuarioId);
   const prisma = getPrisma();
-  // Itens que estão com NPCs continuam com eles (os NPCs exclusivos deste grupo viram gerais).
+  const fichas = await prisma.ficha.findMany({ where: { grupoId: id }, select: { id: true, jogadorId: true } });
+  const copias = await retratos(fichas, "GRUPO_EXCLUIDO");
+  // Itens que estão com NPCs continuam com eles.
   await prisma.$transaction([
+    ...(copias.length ? [prisma.fichaArquivada.createMany({ data: copias })] : []),
     prisma.item.updateMany({ where: { grupoId: id, npcId: { not: null } }, data: { grupoId: null } }),
     prisma.grupo.delete({ where: { id } }),
   ]);

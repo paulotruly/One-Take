@@ -57,11 +57,13 @@ export function ComoFunciona() {
 }
 
 export function Contas() {
+  const { conta } = useRegras();
   return (
     <>
       <p>
         Uma conta serve para as duas coisas: <strong>jogar e mestrar</strong>. Ao <Link to="/cadastro">criar a conta</Link>, você escolhe a
-        interface com que começa. A conta usa só <strong>nickname e senha</strong>: ninguém precisa informar email.
+        interface com que começa. Você entra com <strong>nome de usuário e senha</strong>; ninguém precisa informar e-mail. Também é
+        pedida a data de nascimento: é preciso ter pelo menos {conta.idadeMinima} anos.
       </p>
       <Cartoes
         itens={[
@@ -78,8 +80,19 @@ export function Contas() {
       <ul>
         <li>Toque no seu nome, no topo, para abrir o menu do perfil: <strong>Editar perfil</strong> ou <strong>Sair</strong>.</li>
         <li>As páginas da interface ficam na <strong>barra lateral</strong>; no celular, abra pelo botão de menu no canto do topo.</li>
-        <li>Dá para mudar o <strong>nickname</strong> (usado para entrar e exibido como @nickname), o nome de exibição e a foto (link de uma imagem).</li>
-        <li>Se trocar o nickname, passe a entrar com o novo.</li>
+        <li>Dá para mudar o <strong>nome de usuário</strong> (usado para entrar e exibido como @usuario), o nome de exibição e a foto (link de uma imagem).</li>
+        <li>Se trocar o nome de usuário, passe a entrar com o novo.</li>
+      </ul>
+      <h2>Senha, dados e exclusão</h2>
+      <ul>
+        <li>Tudo isso fica em <strong>Configurações da conta</strong> (no menu do perfil, no topo). Editar perfil é só nome de usuário, nome e foto.</li>
+        <li><strong>Código de recuperação</strong>: ao criar a conta, o app mostra um código uma única vez. Guarde: é com ele que você troca
+          a senha se esquecer. Em Configurações da conta dá para gerar um código novo (com a senha); o anterior deixa de valer.</li>
+        <li><strong>Esqueceu a senha?</strong> Use o link na tela de login: informe o nome de usuário, o código e a senha nova. Depois da
+          troca, o app mostra um código novo, e as sessões abertas em outros aparelhos são encerradas.</li>
+        <li><strong>Baixar meus dados</strong>: a seção Seus dados gera um arquivo com tudo o que está na sua conta, a qualquer momento.</li>
+        <li><strong>Excluir a conta</strong>: no fim das configurações, informe a senha e digite o seu nome de usuário. A exclusão é imediata e
+          definitiva. Os jogadores dos seus grupos ficam com uma cópia arquivada das fichas deles.</li>
       </ul>
     </>
   );
@@ -339,7 +352,7 @@ export function Habilidades() {
           ["Efeito", "O que a carta causa."],
           ["Perícia do teste (opcional)", "Qual perícia o personagem testa para usar a carta. A ficha mostra o teste pronto daquele personagem (ex.: Luta 2d20 + 5)."],
           ["Condição (opcional)", "O que precisa acontecer para poder usar. Ex.: ter acertado dois ataques seguidos."],
-          ["Limite (opcional)", "Quantas vezes ou quando pode ser usada. Ex.: 1 vez por sessão."],
+          ["Limite (opcional)", "Quantas vezes pode ser usada: N vezes por combate ou N vezes por sessão. Sem limite, à vontade."],
           [<span key="m" className="regra__inline"><Droplet size={14} aria-hidden /> Custo de mana</span>, "Quanta mana gasta. Muitas cartas não custam nada."],
           [<span key="n" className="regra__inline"><Sparkles size={14} aria-hidden /> Nível necessário</span>, "A partir de qual nível a carta fica disponível."],
         ]}

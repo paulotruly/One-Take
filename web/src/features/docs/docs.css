@@ -63,12 +63,12 @@
 .landing__hero h1 { font-size: clamp(2rem, 5vw, 3rem); line-height: 1.1; }
 .landing__subtitulo { color: var(--cor-texto-suave); font-size: var(--texto-lg); max-width: 620px; }
 .landing__secao { display: flex; flex-direction: column; gap: var(--esp-5); }
-.landing__grade { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--esp-4); }
+.landing__grade { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr)); gap: var(--esp-4); }
 .landing__vantagem, .landing__papel { display: flex; flex-direction: column; gap: var(--esp-2); padding: var(--esp-5); border: 1px solid var(--cor-borda); }
 .landing__vantagem p, .landing__papel p, .landing__passo p { color: var(--cor-texto-suave); font-size: var(--texto-sm); }
-.landing__passos { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--esp-4); margin: 0; padding: 0; list-style: none; }
+.landing__passos { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr)); gap: var(--esp-4); margin: 0; padding: 0; list-style: none; }
 .landing__passo { display: flex; flex-direction: column; gap: var(--esp-2); padding: var(--esp-5); background: var(--cor-superficie-2); }
-.landing__papeis { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--esp-4); }
+.landing__papeis { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: var(--esp-4); }
 .landing__papel a { display: inline-flex; align-items: center; gap: var(--esp-1); margin-top: auto; font-weight: var(--peso-forte); }
 .landing__chamada {
   display: flex;

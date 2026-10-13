@@ -14,7 +14,7 @@
 }
 
 /* ---------- Escolha de raça/classe ---------- */
-.opcoes { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: var(--esp-4); }
+.opcoes { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(200px, 100%), 1fr)); gap: var(--esp-4); }
 .opcao {
   display: flex;
   flex-direction: column;
@@ -51,7 +51,7 @@
 .contador__valor { display: inline-flex; align-items: center; gap: var(--esp-1); min-width: 70px; justify-content: center; font-weight: var(--peso-forte); }
 
 /* ---------- Recursos (vida, mana, esforço) ---------- */
-.recursos { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--esp-4); }
+.recursos { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr)); gap: var(--esp-4); }
 .recurso { display: flex; flex-direction: column; gap: var(--esp-3); padding: var(--esp-4); border: 1px solid var(--cor-borda); }
 .recurso__topo { display: flex; justify-content: space-between; align-items: center; gap: var(--esp-2); }
 .recurso__rotulo { display: inline-flex; align-items: center; gap: var(--esp-2); font-weight: var(--peso-forte); }

@@ -35,34 +35,45 @@ enum CategoriaPericia {
 
 /// Perfil do usuário autenticado pelo Supabase Auth. id = auth.users.id.
 model Perfil {
-  id               String           @id @db.Uuid
+  id                    String           @id @db.Uuid
   /// Email da conta no Supabase Auth. Contas criadas pelo app usam um email interno (<nickname>@one-take.local).
-  email            String           @unique
+  email                 String           @unique
   /// Identificador público e de login (minúsculo, sem "@"). Exibido como @nickname.
-  nickname         String           @unique
-  papel            Papel            @default(JOGADOR)
+  nickname              String           @unique
+  papel                 Papel            @default(JOGADOR)
   /// Nome de exibição escolhido pelo usuário.
-  nome             String?
+  nome                  String?
   /// Link externo da foto de perfil.
-  fotoUrl          String?
+  fotoUrl               String?
   /// true depois que o catálogo de perícias base foi copiado para este mestre.
-  catalogoIniciado Boolean          @default(false)
-  criadoEm         DateTime         @default(now())
-  classes          Classe[]
-  pericias         Pericia[]
-  racas            Raca[]
-  atributos        Atributo[]
-  grupos           Grupo[]
-  fichas           Ficha[]
-  status           Status[]
-  conceitos        ClasseConceito[]
-  conceitosRaca    RacaConceito[]
-  itensModelo      ItemModelo[]
-  npcs             Npc[]
-  kits             Kit[]
-  categoriasItem   CategoriaItem[]
-  bestas           Besta[]
-  conceitosBesta   BestaConceito[]
+  catalogoIniciado      Boolean          @default(false)
+  /// Data de nascimento informada no cadastro (idade mínima: 12 anos). Nula em contas anteriores a essa regra. Só o dono vê.
+  dataNascimento        DateTime?        @db.Date
+  /// SHA-256 do código de recuperação (troca de senha sem e-mail). O código em si nunca é guardado.
+  codigoRecuperacaoHash String?
+  /// Quando o código de recuperação atual foi gerado.
+  codigoRecuperacaoEm   DateTime?
+  /// Sessões autenticadas antes deste instante deixam de valer (ex.: depois de redefinir a senha).
+  sessoesValidasDesde   DateTime?
+  /// Exclusão da conta confirmada e em execução; a conta fica bloqueada até terminar.
+  exclusaoIniciadaEm    DateTime?
+  criadoEm              DateTime         @default(now())
+  fichasArquivadas      FichaArquivada[]
+  classes               Classe[]
+  pericias              Pericia[]
+  racas                 Raca[]
+  atributos             Atributo[]
+  grupos                Grupo[]
+  fichas                Ficha[]
+  status                Status[]
+  conceitos             ClasseConceito[]
+  conceitosRaca         RacaConceito[]
+  itensModelo           ItemModelo[]
+  npcs                  Npc[]
+  kits                  Kit[]
+  categoriasItem        CategoriaItem[]
+  bestas                Besta[]
+  conceitosBesta        BestaConceito[]
 }
 
 /// Classe jogável. donoId nulo = classe fixa do sistema (somente leitura).
@@ -129,7 +140,9 @@ model Habilidade {
   periciaId       String?                   @db.Uuid
   pericia         Pericia?                  @relation(fields: [periciaId], references: [id], onDelete: SetNull)
   descricaoEfeito String
-  limite          String?
+  /// Limite de uso: quantas vezes (1 a 99) por combate ou por sessão. Os dois nulos = sem limite.
+  limiteUsos      Int?
+  limitePor       LimiteUso?
   nivelNecessario Int                       @default(1)
   /// Mana gasta ao usar a carta. 0 = não custa mana.
   custoMana       Int                       @default(0)
@@ -551,7 +564,9 @@ model HabilidadeAprimoramento {
   titulo          String?
   descricaoEfeito String?
   condicao        String?
-  limite          String?
+  /// Novo limite de uso (os dois nulos = não muda).
+  limiteUsos      Int?
+  limitePor       LimiteUso?
   custoMana       Int?
   statusId        String?    @db.Uuid
   status          Status?    @relation(fields: [statusId], references: [id], onDelete: SetNull)
@@ -849,4 +864,34 @@ model KitNpc {
 
   @@id([kitId, npcId])
   @@index([npcId])
+}
+
+enum MotivoArquivamento {
+  SAIU_DO_GRUPO
+  REMOVIDO_PELO_MESTRE
+  GRUPO_EXCLUIDO
+}
+
+/// Cópia somente leitura de uma ficha que saiu do grupo: o jogador não perde o personagem.
+model FichaArquivada {
+  id          String             @id @default(uuid()) @db.Uuid
+  jogadorId   String             @db.Uuid
+  jogador     Perfil             @relation(fields: [jogadorId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  nome        String
+  nivel       Int
+  classe      String
+  raca        String
+  grupo       String
+  motivo      MotivoArquivamento
+  /// Retrato da ficha no momento do arquivamento (atributos, perícias, cartas, inventário).
+  conteudo    Json
+  arquivadaEm DateTime           @default(now())
+
+  @@index([jogadorId])
+}
+
+/// Período do limite de uso de uma carta.
+enum LimiteUso {
+  COMBATE
+  SESSAO
 }

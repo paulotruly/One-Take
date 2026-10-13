@@ -340,10 +340,17 @@ export async function gastarPontosPericia(id: string, usuarioId: string, pericia
   return detalhar(id, usuarioId);
 }
 
-/** Dono sai do grupo ou mestre remove o membro. Os itens da ficha ficam vagos no grupo. */
+/**
+ * Dono sai do grupo ou mestre remove o membro. Os itens da ficha ficam vagos no grupo, e o jogador fica com uma cópia
+ * arquivada do personagem (somente leitura), que só ele pode apagar.
+ */
 export async function excluir(id: string, usuarioId: string) {
-  await fichaAcessivel(id, usuarioId);
-  await getPrisma().ficha.delete({ where: { id } });
+  const { ficha, souMestre } = await fichaAcessivel(id, usuarioId);
+  // Import tardio: retrato.ts usa detalhar() deste módulo (evita dependência circular).
+  const { retratoDaFicha } = await import("./retrato.js");
+  const retrato = await retratoDaFicha(id, ficha.jogadorId, souMestre ? "REMOVIDO_PELO_MESTRE" : "SAIU_DO_GRUPO");
+  const prisma = getPrisma();
+  await prisma.$transaction([prisma.fichaArquivada.create({ data: retrato }), prisma.ficha.delete({ where: { id } })]);
 }
 
 // ---------- Status (só o mestre aplica e remove) ----------

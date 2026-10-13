@@ -371,7 +371,7 @@ export function MestreProtecoes() {
           ["Classe fixa, atributo fixo", "Nunca: são do sistema."],
         ]}
       />
-      <p>Excluir um <strong>grupo</strong> é permitido e apaga todas as fichas, criaturas invocadas e itens dele, com confirmação.</p>
+      <p>Excluir um <strong>grupo</strong> é permitido, com confirmação: apaga as criaturas invocadas e os itens dele, e as fichas saem do grupo. Cada jogador fica com uma cópia arquivada (só leitura) da própria ficha. O mesmo vale quando você remove um membro ou exclui a sua conta.</p>
       <p>Excluir um item do catálogo não mexe nos itens já lançados nos grupos (são cópias). Excluir uma criatura do bestiário tira também as criaturas dela invocadas.</p>
     </>
   );
@@ -397,7 +397,7 @@ export function JogadorEntrar() {
   return (
     <Passos
       passos={[
-        { titulo: "Crie a conta", texto: <>No <Link to="/cadastro">cadastro</Link>, escolha "Jogador", um nickname e uma senha. (Toda conta joga, inclusive a de mestre.)</> },
+        { titulo: "Crie a conta", texto: <>No <Link to="/cadastro">cadastro</Link>, escolha "Jogador", um nome de usuário, a data de nascimento e uma senha, e guarde o código de recuperação. (Toda conta joga, inclusive a de mestre.)</> },
         { titulo: "Peça o código ao mestre", texto: "São 6 caracteres. Digite em Minhas fichas, no campo Entrar em um grupo." },
         { titulo: "Veja o grupo", texto: "Aparecem a sinopse, o gênero, o mestre, as vagas e o que dá para escolher." },
         { titulo: "Crie a ficha", texto: `Nome, imagem e história (opcionais), raça, classe (use Ver detalhes para comparar) e ${f.pontosAtributoIniciais} pontos de atributo.` },
@@ -419,7 +419,7 @@ export function JogadorFicha() {
           ["Perícias", "Ver o teste pronto (ex.: 2d20 + 5), o total e de onde vem cada ponto. Depois de subir de nível, usar os pontos de perícia."],
           ["Habilidades", "Cartas pequenas em grade: toque numa para ver tudo. Mostra as do seu nível e quantas ainda vão liberar."],
           ["Inventário", "Toque num item para ver os detalhes e Usar, Passar para outro membro ou Descartar (fica vago no grupo). Itens que você não sabe usar aparecem marcados."],
-          ["Personagem", "Editar nome, imagem e história. Sair do grupo apaga a ficha."],
+          ["Personagem", "Editar nome, imagem e história. Sair do grupo tira a ficha do grupo, mas você fica com uma cópia arquivada (só leitura) em Minhas fichas."],
         ]}
       />
     </>
@@ -460,7 +460,6 @@ export function Limitacoes() {
     <ul>
       <li>Rolagem de dados dentro do app (por enquanto, role na mesa; a ficha mostra o teste pronto).</li>
       <li>Gastar esforço pelo app ao rolar (por enquanto, o jogador tira os pontos de esforço na ficha).</li>
-      <li>Recuperar senha sem email.</li>
       <li>Jogador criar itens próprios (hoje só o mestre cria).</li>
     </ul>
   );

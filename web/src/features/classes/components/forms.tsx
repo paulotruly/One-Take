@@ -11,7 +11,10 @@ import {
   type ClasseInput,
   type Grupo,
   type HabilidadeInput,
+  type LimiteUso,
   type TipoEfeito,
+  ROTULO_LIMITE,
+  rotuloLimite,
 } from "../types";
 import { KitsField } from "../../kits/components/KitsField";
 import { kitsPadrao } from "../../kits/types";
@@ -148,6 +151,28 @@ export function ClasseForm({
   );
 }
 
+// ---------- Limite de uso (carta e aprimoramento) ----------
+/** "Sem limite" ou N vezes por combate/sessão. `semMudanca` = rótulo da opção vazia (no aprimoramento: "Sem mudança"). */
+export function CampoLimite({ usos, por, onChange, erro, semMudanca = "Sem limite", rotulo = "Limite de uso" }: {
+  usos: string; por: LimiteUso | ""; onChange: (usos: string, por: LimiteUso | "") => void; erro?: string; semMudanca?: string; rotulo?: string;
+}) {
+  return (
+    <div className="form__linha">
+      <Field rotulo={rotulo} erro={erro}>
+        <select value={por} onChange={(ev) => onChange(ev.target.value ? usos || "1" : "", ev.target.value as LimiteUso | "")}>
+          <option value="">{semMudanca}</option>
+          {(Object.keys(ROTULO_LIMITE) as LimiteUso[]).map((p) => <option key={p} value={p}>Por {ROTULO_LIMITE[p]}</option>)}
+        </select>
+      </Field>
+      {por && (
+        <Field rotulo="Quantas vezes" dica={rotuloLimite(Number(usos) || null, por) ?? "De 1 a 99"}>
+          <input type="number" min={1} max={99} step={1} inputMode="numeric" value={usos} onChange={(ev) => onChange(ev.target.value, por)} />
+        </Field>
+      )}
+    </div>
+  );
+}
+
 // ---------- Habilidade ----------
 export function HabilidadeForm({
   inicial,
@@ -166,7 +191,8 @@ export function HabilidadeForm({
     condicao: inicial?.condicao ?? "",
     tipoEfeito: inicial?.tipoEfeito ?? ("" as TipoEfeito | ""),
     descricaoEfeito: inicial?.descricaoEfeito ?? "",
-    limite: inicial?.limite ?? "",
+    limiteUsos: inicial?.limiteUsos ? String(inicial.limiteUsos) : "",
+    limitePor: inicial?.limitePor ?? ("" as LimiteUso | ""),
     nivelNecessario: String(inicial?.nivelNecessario ?? 1),
     custoMana: String(inicial?.custoMana ?? 0),
     statusId: inicial?.statusId ?? "",
@@ -184,7 +210,8 @@ export function HabilidadeForm({
           condicao: v.condicao.trim() || null,
           tipoEfeito: v.tipoEfeito as TipoEfeito,
           descricaoEfeito: v.descricaoEfeito,
-          limite: v.limite.trim() || null,
+          limiteUsos: v.limitePor ? inteiro(v.limiteUsos) : null,
+          limitePor: v.limitePor || null,
           nivelNecessario: inteiro(v.nivelNecessario),
           custoMana: inteiro(v.custoMana),
           statusId: v.statusId || null,
@@ -195,7 +222,7 @@ export function HabilidadeForm({
       <Field rotulo="Título" erro={e.titulo}>
         <input value={v.titulo} onChange={set("titulo")} maxLength={80} autoFocus />
       </Field>
-      <Field rotulo="Descrição" erro={e.descricao}>
+      <Field rotulo="Descrição" erro={e.descricao} dica="Para negrito, use dois asteriscos: **assim**.">
         <textarea value={v.descricao} onChange={set("descricao")} maxLength={2000} rows={2} />
       </Field>
       <div className="form__linha">
@@ -214,7 +241,7 @@ export function HabilidadeForm({
           <input type="number" min={0} step={1} inputMode="numeric" value={v.custoMana} onChange={set("custoMana")} />
         </Field>
       </div>
-      <Field rotulo="Efeito" erro={e.descricaoEfeito} dica="O que a carta causa.">
+      <Field rotulo="Efeito" erro={e.descricaoEfeito} dica="O que a carta causa. Negrito: **assim**.">
         <textarea value={v.descricaoEfeito} onChange={set("descricaoEfeito")} maxLength={2000} rows={2} />
       </Field>
       <Field rotulo="Condição (opcional)" erro={e.condicao} dica="O que precisa acontecer para poder usar.">
@@ -236,9 +263,8 @@ export function HabilidadeForm({
           ))}
         </select>
       </Field>
-      <Field rotulo="Limite (opcional)" erro={e.limite} dica='Ex.: "1 vez por sessão", "apenas em combate".'>
-        <input value={v.limite} onChange={set("limite")} maxLength={200} />
-      </Field>
+      <CampoLimite usos={v.limiteUsos} por={v.limitePor} erro={e.limiteUsos ?? e.limitePor}
+        onChange={(usos, por) => setV({ ...v, limiteUsos: usos, limitePor: por })} />
       <Rodape enviando={p.enviando} onCancelar={p.onCancelar} erroGeral={p.erroGeral} rotulo="Salvar carta" />
     </Form>
   );

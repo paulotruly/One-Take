@@ -361,7 +361,7 @@ function Ficha({ f }: { f: FichaDetalhe }) {
         aberto={confirmarSaida}
         titulo={f.souMestre ? "Remover do grupo" : "Sair do grupo"}
         rotuloConfirmar={f.souMestre ? "Remover" : "Sair"}
-        mensagem={<>A ficha de <strong>{f.nome}</strong> será apagada e os itens dela ficam vagos no grupo. Não dá para desfazer.</>}
+        mensagem={<>A ficha de <strong>{f.nome}</strong> sai do grupo e os itens dela ficam vagos lá. {f.souMestre ? "O jogador" : "Você"} fica com uma cópia arquivada do personagem, só para leitura.</>}
         processando={excluir.isPending}
         erro={excluir.isError ? mensagemDeErro(excluir.error) : null}
         onCancelar={() => setConfirmarSaida(false)}

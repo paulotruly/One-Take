@@ -1,6 +1,7 @@
-import { Activity, Backpack, ChevronDown, Crown, Gamepad2, Layers, ListChecks, LogOut, Menu, Package, PawPrint, ScrollText, Shield, UserPen, UserRound, Users, X, type LucideIcon } from "lucide-react";
+import { Activity, Backpack, ChevronDown, Crown, Gamepad2, Layers, ListChecks, LogOut, Menu, Package, Settings, PawPrint, ScrollText, Shield, UserPen, UserRound, Users, X, type LucideIcon } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, Outlet, useLocation } from "react-router";
+import { Rodape } from "../components/layout/Rodape";
 import { SeletorKit } from "../features/kits/components/SeletorKit";
 import { interfaceLembrada, lembrarInterface, useAuth, useMe, type Papel } from "../auth/AuthProvider";
 import { Avatar } from "../components/ui/Avatar";
@@ -88,7 +89,7 @@ export function AppLayout() {
             )}
             {me.data ? (
               <MenuPerfil
-                ativo={pathname === "/perfil"}
+                ativo={pathname === "/perfil" || pathname === "/conta"}
                 onSair={sair}
                 rotulo={
                   <>
@@ -123,14 +124,21 @@ export function AppLayout() {
         </nav>
         {menuAberto && <div className="lateral__fundo" aria-hidden onClick={() => setMenuAberto(false)} />}
         <main className="conteudo">
+          {me.data && !me.data.codigoRecuperacaoEm && pathname !== "/conta" && (
+            <p className="aviso-email" role="status">
+              Sua conta não tem código de recuperação: sem ele não dá para trocar a senha se você esquecer.{" "}
+              <Link to="/conta">Gerar código</Link>
+            </p>
+          )}
           <Outlet />
         </main>
       </div>
+      <Rodape />
     </div>
   );
 }
 
-/** Botão do perfil no topo: abre um menu com "Editar perfil" e "Sair". Fecha com clique fora ou Esc. */
+/** Botão do perfil no topo: abre um menu com "Editar perfil", "Configurações da conta" e "Sair". Fecha com clique fora ou Esc. */
 function MenuPerfil({ rotulo, ativo, onSair }: { rotulo: ReactNode; ativo: boolean; onSair: () => void }) {
   const [aberto, setAberto] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -165,6 +173,9 @@ function MenuPerfil({ rotulo, ativo, onSair }: { rotulo: ReactNode; ativo: boole
         <div className="menu-perfil__lista" role="menu">
           <Link to="/perfil" role="menuitem" className="menu-perfil__item" onClick={() => setAberto(false)}>
             <UserPen size={16} aria-hidden /> Editar perfil
+          </Link>
+          <Link to="/conta" role="menuitem" className="menu-perfil__item" onClick={() => setAberto(false)}>
+            <Settings size={16} aria-hidden /> Configurações da conta
           </Link>
           <button type="button" role="menuitem" className="menu-perfil__item" onClick={() => { setAberto(false); onSair(); }}>
             <LogOut size={16} aria-hidden /> Sair

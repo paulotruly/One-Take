@@ -5,28 +5,41 @@ import { api } from "../lib/api";
 import { supabase } from "../lib/supabase";
 
 export type Papel = "MESTRE" | "JOGADOR";
-export type Me = { id: string; nickname: string; papel: Papel; nome: string | null; fotoUrl: string | null };
+export type Me = {
+  id: string;
+  nickname: string;
+  papel: Papel;
+  nome: string | null;
+  fotoUrl: string | null;
+  /** Quando o código de recuperação atual foi gerado (null = a conta ainda não tem). */
+  codigoRecuperacaoEm: string | null;
+  /** "AAAA-MM-DD"; nula em contas criadas antes da idade mínima. */
+  dataNascimento: string | null;
+};
 
-/** Email interno usado no Supabase Auth para contas criadas por nickname (ninguém vê). */
-const emailInterno = (nickname: string) => `${nickname}@one-take.local`;
-
-/** Nickname guardado sem "@" e minúsculo. */
+/** Nome de usuário (nickname no código) guardado sem "@" e minúsculo. */
 export const normalizarNickname = (v: string) => v.trim().replace(/^@/, "").toLowerCase();
 
 type AuthCtx = {
   /** undefined = ainda carregando a sessão salva. */
   session: Session | null | undefined;
-  /** Entra com nickname (ou email, para contas antigas) e senha. */
+  /** Entra com o nome de usuário (ou e-mail, em contas muito antigas) e a senha. */
   entrar: (login: string, senha: string) => Promise<void>;
-  cadastrar: (dados: { nickname: string; senha: string; papel: Papel }) => Promise<void>;
+  /**
+   * Cria a conta pela API. Devolve o código de recuperação (para mostrar uma vez) e `entrar`, que abre a sessão:
+   * a tela só entra depois que a pessoa confirma que guardou o código.
+   */
+  cadastrar: (dados: DadosCadastro) => Promise<{ codigoRecuperacao: string; entrar: () => Promise<void> }>;
   sair: () => Promise<void>;
 };
+
+export type DadosCadastro = { nickname: string; senha: string; papel: Papel; dataNascimento: string };
 
 const Ctx = createContext<AuthCtx | null>(null);
 
 const MENSAGENS: Record<string, string> = {
-  "Invalid login credentials": "Nickname ou senha incorretos.",
-  "User already registered": "Este nickname já está em uso.",
+  "Invalid login credentials": "Nome de usuário ou senha incorretos.",
+  "User already registered": "Este nome de usuário já está em uso.",
   "Signups not allowed for this instance": "O cadastro está desativado no Supabase.",
 };
 const traduzir = (m: string) => MENSAGENS[m] ?? (m.includes("Password should be") ? "A senha precisa ter pelo menos 6 caracteres." : m);
@@ -45,7 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [queryClient]);
 
   async function entrar(login: string, senha: string) {
-    // A API acha a conta pelo nickname e devolve a sessão do Supabase.
+    // A API acha a conta pelo nome de usuário e devolve a sessão do Supabase.
     const tokens = await api<{ access_token: string; refresh_token: string }>("/api/entrar", {
       method: "POST",
       body: { login, senha },
@@ -54,25 +67,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw new Error(traduzir(error.message));
   }
 
-  async function cadastrar({ nickname, senha, papel }: { nickname: string; senha: string; papel: Papel }) {
-    const nick = normalizarNickname(nickname);
-    const { disponivel, motivo } = await api<{ disponivel: boolean; motivo?: string }>(`/api/nicknames/${encodeURIComponent(nick)}`);
-    if (!disponivel) throw new Error(motivo ?? "Nickname indisponível.");
-    // papel e nickname vão no user_metadata; a API cria o perfil com eles no primeiro acesso.
-    const { data, error } = await supabase.auth.signUp({
-      email: emailInterno(nick),
-      password: senha,
-      options: { data: { papel, nickname: nick } },
+  async function cadastrar({ nickname, senha, papel, dataNascimento }: DadosCadastro) {
+    // A API valida, cria a conta no Supabase Auth e o perfil, e devolve a sessão e o código de recuperação.
+    const { codigoRecuperacao, ...tokens } = await api<{ access_token: string; refresh_token: string; codigoRecuperacao: string }>("/api/cadastro", {
+      method: "POST",
+      body: { nickname: normalizarNickname(nickname), senha, papel, dataNascimento },
     });
-    if (error) {
-      if (error.code === "over_email_send_rate_limit" || error.message.toLowerCase().includes("email")) {
-        throw new Error('Cadastro indisponível: no Supabase, desligue "Confirm email" (Authentication > Sign In / Providers > Email).');
-      }
-      throw new Error(traduzir(error.message));
-    }
-    if (!data.session) {
-      throw new Error('Conta criada, mas o Supabase pede confirmação por email. Desligue "Confirm email" no painel do Supabase.');
-    }
+    return {
+      codigoRecuperacao,
+      entrar: async () => {
+        const { error } = await supabase.auth.setSession(tokens);
+        if (error) throw new Error(traduzir(error.message));
+      },
+    };
   }
 
   async function sair() {

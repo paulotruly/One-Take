@@ -4,6 +4,7 @@ import { z } from "zod";
 import { naoAutenticado } from "../../lib/errors.js";
 import { emailInterno, nicknameSchema, normalizarNickname } from "../../lib/nickname.js";
 import { getPrisma } from "../../lib/prisma.js";
+import { pedirSessao } from "../../lib/supabase-auth.js";
 
 export const acessoRouter = Router();
 
@@ -15,7 +16,7 @@ acessoRouter.get("/nicknames/:nickname", async (req, res) => {
     return;
   }
   const existe = await getPrisma().perfil.findUnique({ where: { nickname: r.data }, select: { id: true } });
-  res.json({ disponivel: !existe, motivo: existe ? "Este nickname já está em uso." : undefined });
+  res.json({ disponivel: !existe, motivo: existe ? "Este nome de usuário já está em uso." : undefined });
 });
 
 const entrarSchema = z.object({ login: z.string().min(1, "Obrigatório"), senha: z.string().min(1, "Obrigatório") });
@@ -33,12 +34,7 @@ acessoRouter.post("/entrar", async (req, res) => {
     email = perfil?.email ?? emailInterno(nickname); // conta recém-criada pode ainda não ter perfil
   }
 
-  const resposta = await fetch(`${process.env.SUPABASE_URL}/auth/v1/token?grant_type=password`, {
-    method: "POST",
-    headers: { apikey: process.env.SUPABASE_PUBLISHABLE_KEY!, "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password: senha }),
-  });
-  if (!resposta.ok) throw naoAutenticado("Nickname ou senha incorretos.");
-  const sessao = (await resposta.json()) as { access_token: string; refresh_token: string };
-  res.json({ access_token: sessao.access_token, refresh_token: sessao.refresh_token });
+  const sessao = await pedirSessao(email, senha);
+  if (!sessao) throw naoAutenticado("Nome de usuário ou senha incorretos.");
+  res.json(sessao);
 });

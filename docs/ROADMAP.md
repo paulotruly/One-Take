@@ -23,9 +23,12 @@
 
 - NPCs com ficha (raça, classe opcional, nível, dados, perícias, cartas, inventário).
 - Kits de RPG (no lugar de "exclusivo de um grupo"): coleções por aventura, kit ativo que filtra a interface, kit do grupo.
+- Conta sem e-mail com código de recuperação ("Esqueceu a senha?"), idade mínima de 12 anos, exportação dos dados, exclusão da conta,
+  fichas arquivadas; minutas de Termos de uso e Política de privacidade.
 
 ## Em andamento
 - Instruções de deploy (Render, Vercel).
+- Configurar a chave secreta do Supabase em produção; revisar as minutas legais (`docs/legal/REVISAO_LEGAL_PENDENCIAS.md`).
 
 ## A seguir (fora do escopo atual)
 - Sessões, rolagem de dados no app (com gasto de esforço), combate.
@@ -38,8 +41,7 @@
 - Code-splitting do bundle (o supabase-js deixa o JS principal com ~590 kB; ~170 kB gzip).
 - "Restaurar perícias base" no catálogo do mestre (hoje, base apagada só volta ao duplicar uma classe fixa que a use).
 - Definir: cartas de um nível são todas recebidas ou escolhidas? Perícia nova é escolhida ou pré-determinada?
-- Recuperar senha sem email (ex.: mestre redefine a senha de um jogador do grupo).
 - Desfazer gasto de pontos de perícia (descer de nível não existe por regra).
-- Status em criaturas invocadas.
 - "Desativar" a interface de mestre.
 - Jogador criar itens próprios (hoje só o mestre cria).
+- Limite de tentativas no login por nickname.

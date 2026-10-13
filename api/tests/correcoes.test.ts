@@ -123,6 +123,7 @@ describe("itens de NPC", () => {
     prismaFalso.grupo.findUnique.mockResolvedValue({ id: GRUPO, mestreId: MESTRE.id });
     prismaFalso.item.updateMany.mockResolvedValue({ count: 1 });
     prismaFalso.grupo.delete.mockResolvedValue({});
+    prismaFalso.ficha.findMany.mockResolvedValue([]);
     const res = await comoMestre(request(app).delete(`/api/grupos/${GRUPO}`));
     expect(res.status).toBe(204);
     expect(prismaFalso.item.updateMany).toHaveBeenCalledWith({ where: { grupoId: GRUPO, npcId: { not: null } }, data: { grupoId: null } });

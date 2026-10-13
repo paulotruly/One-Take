@@ -188,3 +188,43 @@ Formato: data — decisão. Motivo.
 - **Kit ativo mostra só o kit (2026-10-13) — decisão do produto.** Com um kit ativo, as listas do mestre não mostram o geral; o geral
   aparece em "Todos". Interpretações: o que é fixo do sistema (classes fixas, atributos e status fixos) continua aparecendo, porque não
   pode entrar em kit; no grupo com kit, itens, criaturas, NPCs e a pré-marcação continuam com o do kit mais o geral.
+- **Home completa, Termos e Privacidade (2026-10-13) — decisão do produto.** A landing curta virou a página oficial (hero, o que é,
+  funcionalidades, como funciona, perguntas, chamada final), substituindo a regra de "home curta". Interpretações: só recursos já
+  implementados (com um aviso do que ainda não existe); sem seção de demonstração visual, porque não há capturas reais no repositório;
+  sem planos, porque não há preços definidos; o quadro do hero é um exemplo de regra (o mesmo da documentação), não uma tela.
+  Termos de uso e Política de privacidade foram escritos a partir do funcionamento real do app, como versão inicial a revisar pelo
+  responsável; o rodapé passou a dizer "Todos os direitos reservados", coerente com a ausência de licença.
+- **E-mail na conta, recuperação de senha e exclusão de conta (2026-10-13) — decisão do produto.** Escolhas do responsável: Resend para
+  enviar e-mails; chave secreta do Supabase de volta, só na API; exclusão **imediata depois da confirmação pelo e-mail** (no lugar do prazo
+  de 30 dias com agendador do pedido original, então não há job agendado); os grupos do mestre são apagados, mas os jogadores **não perdem
+  as fichas**. Interpretações e decisões técnicas:
+  - o login continua por nickname: o Supabase Auth mantém o e-mail interno e o e-mail real fica em `Perfil.emailContato` (verificação
+    opcional e recuperação feitas pelo One-Take, com tokens próprios guardados como hash). Alternativa descartada: trocar o e-mail do Auth
+    pelo real e usar os fluxos do Supabase, que exigiriam confirmação obrigatória ou não deixariam a verificação opcional;
+  - links com o token no fragmento da URL e confirmação por clique (anti-scanner); resposta genérica e assíncrona no "esqueci a senha";
+  - sessões antigas: a API compara o claim `amr` do JWT com `sessoesValidasDesde` (o Supabase não revoga sessões por usuário pela Admin API
+    sem o JWT dele); depois de redefinir a senha, os refresh tokens antigos ainda renovam no Supabase, mas a API recusa tudo;
+  - **fichas arquivadas** também ao sair do grupo, ao ser removido e ao excluir o grupo ("acessar todas as fichas independentemente");
+    a cópia guarda os textos do mestre usados na ficha, sem o nickname dele;
+  - exclusão retomável: marca na conta + ordem explícita + `npm run concluir-exclusoes` para retomar falhas (roda sob demanda);
+  - limite por IP em memória (sem tabela nem dependência nova); o limite por conta usa os tokens do banco.
+- **Termos de uso e Política de privacidade como minutas em `docs/legal/` (2026-10-13).** Fonte única: o site renderiza os arquivos .md;
+  campos não confirmados ficam como `[MARCADORES]` destacados e listados em `docs/legal/REVISAO_LEGAL_PENDENCIAS.md` (interno). Não é
+  parecer jurídico.
+- **Idade mínima de 12 anos, exportação e configurações da conta (2026-10-13) — decisão do produto.** Data de nascimento obrigatória no
+  cadastro, conferida na API (`regras/conta.ts`, exposta em `/api/regras`); contas antigas ficam sem a data. Exportação em JSON
+  (`GET /api/me/exportacao`), para o titular baixar a qualquer momento (interpretado de "podemos fazer isso sim" sobre o encerramento sem
+  exportação). Configurações da conta numa página própria (`/conta`), separada de Editar perfil; a exclusão virou um link discreto no fim.
+  Contato provisório rpgonetake@gmail.com; Supabase em us-west-2 (Estados Unidos); hospedagem Render e Vercel confirmada.
+- **Sem e-mail na conta; recuperação por código (2026-10-13) — decisão do produto.** Substitui o e-mail obrigatório com verificação e o
+  "esqueci a senha" por e-mail, que dependiam de domínio próprio e do Resend. Escolhido o **código de recuperação** como estratégia
+  gratuita: mostrado uma vez no cadastro (a pessoa confirma que guardou antes de entrar), guardado como SHA-256, trocado a cada uso,
+  regenerável com a senha. Alternativas descartadas: o mestre redefinir a senha dos jogadores (dá poder demais ao mestre) e perguntas de
+  segurança (fracas). A exclusão de conta passou a ser confirmada com senha + nome de usuário digitado. A migration apagou os e-mails
+  guardados e a tabela de links. Quem perder senha e código depende do contato manual.
+- **"Nickname" vira "nome de usuário" na interface (2026-10-13) — decisão do produto.** O campo e as rotas continuam `nickname` no
+  código e no banco, como foi feito com "Arquétipo".
+- **Limite de uso da carta em lista fixa (2026-10-13) — decisão do produto.** Em vez de texto livre: N vezes (1 a 99) por combate ou por
+  sessão, ou sem limite. Interpretado só esses dois períodos, os exemplos do responsável. No aprimoramento, o limite muda inteiro.
+- **Negrito na descrição e no efeito da carta (2026-10-13) — decisão do produto.** Sintaxe `**texto**`, desenhada sem HTML (`ComNegrito`).
+

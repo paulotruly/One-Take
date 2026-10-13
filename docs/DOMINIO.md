@@ -11,8 +11,21 @@ Uma conta faz as duas coisas; no cadastro a pessoa escolhe a **interface** com q
 - **Mestre** — também carrega a interface de mestre: cria o mundo (classes, raças, perícias, atributos, status, itens,
   bestiário) e conduz os grupos. Pode ser ativada depois ("Mestrar" no topo). O catálogo de perícias do mestre só é
   copiado no primeiro acesso à interface de mestre, para não ocupar espaço de quem nunca mestra.
-Cada usuário tem um **perfil** com **nickname** (único, usado para entrar; exibido como @nickname), nome opcional e foto (link).
-Ninguém informa email: o cadastro e o login são por nickname e senha.
+Cada usuário tem um **perfil** com **nome de usuário** (no código, `nickname`; único, usado para entrar; exibido como @usuario), nome
+opcional e foto (link).
+O login é por nome de usuário e senha. **Não há e-mail na conta.**
+
+### Conta: senha, dados e exclusão
+- **Idade mínima de 12 anos**: o cadastro pede a data de nascimento (só o dono vê). Contas antigas podem não ter a data.
+- **Código de recuperação**: no cadastro, o app mostra um código (ex.: `7KQ2M-9XH4T-AB3CD-EF5GH`) uma única vez, e a pessoa só entra
+  depois de confirmar que guardou. **Esqueceu a senha?** = nome de usuário + código + senha nova; depois da troca, o código usado deixa de
+  valer, o app mostra um novo e as sessões anteriores deixam de valer. Em Configurações da conta dá para gerar um código novo (com a senha).
+  Contas antigas sem código veem um aviso para gerar.
+- **Baixar meus dados**: um arquivo JSON com a conta, as fichas, as fichas arquivadas e o conteúdo do mestre, a qualquer momento.
+- **Excluir a conta**: em Configurações da conta (link discreto no fim), com a senha e o próprio nome de usuário digitado. A exclusão é
+  **imediata e definitiva**: apaga o perfil, o login, as fichas (inclusive as arquivadas), os grupos e todo o conteúdo do mestre. Os
+  jogadores dos grupos dele ficam com a ficha arquivada.
+- Tudo isso fica em **Configurações da conta** (`/conta`), separado de **Editar perfil** (`/perfil`: nome de usuário, nome e foto).
 
 ## Classe
 É o "herói" que o jogador escolhe. Tem:
@@ -51,7 +64,8 @@ Cada carta da cartela:
   (penalidade temporária), **Controle** (prende, derruba, atordoa, força ação), **Mobilidade** (movimento extra),
   **Invocação** (traz criaturas/objetos), **Utilidade** (fora de combate ou o resto).
 - **Descrição do efeito**: o que a carta causa, em texto livre.
-- **Limite** (opcional): "1 vez por sessão", "apenas em combate".
+- **Limite de uso** (opcional, lista fixa): **N vezes por combate** ou **N vezes por sessão** (N de 1 a 99). Sem limite = vazio.
+- **Negrito** na descrição e no efeito: o texto entre `**dois asteriscos**` aparece em negrito.
 - **Nível necessário** (padrão 1): a carta só fica disponível a partir desse nível (ver Progressão).
 - **Custo de mana** (opcional, padrão 0): quanto de mana a carta gasta ao ser usada. 0 = não custa mana.
   É aqui que os pontos de mana da classe são usados.
@@ -138,7 +152,10 @@ Criada pelo jogador ao entrar no grupo com o código (**uma ficha por jogador em
 - **Nível**: só o mestre sobe (ver Progressão).
 - **Perícias**: soma dos pontos da raça + modificador da classe + pontos colocados ao subir de nível.
 - **Cartas**: as da classe com nível necessário até o nível da ficha.
-- O jogador pode sair do grupo (apaga a ficha) e o mestre pode remover o membro; os itens da ficha ficam vagos no grupo.
+- O jogador pode sair do grupo e o mestre pode remover o membro; os itens da ficha ficam vagos no grupo.
+- **Fichas arquivadas**: quando uma ficha sai do grupo (o jogador sai, o mestre remove, o grupo é excluído ou o mestre exclui a conta), o
+  jogador fica com uma **cópia somente leitura** do personagem (retrato do momento: atributos, perícias, cartas, inventário), em Minhas
+  fichas. A cópia não depende do conteúdo do mestre e só o jogador pode apagá-la.
 
 ## Inventário e itens
 - Todo personagem começa com **5 espaços** e ganha **+2 por nível**. Cada item ocupa **1 ou mais espaços**.

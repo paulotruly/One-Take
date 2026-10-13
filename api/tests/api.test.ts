@@ -49,7 +49,7 @@ describe("regras públicas", () => {
 describe("acesso por nickname (público)", () => {
   it("diz se o nickname está disponível", async () => {
     prismaFalso.perfil.findUnique.mockResolvedValueOnce({ id: "x" }).mockResolvedValueOnce(null);
-    expect((await request(app).get("/api/nicknames/paulo")).body).toEqual({ disponivel: false, motivo: "Este nickname já está em uso." });
+    expect((await request(app).get("/api/nicknames/paulo")).body).toEqual({ disponivel: false, motivo: "Este nome de usuário já está em uso." });
     expect((await request(app).get("/api/nicknames/@Novo")).body).toEqual({ disponivel: true });
     expect((await request(app).get("/api/nicknames/a")).body.disponivel).toBe(false);
   });
@@ -71,7 +71,7 @@ describe("acesso por nickname (público)", () => {
     const fetchFalso = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response("{}", { status: 400 }));
     const res = await request(app).post("/api/entrar").send({ login: "ninguem", senha: "x" });
     expect(res.status).toBe(401);
-    expect(res.body.error.message).toBe("Nickname ou senha incorretos.");
+    expect(res.body.error.message).toBe("Nome de usuário ou senha incorretos.");
     expect(JSON.parse(fetchFalso.mock.calls[0]![1]!.body as string).email).toBe("ninguem@one-take.local");
     fetchFalso.mockRestore();
   });
@@ -127,6 +127,7 @@ describe("autenticação e papel", () => {
   });
 
   it("primeiro acesso cria perfil como JOGADOR", async () => {
+    prismaFalso.$queryRaw.mockResolvedValue([{ "?column?": 1 }]);
     prismaFalso.perfil.findUnique.mockResolvedValue(null);
     prismaFalso.perfil.create.mockImplementation(async ({ data }) => ({ papel: "JOGADOR", catalogoIniciado: false, ...data }));
     prismaFalso.perfil.findUniqueOrThrow.mockResolvedValue(MESTRE);
@@ -136,6 +137,7 @@ describe("autenticação e papel", () => {
   });
 
   it("cadastro como mestre: papel e nome vêm do user_metadata do Supabase", async () => {
+    prismaFalso.$queryRaw.mockResolvedValue([{ "?column?": 1 }]);
     prismaFalso.perfil.findUnique.mockResolvedValue(null);
     prismaFalso.perfil.create.mockImplementation(async ({ data }) => ({ catalogoIniciado: false, ...data }));
     prismaFalso.perfil.findUniqueOrThrow.mockResolvedValue(MESTRE);
@@ -145,6 +147,7 @@ describe("autenticação e papel", () => {
   });
 
   it("papel desconhecido no cadastro vira JOGADOR", async () => {
+    prismaFalso.$queryRaw.mockResolvedValue([{ "?column?": 1 }]);
     prismaFalso.perfil.findUnique.mockResolvedValue(null);
     prismaFalso.perfil.create.mockImplementation(async ({ data }) => ({ catalogoIniciado: false, ...data }));
     prismaFalso.perfil.findUniqueOrThrow.mockResolvedValue(JOGADOR);
@@ -156,7 +159,8 @@ describe("autenticação e papel", () => {
   it("usuário recriado no Auth (id novo, mesmo email) herda o perfil antigo", async () => {
     const antigo = { ...MESTRE, id: OUTRO_MESTRE_ID };
     prismaFalso.perfil.findUnique.mockResolvedValueOnce(null).mockResolvedValueOnce(antigo);
-    prismaFalso.$queryRaw.mockResolvedValue([]); // conta antiga não existe mais em auth.users
+    // 1ª consulta: o usuário do token existe no Auth; 2ª: a conta antiga não existe mais.
+    prismaFalso.$queryRaw.mockResolvedValueOnce([{ "?column?": 1 }]).mockResolvedValueOnce([]);
     prismaFalso.perfil.update.mockResolvedValue(MESTRE);
     prismaFalso.perfil.findUniqueOrThrow.mockResolvedValue(MESTRE);
     const res = await request(app).get("/api/me").set("Authorization", `Bearer ${tokenMestre}`);
@@ -285,7 +289,7 @@ describe("classes", () => {
     prismaFalso.classe.findUnique.mockResolvedValue(fixa);
     prismaFalso.classe.findUniqueOrThrow.mockResolvedValueOnce({
       ...fixa,
-      habilidades: [{ id: "h1", classeId: fixa.id, titulo: "Carta", descricao: "d", condicao: null, tipoEfeito: "Dano", descricaoEfeito: "e", limite: null, nivelNecessario: 3, ordem: 0, aprimoramentos: [{ id: "a1", habilidadeId: "h1", criadoEm: new Date(), nivel: 5, titulo: null, descricaoEfeito: "mais forte", condicao: null, limite: null, custoMana: 2, statusId: null }] }],
+      habilidades: [{ id: "h1", classeId: fixa.id, titulo: "Carta", descricao: "d", condicao: null, tipoEfeito: "Dano", descricaoEfeito: "e", limite: null, nivelNecessario: 3, ordem: 0, aprimoramentos: [{ id: "a1", habilidadeId: "h1", criadoEm: new Date(), nivel: 5, titulo: null, descricaoEfeito: "mais forte", condicao: null, limiteUsos: null, limitePor: null, custoMana: 2, statusId: null }] }],
       pericias: [
         { modificador: 2, pericia: { id: "base-luta", nome: "Luta", donoId: null, origemId: null } },
         { modificador: 1, pericia: { id: "base-vontade", nome: "Vontade", donoId: null, origemId: null } },
@@ -307,7 +311,7 @@ describe("classes", () => {
     expect(data.habilidades.create[0]).not.toHaveProperty("id");
     expect(data.habilidades.create[0]).not.toHaveProperty("classeId");
     expect(data.habilidades.create[0].aprimoramentos.create).toEqual([
-      { nivel: 5, titulo: null, descricaoEfeito: "mais forte", condicao: null, limite: null, custoMana: 2, statusId: null },
+      { nivel: 5, titulo: null, descricaoEfeito: "mais forte", condicao: null, limiteUsos: null, limitePor: null, custoMana: 2, statusId: null },
     ]);
     expect(data.pericias.create).toEqual([
       { periciaId: "minha-luta", modificador: 2 },
@@ -363,6 +367,23 @@ describe("habilidades", () => {
     const negativo = await comoMestre(request(app).post(`/api/classes/${classeId}/habilidades`)).send({ ...corpo, custoMana: -1 });
     expect(negativo.status).toBe(400);
     expect(negativo.body.error.details).toEqual([{ campo: "custoMana", mensagem: "Deve ser no mínimo 0" }]);
+  });
+
+  it("limite de uso: vezes (1 a 99) e período (combate ou sessão) juntos, ou nenhum", async () => {
+    prismaFalso.habilidade.aggregate.mockResolvedValue({ _max: { ordem: null } });
+    prismaFalso.habilidade.create.mockImplementation(async ({ data }) => data);
+    const corpo = { titulo: "Golpe", descricao: "d", tipoEfeito: "DANO", descricaoEfeito: "e" };
+    const url = `/api/classes/${classeId}/habilidades`;
+
+    const ok = await comoMestre(request(app).post(url)).send({ ...corpo, limiteUsos: 2, limitePor: "COMBATE" });
+    expect(ok.status).toBe(201);
+    expect(ok.body).toMatchObject({ limiteUsos: 2, limitePor: "COMBATE" });
+    const semLimite = await comoMestre(request(app).post(url)).send(corpo);
+    expect(semLimite.body).toMatchObject({ limiteUsos: null, limitePor: null });
+
+    expect((await comoMestre(request(app).post(url)).send({ ...corpo, limiteUsos: 2 })).status).toBe(400);
+    expect((await comoMestre(request(app).post(url)).send({ ...corpo, limiteUsos: 0, limitePor: "SESSAO" })).status).toBe(400);
+    expect((await comoMestre(request(app).post(url)).send({ ...corpo, limiteUsos: 1, limitePor: "DIA" })).status).toBe(400);
   });
 
   it("tipo de efeito é obrigatório e vem da lista fixa (Dano, Defesa, Cura...)", async () => {

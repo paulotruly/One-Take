@@ -20,6 +20,7 @@ export type Regras = {
   };
   atributosFixos: { nome: string; descricao: string }[];
   statusFixos: { nome: string; descricao: string; efeito: string; tipo: "BUFF" | "DEBUFF" | "MISTO"; gatilho: string | null }[];
+  conta: { idadeMinima: number };
 };
 
 /** Usado só enquanto /api/regras carrega (mesmos valores da regra atual). */
@@ -33,6 +34,7 @@ const PADRAO: Regras = {
     { nome: "Conhecimento", descricao: "O intelecto e a sensibilidade do personagem diante do mundo." },
   ],
   statusFixos: [],
+  conta: { idadeMinima: 12 },
 };
 
 export function useRegras(): Regras {

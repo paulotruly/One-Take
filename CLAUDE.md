@@ -3,7 +3,7 @@
 Sistema de RPG de mesa para sessões únicas (one-shots). Classes prontas no estilo hero shooter:
 o jogador escolhe uma classe com kit de habilidades já definido. Etapa atual: interface do **mestre**
 para criar classes, raças, perícias, atributos, itens, NPCs e bestiário e conduzir grupos (status, itens, NPCs, criaturas);
-interface do jogador com fichas e inventário (uma conta joga e, se ativar, mestra); login por nickname; regras públicas.
+interface do jogador com fichas e inventário (uma conta joga e, se ativar, mestra); login por nome de usuário (no código, `nickname`), sem e-mail; regras públicas.
 Sessões e rolagem de dados no app ainda não existem (a ficha mostra o teste pronto).
 
 ## Stack
@@ -23,6 +23,7 @@ npm run db:seed              # estrutura fixa: atributos, status, categorias, pe
 npm run promover -- email@x  # muda o papel de uma conta pelo email do Supabase Auth (padrão MESTRE)
 npm run fixar-classe -- "Título"   # classe de um mestre vira fixa do sistema (--devolver nick desfaz)
 npm run exportar -- > ../conteudo.json  # classes e bestas em JSON para a skill de balanceamento (/balancear)
+npm run concluir-exclusoes   # retoma exclusões de conta que pararam no meio (idempotente)
 npm test                     # vitest (Prisma mockado, sem banco)
 npm run typecheck && npm run build
 # Web (dentro de web/)
@@ -55,9 +56,15 @@ O mesmo vale para a **documentação pública** em `/docs` (`web/src/features/do
 `conteudo/jogo.tsx` (começando + regras do jogo) ou `conteudo/mestre.tsx` (guia do mestre, guia do jogador, referência),
 listado em `topicos.tsx` (navegação lateral). Regra ou funcionalidade nova = atualizar ou criar o tópico.
 Números de regra vêm de `useRegras()` (`GET /api/regras`); não escreva números à mão.
-A home (`web/src/pages/HomePage.tsx`) é uma landing page curta: só propaganda e links para a documentação.
+A home (`web/src/pages/HomePage.tsx`) é a página oficial do produto: hero, o que é, funcionalidades **já implementadas**, como funciona,
+perguntas frequentes e chamada final. Não invente recursos, números, depoimentos nem preços; o detalhe fica na documentação.
+Termos de uso e Política de privacidade são as minutas de `docs/legal/` (o site renderiza os .md): atualize-as, e o
+`docs/legal/REVISAO_LEGAL_PENDENCIAS.md`, se dados, acessos, fornecedores ou exclusão mudarem.
 
 ## Qual doc ler
+Contexto geral do projeto (estado, regras RN, segurança, pendências): `PROJECT_CONTEXT.md`. Fluxo de trabalho para
+assistentes: `AGENTS.md`. Histórico de alterações: `docs/CHANGELOG.md`; decisões arquiteturais novas: `docs/adr/`.
+
 | Tarefa | Ler |
 |---|---|
 | Regras do jogo, cartela, perícias, progressão de nível | `docs/DOMINIO.md` |

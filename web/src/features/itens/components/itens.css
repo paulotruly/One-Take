@@ -36,7 +36,7 @@
 .form__grupo legend { padding: 0 var(--esp-2); font-size: var(--texto-sm); font-weight: var(--peso-forte); }
 .categoria-linha { display: flex; align-items: center; gap: var(--esp-3); }
 .categoria-linha__texto { display: flex; flex-direction: column; flex: 1; min-width: 0; }
-.seletor-icone { display: grid; grid-template-columns: repeat(auto-fill, minmax(44px, 1fr)); gap: var(--esp-2); }
+.seletor-icone { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(44px, 100%), 1fr)); gap: var(--esp-2); }
 .seletor-icone__opcao { display: inline-flex; align-items: center; justify-content: center; height: 44px; border: 1px solid var(--cor-borda); background: var(--cor-fundo); color: var(--cor-texto-suave); cursor: pointer; }
 .seletor-icone__opcao:hover { border-color: var(--cor-texto-suave); }
 .seletor-icone__opcao--ativa { border: 2px solid var(--cor-primaria); color: var(--cor-primaria); }

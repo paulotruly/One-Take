@@ -23,10 +23,14 @@ import { catalogoItensRouter } from "./modules/itens/catalogo.routes.js";
 import { categoriasItemRouter } from "./modules/itens/categorias.js";
 import { npcsRouter } from "./modules/npcs/npcs.routes.js";
 import { kitsRouter } from "./modules/kits/kits.routes.js";
+import { contaPublicaRouter, contaRouter } from "./modules/conta/conta.routes.js";
+import { arquivoRouter } from "./modules/fichas/arquivo.js";
 
-export function criarApp({ corsOrigin }: { corsOrigin: string[] }) {
+export function criarApp({ corsOrigin, confiarProxy = false }: { corsOrigin: string[]; confiarProxy?: boolean }) {
   const app = express();
   app.disable("x-powered-by");
+  // Atrás de um proxy (Render), o IP do visitante vem no X-Forwarded-For: usado nos limites de tentativas.
+  if (confiarProxy) app.set("trust proxy", 1);
   app.use(cors({ origin: corsOrigin }));
   app.use(express.json({ limit: "100kb" }));
 
@@ -40,13 +44,13 @@ export function criarApp({ corsOrigin }: { corsOrigin: string[] }) {
   });
 
   // Público (sem login).
-  app.use("/api", regrasRouter, acessoRouter);
+  app.use("/api", regrasRouter, acessoRouter, contaPublicaRouter);
 
   const api = Router();
   api.use(autenticar);
 
   // Qualquer usuário autenticado (permissões finas ficam nos services).
-  api.use(meRouter, fichasRouter);
+  api.use(meRouter, contaRouter, fichasRouter, arquivoRouter);
 
   // Interface de mestre: só quem ativou (papel MESTRE). Rotas de jogador entram antes desta linha.
   const mestre = Router();

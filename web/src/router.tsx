@@ -31,6 +31,10 @@ import { HomePage } from "./pages/HomePage";
 import { LoginPage } from "./pages/LoginPage";
 import { PerfilPage } from "./pages/PerfilPage";
 import { NotFoundPage } from "./pages/SimplesPages";
+import { PrivacidadePage, TermosPage } from "./pages/LegalPages";
+import { ContaExcluidaPage, RecuperarSenhaPage } from "./pages/ContaPages";
+import { FichaArquivadaPage } from "./features/fichas/pages/FichaArquivadaPage";
+import { ConfiguracoesContaPage } from "./features/conta/pages/ConfiguracoesContaPage";
 
 export const router = createBrowserRouter([
   // Público
@@ -41,10 +45,15 @@ export const router = createBrowserRouter([
       { path: "/docs", element: <DocsPage /> },
       { path: "/docs/:slug", element: <DocsPage /> },
       { path: "/guia-do-mestre", element: <Navigate to="/docs/mestre-visao-geral" replace /> },
+      { path: "/termos", element: <TermosPage /> },
+      { path: "/privacidade", element: <PrivacidadePage /> },
     ],
   },
   { path: "/login", element: <LoginPage /> },
   { path: "/cadastro", element: <CadastroPage /> },
+  // Sem login: "Esqueceu a senha?" (código de recuperação) e o aviso de conta excluída.
+  { path: "/recuperar-senha", element: <RecuperarSenhaPage /> },
+  { path: "/conta-excluida", element: <ContaExcluidaPage /> },
   /** Depois do login: volta à interface usada por último (mestre ou jogador). */
   { path: "/area", element: <RedirecionarPorPapel /> },
 
@@ -56,6 +65,7 @@ export const router = createBrowserRouter([
         element: <AppLayout />,
         children: [
           { path: "/perfil", element: <PerfilPage /> },
+          { path: "/conta", element: <ConfiguracoesContaPage /> },
           { path: "/ativar-mestre", element: <AtivarMestrePage /> },
         ],
       },
@@ -110,6 +120,7 @@ export const router = createBrowserRouter([
           { index: true, element: <MinhasFichasPage /> },
           { path: "entrar/:codigo", element: <EntrarGrupoPage /> },
           { path: "fichas/:id", element: <FichaPage /> },
+          { path: "arquivadas/:id", element: <FichaArquivadaPage /> },
         ],
       },
     ],

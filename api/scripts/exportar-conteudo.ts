@@ -3,6 +3,7 @@
 // Uso:
 //   npm run exportar -- > conteudo.json                 (tudo)
 //   npm run exportar -- --titulo Espadachim             (filtra classes/bestas pelo título)
+import { rotuloLimite } from "../src/regras/limite.js";
 import "dotenv/config";
 import { criarPrisma } from "../src/lib/prisma.js";
 
@@ -41,9 +42,9 @@ async function main() {
       },
     });
     const carta = (h: (typeof classes)[number]["habilidades"][number]) => ({
-      titulo: h.titulo, tipoEfeito: h.tipoEfeito, efeito: h.descricaoEfeito, condicao: h.condicao, limite: h.limite,
+      titulo: h.titulo, tipoEfeito: h.tipoEfeito, efeito: h.descricaoEfeito, condicao: h.condicao, limite: rotuloLimite(h.limiteUsos, h.limitePor),
       nivelNecessario: h.nivelNecessario, custoMana: h.custoMana, pericia: h.pericia?.nome ?? null,
-      aprimoramentos: h.aprimoramentos.map((a) => ({ nivel: a.nivel, efeito: a.descricaoEfeito, custoMana: a.custoMana, limite: a.limite, condicao: a.condicao })),
+      aprimoramentos: h.aprimoramentos.map((a) => ({ nivel: a.nivel, efeito: a.descricaoEfeito, custoMana: a.custoMana, limite: rotuloLimite(a.limiteUsos, a.limitePor), condicao: a.condicao })),
     });
     const saida = {
       classes: classes.map((c) => ({

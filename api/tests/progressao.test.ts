@@ -36,10 +36,10 @@ describe("regras de progressão", () => {
 
 describe("aprimoramento de carta", () => {
   const ap = (nivel: number, x: Record<string, unknown>) => ({
-    nivel, titulo: null, descricaoEfeito: null, condicao: null, limite: null, custoMana: null, statusId: null, ...x,
+    nivel, titulo: null, descricaoEfeito: null, condicao: null, limiteUsos: null, limitePor: null, custoMana: null, statusId: null, ...x,
   });
   const carta = {
-    id: "c", nivelNecessario: 1, titulo: "Bola de fogo", descricaoEfeito: "Dano leve", limite: "1 vez por cena", custoMana: 4, statusId: null,
+    id: "c", nivelNecessario: 1, titulo: "Bola de fogo", descricaoEfeito: "Dano leve", limiteUsos: 1, limitePor: "COMBATE", custoMana: 4, statusId: null,
     aprimoramentos: [ap(3, { descricaoEfeito: "Dano médio" }), ap(5, { custoMana: 2, titulo: "Bola de fogo maior" })],
   };
 
@@ -49,7 +49,7 @@ describe("aprimoramento de carta", () => {
 
   it("aprimoramentos se acumulam em ordem; campos nulos não mudam nada", () => {
     expect(aplicarAprimoramentos(carta, 5)).toMatchObject({
-      titulo: "Bola de fogo maior", descricaoEfeito: "Dano médio", custoMana: 2, limite: "1 vez por cena", aprimoradaNoNivel: 5, proximoAprimoramento: null,
+      titulo: "Bola de fogo maior", descricaoEfeito: "Dano médio", custoMana: 2, limiteUsos: 1, limitePor: "COMBATE", aprimoradaNoNivel: 5, proximoAprimoramento: null,
     });
   });
 
@@ -65,5 +65,14 @@ describe("regras padrão de combate", () => {
     const { REGRAS_PADRAO, regrasPadraoAtivas } = await import("../src/regras/combate.js");
     expect(regrasPadraoAtivas([])).toHaveLength(REGRAS_PADRAO.length);
     expect(regrasPadraoAtivas(["combate-dominio"]).map((r) => r.slug)).not.toContain("combate-dominio");
+  });
+});
+
+describe("limite de uso (texto)", async () => {
+  const { rotuloLimite } = await import("../src/regras/limite.js");
+  it("singular, plural e sem limite", () => {
+    expect(rotuloLimite(1, "COMBATE")).toBe("1 vez por combate");
+    expect(rotuloLimite(2, "SESSAO")).toBe("2 vezes por sessão");
+    expect(rotuloLimite(null, null)).toBeNull();
   });
 });

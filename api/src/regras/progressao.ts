@@ -73,7 +73,8 @@ type Aprimoramento = {
   titulo: string | null;
   descricaoEfeito: string | null;
   condicao: string | null;
-  limite: string | null;
+  limiteUsos: number | null;
+  limitePor: string | null;
   custoMana: number | null;
   statusId: string | null;
   status?: unknown;
@@ -88,8 +89,13 @@ export function aplicarAprimoramentos<T extends { nivelNecessario: number; aprim
   const validos = aprimoramentos.filter((a) => a.nivel <= nivel).sort((a, b) => a.nivel - b.nivel);
   const carta: Record<string, unknown> = { ...h };
   for (const a of validos) {
-    for (const campo of ["titulo", "descricaoEfeito", "condicao", "limite", "custoMana"] as const) {
+    for (const campo of ["titulo", "descricaoEfeito", "condicao", "custoMana"] as const) {
       if (a[campo] !== null) carta[campo] = a[campo];
+    }
+    // O limite muda inteiro (vezes e período juntos).
+    if (a.limiteUsos !== null && a.limitePor !== null) {
+      carta.limiteUsos = a.limiteUsos;
+      carta.limitePor = a.limitePor;
     }
     if (a.statusId !== null) {
       carta.statusId = a.statusId;

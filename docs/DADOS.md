@@ -19,14 +19,16 @@ Perfil 1 ──< ItemModelo 1 ──< Item (modeloId?, cópia dos campos)
 Perfil 1 ──< Besta 1 ──< Habilidade (bestaId) / BestaPericia (modificador) / BestaAtributo (dados)
 Perfil 1 ──< Npc >── Raca, Classe? ; Npc 1 ──< NpcAtributo (dados) / NpcPericia (pontos extras) / Item (npcId)
 Grupo 1 ──< Criatura >── Besta   (criatura invocada: nível e recursos atuais)
+Perfil(jogador) 1 ──< FichaArquivada (cópia somente leitura)
 ```
 
 ## Entidades
 | Tabela | Campos principais | Observações |
 |---|---|---|
-| `Perfil` | `id` (= `auth.users.id`), `email` (interno `<nick>@one-take.local` para contas do app), `nickname` (único), `papel`, `nome?`, `fotoUrl?` | Criado no 1º acesso à API com o papel e nome escolhidos no cadastro |
+| `Perfil` | `id` (= `auth.users.id`), `email` (do login no Auth: interno `<nick>@one-take.local` nas contas do app), `nickname` (único), `papel`, `nome?`, `fotoUrl?`, `dataNascimento?` (DATE; obrigatória em cadastros novos), `codigoRecuperacaoHash?` (SHA-256), `codigoRecuperacaoEm?`, `sessoesValidasDesde?`, `exclusaoIniciadaEm?` | Criado no cadastro (`POST /api/cadastro`) ou no 1º acesso de uma conta criada fora do app |
+| `FichaArquivada` | `jogadorId`, `nome`, `nivel`, `classe`, `raca`, `grupo` (textos), `motivo`, `conteudo` (JSON), `arquivadaEm` | Cópia da ficha que saiu do grupo; sem FK para o conteúdo do mestre |
 | `Classe` | `grupo`, `titulo`, `descricao`, `imagemUrl?`, `pontosVida`, `pontosMana`, `pontosEsforco`, `donoId?`, `origemId?` | `donoId` nulo = fixa |
-| `Habilidade` | `classeId?` **ou** `bestaId?` (CHECK: exatamente um), `titulo`, `descricao`, `condicao?`, `tipoEfeito` (enum `TipoEfeito`), `periciaId?` (perícia do teste, SetNull), `descricaoEfeito`, `limite?`, `nivelNecessario` (≥1, padrão 1), `custoMana` (≥0, padrão 0 = sem custo), `ordem` | Cartela de classe ou de criatura |
+| `Habilidade` | `classeId?` **ou** `bestaId?` (CHECK: exatamente um), `titulo`, `descricao`, `condicao?`, `tipoEfeito` (enum `TipoEfeito`), `periciaId?` (perícia do teste, SetNull), `descricaoEfeito`, `limiteUsos?` + `limitePor?` (enum `LimiteUso`: COMBATE, SESSAO; os dois juntos ou nulos, CHECK), `nivelNecessario` (≥1, padrão 1), `custoMana` (≥0, padrão 0 = sem custo), `ordem` | Cartela de classe ou de criatura |
 | `Pericia` | `nome`, `descricao`, `categoria`, `atributoId`, `donoId?`, `origemId?` | Catálogo. `donoId` nulo = base do sistema. Nome único por dono |
 | `ClassePericia` | `classeId`, `periciaId`, `modificador` | Perícia que a classe tem. PK composta |
 | `Atributo` | `nome`, `descricao`, `ordem`, `donoId?` | `donoId` nulo = fixo (Capacidade física, Carisma, Conhecimento). Nome único por dono |
@@ -56,7 +58,7 @@ Grupo 1 ──< Criatura >── Besta   (criatura invocada: nível e recursos a
 | `FichaStatus` | `fichaId`, `statusId`, `aplicadoEm` | status aplicados pelo mestre |
 `Habilidade.statusId?` = status que a carta ativa (SetNull se o status for excluído).
 | `ClasseConceito` | `donoId`, `titulo`, `descricao` | classe generalista; `Classe.conceitoId?` liga as subclasses (SetNull ao excluir) |
-| `HabilidadeAprimoramento` | `habilidadeId`, `nivel` (≥2, único por carta), `titulo?`, `descricaoEfeito?`, `condicao?`, `limite?`, `custoMana?`, `statusId?` | nulos = não mudam |
+| `HabilidadeAprimoramento` | `habilidadeId`, `nivel` (≥2, único por carta), `titulo?`, `descricaoEfeito?`, `condicao?`, `limiteUsos?` + `limitePor?` (juntos), `custoMana?`, `statusId?` | nulos = não mudam |
 
 Enums: `Papel`, `GrupoClasse` (COMBATENTE, VANGUARDISTA, SUPORTE), `CategoriaPericia` (CORPO_A_CORPO, MAGIA, PONTARIA, FISICO, DEFESA, SOCIAL, CONHECIMENTO, PERCEPCAO),
 `TipoEfeito` (DANO, DEFESA, CURA, SUPORTE, FORTALECIMENTO, ENFRAQUECIMENTO, CONTROLE, MOBILIDADE, INVOCACAO, UTILIDADE).
@@ -124,3 +126,18 @@ Nomes no código x na interface: `ClasseConceito`/`RacaConceito`/`BestaConceito`
 - **Itens, criaturas e NPCs não têm tabelas `*NoGrupo`**: no grupo aparecem os do kit dele mais os gerais (sem kit: todos).
 - **Soma de perícias numa função só** (`api/src/modules/pericias/soma.ts`): ficha, NPC e pré-requisito de item usam `somarPericias`;
   o teste de uma carta para um personagem sai de `testeDaCarta`.
+- **Sem e-mail de contato** (migration `recuperacao_sem_email`, depois de `email_senha_exclusao`): a conta não guarda e-mail real. O
+  Supabase Auth usa o e-mail interno do nome de usuário só como identificador técnico. A troca de senha usa o **código de recuperação**:
+  20 caracteres (100 bits) do alfabeto Crockford, mostrado uma vez e guardado como SHA-256 (`api/src/lib/codigo-recuperacao.ts`),
+  trocado a cada uso com `updateMany` condicionado ao hash antigo (dois usos simultâneos: só um vence). A migration apagou os e-mails
+  guardados, a tabela `TokenConta` e o enum `TipoTokenConta`.
+- **Ficha arquivada como retrato JSON** (`modules/fichas/retrato.ts`): calculada com as regras na hora de arquivar, sem dados de outras
+  pessoas (sem mestre nem outros membros); assim o personagem sobrevive à exclusão do grupo e do conteúdo do mestre.
+- **Exclusão de conta em ordem explícita** (`excluirConta` em `conta.service.ts`), por causa dos FKs RESTRICT de Ficha/Npc: marca a conta,
+  tira os retratos, apaga o usuário do Auth e, numa transação, cria as cópias, apaga os grupos, as fichas dele, os NPCs e o perfil (o resto
+  cai em cascata). Idempotente e retomável (`npm run concluir-exclusoes`).
+- **Data de nascimento como `DATE`** (migration `data_nascimento`), nula em contas anteriores: a idade mínima (12 anos, `api/src/regras/conta.ts`)
+  é conferida no cadastro com a data do servidor. Só o dono vê.
+- **Limite de uso como dois campos** (migration `limite_de_uso`): era texto livre (`limite`). A migration converteu os textos no padrão
+  "N uso(s)/vez(es) por combate|sessão" e mandaria o resto para o fim da `condicao` da carta (no banco do responsável, todos converteram).
+  O texto mostrado ("2 vezes por combate") sai de `rotuloLimite` (`api/src/regras/limite.ts`; o front tem a mesma função em `features/classes/types.ts`).

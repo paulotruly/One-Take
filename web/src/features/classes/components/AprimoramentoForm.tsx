@@ -2,7 +2,8 @@
 import { useState, type FormEvent } from "react";
 import { Button } from "../../../components/ui/Button";
 import { Field } from "../../../components/ui/Field";
-import type { AprimoramentoInput, Habilidade } from "../types";
+import { rotuloLimite, type AprimoramentoInput, type Habilidade, type LimiteUso } from "../types";
+import { CampoLimite } from "./forms";
 
 type Props = {
   carta: Habilidade;
@@ -21,7 +22,8 @@ export function AprimoramentoForm({ carta, inicial, opcoesStatus, onEnviar, onCa
     titulo: inicial?.titulo ?? "",
     descricaoEfeito: inicial?.descricaoEfeito ?? "",
     condicao: inicial?.condicao ?? "",
-    limite: inicial?.limite ?? "",
+    limiteUsos: inicial?.limiteUsos ? String(inicial.limiteUsos) : "",
+    limitePor: inicial?.limitePor ?? ("" as LimiteUso | ""),
     custoMana: inicial?.custoMana === null || inicial?.custoMana === undefined ? "" : String(inicial.custoMana),
     statusId: inicial?.statusId ?? "",
   });
@@ -34,7 +36,8 @@ export function AprimoramentoForm({ carta, inicial, opcoesStatus, onEnviar, onCa
       titulo: v.titulo.trim() || null,
       descricaoEfeito: v.descricaoEfeito.trim() || null,
       condicao: v.condicao.trim() || null,
-      limite: v.limite.trim() || null,
+      limiteUsos: v.limitePor ? (v.limiteUsos.trim() === "" ? (undefined as unknown as number) : Number(v.limiteUsos)) : null,
+      limitePor: v.limitePor || null,
       custoMana: v.custoMana.trim() === "" ? null : Number(v.custoMana),
       statusId: v.statusId || null,
     });
@@ -62,9 +65,9 @@ export function AprimoramentoForm({ carta, inicial, opcoesStatus, onEnviar, onCa
       <Field rotulo="Nova condição" erro={erros.condicao}>
         <input value={v.condicao} onChange={set("condicao")} maxLength={500} placeholder={carta.condicao ?? ""} />
       </Field>
-      <Field rotulo="Novo limite" erro={erros.limite}>
-        <input value={v.limite} onChange={set("limite")} maxLength={200} placeholder={carta.limite ?? ""} />
-      </Field>
+      <CampoLimite rotulo={`Novo limite (hoje: ${rotuloLimite(carta.limiteUsos, carta.limitePor) ?? "sem limite"})`} semMudanca="Sem mudança"
+        usos={v.limiteUsos} por={v.limitePor} erro={erros.limiteUsos ?? erros.limitePor}
+        onChange={(usos, por) => setV({ ...v, limiteUsos: usos, limitePor: por })} />
       <Field rotulo="Passa a ativar status" erro={erros.statusId}>
         <select value={v.statusId} onChange={set("statusId")}>
           <option value="">Sem mudança</option>
@@ -87,7 +90,8 @@ export function resumoAprimoramento(a: AprimoramentoInput & { status?: { nome: s
   if (a.descricaoEfeito) partes.push(`efeito: ${a.descricaoEfeito}`);
   if (a.custoMana !== null) partes.push(`custo ${a.custoMana} de mana`);
   if (a.condicao) partes.push(`condição: ${a.condicao}`);
-  if (a.limite) partes.push(`limite: ${a.limite}`);
+  const limite = rotuloLimite(a.limiteUsos, a.limitePor);
+  if (limite) partes.push(`limite: ${limite}`);
   if (a.status) partes.push(`ativa ${a.status.nome}`);
   return partes.join(" · ");
 }

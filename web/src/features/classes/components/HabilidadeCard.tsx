@@ -1,6 +1,7 @@
 import { ChevronLeft, ChevronRight, Pencil, Sparkles, Trash2 } from "lucide-react";
 import { Button } from "../../../components/ui/Button";
-import type { Habilidade } from "../types";
+import { ComNegrito } from "../../../components/texto/ComNegrito";
+import { rotuloLimite, type Habilidade } from "../types";
 import { StatusBadge } from "../../status/components/StatusBadge";
 import { resumoAprimoramento } from "./AprimoramentoForm";
 import { CustoManaBadge, EfeitoBadge, NivelBadge } from "./Selos";
@@ -36,7 +37,7 @@ export function HabilidadeCard({ habilidade: h, onAbrir, acoes }: { habilidade: 
           )}
         </span>
         {h.teste ? <span className="carta__limite">{h.teste.pericia}: {h.teste.teste}</span> : h.pericia && <span className="carta__limite">Teste: {h.pericia.nome}</span>}
-        {h.limite && <span className="carta__limite">{h.limite}</span>}
+        {h.limitePor && <span className="carta__limite">{rotuloLimite(h.limiteUsos, h.limitePor)}</span>}
       </button>
       {acoes && (
         <div className="carta__rodape">
@@ -75,7 +76,7 @@ export function HabilidadeDetalhe({ habilidade: h }: { habilidade: Habilidade })
         <NivelBadge nivel={h.nivelNecessario} />
         {h.aprimoradaNoNivel && <span className="selo selo--novo">Aprimorada no nível {h.aprimoradaNoNivel}</span>}
       </div>
-      <p className="carta__descricao">{h.descricao}</p>
+      <p className="carta__descricao"><ComNegrito texto={h.descricao} /></p>
       {(h.teste || h.pericia) && (
         <p className="carta__linha carta__teste">
           <strong>Teste:</strong> {h.teste ? <>{h.teste.pericia} ({h.teste.atributo}): <b>{h.teste.teste}</b></> : <>{h.pericia!.nome} ({h.pericia!.atributo.nome})</>}
@@ -86,15 +87,15 @@ export function HabilidadeDetalhe({ habilidade: h }: { habilidade: Habilidade })
           <strong>Condição:</strong> {h.condicao}
         </p>
       )}
-      <p className="carta__efeito">{h.descricaoEfeito}</p>
+      <p className="carta__efeito"><ComNegrito texto={h.descricaoEfeito} /></p>
       {h.status && (
         <p className="carta__linha">
           <strong>Ativa:</strong> <StatusBadge nome={h.status.nome} tipo={h.status.tipo} />
         </p>
       )}
-      {h.limite && (
+      {h.limitePor && (
         <p className="carta__linha">
-          <strong>Limite:</strong> {h.limite}
+          <strong>Limite:</strong> {rotuloLimite(h.limiteUsos, h.limitePor)}
         </p>
       )}
       {h.aprimoramentos && h.aprimoramentos.length > 0 && h.aprimoradaNoNivel === undefined && (

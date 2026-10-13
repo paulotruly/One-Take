@@ -33,7 +33,12 @@ async function verificarToken(token: string) {
   // user_metadata vem do cadastro (supabase.auth.signUp com options.data): papel, nickname e nome.
   const meta = (payload.user_metadata ?? {}) as { papel?: unknown; nome?: unknown; nickname?: unknown };
   const nick = nicknameSchema.safeParse(meta.nickname ?? "");
+  // Momento do login (preservado ao renovar o token): o maior timestamp de "amr"; sem ele, o "iat".
+  const amr = Array.isArray(payload.amr) ? (payload.amr as { timestamp?: unknown }[]) : [];
+  const tempos = amr.map((m) => Number(m.timestamp)).filter(Number.isFinite);
+  const autenticadoEm = tempos.length ? Math.max(...tempos) : typeof payload.iat === "number" ? payload.iat : null;
   return {
+    autenticadoEm,
     id: payload.sub,
     email: String(payload.email ?? "").toLowerCase(),
     papel: meta.papel === "MESTRE" ? ("MESTRE" as const) : ("JOGADOR" as const),
@@ -56,6 +61,11 @@ export const autenticar: RequestHandler = async (req, _res, next) => {
   }
 
   const perfil = await carregarPerfil(claims);
+  if (perfil.exclusaoIniciadaEm) throw naoAutenticado("Esta conta foi excluída.");
+  // Sessões abertas antes de redefinir a senha deixam de valer.
+  if (perfil.sessoesValidasDesde && (claims.autenticadoEm === null || claims.autenticadoEm < Math.floor(perfil.sessoesValidasDesde.getTime() / 1000))) {
+    throw naoAutenticado("Sua senha foi alterada. Entre novamente.");
+  }
   req.usuario = { id: perfil.id, email: perfil.email, papel: perfil.papel, catalogoIniciado: perfil.catalogoIniciado };
   next();
 };
@@ -72,6 +82,10 @@ async function carregarPerfil({ id, email, papel, nome, nickname }: Claims) {
   const prisma = getPrisma();
   const atual = await prisma.perfil.findUnique({ where: { id } });
   if (atual) return atual;
+
+  // Token de um usuário que já não existe no Auth (conta excluída): não recria o perfil.
+  const existeNoAuth = await prisma.$queryRaw<unknown[]>`SELECT 1 FROM auth.users WHERE id = ${id}::uuid`;
+  if (!existeNoAuth?.length) throw naoAutenticado("Esta conta não existe mais.");
 
   const mesmoEmail = email ? await prisma.perfil.findUnique({ where: { email } }) : null;
   if (!mesmoEmail) return prisma.perfil.create({ data: { id, email, papel, nome, nickname: await nicknameLivre(nickname ?? nicknameDoEmail(email)) } });
@@ -105,5 +119,5 @@ async function nicknameLivre(desejado: string) {
     const candidato = i === 0 ? desejado : `${desejado.slice(0, 17)}${i + 1}`;
     if (!(await prisma.perfil.findUnique({ where: { nickname: candidato }, select: { id: true } }))) return candidato;
   }
-  throw conflito("NICKNAME_EM_USO", "Não foi possível gerar um nickname livre.");
+  throw conflito("NICKNAME_EM_USO", "Não foi possível gerar um nome de usuário livre.");
 }

@@ -45,12 +45,15 @@ export function LoginPage() {
             <p className="pagina__subtitulo">Mestres e jogadores entram por aqui.</p>
           </div>
         </div>
-        <Field rotulo="Nickname">
-          <input autoComplete="username" value={login} onChange={(e) => setLogin(e.target.value)} placeholder="@seu_nick" required autoFocus />
+        <Field rotulo="Nome de usuário">
+          <input autoComplete="username" value={login} onChange={(e) => setLogin(e.target.value)} placeholder="@seu_usuario" required autoFocus />
         </Field>
         <Field rotulo="Senha">
           <input type="password" autoComplete="current-password" value={senha} onChange={(e) => setSenha(e.target.value)} required />
         </Field>
+        <p className="login__esqueci">
+          <Link to="/recuperar-senha">Esqueceu a senha?</Link>
+        </p>
         {erro && <div className="aviso" role="alert">{erro}</div>}
         <Button type="submit" variante="primario" disabled={enviando}>
           {enviando ? "Entrando…" : "Entrar"}

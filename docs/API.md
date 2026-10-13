@@ -6,8 +6,10 @@ Base local: `http://localhost:3333`. JSON em tudo.
 | Método | Rota | Resposta |
 |---|---|---|
 | GET | `/api/nicknames/:nickname` | `{ disponivel, motivo? }` |
+| POST | `/api/cadastro` | corpo `{ nickname, senha, dataNascimento ("AAAA-MM-DD", idade mínima 12 anos), papel? (JOGADOR), nome? }` → `201 { access_token, refresh_token, codigoRecuperacao }`. Cria o usuário no Supabase Auth (e-mail interno do nome de usuário, já confirmado) e o perfil; o código de recuperação aparece só nesta resposta. 409 `NICKNAME_EM_USO`; 503 `AUTH_NAO_CONFIGURADO` sem a chave secreta. Limite: 10 por hora por IP |
+| POST | `/api/senha/recuperar` | `{ nickname, codigo, senha }` → `{ codigoRecuperacao }` (código novo; o usado deixa de valer). Troca a senha no Auth e encerra as sessões anteriores. Usuário inexistente, conta sem código ou código errado = mesma resposta 400 `RECUPERACAO_INVALIDA`. Limite: 10 por hora por IP |
 | POST | `/api/entrar` | corpo `{ login, senha }` (login = nickname, com ou sem @, ou email antigo) → `{ access_token, refresh_token }` do Supabase; erro = 401 "Nickname ou senha incorretos." |
-| GET | `/api/regras` | `{ progressao, ficha: { pontosAtributoIniciais, inventarioInicial, inventarioPorNivel }, teste: { ladosDoDado, dadosComAtributoZero, divisorComAtributoZero, esforcoPorDadoExtra, esforcoComAtributoZero, chances: [{ dt, chances: [{ pontos, chance }] }] }, atributosFixos, statusFixos, regrasPadrao }` |
+| GET | `/api/regras` | `{ progressao, ficha: { pontosAtributoIniciais, inventarioInicial, inventarioPorNivel }, teste: { ladosDoDado, dadosComAtributoZero, divisorComAtributoZero, esforcoPorDadoExtra, esforcoComAtributoZero, chances: [{ dt, chances: [{ pontos, chance }] }] }, atributosFixos, statusFixos, regrasPadrao, conta: { idadeMinima } }` |
 
 ## Autenticação
 Todas as rotas sob `/api` exigem `Authorization: Bearer <access_token do Supabase>`.
@@ -37,12 +39,18 @@ Formato único:
 | 403 | `ATRIBUTO_FIXO` | tentativa de alterar atributo fixo |
 | 409 | `ATRIBUTO_EM_USO` | excluir atributo que ainda tem perícias |
 | 409 | `EMAIL_EM_USO` | login de uma conta cujo email já pertence a outro perfil ativo (raro) |
+| 400 | `RECUPERACAO_INVALIDA` | nome de usuário ou código de recuperação incorretos (resposta única, sem dizer qual) |
+| 401 | `SENHA_INCORRETA` | reautenticação com a senha errada (gerar código, excluir conta) |
+| 409 | `EXCLUSAO_EM_ANDAMENTO` | outra execução da exclusão da mesma conta começou há menos de 5 minutos |
+| 429 | `MUITAS_TENTATIVAS` | limite de tentativas por IP |
+| 502 | `AUTH_FALHOU` | o Supabase Auth não respondeu como esperado |
+| 503 | `AUTH_NAO_CONFIGURADO` | falta `SUPABASE_SECRET_KEY` |
 | 500 | `ERRO_INTERNO` | inesperado (logado no servidor) |
 
 ## Tipos de resposta
 **Classe (resumo)**: `{ id, grupo, titulo, descricao, imagemUrl, pontosVida, pontosMana, pontosEsforco, donoId, origemId, fixa, criadoEm, atualizadoEm }`
 **Classe (detalhe)**: resumo + `habilidades: Habilidade[]` (a cartela, por `ordem`) + `pericias: PericiaDaClasse[]` (por atributo e nome).
-**Habilidade**: `{ id, classeId, bestaId, periciaId, pericia: { id, nome, atributo } | null, titulo, descricao, condicao, tipoEfeito, descricaoEfeito, limite, nivelNecessario, custoMana, ordem }`
+**Habilidade**: `{ id, classeId, bestaId, periciaId, pericia: { id, nome, atributo } | null, titulo, descricao, condicao, tipoEfeito, descricaoEfeito, limiteUsos, limitePor, nivelNecessario, custoMana, ordem }`
 Nas fichas, NPCs e criaturas, cada carta vem também com `teste: { pericia, atributo, teste: "2d20 + 5" } | null`. `periciaId` no POST/PATCH = perícia do catálogo do mestre.
 `tipoEfeito`: `DANO | DEFESA | CURA | SUPORTE | FORTALECIMENTO | ENFRAQUECIMENTO | CONTROLE | MOBILIDADE | INVOCACAO | UTILIDADE` (obrigatório; outro valor = 400 "Escolha um tipo de efeito").
 **PericiaCatalogo**: `{ id, nome, descricao, categoria, atributoId, atributo: Atributo, donoId, origemId, criadoEm, usosClasses, usosRacas }`
@@ -56,7 +64,7 @@ Nas fichas, NPCs e criaturas, cada carta vem também com `teste: { pericia, atri
 | Método | Rota | Corpo | Resposta |
 |---|---|---|---|
 | GET | `/health` | — (público) | `200 { status: "ok", banco: "ok" }` ou `503` |
-| GET | `/api/me` | — (qualquer papel) | `{ id, nickname, papel, nome, fotoUrl }` (email nunca é exposto). No 1º acesso cria o perfil com `papel` e `nome` do `user_metadata` do cadastro (papel inválido = JOGADOR); conta recriada herda o perfil antigo |
+| GET | `/api/me` | — (qualquer papel) | `{ id, nickname, papel, nome, fotoUrl, dataNascimento, codigoRecuperacaoEm }` (só para o próprio usuário; o e-mail interno do login e o hash do código nunca são expostos). No 1º acesso cria o perfil com `papel` e `nome` do `user_metadata` do cadastro (papel inválido = JOGADOR); conta recriada herda o perfil antigo |
 | POST | `/api/me/mestre` | — | ativa a interface de mestre (papel MESTRE) → perfil |
 | PATCH | `/api/me` | `{ nickname?, nome?, fotoUrl? }` (`""` = limpar; nickname 3–20 `[a-z0-9_.-]`, único: 409 `NICKNAME_EM_USO`) | perfil |
 | GET | `/api/classes?grupo=SUPORTE` | — | `Classe[]` (fixas primeiro, depois as do mestre; por título) |
@@ -66,7 +74,7 @@ Nas fichas, NPCs e criaturas, cada carta vem também com `teste: { pericia, atri
 | PATCH | `/api/classes/:id` | qualquer subconjunto do POST | `Classe` |
 | DELETE | `/api/classes/:id` | — | `204` (cascata) |
 | POST | `/api/classes/:id/duplicar` | — | `201 Classe (detalhe)` — cópia "(cópia)" do mestre, com habilidades, perícias e o mesmo link de imagem |
-| POST | `/api/classes/:classeId/habilidades` | `{ titulo, descricao, tipoEfeito, descricaoEfeito, condicao?, limite?, nivelNecessario? (1), custoMana? (0) }` | `201 Habilidade` (no fim da cartela). Classe inexistente = 404; fixa = 403 |
+| POST | `/api/classes/:classeId/habilidades` | `{ titulo, descricao, tipoEfeito, descricaoEfeito, condicao?, limiteUsos? (1–99), limitePor? (COMBATE \| SESSAO), nivelNecessario? (1), custoMana? (0) }` (limite: os dois juntos ou nenhum) | `201 Habilidade` (no fim da cartela). Classe inexistente = 404; fixa = 403 |
 | PUT | `/api/classes/:classeId/habilidades/ordem` | `{ ids: string[] }` — exatamente as habilidades da classe, na nova ordem | `Habilidade[]` |
 | PATCH | `/api/habilidades/:id` | subconjunto | `Habilidade` |
 | DELETE | `/api/habilidades/:id` | — | `204` |
@@ -86,7 +94,7 @@ Nas fichas, NPCs e criaturas, cada carta vem também com `teste: { pericia, atri
 | PUT | `/api/classes/:classeId/pericias/:periciaId` | `{ modificador }` | adiciona a perícia do catálogo à classe ou atualiza o modificador → `{ classeId, periciaId, modificador }` |
 | DELETE | `/api/classes/:classeId/pericias/:periciaId` | — | `204` (só tira da classe; a perícia continua no catálogo) |
 
-Limites: título 80, descrição 2000, condição 500, limite 200, nome de perícia 60, descrição de perícia 1000; pontos de vida/mana/esforço 1–9999 (nenhum pode ser zero); custo de mana 0–999;
+Limites: título 80, descrição 2000, condição 500, nome de perícia 60, descrição de perícia 1000; pontos de vida/mana/esforço 1–9999 (nenhum pode ser zero); custo de mana 0–999;
 nível 1–100; modificador −99 a 99. `imagemUrl`: link http(s) até 2000 caracteres.
 Em campos de texto opcionais (inclusive `imagemUrl`), `""` é salvo como `null`.
 
@@ -106,7 +114,7 @@ Grupos: `disponiveis.statusIds` (status ativados). Membros do grupo trazem `stat
 | GET | `/api/conceitos` | — | conceitos do mestre com `subclasses[]` |
 | POST | `/api/conceitos` | `{ titulo, descricao }` | `201` |
 | PATCH / DELETE | `/api/conceitos/:id` | subconjunto | excluir mantém as subclasses (sem conceito) |
-| POST | `/api/habilidades/:id/aprimoramentos` | `{ nivel, titulo?, descricaoEfeito?, condicao?, limite?, custoMana?, statusId? }` (nível > nível da carta; pelo menos uma mudança) | `201`; nível repetido = 409 `NIVEL_EM_USO` |
+| POST | `/api/habilidades/:id/aprimoramentos` | `{ nivel, titulo?, descricaoEfeito?, condicao?, limiteUsos?, limitePor?, custoMana?, statusId? }` (nível > nível da carta; pelo menos uma mudança) | `201`; nível repetido = 409 `NIVEL_EM_USO` |
 | PATCH / DELETE | `/api/aprimoramentos/:id` | mesmo corpo | |
 
 Classes aceitam `conceitoId` (conceito do próprio mestre) e devolvem `conceito: { id, titulo }`. Cartas vêm com `aprimoramentos[]`.
@@ -227,3 +235,23 @@ Cartas de besta usam as mesmas rotas `/api/habilidades/:id` e `/api/aprimorament
 | DELETE | `/api/criaturas/:id/status/:statusId` | — | ficha da criatura |
 Valem os status ativados no grupo (criatura) ou todos os do mestre (NPC). Automáticos (vida/mana/esforço em 0) aparecem sozinhos.
 A `Criatura` no grupo traz `status[]` (resumo). `PATCH /api/fichas/:id`: o jogador só diminui `vidaAtual` (aumentar = 403 `SO_MESTRE_CURA`).
+
+## Conta (logado)
+| Método | Rota | Corpo | Resposta |
+|---|---|---|---|
+| POST | `/api/me/codigo-recuperacao` | `{ senha }` (senha atual) | `{ codigoRecuperacao }`; o anterior deixa de valer. 401 `SENHA_INCORRETA` |
+| GET | `/api/me/exportacao` | — | JSON com todos os dados da conta (portabilidade), como anexo `one-take-meus-dados.json`: conta, fichas (sem dados de outros jogadores), fichas arquivadas e o conteúdo do mestre. Sem o e-mail técnico do login nem hashes de links |
+| POST | `/api/me/exclusao` | `{ senha, confirmacao }` (`confirmacao` = o próprio nome de usuário) | `{ excluida: true }`; exclusão definitiva imediata (ver DOMINIO). Nome de usuário que não confere = 400 |
+
+Sessões: a API recusa (401) tokens cuja autenticação (claim `amr` do JWT, ou `iat`) é anterior a `Perfil.sessoesValidasDesde`
+(gravado ao trocar a senha com o código de recuperação) e qualquer token de conta com `exclusaoIniciadaEm`. Token de usuário que não existe mais no Auth não
+recria o perfil.
+
+## Fichas arquivadas (jogador)
+| Método | Rota | Resposta |
+|---|---|---|
+| GET | `/api/fichas-arquivadas` | minhas cópias: `{ id, nome, nivel, classe, raca, grupo, motivo, arquivadaEm }` |
+| GET | `/api/fichas-arquivadas/:id` | cópia completa com `conteudo` (história, imagem, classe, raça, recursos, atributos, perícias, cartas, inventário); de outro = 404 |
+| DELETE | `/api/fichas-arquivadas/:id` | `204` (só o dono) |
+
+`motivo`: `SAIU_DO_GRUPO | REMOVIDO_PELO_MESTRE | GRUPO_EXCLUIDO`. `DELETE /api/fichas/:id` e `DELETE /api/grupos/:id` arquivam antes de apagar.

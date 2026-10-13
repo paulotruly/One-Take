@@ -5,6 +5,7 @@ import { Button } from "../components/ui/Button";
 import { Field } from "../components/ui/Field";
 import { ErrorState, Loading } from "../components/ui/States";
 import { erroDeFormulario, errosDeCampo, mensagemDeErro } from "../lib/api";
+import { Link } from "react-router";
 
 export function PerfilPage() {
   const me = useMe();
@@ -43,10 +44,10 @@ function FormularioPerfil({ me }: { me: Me }) {
       </div>
 
       <form className="form" noValidate onSubmit={enviar}>
-        <Field rotulo="Nickname" erro={erros.nickname} dica="Usado para entrar. Se mudar, passe a entrar com o novo.">
+        <Field rotulo="Nome de usuário" erro={erros.nickname} dica="Usado para entrar. Se mudar, passe a entrar com o novo.">
           <input value={nickname} onChange={(e) => setNickname(e.target.value)} maxLength={21} autoComplete="username" />
         </Field>
-        <Field rotulo="Nome (opcional)" erro={erros.nome} dica="Se preenchido, aparece no lugar do @nickname.">
+        <Field rotulo="Nome (opcional)" erro={erros.nome} dica="Se preenchido, aparece no lugar do @usuario.">
           <input value={nome} onChange={(e) => setNome(e.target.value)} maxLength={60} />
         </Field>
         <Field rotulo="Link da foto de perfil" erro={erros.fotoUrl} dica="Opcional. Cole o endereço (https://...) de uma imagem.">
@@ -60,6 +61,10 @@ function FormularioPerfil({ me }: { me: Me }) {
           </Button>
         </div>
       </form>
+
+      <p className="pagina__subtitulo">
+        Código de recuperação da senha, seus dados e exclusão da conta ficam em <Link to="/conta">Configurações da conta</Link>.
+      </p>
     </div>
   );
 }

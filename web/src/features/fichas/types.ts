@@ -14,6 +14,34 @@ export type FichaResumo = {
   raca: string;
 };
 
+/** Cópia somente leitura de uma ficha que saiu do grupo (o jogador saiu, foi removido ou o grupo foi excluído). */
+export type MotivoArquivamento = "SAIU_DO_GRUPO" | "REMOVIDO_PELO_MESTRE" | "GRUPO_EXCLUIDO";
+export const ROTULO_MOTIVO: Record<MotivoArquivamento, string> = {
+  SAIU_DO_GRUPO: "Você saiu do grupo",
+  REMOVIDO_PELO_MESTRE: "O mestre removeu a ficha do grupo",
+  GRUPO_EXCLUIDO: "O grupo foi excluído",
+};
+export type FichaArquivadaResumo = { id: string; nome: string; nivel: number; classe: string; raca: string; grupo: string; motivo: MotivoArquivamento; arquivadaEm: string };
+type RecursoArquivado = { atual: number; max: number };
+export type FichaArquivada = FichaArquivadaResumo & {
+  conteudo: {
+    historia: string | null;
+    imagemUrl: string | null;
+    classe: { titulo: string; grupo: string; descricao: string; imagemUrl: string | null };
+    raca: { titulo: string; deslocamento: number; imagemUrl: string | null };
+    vida: RecursoArquivado;
+    mana: RecursoArquivado;
+    esforco: RecursoArquivado;
+    atributos: { nome: string; dados: number; teste: string }[];
+    pericias: { nome: string; atributo: string; total: number; teste: string }[];
+    habilidades: {
+      titulo: string; descricao: string; tipoEfeito: string; descricaoEfeito: string; condicao: string | null; limite: string | null;
+      custoMana: number; nivelNecessario: number; teste: string | null;
+    }[];
+    inventario: { nome: string; descricao: string; efeito: string | null; espacos: number; categoria: string | null; usosRestantes: number | null }[];
+  };
+};
+
 export type PericiaDaFicha = {
   id: string;
   nome: string;

@@ -3,14 +3,15 @@ import { conflito } from "../../lib/errors.js";
 import { getPrisma } from "../../lib/prisma.js";
 import { usuarioDe } from "../../middleware/auth.js";
 import { editarPerfilSchema } from "./me.schemas.js";
+import { apresentarConta, camposDaConta } from "../conta/conta.service.js";
 
-// Perfil do próprio usuário (qualquer papel). O email interno nunca é exposto.
+// Perfil do próprio usuário (qualquer papel). O e-mail interno do login nunca é exposto; o de contato só para o dono.
 export const meRouter = Router();
 
-const publico = { id: true, nickname: true, papel: true, nome: true, fotoUrl: true } as const;
+const publico = camposDaConta;
 
 meRouter.get("/me", async (req, res) => {
-  res.json(await getPrisma().perfil.findUniqueOrThrow({ where: { id: usuarioDe(req).id }, select: publico }));
+  res.json(apresentarConta(await getPrisma().perfil.findUniqueOrThrow({ where: { id: usuarioDe(req).id }, select: publico })));
 });
 
 /**
@@ -19,7 +20,7 @@ meRouter.get("/me", async (req, res) => {
  */
 meRouter.post("/me/mestre", async (req, res) => {
   const usuario = usuarioDe(req);
-  res.json(await getPrisma().perfil.update({ where: { id: usuario.id }, data: { papel: "MESTRE" }, select: publico }));
+  res.json(apresentarConta(await getPrisma().perfil.update({ where: { id: usuario.id }, data: { papel: "MESTRE" }, select: publico })));
 });
 
 meRouter.patch("/me", async (req, res) => {
@@ -30,5 +31,5 @@ meRouter.patch("/me", async (req, res) => {
     const outro = await prisma.perfil.findFirst({ where: { nickname: dados.nickname, NOT: { id } }, select: { id: true } });
     if (outro) throw conflito("NICKNAME_EM_USO", `@${dados.nickname} já está em uso.`);
   }
-  res.json(await prisma.perfil.update({ where: { id }, data: dados, select: publico }));
+  res.json(apresentarConta(await prisma.perfil.update({ where: { id }, data: dados, select: publico })));
 });

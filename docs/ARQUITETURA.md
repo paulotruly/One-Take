@@ -8,11 +8,14 @@ api/
   scripts/promover-mestre.ts   # npm run promover
   scripts/fixar-classe.ts      # npm run fixar-classe -- "Título" [--devolver nick]: classe do mestre vira fixa (e volta)
   scripts/exportar-conteudo.ts # npm run exportar: classes e bestas em JSON para o balanceamento
+  scripts/concluir-exclusoes.ts # npm run concluir-exclusoes: retoma exclusões de conta que pararam no meio
   src/
     index.ts                 # lê env e sobe o servidor
     app.ts                   # monta Express: cors, json, /health, /api (auth → papel → módulos), erros
     env.ts                   # variáveis validadas com Zod
-    lib/                     # prisma (adapter pg), errors (AppError), validacao (helpers Zod)
+    lib/                     # prisma (adapter pg), errors (AppError), validacao (helpers Zod), kits, nickname,
+                             # config (env lida na hora), codigo-recuperacao (gerar e conferir), supabase-auth
+                             # (sessão e Admin API), limite (tentativas por IP em memória)
     middleware/              # auth (autenticar, exigirPapel), error-handler
     modules/<recurso>/       # routes → service → schemas
     regras/                  # regras de jogo puras e testadas (FONTE ÚNICA): progressao, ficha (inventário, pré-requisito de item),
@@ -23,7 +26,8 @@ web/
   src/
     main.tsx, router.tsx     # providers (Query, Auth) e rotas
     styles/tokens.css        # TODAS as cores, espaçamentos e fontes (trocar o tema = mexer aqui)
-    styles/base.css, layout.css
+    styles/base.css, layout.css, home.css
+    styles/mobile.css        # ajustes de celular, carregado por último; grades usam minmax(min(Npx, 100%), 1fr)
     lib/supabase.ts          # cliente Supabase + leitura do .env
     lib/api.ts               # fetch com JWT, ApiError, helpers de erro de formulário
     auth/                    # AuthProvider (sessão, useMe) e guards (RequirePapel)
@@ -60,6 +64,12 @@ docs/
   o front guarda a sessão e manda o `access_token` em cada chamada.
 - API não chama o Supabase por requisição: só verifica a assinatura (chaves públicas em cache).
 - Papel vem da tabela `Perfil`, não do token. Novo usuário = JOGADOR. Promover: `npm run promover -- email` (lê `auth.users`; não precisa ter logado antes).
+- **Cadastro pela API** (`POST /api/cadastro`): a API cria o usuário no Supabase Auth pela **Admin API** (chave secreta, só no servidor),
+  com o e-mail interno do nome de usuário já confirmado, cria o perfil com o hash do código de recuperação e devolve a sessão e o código;
+  o front mostra o código e só faz `setSession` depois que a pessoa confirma que guardou.
+- **Esqueceu a senha** (`POST /api/senha/recuperar`): nome de usuário + código; a senha é trocada pela Admin API. Não há e-mail.
+- **Sessões**: `autenticar` recusa tokens autenticados antes de `sessoesValidasDesde` (claim `amr`) e contas em exclusão.
+- **Limites**: por IP em memória (`limitarPorOrigem`). Atrás do Render, use `TRUST_PROXY=1`.
 
 ## Imagens
 Por enquanto a imagem da classe é um **link externo** (`imagemUrl`), validado como http(s) e
@@ -75,6 +85,8 @@ exibido direto pelo front. Não há upload nem uso do Supabase Storage.
 | `SUPABASE_PUBLISHABLE_KEY` | Chave publishable/anon (pública), a mesma do web — usada no login por nickname. |
 | `CORS_ORIGIN` | Origens do front separadas por vírgula. |
 | `PORT` | Porta HTTP (Render define sozinho). |
+| `SUPABASE_SECRET_KEY` | Chave **secreta** do Supabase (Project Settings > API Keys > Secret keys). Cadastro, "esqueceu a senha" e exclusão de conta. Nunca no web. |
+| `TRUST_PROXY` | `1` atrás de proxy (Render): o limite por IP usa o X-Forwarded-For. |
 
 ## Configuração do Supabase (uma vez)
 1. Criar projeto em supabase.com. Guardar a senha do banco.
@@ -90,14 +102,19 @@ exibido direto pelo front. Não há upload nem uso do Supabase Storage.
 6. Rodar `npm run promover -- email-do-mestre` (cria o perfil a partir de `auth.users`, se preciso).
 
 ## Web
-- Públicas: `/` (landing page curta), `/docs` e `/docs/:slug` (documentação com navegação lateral; tópicos em
+- Públicas: `/` (página inicial: hero, funcionalidades, como funciona, perguntas, com âncoras no topo), `/termos` e `/privacidade`
+  (`pages/LegalPages.tsx`), `/docs` e `/docs/:slug` (documentação com navegação lateral; tópicos em
   `features/docs/topicos.tsx`, números de `GET /api/regras`), `/guia-do-mestre` (redireciona para a documentação), `/login`, `/cadastro`
   (escolha "Sou mestre"/"Sou jogador"; papel e nome vão no `user_metadata` do Supabase). `/area` redireciona pelo papel.
 - Logado (qualquer papel): `/perfil` (nickname, nome e foto por link).
 - Jogador: `/jogador` (minhas fichas + entrar com código), `/jogador/entrar/:codigo` (criar ficha), `/jogador/fichas/:id`.
 - **Login por nickname**: o front chama `POST /api/entrar`; a API acha o email da conta pelo nickname, pede a sessão ao
   Supabase (`/auth/v1/token?grant_type=password` com a chave publishable) e devolve os tokens; o front faz `setSession`.
-  O cadastro usa `signUp` com email interno `<nickname>@one-take.local` e `user_metadata { papel, nickname }`.
+  O cadastro passa pela API (`POST /api/cadastro`), que cria o usuário com o e-mail interno `<nickname>@one-take.local`.
+- Sem login (fora dos layouts): `/recuperar-senha` (código de recuperação) e `/conta-excluida` (`pages/ContaPages.tsx`).
+  Termos e Política (`pages/LegalPages.tsx`) renderizam as minutas de `docs/legal/` via `?raw` (o `vite.config.ts` libera ler `..`;
+  na Vercel, manter "Include files outside the root directory" ligado). `/conta` (Configurações da conta, `features/conta/pages/ConfiguracoesContaPage.tsx`): e-mail, seus dados
+  (data de nascimento e exportação), código de recuperação e, discreta no fim, a exclusão. `/perfil` é só o perfil público. Aviso de conta sem código no `AppLayout`. Jogador: `/jogador/arquivadas/:id`.
 - Mestre: `/mestre/grupos`, `/mestre/grupos/novo`, `/mestre/grupos/:id`, `/mestre/grupos/:id/editar`, `/mestre/fichas/:id`,
   `/mestre` (galeria, `?grupo=` no filtro), `/mestre/racas`, `/mestre/racas/:id`, `/mestre/classes/nova` (só a classe),
   `/mestre/classes/:id` (dados, resumo das habilidades, perícias), `/mestre/classes/:id/editar`,
@@ -107,8 +124,8 @@ exibido direto pelo front. Não há upload nem uso do Supabase Storage.
 - Mestre também: `/mestre/npcs`, `/mestre/npcs/novo` (`?grupo=` volta ao grupo, `?kit=` já marca o kit), `/mestre/npcs/:id`, `/mestre/npcs/:id/editar`, `/mestre/bestiario`, `/mestre/bestiario/novo`, `/mestre/bestiario/:id`, `/mestre/bestiario/:id/editar`, `/mestre/itens`, `/mestre/kits`.
   Kit ativo: guardado no navegador (`features/kits/types.ts`, try/catch); `useKitAtivo` + `soDoKit` filtram as listas (só o kit; fixos do sistema sempre) e o kit ativo é o padrão dos formulários. No grupo vale `visivelNoKit` (kit + gerais).
   Logado: `/ativar-mestre`.
-- Layouts: `PublicLayout` (regras, guia; botões Entrar/Criar conta; links no topo) e `AppLayout` (topo com marca, troca Mestrar/Jogar
-  e menu do perfil com Editar perfil e Sair; navegação da interface numa **barra lateral**, que no celular vira gaveta aberta pelo botão de menu).
+- Layouts: `PublicLayout` (regras, guia; botões Login e Registrar-se sempre visíveis, que com sessão levam à área da conta; links no topo) e `AppLayout` (topo com marca, troca Mestrar/Jogar
+  e menu do perfil com Editar perfil e Sair; navegação da interface numa **barra lateral**, que no celular vira gaveta aberta pelo botão de menu). Os dois têm o `Rodape` (`components/layout/Rodape.tsx`): créditos, direitos autorais, Documentação, Termos de uso, Política de privacidade e GitHub.
 - Se a API responder 401, o front faz `signOut` e volta ao login.
 - Dados: TanStack Query; toda mutação invalida as queries `["classes", ...]`.
 - Erros de validação da API (`details`) aparecem embaixo de cada campo dos formulários.

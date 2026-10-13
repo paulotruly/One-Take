@@ -1,10 +1,18 @@
 // Hooks de fichas (jogador e mestre) e do inventário.
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../../lib/api";
-import type { Convite, CriarFichaInput, FichaDetalhe, FichaResumo } from "./types";
+import type { Convite, CriarFichaInput, FichaArquivada, FichaArquivadaResumo, FichaDetalhe, FichaResumo } from "./types";
 
 export function useMinhasFichas() {
   return useQuery({ queryKey: ["fichas", "minhas"], queryFn: () => api<FichaResumo[]>("/api/fichas") });
+}
+
+export function useFichasArquivadas() {
+  return useQuery({ queryKey: ["fichas", "arquivadas"], queryFn: () => api<FichaArquivadaResumo[]>("/api/fichas-arquivadas") });
+}
+
+export function useFichaArquivada(id: string) {
+  return useQuery({ queryKey: ["fichas", "arquivadas", id], queryFn: () => api<FichaArquivada>(`/api/fichas-arquivadas/${id}`) });
 }
 
 export function useFicha(id: string) {
@@ -64,3 +72,5 @@ export const useMoverItem = () =>
   );
 
 export const useExcluirItem = () => useEscrita((itemId: string) => api<void>(`/api/itens/${itemId}`, { method: "DELETE" }));
+
+export const useExcluirFichaArquivada = () => useEscrita((id: string) => api<void>(`/api/fichas-arquivadas/${id}`, { method: "DELETE" }));

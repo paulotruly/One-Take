@@ -21,9 +21,9 @@ export async function prepararJwks() {
 
 export async function token(
   usuario: { id: string; email: string },
-  opcoes: { aud?: string; iss?: string; metadata?: Record<string, unknown> } = {},
+  opcoes: { aud?: string; iss?: string; metadata?: Record<string, unknown>; claims?: Record<string, unknown> } = {},
 ) {
-  return new SignJWT({ email: usuario.email, user_metadata: opcoes.metadata ?? {} })
+  return new SignJWT({ email: usuario.email, user_metadata: opcoes.metadata ?? {}, ...opcoes.claims })
     .setProtectedHeader({ alg: "ES256", kid: "teste" })
     .setSubject(usuario.id)
     .setIssuer(opcoes.iss ?? ISS)
