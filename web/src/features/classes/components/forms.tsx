@@ -16,6 +16,7 @@ import {
   ROTULO_LIMITE,
   rotuloLimite,
 } from "../types";
+import type { RegraDefesa } from "../../docs/regras";
 import { KitsField } from "../../kits/components/KitsField";
 import { kitsPadrao } from "../../kits/types";
 import { ClasseImagem } from "./ClasseImagem";
@@ -178,12 +179,15 @@ export function HabilidadeForm({
   inicial,
   opcoesStatus = [],
   opcoesPericias = [],
+  regrasDefesa = [],
   ...p
 }: BaseProps<HabilidadeInput> & {
   inicial?: HabilidadeInput;
   opcoesStatus?: { id: string; nome: string; automatico: boolean }[];
   /** Perícias do catálogo do mestre (para escolher a perícia testada pela carta). */
-  opcoesPericias?: { id: string; nome: string; atributo: { nome: string } }[];
+  opcoesPericias?: { id: string; nome: string; origemId?: string | null; atributo: { nome: string } }[];
+  /** Tabela de defesa do alvo (GET /api/regras): marca as defesas sozinho ao escolher a perícia do teste. */
+  regrasDefesa?: RegraDefesa[];
 }) {
   const [v, setV] = useState({
     titulo: inicial?.titulo ?? "",
@@ -199,6 +203,27 @@ export function HabilidadeForm({
     periciaId: inicial?.periciaId ?? "",
   });
   const [defesas, setDefesas] = useState<string[]>(inicial?.periciasDefesaIds ?? []);
+  // Defesas da tabela para a perícia do teste, já como perícias do catálogo do mestre (pela base ou pelo nome).
+  const mesma = (p: { id: string; nome: string; origemId?: string | null }, base: { id: string; nome: string }) =>
+    (p.origemId ?? p.id) === base.id || p.nome.trim().toLowerCase() === base.nome.toLowerCase();
+  const sugeridas = (periciaId: string) => {
+    const ataque = opcoesPericias.find((x) => x.id === periciaId);
+    if (!ataque) return new Map<string, string>();
+    const m = new Map<string, string>();
+    for (const r of regrasDefesa.filter((r) => mesma(ataque, r.ataque))) {
+      const d = opcoesPericias.find((x) => mesma(x, r.defesa));
+      if (d) m.set(d.id, r.quando);
+    }
+    return m;
+  };
+  const sugestoes = sugeridas(v.periciaId);
+  const trocarPericia = (periciaId: string) => {
+    const antes = [...sugestoes.keys()];
+    const depois = [...sugeridas(periciaId).keys()];
+    setV({ ...v, periciaId });
+    // Troca só o que foi marcado sozinho; o que o mestre marcou à mão fica.
+    setDefesas((d) => [...new Set([...d.filter((x) => !antes.includes(x)), ...depois])]);
+  };
   const alternarDefesa = (id: string, marcar: boolean) => setDefesas((d) => (marcar ? [...new Set([...d, id])] : d.filter((x) => x !== id)));
   const set = (campo: keyof typeof v) => (e: { target: { value: string } }) => setV({ ...v, [campo]: e.target.value });
   const e = p.erros ?? {};
@@ -251,7 +276,7 @@ export function HabilidadeForm({
         <input value={v.condicao} onChange={set("condicao")} maxLength={500} />
       </Field>
       <Field rotulo="Perícia do teste" erro={e.periciaId} dica="Qual perícia o personagem testa para usar a carta. A ficha mostra o teste pronto (ex.: 2d20 + 5).">
-        <select value={v.periciaId} onChange={set("periciaId")}>
+        <select value={v.periciaId} onChange={(ev) => trocarPericia(ev.target.value)}>
           <option value="">Nenhuma (sem teste ou o mestre decide)</option>
           {opcoesPericias.map((p) => (
             <option key={p.id} value={p.id}>{p.nome} ({p.atributo.nome})</option>
@@ -260,7 +285,10 @@ export function HabilidadeForm({
       </Field>
       <fieldset className="form__grupo">
         <legend>Defesa do alvo (opcional)</legend>
-        <p className="campo__dica">Perícias que o alvo pode usar para se defender desta carta. Marque quantas quiser.</p>
+        <p className="campo__dica">
+          Perícias que o alvo pode usar para se defender desta carta. Ao escolher a perícia do teste, as defesas da regra são marcadas
+          sozinhas; desmarque as que não valem ou marque outras.
+        </p>
         {opcoesPericias.length === 0 ? (
           <p className="pagina__subtitulo">Nenhuma perícia no catálogo.</p>
         ) : (
@@ -268,7 +296,10 @@ export function HabilidadeForm({
             {opcoesPericias.map((p) => (
               <label key={p.id} className={`checklist__item ${defesas.includes(p.id) ? "checklist__item--marcado" : ""}`}>
                 <input type="checkbox" checked={defesas.includes(p.id)} onChange={(ev) => alternarDefesa(p.id, ev.target.checked)} />
-                <span>{p.nome} <span className="pagina__subtitulo">({p.atributo.nome})</span></span>
+                <span>
+                  {p.nome} <span className="pagina__subtitulo">({p.atributo.nome})</span>
+                  {sugestoes.has(p.id) && <span className="campo__dica"> Pela regra: {sugestoes.get(p.id)!.toLowerCase()}</span>}
+                </span>
               </label>
             ))}
           </div>

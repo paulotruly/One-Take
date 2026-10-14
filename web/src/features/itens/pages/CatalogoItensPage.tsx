@@ -1,6 +1,6 @@
 // Catálogo de itens do mestre: armas, artefatos, taverna e sebo. Os itens ficam sempre à mão para lançar nos grupos.
-import { AlternarVerificado } from "../../verificados/pages/AlternarVerificado";
-import { VerificadoBadge } from "../../verificados/components/VerificadoBadge";
+import { SeloVerificado } from "../../verificados/pages/SeloVerificado";
+import { AcessoBadge, VerificadoBadge } from "../../verificados/components/VerificadoBadge";
 import { Pencil, Plus, Send, Tags, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "../../../components/ui/Button";
@@ -111,13 +111,14 @@ export function CatalogoItensPage() {
               key={i.id}
               item={i}
               onAbrir={() => setAberto(i)}
-              extra={i.verificado ? <VerificadoBadge /> : i.kitIds.length === 0 && <span className="selo">Geral</span>}
+              aposNome={i.verificado && <VerificadoBadge />}
+              extra={i.verificado || i.deOutro ? <AcessoBadge item={i} /> : i.kitIds.length === 0 && <span className="selo">Geral</span>}
             />
           ))}
         </ul>
       )}
 
-      <Modal aberto={!!aberto} onFechar={() => setAberto(null)} titulo={aberto?.nome ?? ""}>
+      <Modal aberto={!!aberto} onFechar={() => setAberto(null)} titulo={aberto ? <>{aberto.nome} <SeloVerificado tipo="itemModelo" item={aberto} /></> : ""}>
         {aberto && (
           <>
             <ItemDetalhe item={aberto} />
@@ -130,7 +131,6 @@ export function CatalogoItensPage() {
                   <Button onClick={() => abrirForm(aberto)}>
                     <Pencil size={16} aria-hidden /> Editar
                   </Button>
-                  <AlternarVerificado tipo="itemModelo" item={aberto} />
                 </>
               )}
               <Button variante="primario" onClick={() => abrirLancar(aberto)}>

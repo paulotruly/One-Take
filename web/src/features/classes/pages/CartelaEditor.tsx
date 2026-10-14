@@ -7,6 +7,7 @@ import { Button } from "../../../components/ui/Button";
 import { ConfirmDialog } from "../../../components/ui/ConfirmDialog";
 import { Modal } from "../../../components/ui/Modal";
 import { erroDeFormulario, errosDeCampo, mensagemDeErro } from "../../../lib/api";
+import { useRegras } from "../../docs/regras";
 import { useCatalogo } from "../../pericias/api";
 import { useStatus } from "../../status/api";
 import {
@@ -33,6 +34,7 @@ export function CartelaEditor({ habilidades, editavel, criar, ordenar }: Props) 
   const excluir = useExcluirHabilidade();
   const status = useStatus();
   const catalogo = useCatalogo();
+  const { defesas } = useRegras();
 
   // undefined = modal fechado; null = nova; Habilidade = editando
   const [emEdicao, setEmEdicao] = useState<Habilidade | null | undefined>(undefined);
@@ -94,6 +96,7 @@ export function CartelaEditor({ habilidades, editavel, criar, ordenar }: Props) 
           inicial={emEdicao ? { ...emEdicao, periciasDefesaIds: emEdicao.periciasDefesa?.map((d) => d.periciaId) ?? [] } : undefined}
           opcoesStatus={status.data}
           opcoesPericias={catalogo.data}
+          regrasDefesa={defesas}
           enviando={salvando.isPending}
           erros={errosDeCampo(salvando.error)}
           erroGeral={erroDeFormulario(salvando.error)}

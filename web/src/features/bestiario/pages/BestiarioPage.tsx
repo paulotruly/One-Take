@@ -1,5 +1,6 @@
 // Bestiário do mestre: criaturas montadas como classes, prontas para invocar nos grupos.
-import { AlternarVerificado } from "../../verificados/pages/AlternarVerificado";
+import { VerificadoBadge } from "../../verificados/components/VerificadoBadge";
+import { SeloVerificado } from "../../verificados/pages/SeloVerificado";
 import { AvisoKit } from "../../kits/components/AvisoKit";
 import { useKitAtivo } from "../../kits/api";
 import { soDoKit } from "../../kits/types";
@@ -48,7 +49,7 @@ export function BestiarioPage() {
         criar={useCriarConceitoBesta()}
         editar={useEditarConceitoBesta()}
         excluir={useExcluirConceitoBesta()}
-        acoesExtra={(c) => <AlternarVerificado tipo="bestaConceito" item={c} pequeno />}
+        selo={(c) => <SeloVerificado tipo="bestaConceito" item={c} />}
       />
 
       <h2>Todas as criaturas</h2>
@@ -73,7 +74,7 @@ export function BestiarioPage() {
                 </div>
                 <div className="classe-card__corpo">
                   {b.conceito && <span className="classe-card__conceito">{b.conceito.titulo}</span>}
-                  <h3>{b.titulo}</h3>
+                  <h3>{b.titulo} {b.verificado && <VerificadoBadge porKit={b.verificadoPorKit && !b.seloProprio} />}</h3>
                   <StatsBar vida={b.pontosVida} mana={b.pontosMana} esforco={b.pontosEsforco} compacto />
                   <span className="stat"><Footprints size={12} aria-hidden /> {b.deslocamento} quadrados</span>
                   <p className="classe-card__descricao">{b.descricao}</p>

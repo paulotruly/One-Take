@@ -37,6 +37,45 @@ kitsRouter.get("/kits", async (req, res) => {
   res.json(kits.sort((a, b) => Number(a.donoId !== usuarioId) - Number(b.donoId !== usuarioId)).map((k) => apresentar(k, quem)));
 });
 
+/** O que está dentro do kit, por tipo (nomes e ids, para a tela do kit). Do mestre ou verificado; os grupos só para o dono. */
+const nome = { select: { id: true, nome: true } } as const;
+const titulo = { select: { id: true, titulo: true } } as const;
+const dentro = {
+  classes: { select: { classe: titulo } },
+  racas: { select: { raca: titulo } },
+  atributos: { select: { atributo: nome } },
+  pericias: { select: { pericia: { select: { id: true, nome: true, atributo: { select: { nome: true } } } } } },
+  status: { select: { status: { select: { id: true, nome: true, tipo: true } } } },
+  itens: { select: { itemModelo: nome } },
+  bestas: { select: { besta: titulo } },
+  npcs: { select: { npc: nome } },
+  grupos: { select: { id: true, titulo: true } },
+} as const;
+
+const porNome = <T extends { nome: string }>(l: T[]) => l.sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+
+kitsRouter.get("/kits/:id", async (req, res) => {
+  const usuarioId = usuarioDe(req).id;
+  const id = idDe(req.params.id, "Kit não encontrado");
+  const kit = await getPrisma().kit.findUnique({ where: { id }, include: { ...contagem, ...dentro } });
+  if (!kit || (kit.donoId !== usuarioId && !kit.verificado)) throw naoEncontrado("Kit não encontrado");
+  const { classes, racas, atributos, pericias, status, itens, bestas, npcs, grupos, ...resto } = kit;
+  res.json({
+    ...apresentar(resto, await quemVe(usuarioId)),
+    dentro: {
+      classes: porNome(classes.map(({ classe: c }) => ({ id: c.id, nome: c.titulo }))),
+      racas: porNome(racas.map(({ raca: r }) => ({ id: r.id, nome: r.titulo }))),
+      atributos: porNome(atributos.map(({ atributo: a }) => a)),
+      pericias: porNome(pericias.map(({ pericia: p }) => ({ id: p.id, nome: p.nome, atributo: p.atributo.nome }))),
+      status: porNome(status.map(({ status: s }) => s)),
+      itens: porNome(itens.map(({ itemModelo: i }) => i)),
+      bestas: porNome(bestas.map(({ besta: b }) => ({ id: b.id, nome: b.titulo }))),
+      npcs: porNome(npcs.map(({ npc: n }) => n)),
+      grupos: kit.donoId === usuarioId ? porNome(grupos.map((g) => ({ id: g.id, nome: g.titulo }))) : [],
+    },
+  });
+});
+
 kitsRouter.post("/kits", async (req, res) => {
   const dados = criarSchema.parse(req.body);
   res.status(201).json(apresentar(await getPrisma().kit.create({ data: { ...dados, donoId: usuarioDe(req).id }, include: contagem })));

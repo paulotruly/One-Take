@@ -72,7 +72,10 @@ Cada carta da cartela:
 - **Ordem** dentro da cartela (o mestre reordena).
 - **Ativa status** (opcional).
 - **Defesa do alvo** (opcional): uma ou mais perícias que o alvo pode usar para se defender da carta (informativo; o mestre
-  pede o teste ao alvo).
+  pede o teste ao alvo). Ao escolher a perícia do teste, o formulário marca sozinho as defesas da regra (`api/src/regras/defesas.ts`,
+  em `GET /api/regras`); o mestre desmarca ou marca outras à mão. Furtividade x Intuição (alvo em flanco, fora do campo de visão
+  ou em ponto cego) ou Percepção (alvo no campo de visão); Luta x Reflexos (chance clara de esquiva) ou Resistência (sem desvio);
+  Pontaria x Reflexos; Domínio x Reflexos (projéteis), Resistência (ataque direto, sem esquiva) ou Vontade (mental ou telepático).
 - **Perícia do teste** (opcional): qual perícia o personagem testa para usar a carta. Fichas, NPCs e criaturas mostram o teste pronto
   daquele personagem (dados do atributo da perícia + total dele nela; sem a perícia, bônus 0).
 - **Aprimoramentos** (opcional): a partir de um nível, a mesma carta muda (título, efeito, condição, limite, custo de mana,
@@ -217,6 +220,10 @@ O One-Take é RPG de mesa com apoio de tecnologia: o app controla fichas e avisa
   - **Automáticos** (do sistema): Morto (vida 0), Sem energia vital (mana 0), Cansado (esforço 0).
   - **Aplicados pelo mestre** durante a sessão: fixos do sistema (Assustado, Furioso, Inspirado, Confiante, Envenenado,
     Atordoado; proposta inicial) e os criados por cada mestre.
+  - **Categorias de status** (do mestre, ex.: Elementais, Mentais): só organizam. A página de status mostra os aplicados pelo
+    mestre separados por categoria (cada uma oculta com a seta); ao montar o grupo, marcar a categoria leva todos os status dela.
+    Excluir a categoria não apaga os status. Categoria verificada aparece para todo mestre (só leitura); a categoria privada de outra
+    pessoa não aparece nem no status verificado dela.
   - Em cada grupo o mestre escolhe quais status valem (opcional). Grupo novo começa com os fixos marcados.
   - Uma carta de habilidade pode indicar o status que **ativa** (campo opcional); o mestre aplica na ficha do alvo.
   - **NPCs e criaturas** também recebem status. Valem os ativados no grupo (criatura invocada) ou todos os do mestre (NPC).

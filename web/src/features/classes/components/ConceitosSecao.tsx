@@ -1,5 +1,5 @@
 // Arquétipos do mestre na galeria (container: dados + mutações).
-import { AlternarVerificado } from "../../verificados/pages/AlternarVerificado";
+import { SeloVerificado } from "../../verificados/pages/SeloVerificado";
 import { useConceitos, useCriarConceito, useEditarConceito, useExcluirConceito } from "../api";
 import { ConceitosBloco } from "./ConceitosBloco";
 
@@ -21,7 +21,7 @@ export function ConceitosSecao() {
       criar={useCriarConceito()}
       editar={useEditarConceito()}
       excluir={useExcluirConceito()}
-      acoesExtra={(c) => <AlternarVerificado tipo="classeConceito" item={c} pequeno />}
+      selo={(c) => <SeloVerificado tipo="classeConceito" item={c} />}
     />
   );
 }

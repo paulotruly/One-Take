@@ -12,6 +12,7 @@ import "./styles/home.css";
 import "./components/ui/ui.css";
 import "./features/classes/components/classes.css";
 import "./features/pericias/components/pericias.css";
+import "./features/status/components/status.css";
 import "./features/grupos/components/grupos.css";
 import "./features/fichas/components/fichas.css";
 import "./features/itens/components/itens.css";

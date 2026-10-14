@@ -53,7 +53,8 @@ Perfil(jogador) 1 ──< FichaArquivada (cópia somente leitura)
 | `BestaPericia` | `bestaId`, `periciaId`, `modificador` | PK composta |
 | `BestaAtributo` | `bestaId`, `atributoId`, `dados` (≥0) | d20 da criatura por atributo |
 | `Criatura` | `grupoId`, `bestaId`, `nome`, `nivel` (≥1), `vidaAtual`, `manaAtual`, `esforcoAtual` | Criatura invocada no grupo; apagado ao morrer ou ser removido |
-| `Status` | `nome`, `descricao`, `efeito`, `tipo` (BUFF/DEBUFF/MISTO), `gatilho?` (VIDA_ZERO/MANA_ZERO/ESFORCO_ZERO), `ordem`, `donoId?` | `donoId` nulo = fixo; só fixos têm gatilho |
+| `Status` | `nome`, `descricao`, `efeito`, `tipo` (BUFF/DEBUFF/MISTO), `gatilho?` (VIDA_ZERO/MANA_ZERO/ESFORCO_ZERO), `ordem`, `donoId?`, `categoriaId?` | `donoId` nulo = fixo; só fixos têm gatilho; categoria `SetNull` ao excluir |
+| `CategoriaStatus` | `nome`, `descricao`, `donoId`, `verificado` | do mestre (sem fixas); nome único por dono; só organiza (migration `20261013160000_categorias_de_status`) |
 | `StatusNoGrupo` | `grupoId`, `statusId` | status ativados no grupo |
 | `FichaStatus` | `fichaId`, `statusId`, `aplicadoEm` | status aplicados pelo mestre |
 `Habilidade.statusId?` = status que a carta ativa (SetNull se o status for excluído).
@@ -67,7 +68,7 @@ Nomes no código x na interface: `ClasseConceito`/`RacaConceito`/`BestaConceito`
 `Perfil.papel = MESTRE` significa "interface de mestre ativada"; toda conta joga.
 `Perfil.catalogoIniciado` marca que o mestre já recebeu a cópia das perícias base.
 `Perfil.cargo` (enum `Cargo`: USUARIO, ADMIN; trocado só por `npm run cargo`) e `Perfil.ocultarVerificados` (preferência).
-`verificado` (booleano, índice) em Classe, Raca, Atributo, Pericia, Status, CategoriaItem, ItemModelo, Besta, Npc, Kit,
+`verificado` (booleano, índice) em Classe, Raca, Atributo, Pericia, Status, CategoriaItem, CategoriaStatus, ItemModelo, Besta, Npc, Kit,
 ClasseConceito, RacaConceito e BestaConceito (o do Kit vale para tudo ligado a ele, calculado na consulta, sem copiar o booleano): o ADMIN marca as
 coisas dele; todo mestre vê e usa, só leitura. Visibilidade das listas: dele + fixo (`donoId` nulo) + verificado (sem o verificado se a
 pessoa oculta). Quem não é o dono não recebe os `kitIds`. Migrations `20261013120000_kit_basico_admin` (cargo inicial e tabela

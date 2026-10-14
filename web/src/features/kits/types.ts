@@ -11,6 +11,15 @@ export type Kit = Visao & {
 
 export type KitInput = { nome: string; descricao: string };
 
+type Coisa = { id: string; nome: string };
+/** Tela do kit: o que está dentro, por tipo (os grupos só para o dono). */
+export type KitDetalhe = Kit & {
+  dentro: {
+    classes: Coisa[]; racas: Coisa[]; atributos: Coisa[]; pericias: (Coisa & { atributo: string })[];
+    status: (Coisa & { tipo: "BUFF" | "DEBUFF" | "MISTO" })[]; itens: Coisa[]; bestas: Coisa[]; npcs: Coisa[]; grupos: Coisa[];
+  };
+};
+
 /** Kit ativo (telas do mestre): só o que está no kit. Sem kit escolhido ("Todos"), aparece tudo, inclusive o geral. */
 export function soDoKit(kitIds: string[] | undefined, kitId: string | null) {
   return !kitId || (kitIds ?? []).includes(kitId);

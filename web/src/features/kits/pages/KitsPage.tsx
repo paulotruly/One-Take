@@ -1,7 +1,8 @@
 // Kits de RPG do mestre: criar, editar, excluir e escolher o kit ativo (filtro da interface).
-import { AlternarVerificado } from "../../verificados/pages/AlternarVerificado";
-import { VerificadoBadge } from "../../verificados/components/VerificadoBadge";
-import { Check, Package, Pencil, Plus, Trash2 } from "lucide-react";
+import { SeloVerificado } from "../../verificados/pages/SeloVerificado";
+import { AcessoBadge } from "../../verificados/components/VerificadoBadge";
+import { Check, Eye, Package, Pencil, Plus, Trash2 } from "lucide-react";
+import { Link } from "react-router";
 import { useState, type FormEvent } from "react";
 import { Button } from "../../../components/ui/Button";
 import { ConfirmDialog } from "../../../components/ui/ConfirmDialog";
@@ -72,7 +73,7 @@ export function KitsPage() {
           {kits.data.map((k) => (
             <li key={k.id} className={`conceito ${k.id === kitId ? "conceito--ativo" : ""}`}>
               <div className="conceito__topo">
-                <h3><Package size={18} aria-hidden /> {k.nome}</h3>
+                <h3><Package size={18} aria-hidden /> <Link to={`/mestre/kits/${k.id}`}>{k.nome}</Link> <SeloVerificado tipo="kit" item={k} /></h3>
                 {!k.deOutro && (
                   <div className="pericia__acoes">
                     <Button pequeno variante="fantasma" aria-label={`Editar ${k.nome}`} onClick={() => abrir(k)}><Pencil size={14} aria-hidden /></Button>
@@ -80,17 +81,13 @@ export function KitsPage() {
                   </div>
                 )}
               </div>
-              {k.verificado && (
-                <p className="pagina__subtitulo">
-                  <VerificadoBadge /> {k.deOutro ? "Kit verificado do One-Take: só leitura. Use como kit ativo ou num grupo." : "Todo mestre vê este kit e tudo o que está nele."}
-                </p>
-              )}
+              {(k.verificado || k.deOutro) && <div><AcessoBadge item={k} /></div>}
               {k.descricao && <p className="pericia__descricao">{k.descricao}</p>}
               <p className="pagina__subtitulo">
                 {ROTULOS.filter(([c]) => k.conteudo[c] > 0).map(([c, r]) => `${k.conteudo[c]} ${r}`).join(" · ") || "Vazio por enquanto."}
               </p>
-              {k.podeVerificar && <div><AlternarVerificado tipo="kit" item={k} pequeno /></div>}
-              <div>
+              <div className="conceito__subclasses">
+                <Link to={`/mestre/kits/${k.id}`} className="btn btn--pequeno"><Eye size={14} aria-hidden /> Ver o que tem</Link>
                 {k.id === kitId ? (
                   <Button pequeno onClick={() => definir(null)}><Check size={14} aria-hidden /> Kit ativo · mostrar tudo</Button>
                 ) : (

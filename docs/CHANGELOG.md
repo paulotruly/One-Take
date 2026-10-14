@@ -7,6 +7,34 @@ Registre só o que muda comportamento, manutenção ou entendimento do sistema. 
 Formato de cada entrada: **Resumo**, Motivo, Arquivos/módulos, Impacto (regras ou arquitetura), Procedimentos (migrations, config) e Docs.
 
 ## Não commitado (2026-10-13)
+- **Tela do kit** (`/mestre/kits/:id`): o que está dentro, por tipo, com link para cada coisa e os grupos que usam o kit; serve
+  também para o kit verificado. API `GET /api/kits/:id`. Arquivos: `kits.routes.ts`, `KitDetalhePage.tsx`, `KitsPage.tsx`, `router.tsx`;
+  testes em `tests/kits.test.ts`. Docs: API, documentação pública (Kits de RPG).
+- **Categorias de status** (do mestre, verificáveis): botão Categorias na página de status, campo Categoria no status, página e
+  seletor do grupo separados por categoria (marcar a categoria leva todos os status dela).
+  - Arquivos: `api/src/modules/status/categorias.ts` (novo), `status.service.ts`, `status.schemas.ts`, `lib/sistema.ts`, `app.ts`;
+    `web/src/features/status/` (`CategoriasStatusModal.tsx`, `categorias.ts`, `status.css`), `DisponiveisSelector.tsx`, `lib/useOculto.ts`.
+  - Procedimentos: migration `20261013160000_categorias_de_status` (aplicada). Testes: `tests/categorias-status.test.ts`.
+  - Docs: DOMINIO, DADOS, API, DECISOES, documentação pública (Status).
+- **Selo verificado ao lado do nome também nos cards e listas**: raças, criaturas, classes (com "pelo kit"), escolha do que vale no
+  grupo (classes, raças, atributos, perícias, status), campo Kits dos formulários e aviso do kit ativo.
+- **Botão de verificar só com o ícone, ao lado do nome** (ADMIN): o selo cinza vira azul com check branco ao marcar; o texto ficou
+  na dica. `SeloVerificado` (selo ou botão) substitui `AlternarVerificado`. Arquivos: `BotaoVerificar.tsx`, `SeloVerificado.tsx`, `ui.css`, `Modal.tsx`.
+- **Perícias da raça em selos no card** (ícone da categoria, nome e pontos), com mais espaço acima. Arquivos: `RacasPage.tsx`, `layout.css`.
+- **Selo verificado ao lado do nome** (só o ícone, em todas as telas) e situação sempre em selo: "Só leitura" (de outra pessoa),
+  "Verificado pelo kit" e "Visível para todos", no lugar dos textos soltos; tipo do status (Buff, Debuff, Misto) também virou selo.
+  Arquivos: `verificados/components/VerificadoBadge.tsx` (`AcessoBadge`), `classes/components/Selos.tsx` e as páginas que mostram o selo.
+- **Balanceamento de 4 classes do @paulo** (conteúdo no banco, sem mudança de código; conferido com `/balancear`, DT 12 e 15):
+  Espadachim (Aparada precisa 1x por combate, testa Reflexos, reduz 2d6 e contra-ataca 1d6; Estocada direta 2d6+2, 2x por combate;
+  Investida cortante 2d6+2), Feiticeiro elemental (mana: Punho 5, Esfera 5, Onda 10, Tempestade 20, Meteoro 15) e Necromante
+  (Atormentar de almas sem limite por 5 de mana; Exército de esqueletos 4d8; Reanimação 10; Contato com a morte 5). Perícias do
+  Arqueiro e do Necromante postas pelo responsável. Segundo ajuste: Guarda firme 1x por combate;
+  Esfera ígnea 2d6+3 e Meteoro 3d10; Disparo duplo 1d10 por flecha e Chuva de flechas 3d6; Invocação das almas 1d8 por alma e
+  Reanimação 1d8 por cadáver (atacam por 2 a 3 turnos, com 1 de vida), as duas por 5 de mana. Notas finais: Espadachim 124 a 144, Arqueiro 101 a 116, Feiticeiro 84 a 99,
+  Necromante 81 a 94. Vida base 30 nas 4 (combates de 3,6 a 5,3 turnos no nível 1) e mana 10 no Espadachim e no Arqueiro
+  (margem, já que mana 0 mata). Notas: Espadachim 120 a 137, Arqueiro 101 a 116, Feiticeiro 84 a 99, Necromante 81 a 94.
+- **Arquétipos mais compactos** (classes, raças e bestiário): cartões numa linha com rolagem horizontal, descrição em 2 linhas
+  e botão de seta para ocultar ou mostrar a seção (lembrado no navegador). Arquivos: `ConceitosBloco.tsx`, `classes.css`.
 - **Selo verificado e cargo ADMIN**: o ADMIN (cargo no banco, `npm run cargo`) edita o fixo não automático e marca qualquer coisa
   dele como verificada (classes, raças, atributos, perícias, status, categorias de item, itens do catálogo, criaturas e NPCs); todo mestre vê e usa, só leitura, e duplica para mudar.
   Cada pessoa pode ocultar os verificados em Configurações da conta. NPCs e perícias ganharam "duplicar".
@@ -15,7 +43,8 @@ Formato de cada entrada: **Resumo**, Motivo, Arquivos/módulos, Impacto (regras 
   - Procedimentos: migrations `20261013120000_kit_basico_admin`, `20261013130000_verificado_e_cargo` e
     `20261013140000_verificado_em_tudo` e `20261013150000_verificado_kits_arquetipos` (aplicadas); `npm run cargo -- paulo ADMIN` (feito).
   - Docs: DOMINIO, DADOS, API, ARQUITETURA, DECISOES, CLAUDE.md, documentação pública (Conteúdo verificado).
-- **Perícias de defesa nas cartas** (opcionais, várias) e **ranking de balanceamento** (`calc.mjs ranking`: poder por nível juntando vida,
+- **Perícias de defesa nas cartas** (opcionais, várias; marcadas sozinhas pela perícia do teste conforme a tabela de
+  `api/src/regras/defesas.ts`, e ajustáveis à mão) e **ranking de balanceamento** (`calc.mjs ranking`: poder por nível juntando vida,
   mana, esforço, acerto, cartas, limites, cura e defesa; duelos e alertas).
   - Procedimentos: migrations `20261013100000_pericia_de_defesa` e `20261013110000_pericias_de_defesa_multiplas` (aplicadas).
   - Docs: DOMINIO, DADOS, API, DECISOES, documentação pública (Habilidades), skill `balancear`.

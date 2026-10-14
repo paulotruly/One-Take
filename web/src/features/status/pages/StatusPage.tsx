@@ -1,12 +1,11 @@
 // Catálogo de status do mestre: fixos do sistema (somente leitura) + os criados por ele.
-import { AlternarVerificado } from "../../verificados/pages/AlternarVerificado";
+import { SeloVerificado } from "../../verificados/pages/SeloVerificado";
 import { AvisoKit } from "../../kits/components/AvisoKit";
 import { useKitAtivo } from "../../kits/api";
 import { soDoKit } from "../../kits/types";
-import { Lock, Plus, Zap } from "lucide-react";
+import { ChevronDown, ChevronUp, Lock, Plus, Tags, Zap } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { KitsField } from "../../kits/components/KitsField";
-import { VerificadoBadge } from "../../verificados/components/VerificadoBadge";
 import { kitsPadrao } from "../../kits/types";
 import { Button } from "../../../components/ui/Button";
 import { ConfirmDialog } from "../../../components/ui/ConfirmDialog";
@@ -14,9 +13,12 @@ import { Field } from "../../../components/ui/Field";
 import { Modal } from "../../../components/ui/Modal";
 import { ErrorState, Loading } from "../../../components/ui/States";
 import { erroDeFormulario, errosDeCampo, mensagemDeErro } from "../../../lib/api";
-import { useCriarStatus, useEditarStatus, useExcluirStatus, useStatus } from "../api";
+import { useOculto } from "../../../lib/useOculto";
+import { useCategoriasStatus, useCriarStatus, useEditarStatus, useExcluirStatus, useStatus } from "../api";
+import { agruparPorCategoria, type GrupoDeStatus } from "../categorias";
+import { CategoriasStatusModal } from "./CategoriasStatusModal";
 import { StatusBadge } from "../components/StatusBadge";
-import { LISTA_TIPOS, ROTULO_GATILHO, ROTULO_TIPO, type Status, type StatusInput, type TipoStatus } from "../types";
+import { LISTA_TIPOS, ROTULO_GATILHO, ROTULO_TIPO, type CategoriaStatus, type Status, type StatusInput, type TipoStatus } from "../types";
 
 export function StatusPage() {
   const status = useStatus();
@@ -27,6 +29,8 @@ export function StatusPage() {
   const [emEdicao, setEmEdicao] = useState<Status | null | undefined>(undefined);
   const [aExcluir, setAExcluir] = useState<Status | null>(null);
   const salvando = emEdicao ? editar : criar;
+  const categorias = useCategoriasStatus();
+  const [gerenciando, setGerenciando] = useState(false);
 
   function abrir(s: Status | null) {
     criar.reset();
@@ -39,6 +43,7 @@ export function StatusPage() {
   const lista = (status.data ?? []).filter((s) => s.fixo || soDoKit(s.kitIds, kitId));
   const automaticos = lista.filter((s) => s.automatico);
   const manuais = lista.filter((s) => !s.automatico);
+  const grupos = agruparPorCategoria(manuais, categorias.data, { comVazias: true });
 
   return (
     <div className="pagina">
@@ -50,9 +55,14 @@ export function StatusPage() {
             escolhe quais status valem.
           </p>
         </div>
-        <Button variante="primario" onClick={() => abrir(null)}>
-          <Plus size={16} aria-hidden /> Novo status
-        </Button>
+        <div className="classe-cabecalho__acoes">
+          <Button onClick={() => setGerenciando(true)}>
+            <Tags size={16} aria-hidden /> Categorias
+          </Button>
+          <Button variante="primario" onClick={() => abrir(null)}>
+            <Plus size={16} aria-hidden /> Novo status
+          </Button>
+        </div>
       </div>
 
       <AvisoKit />
@@ -70,14 +80,21 @@ export function StatusPage() {
           <section className="secao">
             <h2>Aplicados pelo mestre</h2>
             <p className="pagina__subtitulo">Você aplica e remove durante a sessão, na ficha de cada personagem. Cartas de habilidade podem indicar qual status ativam.</p>
-            <Lista itens={manuais} onEditar={abrir} onExcluir={setAExcluir} />
+            {grupos.length === 1 && grupos[0]!.id === "sem-categoria" ? (
+              <Lista itens={manuais} onEditar={abrir} onExcluir={setAExcluir} />
+            ) : grupos.length === 0 ? (
+              <Lista itens={[]} onEditar={abrir} onExcluir={setAExcluir} />
+            ) : (
+              grupos.map((g) => <GrupoStatus key={g.id} grupo={g} onEditar={abrir} onExcluir={setAExcluir} />)
+            )}
           </section>
         </>
       )}
 
       <Modal aberto={emEdicao !== undefined} onFechar={fechar} titulo={emEdicao ? "Editar status" : "Novo status"}>
         <StatusForm
-          inicial={emEdicao ? { ...emEdicao, kitIds: emEdicao.kitIds ?? [] } : undefined}
+          inicial={emEdicao ? { ...emEdicao, kitIds: emEdicao.kitIds ?? [], categoriaId: emEdicao.categoria?.id ?? emEdicao.categoriaId ?? null } : undefined}
+          categorias={categorias.data ?? []}
           enviando={salvando.isPending}
           erros={errosDeCampo(salvando.error)}
           erroGeral={erroDeFormulario(salvando.error)}
@@ -85,6 +102,8 @@ export function StatusPage() {
           onEnviar={(dados) => (emEdicao ? editar.mutate({ id: emEdicao.id, dados }, { onSuccess: fechar }) : criar.mutate(dados, { onSuccess: fechar }))}
         />
       </Modal>
+
+      <CategoriasStatusModal aberto={gerenciando} onFechar={() => setGerenciando(false)} />
 
       <ConfirmDialog
         aberto={!!aExcluir}
@@ -99,6 +118,21 @@ export function StatusPage() {
   );
 }
 
+/** Uma categoria de status, que dá para ocultar com a seta (lembrado neste navegador). */
+function GrupoStatus({ grupo, onEditar, onExcluir }: { grupo: GrupoDeStatus; onEditar: (s: Status) => void; onExcluir: (s: Status) => void }) {
+  const [oculto, alternar] = useOculto(`status-categoria:${grupo.id}`);
+  return (
+    <div className="status-categoria">
+      <button type="button" className="conceitos__alternar status-categoria__titulo" onClick={alternar} aria-expanded={!oculto} title={oculto ? "Mostrar" : "Ocultar"}>
+        <h3>{grupo.nome} <span className="pagina__subtitulo">({grupo.itens.length})</span></h3>
+        {oculto ? <ChevronDown size={18} aria-hidden /> : <ChevronUp size={18} aria-hidden />}
+        <span className="sr-only">{oculto ? "Mostrar" : "Ocultar"}</span>
+      </button>
+      {!oculto && (grupo.itens.length === 0 ? <p className="pagina__subtitulo">Nenhum status nesta categoria ainda.</p> : <Lista itens={grupo.itens} onEditar={onEditar} onExcluir={onExcluir} />)}
+    </div>
+  );
+}
+
 function Lista({ itens, onEditar, onExcluir }: { itens: Status[]; onEditar: (s: Status) => void; onExcluir: (s: Status) => void }) {
   if (itens.length === 0) return <p className="pagina__subtitulo">Nenhum status aqui.</p>;
   return (
@@ -108,9 +142,9 @@ function Lista({ itens, onEditar, onExcluir }: { itens: Status[]; onEditar: (s: 
           <div>
             <div className="pericia__nome">
               <StatusBadge nome={s.nome} tipo={s.tipo} />
-              <span className="pagina__subtitulo">{ROTULO_TIPO[s.tipo]}</span>
+              <SeloVerificado tipo="status" item={s} />
+              <span className={`selo selo--status-${s.tipo}`}>{ROTULO_TIPO[s.tipo]}</span>
               {s.fixo && <span className="selo selo--fixa"><Lock size={12} aria-hidden /> Fixo</span>}
-              {s.verificado && <VerificadoBadge />}
               {s.gatilho && <span className="selo"><Zap size={12} aria-hidden /> {ROTULO_GATILHO[s.gatilho]}</span>}
             </div>
             {s.descricao && <p className="pericia__descricao">{s.descricao}</p>}
@@ -120,7 +154,6 @@ function Lista({ itens, onEditar, onExcluir }: { itens: Status[]; onEditar: (s: 
             <div className="pericia__acoes">
               <Button pequeno variante="fantasma" onClick={() => onEditar(s)}>Editar</Button>
               {!s.fixo && <Button pequeno variante="fantasma" onClick={() => onExcluir(s)} aria-label={`Excluir ${s.nome}`}>Excluir</Button>}
-              <AlternarVerificado tipo="status" item={s} pequeno />
             </div>
           )}
         </li>
@@ -131,6 +164,7 @@ function Lista({ itens, onEditar, onExcluir }: { itens: Status[]; onEditar: (s: 
 
 function StatusForm({
   inicial,
+  categorias,
   onEnviar,
   onCancelar,
   enviando,
@@ -138,6 +172,7 @@ function StatusForm({
   erroGeral,
 }: {
   inicial?: StatusInput;
+  categorias: CategoriaStatus[];
   onEnviar: (d: StatusInput) => void;
   onCancelar: () => void;
   enviando?: boolean;
@@ -149,10 +184,11 @@ function StatusForm({
   const [efeito, setEfeito] = useState(inicial?.efeito ?? "");
   const [descricao, setDescricao] = useState(inicial?.descricao ?? "");
   const [kitIds, setKitIds] = useState<string[]>(inicial?.kitIds ?? kitsPadrao());
+  const [categoriaId, setCategoriaId] = useState(inicial?.categoriaId ?? "");
 
   function enviar(e: FormEvent) {
     e.preventDefault();
-    onEnviar({ nome, tipo, efeito, descricao, kitIds });
+    onEnviar({ nome, tipo, efeito, descricao, kitIds, categoriaId: categoriaId || null });
   }
 
   return (
@@ -172,6 +208,12 @@ function StatusForm({
       </Field>
       <Field rotulo="Descrição (opcional)" erro={erros.descricao} dica="O que o personagem está sentindo ou passando.">
         <textarea value={descricao} onChange={(e) => setDescricao(e.target.value)} maxLength={500} rows={2} />
+      </Field>
+      <Field rotulo="Categoria (opcional)" erro={erros.categoriaId} dica="Para agrupar os status. Crie categorias no botão Categorias.">
+        <select value={categoriaId} onChange={(e) => setCategoriaId(e.target.value)}>
+          <option value="">Sem categoria</option>
+          {categorias.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
+        </select>
       </Field>
       <KitsField valor={kitIds} onChange={setKitIds} erro={erros.kitIds} />
       {erroGeral && <div className="aviso">{erroGeral}</div>}

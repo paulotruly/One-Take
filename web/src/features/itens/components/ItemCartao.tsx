@@ -15,14 +15,14 @@ function Miniatura({ item }: { item: Item }) {
 }
 
 /** Linha do inventário / catálogo. Toque abre os detalhes. */
-export function ItemLinha({ item, onAbrir, naoSabeUsar, extra }: { item: Item; onAbrir: () => void; naoSabeUsar?: boolean; extra?: ReactNode }) {
+export function ItemLinha({ item, onAbrir, naoSabeUsar, extra, aposNome }: { item: Item; onAbrir: () => void; naoSabeUsar?: boolean; extra?: ReactNode; aposNome?: ReactNode }) {
   const usos = rotuloUsos(item);
   return (
     <li className="item">
       <button type="button" className="item__abrir" onClick={onAbrir}>
         <Miniatura item={item} />
         <span className="item__info">
-          <strong className="item__nome">{item.nome}</strong>
+          <strong className="item__nome">{item.nome} {aposNome}</strong>
           <span className="item__chips">
             {item.categoria && <span className="selo">{item.categoria.nome}</span>}
             <span className="selo">{rotuloEspacos(item.espacos)}</span>

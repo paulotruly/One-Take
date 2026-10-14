@@ -6,6 +6,8 @@ import type { Atributo, PericiaCatalogo } from "../../pericias/types";
 import type { Raca } from "../../racas/types";
 import type { Status } from "../../status/types";
 import { StatusBadge } from "../../status/components/StatusBadge";
+import { agruparPorCategoria } from "../../status/categorias";
+import { VerificadoBadge } from "../../verificados/components/VerificadoBadge";
 import type { Disponiveis } from "../types";
 
 type Props = {
@@ -46,6 +48,14 @@ export function DisponiveisSelector({ classes: cls, racas: rcs, atributos: atrs,
     set({ [campo]: marcar ? [...new Set([...valor[campo], ...ids])] : valor[campo].filter((id) => !ids.includes(id)) });
   }
 
+  // Status agrupados pela categoria do mestre: marcar a categoria leva todos os status dela.
+  const gruposStatus = agruparPorCategoria(status);
+  const caixaStatus = (s: Status) => (
+    <Caixa key={s.id} marcado={valor.statusIds.includes(s.id)} onChange={(m) => set({ statusIds: alternar(valor.statusIds, s.id, m) })}>
+      <StatusBadge nome={s.nome} tipo={s.tipo} /> {s.verificado && <VerificadoBadge />} {s.automatico && <span className="selo">Automático</span>}
+    </Caixa>
+  );
+
   return (
     <div className="disponiveis">
       <fieldset className="disponiveis__bloco">
@@ -62,7 +72,7 @@ export function DisponiveisSelector({ classes: cls, racas: rcs, atributos: atrs,
           <div className="checklist">
             {cls.map((c) => (
               <Caixa key={c.id} marcado={valor.classeIds.includes(c.id)} onChange={(m) => set({ classeIds: alternar(valor.classeIds, c.id, m) })}>
-                {c.titulo} <span className="pagina__subtitulo">· {ROTULO_GRUPO[c.grupo]}{c.fixa ? " · fixa" : ""}</span>
+                {c.titulo} {c.verificado && <VerificadoBadge />} <span className="pagina__subtitulo">· {ROTULO_GRUPO[c.grupo]}{c.fixa ? " · fixa" : ""}</span>
               </Caixa>
             ))}
           </div>
@@ -83,7 +93,7 @@ export function DisponiveisSelector({ classes: cls, racas: rcs, atributos: atrs,
           <div className="checklist">
             {rcs.map((r) => (
               <Caixa key={r.id} marcado={valor.racaIds.includes(r.id)} onChange={(m) => set({ racaIds: alternar(valor.racaIds, r.id, m) })}>
-                {r.titulo} <span className="pagina__subtitulo">· {r.deslocamento} quadrados</span>
+                {r.titulo} {r.verificado && <VerificadoBadge />} <span className="pagina__subtitulo">· {r.deslocamento} quadrados</span>
               </Caixa>
             ))}
           </div>
@@ -101,13 +111,13 @@ export function DisponiveisSelector({ classes: cls, racas: rcs, atributos: atrs,
           return (
             <div key={a.id} className="disponiveis__atributo">
               <Caixa marcado={marcado} onChange={(m) => marcarAtributo(a, m)}>
-                <strong>{a.nome}</strong>
+                <strong>{a.nome}</strong> {a.verificado && <VerificadoBadge />}
               </Caixa>
               {marcado && doAtributo.length > 0 && (
                 <div className="checklist checklist--recuado">
                   {doAtributo.map((p) => (
                     <Caixa key={p.id} marcado={valor.periciaIds.includes(p.id)} onChange={(m) => set({ periciaIds: alternar(valor.periciaIds, p.id, m) })}>
-                      {p.nome}
+                      {p.nome} {p.verificado && <VerificadoBadge />}
                     </Caixa>
                   ))}
                 </div>
@@ -126,13 +136,22 @@ export function DisponiveisSelector({ classes: cls, racas: rcs, atributos: atrs,
           <button type="button" className="link-botao" onClick={() => todos("statusIds", status.map((s) => s.id), true)}>Marcar todos</button>
           <button type="button" className="link-botao" onClick={() => todos("statusIds", status.map((s) => s.id), false)}>Limpar</button>
         </div>
-        <div className="checklist">
-          {status.map((s) => (
-            <Caixa key={s.id} marcado={valor.statusIds.includes(s.id)} onChange={(m) => set({ statusIds: alternar(valor.statusIds, s.id, m) })}>
-              <StatusBadge nome={s.nome} tipo={s.tipo} /> {s.automatico && <span className="pagina__subtitulo">automático</span>}
-            </Caixa>
-          ))}
-        </div>
+        {gruposStatus.length === 1 && gruposStatus[0]!.id === "sem-categoria" ? (
+          <div className="checklist">{status.map(caixaStatus)}</div>
+        ) : (
+          gruposStatus.map((g) => {
+            const ids = g.itens.map((s) => s.id);
+            const todos = ids.every((id) => valor.statusIds.includes(id));
+            return (
+              <div key={g.id} className="disponiveis__atributo">
+                <Caixa marcado={todos} onChange={(m) => set({ statusIds: m ? [...new Set([...valor.statusIds, ...ids])] : valor.statusIds.filter((id) => !ids.includes(id)) })}>
+                  <strong>{g.nome}</strong> <span className="pagina__subtitulo">({ids.filter((id) => valor.statusIds.includes(id)).length} de {ids.length})</span>
+                </Caixa>
+                <div className="checklist checklist--recuado">{g.itens.map(caixaStatus)}</div>
+              </div>
+            );
+          })
+        )}
       </fieldset>
     </div>
   );

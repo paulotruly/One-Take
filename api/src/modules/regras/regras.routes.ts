@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { getPrisma } from "../../lib/prisma.js";
 import { REGRAS_PADRAO } from "../../regras/combate.js";
+import { DEFESAS } from "../../regras/defesas.js";
 import { CONTA } from "../../regras/conta.js";
 import { FICHA } from "../../regras/ficha.js";
 import { PROGRESSAO } from "../../regras/progressao.js";
@@ -27,6 +28,7 @@ regrasRouter.get("/regras", async (_req, res) => {
     atributosFixos,
     statusFixos,
     regrasPadrao: REGRAS_PADRAO,
+    defesas: DEFESAS,
     conta: { idadeMinima: CONTA.idadeMinima },
   });
 });

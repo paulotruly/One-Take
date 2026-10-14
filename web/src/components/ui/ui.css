@@ -118,6 +118,13 @@
   white-space: nowrap;
   vertical-align: middle;
 }
+/* Botão de verificar (ADMIN): o próprio selo, cinza quando não é verificado e azul (check branco) quando é. */
+.botao-verificar .botao-verificar__icone { fill: none; stroke: var(--cor-texto-suave); }
+.botao-verificar:hover .botao-verificar__icone { stroke: var(--cor-verificado); }
+.botao-verificar--ativo .botao-verificar__icone,
+.botao-verificar--ativo:hover .botao-verificar__icone { fill: var(--cor-verificado); stroke: var(--cor-sobre-verificado); }
+.selo--verificado { color: var(--cor-verificado); }
+.selo--leitura { color: var(--cor-fixa); }
 .selo-verificado__icone {
   fill: var(--cor-verificado);
   stroke: var(--cor-sobre-verificado);

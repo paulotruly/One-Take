@@ -1,6 +1,5 @@
 // Container: gerenciar categorias de item. As fixas do sistema só aparecem; as do mestre podem ser criadas, editadas e excluídas.
-import { AlternarVerificado } from "../../verificados/pages/AlternarVerificado";
-import { VerificadoBadge } from "../../verificados/components/VerificadoBadge";
+import { SeloVerificado } from "../../verificados/pages/SeloVerificado";
 import { Lock, Pencil, Plus, Trash2 } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { Button } from "../../../components/ui/Button";
@@ -60,11 +59,10 @@ export function CategoriasItemModal({ aberto, onFechar }: { aberto: boolean; onF
                   <li key={c.id} className="categoria-linha">
                     <span className="item__miniatura item__miniatura--icone" aria-hidden><Icone size={18} /></span>
                     <span className="categoria-linha__texto">
-                      <strong>{c.nome}</strong>
+                      <strong>{c.nome} <SeloVerificado tipo="categoriaItem" item={c} /></strong>
                       <span className="pagina__subtitulo">{c.descricao || "Sem descrição"}{c.usos ? ` · ${c.usos} itens` : ""}</span>
                     </span>
                     {c.fixa && <span className="selo selo--fixa" title="Categoria do sistema"><Lock size={12} aria-hidden /> Fixa</span>}
-                    {c.verificado && <VerificadoBadge />}
                     {(c.editavel ?? !c.fixa) && (
                       <span className="pericia__acoes">
                         <Button pequeno variante="fantasma" aria-label={`Editar ${c.nome}`} onClick={() => abrir(c)}><Pencil size={14} aria-hidden /></Button>
@@ -74,7 +72,6 @@ export function CategoriasItemModal({ aberto, onFechar }: { aberto: boolean; onF
                             <Trash2 size={14} aria-hidden />
                           </Button>
                         )}
-                        <AlternarVerificado tipo="categoriaItem" item={c} pequeno />
                       </span>
                     )}
                   </li>

@@ -1,4 +1,5 @@
 // Campo "Kits" dos formulários do mestre: em quais kits de RPG a coisa está. Nenhum = geral.
+import { VerificadoBadge } from "../../verificados/components/VerificadoBadge";
 import { Link } from "react-router";
 import { useKits } from "../api";
 
@@ -20,7 +21,7 @@ export function KitsField({ valor, onChange, erro }: { valor: string[]; onChange
             {lista.map((k) => (
               <label key={k.id} className={`checklist__item ${valor.includes(k.id) ? "checklist__item--marcado" : ""}`}>
                 <input type="checkbox" checked={valor.includes(k.id)} onChange={(e) => alternar(k.id, e.target.checked)} />
-                <span>{k.nome}</span>
+                <span>{k.nome} {k.verificado && <VerificadoBadge />}</span>
               </label>
             ))}
           </div>

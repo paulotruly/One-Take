@@ -8,10 +8,12 @@ type Props = {
   valor?: number;
   tituloValor?: string;
   rodape?: ReactNode;
+  /** Selos ao lado do nome (verificado, só leitura). */
+  aposNome?: ReactNode;
   acoes?: ReactNode;
 };
 
-export function PericiaItem({ pericia: p, valor, tituloValor, rodape, acoes }: Props) {
+export function PericiaItem({ pericia: p, valor, tituloValor, rodape, aposNome, acoes }: Props) {
   return (
     <li className={`pericia ${valor !== undefined ? "pericia--com-mod" : ""}`}>
       <span className="pericia__icone">
@@ -25,6 +27,7 @@ export function PericiaItem({ pericia: p, valor, tituloValor, rodape, acoes }: P
       <div>
         <div className="pericia__nome">
           <strong>{p.nome}</strong>
+          {aposNome}
         </div>
         {p.descricao && <p className="pericia__descricao">{p.descricao}</p>}
         {rodape}

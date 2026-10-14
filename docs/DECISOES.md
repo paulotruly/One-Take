@@ -247,3 +247,12 @@ Formato: data — decisão. Motivo.
   kit verificado), não copiado: entrar ou sair do kit muda na hora e o selo próprio continua independente. Criado para o @paulo o kit
   "Kit básico do One-Take", verificado e vazio. Com o kit verificado de outra pessoa como kit ativo, o que o mestre cria não entra nele.
   Selo no estilo das redes sociais (check branco no selo azul, ícone `BadgeCheck`).
+- **Defesa do alvo marcada pela perícia do teste (2026-10-13) — decisão do produto.** Tabela do responsável (Furtividade, Luta,
+  Pontaria e Domínio contra Intuição, Percepção, Reflexos, Resistência e Vontade, com a situação de cada uma) em
+  `api/src/regras/defesas.ts`, pelas perícias base; o formulário marca todas as defesas possíveis da perícia escolhida, mostra a
+  situação ao lado e o mestre ajusta. Trocar a perícia troca só o que foi marcado sozinho. Não guarda a situação: a carta continua
+  com a lista de perícias de defesa.
+- **Categorias de status criadas pelo mestre (2026-10-13) — decisão do produto.** "Agrupar os status para facilitar": o responsável
+  escolheu grupos criados pelo mestre (e não agrupamento automático por tipo). Chamadas de **categorias** para não confundir com os
+  grupos de jogo. Só organizam: a página de status separa por categoria (com seta para ocultar) e o seletor do grupo marca a categoria
+  inteira; o grupo continua guardando a lista de status (sem guardar a categoria). Sem categorias fixas; podem ser verificadas.

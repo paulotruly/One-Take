@@ -41,24 +41,24 @@ enum CategoriaPericia {
 
 /// Perfil do usuário autenticado pelo Supabase Auth. id = auth.users.id.
 model Perfil {
-  id                    String           @id @db.Uuid
+  id                    String            @id @db.Uuid
   /// Email da conta no Supabase Auth. Contas criadas pelo app usam um email interno (<nickname>@one-take.local).
-  email                 String           @unique
+  email                 String            @unique
   /// Identificador público e de login (minúsculo, sem "@"). Exibido como @nickname.
-  nickname              String           @unique
-  papel                 Papel            @default(JOGADOR)
+  nickname              String            @unique
+  papel                 Papel             @default(JOGADOR)
   /// Nome de exibição escolhido pelo usuário.
   nome                  String?
   /// Link externo da foto de perfil.
   fotoUrl               String?
   /// Cargo no sistema. Trocado só por `npm run cargo` (nunca pela interface).
-  cargo                 Cargo            @default(USUARIO)
+  cargo                 Cargo             @default(USUARIO)
   /// Preferência: esconder da própria interface o conteúdo verificado de outras pessoas.
-  ocultarVerificados    Boolean          @default(false)
+  ocultarVerificados    Boolean           @default(false)
   /// true depois que o catálogo de perícias base foi copiado para este mestre.
-  catalogoIniciado      Boolean          @default(false)
+  catalogoIniciado      Boolean           @default(false)
   /// Data de nascimento informada no cadastro (idade mínima: 12 anos). Nula em contas anteriores a essa regra. Só o dono vê.
-  dataNascimento        DateTime?        @db.Date
+  dataNascimento        DateTime?         @db.Date
   /// SHA-256 do código de recuperação (troca de senha sem e-mail). O código em si nunca é guardado.
   codigoRecuperacaoHash String?
   /// Quando o código de recuperação atual foi gerado.
@@ -67,7 +67,7 @@ model Perfil {
   sessoesValidasDesde   DateTime?
   /// Exclusão da conta confirmada e em execução; a conta fica bloqueada até terminar.
   exclusaoIniciadaEm    DateTime?
-  criadoEm              DateTime         @default(now())
+  criadoEm              DateTime          @default(now())
   fichasArquivadas      FichaArquivada[]
   classes               Classe[]
   pericias              Pericia[]
@@ -82,6 +82,7 @@ model Perfil {
   npcs                  Npc[]
   kits                  Kit[]
   categoriasItem        CategoriaItem[]
+  categoriasStatus      CategoriaStatus[]
   bestas                Besta[]
   conceitosBesta        BestaConceito[]
 }
@@ -435,6 +436,24 @@ model CategoriaItem {
   @@index([verificado])
 }
 
+/// Categoria de status do mestre (ex.: Elementais, Mentais): organiza a página de status e a escolha do que vale no grupo.
+/// Excluir a categoria não apaga os status (ficam sem categoria).
+model CategoriaStatus {
+  id         String   @id @default(uuid()) @db.Uuid
+  nome       String
+  descricao  String   @default("")
+  donoId     String   @db.Uuid
+  dono       Perfil   @relation(fields: [donoId], references: [id], onDelete: Cascade)
+  status     Status[]
+  criadoEm   DateTime @default(now())
+  /// Verificado pelo administrador: todo mestre vê e usa (só leitura).
+  verificado Boolean  @default(false)
+
+  @@unique([donoId, nome])
+  @@index([donoId])
+  @@index([verificado])
+}
+
 /// Item do catálogo do mestre (molde). Lançar no grupo cria um Item com uma cópia destes campos.
 model ItemModelo {
   id                 String         @id @default(uuid()) @db.Uuid
@@ -543,11 +562,15 @@ model Status {
   aprimoramentos HabilidadeAprimoramento[]
   criadoEm       DateTime                  @default(now())
 
-  kits       KitStatus[]
+  kits        KitStatus[]
   /// Verificado pelo administrador: todo mestre vê e usa (só leitura; duplica para mudar).
-  verificado Boolean     @default(false)
+  verificado  Boolean          @default(false)
+  /// Categoria criada pelo mestre (ex.: Elementais), só para organizar; sem categoria = "Outros".
+  categoriaId String?          @db.Uuid
+  categoria   CategoriaStatus? @relation(fields: [categoriaId], references: [id], onDelete: SetNull)
 
   @@unique([donoId, nome])
+  @@index([categoriaId])
   @@index([donoId])
   @@index([verificado])
 }

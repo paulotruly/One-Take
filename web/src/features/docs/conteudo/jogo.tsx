@@ -341,6 +341,7 @@ export function Pericias() {
 }
 
 export function Habilidades() {
+  const { defesas } = useRegras();
   return (
     <>
       <p>Cada classe tem uma <strong>cartela</strong>: o deck de cartas de habilidade dela. Uma carta tem:</p>
@@ -351,7 +352,7 @@ export function Habilidades() {
           ["Tipo de efeito", "Escolhido de uma lista fixa (veja abaixo)."],
           ["Efeito", "O que a carta causa."],
           ["Perícia do teste (opcional)", "Qual perícia o personagem testa para usar a carta. A ficha mostra o teste pronto daquele personagem (ex.: Luta 2d20 + 5)."],
-          ["Defesa do alvo (opcional)", "Perícias que o alvo pode usar para se defender da carta (uma ou mais). Ex.: Reflexos ou Resistência."],
+          ["Defesa do alvo (opcional)", "Perícias que o alvo pode usar para se defender da carta (uma ou mais). Ao escolher a perícia do teste, as defesas da tabela abaixo são marcadas sozinhas; o mestre ajusta."],
           ["Condição (opcional)", "O que precisa acontecer para poder usar. Ex.: ter acertado dois ataques seguidos."],
           ["Limite (opcional)", "Quantas vezes pode ser usada: N vezes por combate ou N vezes por sessão. Sem limite, à vontade."],
           [<span key="m" className="regra__inline"><Droplet size={14} aria-hidden /> Custo de mana</span>, "Quanta mana gasta. Muitas cartas não custam nada."],
@@ -359,6 +360,12 @@ export function Habilidades() {
         ]}
       />
       <p>No nível N o personagem tem <strong>todas</strong> as cartas da classe com nível necessário até N.</p>
+      <h2>Defesa do alvo</h2>
+      <p>Contra cada perícia de ataque, o alvo se defende com a perícia que combina com a situação:</p>
+      <Tabela
+        cabecalho={["Ataque", "Defesa", "Quando"]}
+        linhas={defesas.map((d) => [d.ataque.nome, d.defesa.nome, d.quando])}
+      />
       <h2>Tipos de efeito</h2>
       <Tabela
         cabecalho={["Tipo", "O que faz"]}

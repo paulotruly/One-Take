@@ -1,5 +1,5 @@
 import { Footprints, Plus } from "lucide-react";
-import { AlternarVerificado } from "../../verificados/pages/AlternarVerificado";
+import { SeloVerificado } from "../../verificados/pages/SeloVerificado";
 import { AvisoKit } from "../../kits/components/AvisoKit";
 import { useKitAtivo } from "../../kits/api";
 import { soDoKit } from "../../kits/types";
@@ -11,6 +11,8 @@ import { EmptyState, ErrorState, Loading } from "../../../components/ui/States";
 import { erroDeFormulario, errosDeCampo, mensagemDeErro } from "../../../lib/api";
 import { ClasseImagem } from "../../classes/components/ClasseImagem";
 import { ConceitosBloco } from "../../classes/components/ConceitosBloco";
+import { VerificadoBadge } from "../../verificados/components/VerificadoBadge";
+import { CategoriaIcone } from "../../pericias/components/CategoriaIcone";
 import { formatarModificador } from "../../pericias/types";
 import { useConceitosRaca, useCriarConceitoRaca, useCriarRaca, useEditarConceitoRaca, useExcluirConceitoRaca, useRacas } from "../api";
 import { RacaForm } from "../components/RacaForm";
@@ -61,7 +63,7 @@ export function RacasPage() {
         criar={criarConceito}
         editar={editarConceito}
         excluir={excluirConceito}
-        acoesExtra={(c) => <AlternarVerificado tipo="racaConceito" item={c} pequeno />}
+        selo={(c) => <SeloVerificado tipo="racaConceito" item={c} />}
       />
 
       <h2>Todas as raças</h2>
@@ -83,18 +85,24 @@ export function RacasPage() {
                 <div className="card-link__topo">
                   <div>
                     {r.conceito && <span className="classe-card__conceito">{r.conceito.titulo}</span>}
-                    <h3>{r.titulo}</h3>
+                    <h3>{r.titulo} {r.verificado && <VerificadoBadge porKit={r.verificadoPorKit && !r.seloProprio} />}</h3>
                   </div>
                   <span className="stat" title="Deslocamento por turno">
                     <Footprints size={14} aria-hidden /> {r.deslocamento} quadrados
                   </span>
                 </div>
                 <p className="card-link__descricao">{r.descricao}</p>
-                <p className="card-link__rodape">
-                  {r.pericias.length === 0
-                    ? "Sem perícias de base"
-                    : r.pericias.map((p) => `${p.nome} ${formatarModificador(p.pontos)}`).join(" · ")}
-                </p>
+                <div className="card-link__rodape card-link__pericias">
+                  {r.pericias.length === 0 ? (
+                    <span className="selo selo--leitura">Sem perícias de base</span>
+                  ) : (
+                    r.pericias.map((p) => (
+                      <span key={p.id} className="selo selo--atributo" title={p.descricao}>
+                        <CategoriaIcone categoria={p.categoria} tamanho={12} /> {p.nome} {formatarModificador(p.pontos)}
+                      </span>
+                    ))
+                  )}
+                </div>
               </Link>
             </li>
           ))}

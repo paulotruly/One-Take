@@ -3,7 +3,7 @@ import { X } from "lucide-react";
 import { Button } from "./Button";
 
 type Props = {
-  titulo: string;
+  titulo: ReactNode;
   aberto: boolean;
   onFechar: () => void;
   children: ReactNode;

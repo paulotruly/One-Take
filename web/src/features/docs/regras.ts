@@ -21,7 +21,11 @@ export type Regras = {
   atributosFixos: { nome: string; descricao: string }[];
   statusFixos: { nome: string; descricao: string; efeito: string; tipo: "BUFF" | "DEBUFF" | "MISTO"; gatilho: string | null }[];
   conta: { idadeMinima: number };
+  /** Defesa do alvo pela perícia do teste da carta (api/src/regras/defesas.ts), pelas perícias base. */
+  defesas: RegraDefesa[];
 };
+
+export type RegraDefesa = { ataque: { id: string; nome: string }; defesa: { id: string; nome: string }; quando: string };
 
 /** Usado só enquanto /api/regras carrega (mesmos valores da regra atual). */
 const PADRAO: Regras = {
@@ -35,6 +39,7 @@ const PADRAO: Regras = {
   ],
   statusFixos: [],
   conta: { idadeMinima: 12 },
+  defesas: [],
 };
 
 export function useRegras(): Regras {

@@ -1,7 +1,7 @@
 // Catálogo do mestre: atributos (3 fixos + os dele) e perícias (nome, descrição, categoria, atributo).
 // Classes e raças usam perícias deste catálogo.
-import { AlternarVerificado } from "../../verificados/pages/AlternarVerificado";
-import { VerificadoBadge } from "../../verificados/components/VerificadoBadge";
+import { SeloVerificado } from "../../verificados/pages/SeloVerificado";
+import { AcessoBadge } from "../../verificados/components/VerificadoBadge";
 import { AvisoKit } from "../../kits/components/AvisoKit";
 import { useKitAtivo } from "../../kits/api";
 import { soDoKit } from "../../kits/types";
@@ -110,12 +110,12 @@ export function PericiasPage() {
                 <div>
                   <div className="pericia__nome">
                     <strong>{a.nome}</strong>
+                    <SeloVerificado tipo="atributo" item={a} />
                     {a.fixo && (
                       <span className="selo selo--fixa" title="Atributo fixo do sistema">
                         <Lock size={12} aria-hidden /> Fixo
                       </span>
                     )}
-                    {a.verificado && <VerificadoBadge />}
                   </div>
                   {a.descricao && <p className="pericia__descricao">{a.descricao}</p>}
                   <span className="pericia__usos">
@@ -132,7 +132,6 @@ export function PericiasPage() {
                         Excluir
                       </Button>
                     )}
-                    <AlternarVerificado tipo="atributo" item={a} pequeno />
                   </div>
                 )}
               </li>
@@ -171,7 +170,8 @@ export function PericiasPage() {
               <PericiaItem
                 key={p.id}
                 pericia={p}
-                rodape={<span className="pericia__usos">{p.verificado && <VerificadoBadge />} {p.deOutro ? "De outra pessoa: copie para o seu catálogo para usar." : usos(p)}</span>}
+                aposNome={<><SeloVerificado tipo="pericia" item={p} />{(p.deOutro || p.verificado) && <AcessoBadge item={p} />}</>}
+                rodape={p.deOutro ? undefined : <span className="pericia__usos">{usos(p)}</span>}
                 acoes={
                   p.deOutro ? (
                     <Button pequeno variante="fantasma" disabled={duplicarPericia.isPending} onClick={() => duplicarPericia.mutate(p.id)}>
@@ -185,7 +185,6 @@ export function PericiasPage() {
                       <Button pequeno variante="fantasma" aria-label={`Excluir ${p.nome}`} onClick={() => pedirExclusao({ tipo: "pericia", item: p })}>
                         Excluir
                       </Button>
-                      <AlternarVerificado tipo="pericia" item={p} pequeno />
                     </>
                   )
                 }

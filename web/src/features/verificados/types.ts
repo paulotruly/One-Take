@@ -2,7 +2,7 @@
 
 export type TipoVerificavel =
   | "classe" | "raca" | "atributo" | "pericia" | "status" | "categoriaItem" | "itemModelo" | "besta" | "npc"
-  | "kit" | "classeConceito" | "racaConceito" | "bestaConceito";
+  | "kit" | "classeConceito" | "racaConceito" | "bestaConceito" | "categoriaStatus";
 
 /** Campos que a API manda junto de cada coisa, para quem está vendo. */
 export type Visao = {

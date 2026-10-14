@@ -22,6 +22,7 @@ import { CatalogoItensPage } from "./features/itens/pages/CatalogoItensPage";
 import { NpcDetalhePage } from "./features/npcs/pages/NpcDetalhePage";
 import { EditarNpcPage, NovoNpcPage } from "./features/npcs/pages/NpcFormPage";
 import { NpcsPage } from "./features/npcs/pages/NpcsPage";
+import { KitDetalhePage } from "./features/kits/pages/KitDetalhePage";
 import { KitsPage } from "./features/kits/pages/KitsPage";
 import { AppLayout } from "./layouts/AppLayout";
 import { AtivarMestrePage } from "./pages/AtivarMestrePage";
@@ -94,6 +95,7 @@ export const router = createBrowserRouter([
           { path: "itens", element: <CatalogoItensPage /> },
           { path: "npcs", element: <NpcsPage /> },
           { path: "kits", element: <KitsPage /> },
+          { path: "kits/:id", element: <KitDetalhePage /> },
           { path: "npcs/novo", element: <NovoNpcPage /> },
           { path: "npcs/:id", element: <NpcDetalhePage /> },
           { path: "npcs/:id/editar", element: <EditarNpcPage /> },

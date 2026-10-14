@@ -1,6 +1,6 @@
 // Ficha do NPC (mestre): recursos, dados por atributo, perícias com teste, cartas da classe no nível e inventário.
-import { AlternarVerificado } from "../../verificados/pages/AlternarVerificado";
-import { VerificadoBadge } from "../../verificados/components/VerificadoBadge";
+import { SeloVerificado } from "../../verificados/pages/SeloVerificado";
+import { AcessoBadge } from "../../verificados/components/VerificadoBadge";
 import { Dices, Droplet, Footprints, Heart, Minus, Plus, Skull, Trash2, Zap, Copy } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
@@ -80,19 +80,17 @@ function FichaNpc({ n }: { n: NpcDetalhe }) {
             <span className="selo selo--nivel">Nível {n.nivel}</span>
             <span className="selo">NPC</span>
             {n.kitIds.length === 0 && !n.deOutro && <span className="selo">Geral</span>}
-            {n.verificado && <VerificadoBadge />}
+            <AcessoBadge item={n} />
           </div>
-          <h1>{n.nome}</h1>
+          <h1>{n.nome} <SeloVerificado tipo="npc" item={n} /></h1>
           <p className="pericia__nome">{n.raca.titulo}{n.classe ? ` · ${n.classe.titulo}` : " · sem classe"}</p>
           <span className="stat"><Footprints size={14} aria-hidden /> Deslocamento: {n.raca.deslocamento} quadrados</span>
           {n.descricao && <p className="classe-cabecalho__descricao">{n.descricao}</p>}
-          {n.deOutro && <p className="pagina__subtitulo">NPC verificado de outra pessoa: somente leitura. Duplique para ter o seu.</p>}
           <div className="classe-cabecalho__acoes">
             {editavel ? (
               <>
                 <Link to={`/mestre/npcs/${n.id}/editar`} className="btn">Editar NPC</Link>
                 <Button variante="perigo" onClick={() => { excluir.reset(); setConfirmarExclusao(true); }}>Excluir NPC</Button>
-                <AlternarVerificado tipo="npc" item={n} />
               </>
             ) : (
               <Button variante="primario" disabled={duplicar.isPending} onClick={() => duplicar.mutate(n.id, { onSuccess: (c) => navigate(`/mestre/npcs/${c.id}`) })}>

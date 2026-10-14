@@ -156,6 +156,7 @@ export function MestreKits() {
           ["Em um ou mais kits", "Aparece só com esses kits. A mesma coisa pode estar em vários kits (ex.: um Lobo no kit de terror e no de fantasia)."],
           ["Kit ativo", "Escolhido no topo da navegação lateral. As listas mostram só o que é do kit (mais o que é fixo do sistema), e tudo o que você criar já entra nele. Para ver o geral, escolha Todos."],
           ["Grupo com kit", "Ao montar o grupo, escolha o kit: ele já marca as classes, raças, perícias e status do kit (você ajusta). Itens, criaturas e NPCs mostrados no grupo seguem o kit."],
+          ["Ver o que tem", "Em Kits de RPG, toque no nome do kit (ou em Ver o que tem): a tela lista tudo o que está nele, por tipo, com link para cada coisa e os grupos que usam o kit."],
         ]}
       />
       <Destaque tipo="dica" titulo="Excluir um kit não apaga nada">
@@ -344,10 +345,15 @@ export function MestreStatus() {
         <li>Em <strong>Status</strong>, no menu, ficam os status fixos do sistema (somente leitura) e os seus.</li>
         <li>Crie status próprios com nome, tipo (benefício, prejuízo ou misto) e efeito.</li>
         <li>Os automáticos (Morto, Sem energia vital, Cansado) aparecem sozinhos quando vida, mana ou esforço chegam a 0.</li>
+        <li>
+          Para agrupar, use o botão <strong>Categorias</strong> e crie as suas (ex.: Elementais, Mentais). No status, escolha a categoria: a
+          página passa a mostrar os status separados por categoria, e cada uma se oculta com a seta.
+        </li>
       </ul>
       <h2>No grupo</h2>
       <ul>
         <li>Ao criar ou editar o grupo, marque quais status valem ali. Um grupo novo começa com os status do sistema marcados.</li>
+        <li>Com categorias, marque a categoria para levar todos os status dela de uma vez; depois desmarque os que não quiser.</li>
         <li>Status desmarcados não aparecem nas fichas daquele grupo nem podem ser aplicados.</li>
       </ul>
       <h2>Durante a sessão</h2>

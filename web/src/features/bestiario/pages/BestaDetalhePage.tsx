@@ -1,6 +1,6 @@
 // Página da criatura: dados, dados por atributo, perícias (com o teste montado), cartela e prévia de progressão.
-import { AlternarVerificado } from "../../verificados/pages/AlternarVerificado";
-import { VerificadoBadge } from "../../verificados/components/VerificadoBadge";
+import { SeloVerificado } from "../../verificados/pages/SeloVerificado";
+import { AcessoBadge } from "../../verificados/components/VerificadoBadge";
 import { Copy, Dices, Footprints, Minus, Plus } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
@@ -73,19 +73,18 @@ export function BestaDetalhePage() {
           <ClasseImagem url={b.imagemUrl} titulo={b.titulo} />
         </div>
         <div className="classe-cabecalho__info">
+          {(b.verificado || b.deOutro) && <div className="classe-cabecalho__selos"><AcessoBadge item={b} /></div>}
           {b.conceito && <p className="classe-card__conceito">Forma de {b.conceito.titulo}</p>}
-          <h1>{b.titulo}</h1>
+          <h1>{b.titulo} <SeloVerificado tipo="besta" item={b} /></h1>
           <StatsBar vida={b.pontosVida} mana={b.pontosMana} esforco={b.pontosEsforco} />
           <span className="stat"><Footprints size={14} aria-hidden /> Deslocamento: {b.deslocamento} quadrados</span>
           <p className="classe-cabecalho__descricao">{b.descricao}</p>
-          {b.verificado && <p className="pagina__subtitulo"><VerificadoBadge /> {b.deOutro ? "Criatura verificada de outra pessoa: somente leitura. Duplique para ter a sua." : "Todo mestre vê esta criatura."}</p>}
           <div className="classe-cabecalho__acoes">
             {editavel && <Link to={`/mestre/bestiario/${id}/editar`} className="btn">Editar criatura</Link>}
             <Button disabled={duplicar.isPending} onClick={() => duplicar.mutate(id, { onSuccess: (c) => navigate(`/mestre/bestiario/${c.id}`) })}>
               <Copy size={16} aria-hidden /> Duplicar
             </Button>
             {editavel && <Button variante="perigo" onClick={() => { excluir.reset(); setConfirmarExclusao(true); }}>Excluir criatura</Button>}
-            <AlternarVerificado tipo="besta" item={b} />
           </div>
         </div>
       </header>

@@ -253,9 +253,12 @@ button.topo__perfil { border: 0; background: transparent; font: inherit; cursor:
 .card-link__topo { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--esp-3); }
 .card-link__descricao { color: var(--cor-texto-suave); font-size: var(--texto-sm); }
 .card-link__rodape { margin-top: auto; font-size: var(--texto-xs); color: var(--cor-texto-suave); }
+/* Perícias da raça em selos, com folga acima (margin-top: auto já empurra para o fim do card). */
+.card-link__pericias { display: flex; flex-wrap: wrap; gap: var(--esp-1); padding-top: var(--esp-5); color: inherit; }
 .card-link--com-imagem { padding: 0; gap: 0; }
 .card-link--com-imagem > :not(.card-link__imagem) { padding: 0 var(--esp-5); }
 .card-link--com-imagem > .card-link__topo { padding-top: var(--esp-4); }
+.card-link--com-imagem > .card-link__pericias { padding-top: var(--esp-5); }
 .card-link--com-imagem > :last-child { padding-bottom: var(--esp-5); margin-top: auto; }
 .card-link--com-imagem > * + * { margin-top: var(--esp-3); }
 .card-link__imagem { aspect-ratio: 16 / 9; overflow: hidden; border-bottom: 1px solid var(--cor-borda); }

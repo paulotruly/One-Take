@@ -12,7 +12,7 @@ export function NpcLinha({ n }: { n: NpcResumo }) {
       <Link to={`/mestre/npcs/${n.id}`} className="membro">
         <Avatar url={n.imagemUrl} nome={n.nome} tamanho={48} />
         <div className="membro__info">
-          <strong>{n.nome} {n.morto && <span className="selo selo--status-DEBUFF"><Skull size={12} aria-hidden /> Morto</span>} {n.verificado && <VerificadoBadge />}</strong>
+          <strong>{n.nome} {n.verificado && <VerificadoBadge />} {n.morto && <span className="selo selo--status-DEBUFF"><Skull size={12} aria-hidden /> Morto</span>}</strong>
           <span className="pagina__subtitulo">
             {n.raca}{n.classe ? ` · ${n.classe}` : ""} · Nível {n.nivel}{n.kitIds.length === 0 && !n.deOutro && " · Geral"}
           </span>

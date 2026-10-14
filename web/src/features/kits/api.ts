@@ -2,10 +2,14 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSyncExternalStore } from "react";
 import { api } from "../../lib/api";
-import { gravarKitAtivo, lerKitAtivo, type Kit, type KitInput } from "./types";
+import { gravarKitAtivo, lerKitAtivo, type Kit, type KitDetalhe, type KitInput } from "./types";
 
 export function useKits() {
   return useQuery({ queryKey: ["kits"], queryFn: () => api<Kit[]>("/api/kits") });
+}
+
+export function useKit(id: string) {
+  return useQuery({ queryKey: ["kits", id], queryFn: () => api<KitDetalhe>(`/api/kits/${id}`) });
 }
 
 /** Mudar kits mexe no conteúdo de tudo (listas mostram kitIds). */

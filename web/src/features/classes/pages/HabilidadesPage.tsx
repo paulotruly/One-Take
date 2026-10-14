@@ -4,6 +4,7 @@ import { LinkVoltar } from "../../../components/ui/LinkVoltar";
 import { ErrorState, Loading } from "../../../components/ui/States";
 import { mensagemDeErro } from "../../../lib/api";
 import { useClasse, useCriarHabilidade, useOrdenarHabilidades } from "../api";
+import { VerificadoBadge } from "../../verificados/components/VerificadoBadge";
 import { GrupoBadge, OrigemBadge } from "../components/Selos";
 import { CartelaEditor } from "./CartelaEditor";
 
@@ -32,9 +33,9 @@ export function HabilidadesPage() {
       <div>
         <div className="classe-cabecalho__selos">
           <GrupoBadge grupo={c.grupo} />
-          <OrigemBadge fixa={c.fixa} verificado={c.verificado} deOutro={c.deOutro} />
+          <OrigemBadge fixa={c.fixa} deOutro={c.deOutro} />
         </div>
-        <h1>Habilidades de {c.titulo}</h1>
+        <h1>Habilidades de {c.titulo} {c.verificado && <VerificadoBadge />}</h1>
         <p className="pagina__subtitulo">
           {c.habilidades.length} {c.habilidades.length === 1 ? "carta" : "cartas"} na cartela · toque numa carta para ver tudo
           {editavel ? " · use as setas para reordenar" : c.deOutro ? " · verificada, somente leitura" : " · classe fixa, somente leitura"}

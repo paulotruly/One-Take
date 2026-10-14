@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router";
 import type { Classe } from "../types";
+import { VerificadoBadge } from "../../verificados/components/VerificadoBadge";
 import { ClasseImagem } from "./ClasseImagem";
 import { GrupoBadge, OrigemBadge } from "./Selos";
 import { StatsBar } from "./StatsBar";
@@ -15,12 +16,12 @@ export function ClasseCard({ classe, href, acoes }: Props) {
           <ClasseImagem url={classe.imagemUrl} titulo={classe.titulo} />
           <div className="classe-card__selos">
             <GrupoBadge grupo={classe.grupo} />
-            <OrigemBadge fixa={classe.fixa} verificado={classe.verificado} deOutro={classe.deOutro} />
+            <OrigemBadge fixa={classe.fixa} deOutro={classe.deOutro} />
           </div>
         </div>
         <div className="classe-card__corpo">
           {classe.conceito && <span className="classe-card__conceito">{classe.conceito.titulo}</span>}
-          <h3>{classe.titulo}</h3>
+          <h3>{classe.titulo} {classe.verificado && <VerificadoBadge porKit={classe.verificadoPorKit && !classe.seloProprio} />}</h3>
           <StatsBar vida={classe.pontosVida} mana={classe.pontosMana} esforco={classe.pontosEsforco} compacto />
           <p className="classe-card__descricao">{classe.descricao}</p>
         </div>

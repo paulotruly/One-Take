@@ -1,6 +1,6 @@
 // Página da raça: dados (título, descrição, deslocamento) e perícias de base escolhidas do catálogo.
-import { AlternarVerificado } from "../../verificados/pages/AlternarVerificado";
-import { VerificadoBadge } from "../../verificados/components/VerificadoBadge";
+import { SeloVerificado } from "../../verificados/pages/SeloVerificado";
+import { AcessoBadge } from "../../verificados/components/VerificadoBadge";
 import { Footprints, Plus } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
@@ -61,12 +61,12 @@ export function RacaDetalhePage() {
           <ClasseImagem url={r.imagemUrl} titulo={r.titulo} />
         </div>
         <div className="classe-cabecalho__info">
-          <h1>{r.titulo}</h1>
+          {(r.verificado || r.deOutro) && <div className="classe-cabecalho__selos"><AcessoBadge item={r} /></div>}
+          <h1>{r.titulo} <SeloVerificado tipo="raca" item={r} /></h1>
           <span className="stat" title="Deslocamento por turno">
             <Footprints size={14} aria-hidden /> Deslocamento: {r.deslocamento} quadrados por turno
           </span>
           <p className="classe-cabecalho__descricao">{r.descricao}</p>
-          {r.verificado && <p className="pagina__subtitulo"><VerificadoBadge /> {r.deOutro ? "Raça verificada de outra pessoa: somente leitura." : "Todo mestre vê esta raça."}</p>}
           <div className="classe-cabecalho__acoes" hidden={!(r.editavel ?? true)}>
           <Button
             onClick={() => {
@@ -85,7 +85,6 @@ export function RacaDetalhePage() {
           >
             Excluir raça
           </Button>
-          <AlternarVerificado tipo="raca" item={r} />
           </div>
         </div>
       </header>

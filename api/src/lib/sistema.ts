@@ -9,7 +9,7 @@ import { getPrisma } from "./prisma.js";
 /** Tudo o que o mestre cria pode ser verificado. */
 export const TIPOS_VERIFICAVEIS = [
   "classe", "raca", "atributo", "pericia", "status", "categoriaItem", "itemModelo", "besta", "npc",
-  "kit", "classeConceito", "racaConceito", "bestaConceito",
+  "kit", "classeConceito", "racaConceito", "bestaConceito", "categoriaStatus",
 ] as const;
 export type TipoVerificavel = (typeof TIPOS_VERIFICAVEIS)[number];
 

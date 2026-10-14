@@ -37,6 +37,7 @@ export const prismaFalso = {
   criatura: modelo(),
   itemModelo: modelo(),
   categoriaItem: modelo(),
+  categoriaStatus: modelo(),
   npc: modelo(),
   npcAtributo: modelo(),
   npcPericia: modelo(),

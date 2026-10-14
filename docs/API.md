@@ -9,7 +9,7 @@ Base local: `http://localhost:3333`. JSON em tudo.
 | POST | `/api/cadastro` | corpo `{ nickname, senha, dataNascimento ("AAAA-MM-DD", idade mínima 12 anos), papel? (JOGADOR), nome? }` → `201 { access_token, refresh_token, codigoRecuperacao }`. Cria o usuário no Supabase Auth (e-mail interno do nome de usuário, já confirmado) e o perfil; o código de recuperação aparece só nesta resposta. 409 `NICKNAME_EM_USO`; 503 `AUTH_NAO_CONFIGURADO` sem a chave secreta. Limite: 10 por hora por IP |
 | POST | `/api/senha/recuperar` | `{ nickname, codigo, senha }` → `{ codigoRecuperacao }` (código novo; o usado deixa de valer). Troca a senha no Auth e encerra as sessões anteriores. Usuário inexistente, conta sem código ou código errado = mesma resposta 400 `RECUPERACAO_INVALIDA`. Limite: 10 por hora por IP |
 | POST | `/api/entrar` | corpo `{ login, senha }` (login = nickname, com ou sem @, ou email antigo) → `{ access_token, refresh_token }` do Supabase; erro = 401 "Nickname ou senha incorretos." |
-| GET | `/api/regras` | `{ progressao, ficha: { pontosAtributoIniciais, inventarioInicial, inventarioPorNivel }, teste: { ladosDoDado, dadosComAtributoZero, divisorComAtributoZero, esforcoPorDadoExtra, esforcoComAtributoZero, chances: [{ dt, chances: [{ pontos, chance }] }] }, atributosFixos, statusFixos, regrasPadrao, conta: { idadeMinima } }` |
+| GET | `/api/regras` | `{ progressao, ficha: { pontosAtributoIniciais, inventarioInicial, inventarioPorNivel }, teste: { ladosDoDado, dadosComAtributoZero, divisorComAtributoZero, esforcoPorDadoExtra, esforcoComAtributoZero, chances: [{ dt, chances: [{ pontos, chance }] }] }, atributosFixos, statusFixos, regrasPadrao, conta: { idadeMinima }, defesas: [{ ataque: { id, nome }, defesa: { id, nome }, quando }] }` (defesas pelas perícias base) |
 
 ## Autenticação
 Todas as rotas sob `/api` exigem `Authorization: Bearer <access_token do Supabase>`.
@@ -101,9 +101,12 @@ Em campos de texto opcionais (inclusive `imagemUrl`), `""` é salvo como `null`.
 ## Status (mestre)
 | Método | Rota | Corpo | Resposta |
 |---|---|---|---|
-| GET | `/api/status` | — | fixos + do mestre: `{ id, nome, descricao, efeito, tipo, gatilho, ordem, fixo, automatico }` |
-| POST | `/api/status` | `{ nome, efeito, tipo, descricao? }` (sempre manual, sem gatilho) | `201`; nome repetido = 409 `NOME_EM_USO` |
+| GET | `/api/status` | — | fixos + do mestre: `{ id, nome, descricao, efeito, tipo, gatilho, ordem, fixo, automatico, categoriaId, categoria: { id, nome } \| null }` (categoria só se for do mestre ou verificada) |
+| POST | `/api/status` | `{ nome, efeito, tipo, descricao?, categoriaId? }` (sempre manual, sem gatilho) | `201`; nome repetido = 409 `NOME_EM_USO`; categoria de outra pessoa (não verificada) = 404 |
 | PATCH / DELETE | `/api/status/:id` | subconjunto | fixo = 403 `STATUS_FIXO`; excluir tira de fichas, grupos e cartas |
+| GET | `/api/status-categorias` | — | do mestre + verificadas: `{ id, nome, descricao, usos }` + campos de visão |
+| POST | `/api/status-categorias` | `{ nome, descricao? }` | `201`; nome repetido = 409 `NOME_EM_USO` |
+| PATCH / DELETE | `/api/status-categorias/:id` | subconjunto | verificada de outra pessoa = 403 `VERIFICADO`; excluir deixa os status sem categoria |
 
 Habilidades aceitam `statusId` (ou `null`) no POST/PATCH e devolvem `status: { id, nome, tipo }`.
 Grupos: `disponiveis.statusIds` (status ativados). Membros do grupo trazem `status[]`.
@@ -140,8 +143,9 @@ O kit do grupo (`kitId`) não limita o PUT de disponíveis: a tela usa o kit par
 | Método | Rota | Corpo | Resposta |
 |---|---|---|---|
 | GET | `/api/sistema` | — | `{ admin }` (cargo ADMIN de quem pede) |
-| PUT | `/api/verificados/:tipo/:id` | `{ verificado: boolean }` | `{ tipo, id, verificado }`. `tipo`: classe, raca, atributo, pericia, status, categoriaItem, itemModelo, besta, npc, kit, classeConceito, racaConceito, bestaConceito (outro = 400). Só ADMIN (403) e só nas coisas dele (404) |
-| GET | `/api/kits` | — | kits do mestre: `{ id, nome, descricao, basico, conteudo { classes, racas, atributos, pericias, status, itens, bestas, npcs, grupos } }` |
+| PUT | `/api/verificados/:tipo/:id` | `{ verificado: boolean }` | `{ tipo, id, verificado }`. `tipo`: classe, raca, atributo, pericia, status, categoriaItem, itemModelo, besta, npc, kit, classeConceito, racaConceito, bestaConceito, categoriaStatus (outro = 400). Só ADMIN (403) e só nas coisas dele (404) |
+| GET | `/api/kits` | — | kits do mestre e verificados: `{ id, nome, descricao, conteudo { classes, racas, atributos, pericias, status, itens, bestas, npcs, grupos } }` + campos de visão |
+| GET | `/api/kits/:id` | — | o kit + `dentro: { classes, racas, atributos, pericias (com atributo), status (com tipo), itens, bestas, npcs, grupos }` (cada um `{ id, nome }`, por nome; `grupos` só para o dono). Kit de outra pessoa sem selo = 404 |
 | POST | `/api/kits` | `{ nome, descricao? }` | `201 Kit` |
 | PATCH | `/api/kits/:id` | parcial | `Kit` |
 | DELETE | `/api/kits/:id` | — | `204`. Nada é apagado: as coisas saem do kit (sem outro kit, viram gerais) e os grupos ficam sem kit |

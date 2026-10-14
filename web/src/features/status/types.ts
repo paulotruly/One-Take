@@ -1,3 +1,5 @@
+import type { Visao } from "../verificados/types";
+
 export type TipoStatus = "BUFF" | "DEBUFF" | "MISTO";
 export type GatilhoStatus = "VIDA_ZERO" | "MANA_ZERO" | "ESFORCO_ZERO";
 
@@ -26,11 +28,17 @@ export type Status = {
   seloProprio?: boolean;
   /** Verificado por estar num kit verificado. */
   verificadoPorKit?: boolean;
+  /** Categoria do mestre (ex.: Elementais); null = sem categoria. Só vem se for visível para quem vê. */
+  categoriaId?: string | null;
+  categoria?: { id: string; nome: string } | null;
 };
+
+/** Categoria de status criada pelo mestre (ou verificada): só organiza a lista e o que vale no grupo. */
+export type CategoriaStatus = Visao & { id: string; nome: string; descricao: string; usos?: number };
 
 export type StatusResumo = { id: string; nome: string; tipo: TipoStatus };
 
-export type StatusInput = { nome: string; descricao: string; efeito: string; tipo: TipoStatus; kitIds: string[] };
+export type StatusInput = { nome: string; descricao: string; efeito: string; tipo: TipoStatus; kitIds: string[]; categoriaId: string | null };
 
 export const ROTULO_TIPO: Record<TipoStatus, string> = { BUFF: "Benefício", DEBUFF: "Prejuízo", MISTO: "Misto" };
 export const LISTA_TIPOS: TipoStatus[] = ["DEBUFF", "BUFF", "MISTO"];

@@ -213,10 +213,14 @@
 .selo--novo { color: var(--cor-sucesso); }
 
 /* ---------- Arquétipos ---------- */
-.conceitos { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr)); gap: var(--esp-4); margin: 0; padding: 0; list-style: none; }
-.conceito { display: flex; flex-direction: column; gap: var(--esp-3); padding: var(--esp-4); border: 1px solid var(--cor-borda); border-left: 4px solid var(--cor-primaria); }
+/* Arquétipos em uma linha com rolagem horizontal: ocupam pouca altura. */
+.conceitos { display: flex; gap: var(--esp-3); margin: 0; padding: 0 0 var(--esp-2); list-style: none; overflow-x: auto; scroll-snap-type: x proximity; }
+.conceito { flex: 0 0 min(280px, 85%); scroll-snap-align: start; display: flex; flex-direction: column; gap: var(--esp-2); padding: var(--esp-3); border: 1px solid var(--cor-borda); border-left: 4px solid var(--cor-primaria); }
+.conceito__descricao { display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin: 0; }
+.conceitos__alternar { display: flex; align-items: center; gap: var(--esp-2); padding: 0; border: 0; background: none; color: inherit; font: inherit; cursor: pointer; text-align: left; }
+.conceitos__alternar h2 { margin: 0; }
 .conceito--ativo { background: var(--cor-superficie-2); }
-.conceito__topo { display: flex; justify-content: space-between; align-items: center; gap: var(--esp-2); }
+.conceito__topo { display: flex; flex-direction: column; align-items: flex-start; gap: var(--esp-1); }
 .conceito__topo h3 { display: flex; align-items: center; gap: var(--esp-2); }
 .conceito__subclasses { display: flex; flex-wrap: wrap; gap: var(--esp-2); align-items: center; }
 .conceito__subclasse { padding: var(--esp-1) var(--esp-3); border: 1px solid var(--cor-borda); font-size: var(--texto-sm); color: var(--cor-texto); }

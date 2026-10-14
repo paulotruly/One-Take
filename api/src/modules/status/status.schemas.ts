@@ -11,6 +11,8 @@ const base = z.object({
   tipo: z.enum(TipoStatus),
   /** Kits de RPG em que o status está (sem kit = geral). */
   kitIds: kitIdsSchema,
+  /** Categoria do mestre (ou verificada); null = sem categoria. */
+  categoriaId: z.guid("Categoria inválida").nullable().optional(),
 });
 
 export const criarStatusSchema = base.extend({ descricao: base.shape.descricao.default("") });

@@ -1,21 +1,23 @@
 // Bloco de "conceitos" (arquétipo, arquétipo de raça, arquétipo de criatura): lista, criar, editar e excluir.
 // Recebe os dados e as mutações de quem usa; aqui só ficam o desenho e o estado dos modais.
-import { GitBranch, Plus } from "lucide-react";
+import { ChevronDown, ChevronUp, GitBranch, Plus } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router";
 import type { UseMutationResult } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import type { Visao } from "../../verificados/types";
-import { VerificadoBadge } from "../../verificados/components/VerificadoBadge";
+import { AcessoBadge, VerificadoBadge } from "../../verificados/components/VerificadoBadge";
 import { Button } from "../../../components/ui/Button";
 import { ConfirmDialog } from "../../../components/ui/ConfirmDialog";
 import { Field } from "../../../components/ui/Field";
 import { Modal } from "../../../components/ui/Modal";
 import { ErrorState, Loading } from "../../../components/ui/States";
+import { useOculto } from "../../../lib/useOculto";
 import { erroDeFormulario, errosDeCampo, mensagemDeErro } from "../../../lib/api";
 
 export type ConceitoVisao = Visao & { id: string; titulo: string; descricao: string; filhos: { id: string; titulo: string }[] };
 type Dados = { titulo: string; descricao: string };
+
 
 type Props = {
   /** Ex.: "Arquétipos". */
@@ -37,8 +39,8 @@ type Props = {
   criar: UseMutationResult<unknown, Error, Dados>;
   editar: UseMutationResult<unknown, Error, { id: string; dados: Dados }>;
   excluir: UseMutationResult<unknown, Error, string>;
-  /** Ações extras por arquétipo (ex.: o botão de verificar). */
-  acoesExtra?: (c: ConceitoVisao) => ReactNode;
+  /** Selo ao lado do nome (com o botão de verificar, para o ADMIN); sem ele, só o selo se for verificado. */
+  selo?: (c: ConceitoVisao) => ReactNode;
 };
 
 export function ConceitosBloco(p: Props) {
@@ -47,6 +49,8 @@ export function ConceitosBloco(p: Props) {
   const [titulo, setTitulo] = useState("");
   const [descricao, setDescricao] = useState("");
   const salvando = emEdicao ? p.editar : p.criar;
+  const [oculto, alternarOculto] = useOculto(p.nome);
+  const total = p.conceitos?.length ?? 0;
 
   function abrir(c: ConceitoVisao | null) {
     p.criar.reset();
@@ -68,15 +72,20 @@ export function ConceitosBloco(p: Props) {
     <section className="secao">
       <div className="secao__cabecalho">
         <div>
-          <h2>{p.titulo}</h2>
-          <p className="pagina__subtitulo">{p.explicacao}</p>
+          <button type="button" className="conceitos__alternar" onClick={alternarOculto} aria-expanded={!oculto}
+            title={oculto ? "Mostrar" : "Ocultar"}>
+            <h2>{p.titulo}{total > 0 && <span className="pagina__subtitulo"> ({total})</span>}</h2>
+            {oculto ? <ChevronDown size={20} aria-hidden /> : <ChevronUp size={20} aria-hidden />}
+            <span className="sr-only">{oculto ? "Mostrar" : "Ocultar"}</span>
+          </button>
+          {!oculto && <p className="pagina__subtitulo">{p.explicacao}</p>}
         </div>
         <Button onClick={() => abrir(null)}>
           <Plus size={16} aria-hidden /> Novo {p.nome}
         </Button>
       </div>
 
-      {p.carregando ? (
+      {oculto ? null : p.carregando ? (
         <Loading compacto />
       ) : p.erro ? (
         <ErrorState mensagem={mensagemDeErro(p.erro)} onTentarNovamente={p.onTentarNovamente} />
@@ -87,16 +96,16 @@ export function ConceitosBloco(p: Props) {
           {p.conceitos.map((c) => (
             <li key={c.id} className="conceito">
               <div className="conceito__topo">
-                <h3><GitBranch size={18} aria-hidden /> {c.titulo} {c.verificado && <VerificadoBadge compacto />}</h3>
+                <h3><GitBranch size={18} aria-hidden /> {c.titulo} {p.selo ? p.selo(c) : c.verificado && <VerificadoBadge />}</h3>
+                {(c.deOutro || c.verificado) && <AcessoBadge item={c} />}
                 {!c.deOutro && (
                   <div className="pericia__acoes">
                     <Button pequeno variante="fantasma" onClick={() => abrir(c)}>Editar</Button>
                     <Button pequeno variante="fantasma" onClick={() => { p.excluir.reset(); setAExcluir(c); }}>Excluir</Button>
-                    {p.acoesExtra?.(c)}
                   </div>
                 )}
               </div>
-              <p className="pericia__descricao">{c.descricao}</p>
+              <p className="pericia__descricao conceito__descricao" title={c.descricao}>{c.descricao}</p>
               <div className="conceito__subclasses">
                 {c.filhos.length === 0 && !c.deOutro ? (
                   <span className="aviso-inline">Sem {p.rotuloFilho.toLowerCase()} ainda: crie pelo menos uma.</span>
