@@ -11,7 +11,7 @@ export type Raca = {
   pericias: PericiaDaRaca[];
   /** Kits de RPG em que a raça está (vazio = geral). */
   kitIds: string[];
-  /** Para quem vê: pode editar (é dele, ou é fixo e ele é administrador). */
+  /** Para quem vê: pode editar (é dele). */
   editavel?: boolean;
   /** Selo verificado: todo mestre vê e usa. */
   verificado?: boolean;

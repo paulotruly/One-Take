@@ -3,7 +3,7 @@ import { Button } from "../../../components/ui/Button";
 import { ComNegrito } from "../../../components/texto/ComNegrito";
 import { rotuloLimite, type Habilidade } from "../types";
 import { StatusBadge } from "../../status/components/StatusBadge";
-import { resumoAprimoramento } from "./AprimoramentoForm";
+import { resumoAprimoramento } from "../aprimoramento";
 import { CustoManaBadge, EfeitoBadge, NivelBadge } from "./Selos";
 
 export type AcoesCarta = {
@@ -106,7 +106,7 @@ export function HabilidadeDetalhe({ habilidade: h }: { habilidade: Habilidade })
       {h.aprimoramentos && h.aprimoramentos.length > 0 && h.aprimoradaNoNivel === undefined && (
         <ul className="carta__aprimoramentos">
           {h.aprimoramentos.map((a) => (
-            <li key={a.id}><strong>Nv {a.nivel}:</strong> {resumoAprimoramento(a)}</li>
+            <li key={a.id}><strong>Nv {a.nivel}:</strong> {resumoAprimoramento(a, h)}</li>
           ))}
         </ul>
       )}

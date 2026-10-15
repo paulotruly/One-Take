@@ -22,8 +22,7 @@ export type Classe = {
   /** Arquétipo do qual esta é subclasse (opcional). */
   conceitoId?: string | null;
   conceito?: { id: string; titulo: string; descricao?: string } | null;
-  fixa: boolean;
-  /** Para quem vê: pode editar (é dele, ou é fixo e ele é administrador). */
+  /** Para quem vê: pode editar (é dele). */
   editavel?: boolean;
   /** Selo verificado: todo mestre vê e usa. */
   verificado?: boolean;
@@ -46,17 +45,18 @@ export type Conceito = Visao & {
 };
 export type ConceitoInput = { titulo: string; descricao: string };
 
-/** A mesma carta muda a partir de um nível. Campos nulos = continuam como na carta. */
+/** A carta inteira a partir de um nível (versão completa; nulo = sem condição, sem limite, sem status). */
 export type Aprimoramento = {
   id: string;
   habilidadeId: string;
   nivel: number;
-  titulo: string | null;
-  descricaoEfeito: string | null;
+  titulo: string;
+  descricao: string;
+  descricaoEfeito: string;
   condicao: string | null;
   limiteUsos: number | null;
   limitePor: LimiteUso | null;
-  custoMana: number | null;
+  custoMana: number;
   statusId: string | null;
   status?: { id: string; nome: string; tipo: "BUFF" | "DEBUFF" | "MISTO" } | null;
 };

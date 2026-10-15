@@ -256,3 +256,45 @@ Formato: data — decisão. Motivo.
   escolheu grupos criados pelo mestre (e não agrupamento automático por tipo). Chamadas de **categorias** para não confundir com os
   grupos de jogo. Só organizam: a página de status separa por categoria (com seta para ocultar) e o seletor do grupo marca a categoria
   inteira; o grupo continua guardando a lista de status (sem guardar a categoria). Sem categorias fixas; podem ser verificadas.
+- **Nada fixo: o compartilhado é o verificado (2026-10-14) — decisão do produto.** "Não deixe nenhum status FIXO, nem nada mais FIXO.
+  Tudo é editável. O que o admin vai poder estabelecer pros outros são os kits verificados." Classe, atributo, status e categoria de
+  item passaram a ter dono obrigatório; o que era fixo foi para a conta ADMIN mais antiga (atributos e status no kit verificado mais
+  antigo dela, o "Kit básico do One-Take"; categorias de item, que não entram em kit, com o selo). O ADMIN edita como qualquer dono,
+  inclusive os status automáticos (Morto, Sem energia vital, Cansado), que só não podem ser excluídos porque a ficha depende do gatilho.
+  Saiu o script `fixar-classe`. O seed agora cria o conteúdo inicial na conta ADMIN, só o que falta (nunca sobrescreve o que o dono
+  editou), e não roda sem uma conta ADMIN. Perícias base continuam sem dono: são o modelo do catálogo de cada mestre (não aparecem).
+  Riscos aceitos: quem oculta os verificados deixa de ver os atributos e status do kit básico nas listas (o que já está em grupos e
+  fichas continua); se o ADMIN tirar algo do kit, os outros param de ver.
+- **Status só com efeito (2026-10-14) — decisão do produto.** "Nos status, não precisamos de Descrição, apenas Efeito." A coluna
+  saiu; a migration juntou a descrição antiga no começo do efeito (nada se perdeu). Na lista, o título do status ficou em destaque (texto
+  maior, sem a caixa dos selos) e a ordem é título, tipo e, por último, o botão ou selo de verificado.
+- **Limite por função no grupo (2026-10-14) — decisão do produto.** "Ao criar grupos, permita que o mestre possa definir limite de
+  classes suporte, dano ou vanguardista." Três campos opcionais no grupo (Combatentes, Vanguardistas, Suportes; vazio = sem limite,
+  0 = função fechada), conferidos ao criar a ficha (409 `FUNCAO_CHEIA`) e mostrados na escolha de classe com o motivo. O limite não
+  pode ficar abaixo das fichas que já existem daquela função. "Dano" = função Combatente.
+- **Regras de combate (2026-10-14) — decisão do produto.** Respostas do responsável à revisão das regras: ataque contra defesa (o
+  alvo rola os dados do atributo + perícia de defesa e pode gastar esforço; empate do atacante; DT só se o mestre definir, em voz alta);
+  defesa bem-sucedida evita todo o dano; Iniciativa define a ordem; turno = 1 movimento + 1 ação, sem trocar; cartas só no próprio
+  turno (a Intervenção defensiva é a exceção); o mestre define início e fim do combate; mana pode ser zerada por uma carta (o jogador
+  fica atento; custos e mana das classes vão ser rebalanceados); 0 de vida ou mana = morte sem volta; **1 ponto de esforço por rodada**;
+  recuperação nos interlúdios; cura rolada pelo jogador e lançada pelo mestre; perícias de defesa = categoria Defesa (com Vontade).
+  **Domínio de combate e Égide saíram** das regras padrão (status e cartas já fazem isso); os status Contido e Imobilizado do seed
+  deixaram de citar o Domínio. As regras padrão ganharam texto completo em `regras/combate.ts`, que a documentação, a página do grupo
+  e a ficha mostram; o mestre liga e desliga por grupo e cria regras próprias.
+- **Turnos nos status aplicados (2026-10-14) — decisão do produto.** "O mestre anota dentro do status quantos turnos ele vai estar
+  assim e tira -1, -1 até sumir." Coluna `turnos` (1 a 99, nula = sem prazo) em `FichaStatus`, `NpcStatus` e `CriaturaStatus`;
+  `PATCH .../status/:statusId { turnos }`, 0 tira o status. Nada é automático por rodada (o app não sabe quando a rodada passa).
+  "Status se acumulam" = status diferentes somam efeitos; o mesmo status continua um só por personagem (aplicar de novo troca os turnos).
+- **Aprimoramento é a carta inteira (2026-10-14) — decisão do produto.** Antes, campo vazio = "não muda", o que impedia tirar o
+  limite ou o status. Agora cada aprimoramento guarda a versão completa da carta no nível, com descrição própria; o formulário vem
+  preenchido com a versão anterior. A migration preencheu os campos vazios com a versão anterior (não havia aprimoramentos no banco).
+- **Personagem entre mesas (2026-10-14) — decisão do produto.** Cada mesa é uma sessão; para subir de nível o personagem participa de
+  mais mesas. Respostas do responsável: os itens **não** vão junto; o personagem começa a mesa nova com vida, mana e esforço **cheios**;
+  a classe **tem que estar liberada** na mesa nova (vale também para a raça). Implementação: a ficha nova é criada a partir da origem
+  (ficha ativa de outro grupo ou arquivada com `classeId`/`racaId`), com o mesmo nível; os pontos de perícia voltam para serem gastos
+  no catálogo do mestre novo (as perícias são de cada mestre, não dá para copiar); a origem vira arquivada (motivo
+  `LEVADO_PARA_OUTRA_MESA`) ou, se já era arquivada, sai, para existir só uma cópia viva. Arquivadas antigas, sem classe e raça
+  guardadas, não podem ser levadas.
+- **Mana dos conjuradores (2026-10-14) — decisão do produto.** Com a recuperação só nos interlúdios, a mana base passou a cobrir cerca de
+  dois combates: Bardo 100 para 150, Feiticeiro elemental 100 para 130, Necromante 100 para 120 (no banco, conta do ADMIN). Paladino
+  continua 120 (tanque forte de propósito).

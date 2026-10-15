@@ -10,12 +10,17 @@ import { useClasses } from "../../classes/api";
 import { useAtributos, useCatalogo } from "../../pericias/api";
 import { useRacas } from "../../racas/api";
 import { useStatus } from "../../status/api";
+import { useRegras } from "../../docs/regras";
 import { useKitAtivo, useKits } from "../../kits/api";
 import { visivelNoKit } from "../../kits/types";
 import { useCriarGrupo, useDefinirDisponiveis, useEditarGrupo, useGrupo } from "../api";
 import { DisponiveisSelector } from "../components/DisponiveisSelector";
 import { GrupoInfoForm, type GrupoInfo } from "../components/GrupoInfoForm";
 import type { Disponiveis, GrupoDetalhe } from "../types";
+
+/** Limite por função no formulário: vazio = sem limite. */
+const limiteParaCampo = (n: number | null | undefined) => (n == null ? "" : String(n));
+const campoParaLimite = (v: string) => (v.trim() === "" ? null : Number(v));
 
 export function NovoGrupoPage() {
   return <Formulario />;
@@ -41,6 +46,11 @@ function Formulario({ grupo }: { grupo?: GrupoDetalhe }) {
   const criar = useCriarGrupo();
   const editar = useEditarGrupo(grupo?.id ?? "");
   const definir = useDefinirDisponiveis(grupo?.id ?? "");
+  const { regrasPadrao } = useRegras();
+  // Regras padrão de combate desligadas (slugs); as que saíram do sistema são ignoradas ao salvar.
+  const [desativadas, setDesativadas] = useState<string[]>(grupo?.regrasPadraoDesativadas ?? []);
+  const alternarRegra = (slug: string, vale: boolean) =>
+    setDesativadas((d) => (vale ? d.filter((s) => s !== slug) : [...d, slug]));
 
   const [info, setInfo] = useState<GrupoInfo>({
     titulo: grupo?.titulo ?? "",
@@ -49,6 +59,9 @@ function Formulario({ grupo }: { grupo?: GrupoDetalhe }) {
     imagemUrl: grupo?.imagemUrl ?? "",
     limiteMembros: String(grupo?.limiteMembros ?? 4),
     permitirClassesRepetidas: grupo?.permitirClassesRepetidas ?? true,
+    limiteCombatentes: limiteParaCampo(grupo?.limiteCombatentes),
+    limiteVanguardistas: limiteParaCampo(grupo?.limiteVanguardistas),
+    limiteSuportes: limiteParaCampo(grupo?.limiteSuportes),
   });
   const [kitId, setKitId] = useState<string | null>(grupo ? grupo.kitId : kitAtivo);
   const [disponiveis, setDisponiveis] = useState<Disponiveis>(
@@ -57,20 +70,20 @@ function Formulario({ grupo }: { grupo?: GrupoDetalhe }) {
 
   const carregando = classes.isPending || racas.isPending || atributos.isPending || catalogo.isPending || status.isPending;
 
-  /** Marca tudo o que o kit traz (do kit + gerais); os status fixos do sistema vêm sempre. Sem kit, só os status fixos. */
+  /** Marca tudo o que o kit traz (do kit + gerais); os status automáticos vêm sempre. Sem kit, só os automáticos. */
   function marcarDoKit(k: string | null) {
     const no = (x: { kitIds?: string[] }) => visivelNoKit(x.kitIds, k);
-    const atrs = (atributos.data ?? []).filter((a) => !a.fixo && no(a)).map((a) => a.id);
+    const atrs = (atributos.data ?? []).filter(no).map((a) => a.id);
     setDisponiveis({
       classeIds: k ? (classes.data ?? []).filter(no).map((c) => c.id) : [],
       racaIds: k ? (racas.data ?? []).filter(no).map((r) => r.id) : [],
       atributoIds: k ? atrs : [],
       periciaIds: k ? (catalogo.data ?? []).filter((p) => no(p) && atrs.includes(p.atributoId)).map((p) => p.id) : [],
-      statusIds: (status.data ?? []).filter((s) => s.fixo || (k && no(s))).map((s) => s.id),
+      statusIds: (status.data ?? []).filter((s) => s.automatico || (k && no(s))).map((s) => s.id),
     });
   }
 
-  // Grupo novo: já começa marcado pelo kit ativo (ou só com os status fixos), quando os dados chegam.
+  // Grupo novo: já começa marcado pelo kit ativo (ou só com os status automáticos), quando os dados chegam.
   const [iniciado, setIniciado] = useState(!!grupo);
   useEffect(() => {
     if (iniciado || carregando) return;
@@ -95,7 +108,11 @@ function Formulario({ grupo }: { grupo?: GrupoDetalhe }) {
       imagemUrl: info.imagemUrl.trim() || null,
       limiteMembros: info.limiteMembros.trim() === "" ? (undefined as unknown as number) : Number(info.limiteMembros),
       permitirClassesRepetidas: info.permitirClassesRepetidas,
+      limiteCombatentes: campoParaLimite(info.limiteCombatentes),
+      limiteVanguardistas: campoParaLimite(info.limiteVanguardistas),
+      limiteSuportes: campoParaLimite(info.limiteSuportes),
       kitId,
+      regrasPadraoDesativadas: desativadas.filter((s) => regrasPadrao.some((r) => r.slug === s)),
     };
   }
 
@@ -149,6 +166,20 @@ function Formulario({ grupo }: { grupo?: GrupoDetalhe }) {
               onChange={setDisponiveis}
             />
           )}
+        </section>
+        <section className="secao">
+          <h2>Regras de combate</h2>
+          <p className="pagina__subtitulo">
+            As regras padrão valem em todo grupo. Desmarque as que não quiser nesta mesa; regras próprias você cria na página do grupo.
+          </p>
+          <div className="regras-padrao__lista">
+            {regrasPadrao.map((r) => (
+              <label key={r.slug} className="checklist__item">
+                <input type="checkbox" checked={!desativadas.includes(r.slug)} onChange={(e) => alternarRegra(r.slug, e.target.checked)} />
+                <span><strong>{r.titulo}</strong>: {r.resumo}</span>
+              </label>
+            ))}
+          </div>
         </section>
       </div>
 

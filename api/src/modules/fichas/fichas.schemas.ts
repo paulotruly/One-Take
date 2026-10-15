@@ -10,6 +10,8 @@ export const criarFichaSchema = z.object({
   imagemUrl: urlOpcional(),
   /** Dados (d20) por atributo: { [atributoId]: quantidade }. Soma = pontos iniciais. */
   dados: z.record(z.guid(), inteiro(0, 99)),
+  /** Levar um personagem de outra mesa (ficha ativa ou arquivada): mesma classe, raça e nível; sem itens; recursos cheios. */
+  origem: z.object({ tipo: z.enum(["FICHA", "ARQUIVADA"]), id: z.guid("Personagem inválido") }).nullish(),
 });
 
 export const editarFichaSchema = z.object({

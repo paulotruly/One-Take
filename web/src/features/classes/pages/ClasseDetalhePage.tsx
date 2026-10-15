@@ -72,7 +72,7 @@ export function ClasseDetalhePage() {
   }
 
   const c = classe.data;
-  const editavel = c.editavel ?? !c.fixa;
+  const editavel = !!c.editavel;
   // Perícias do catálogo que a classe ainda não tem.
   const disponiveis = (catalogo.data ?? []).filter((p) => !c.pericias.some((cp) => cp.id === p.id));
 

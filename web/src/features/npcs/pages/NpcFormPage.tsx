@@ -13,7 +13,7 @@ function useOpcoes() {
   return {
     carregando: racas.isPending || classes.isPending,
     racas: (racas.data ?? []).map((r) => ({ id: r.id, titulo: r.conceito ? `${r.conceito.titulo}: ${r.titulo}` : r.titulo })),
-    classes: (classes.data ?? []).map((c) => ({ id: c.id, titulo: c.fixa ? `${c.titulo} (fixa)` : c.titulo })),
+    classes: (classes.data ?? []).map((c) => ({ id: c.id, titulo: c.titulo })),
   };
 }
 

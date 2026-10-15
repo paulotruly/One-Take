@@ -67,7 +67,7 @@ export function CatalogoItensPage() {
 
   const lista = (itens.data ?? []).filter((i) => (!categoria || i.categoria?.id === categoria) && soDoKit(i.kitIds, kitId));
   const opcoesPericias = (pericias.data ?? []).map((p) => ({ id: p.id, rotulo: `${p.nome} (${p.atributo.nome})` }));
-  const opcoesClasses = (classes.data ?? []).map((c) => ({ id: c.id, rotulo: c.fixa ? `${c.titulo} (fixa)` : c.titulo }));
+  const opcoesClasses = (classes.data ?? []).map((c) => ({ id: c.id, rotulo: c.titulo }));
   const gruposParaLancar = grupos.data ?? [];
 
   return (

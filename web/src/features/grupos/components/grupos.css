@@ -57,3 +57,13 @@
 }
 .lista-simples { display: flex; flex-direction: column; gap: var(--esp-2); margin: 0; padding: 0; list-style: none; font-size: var(--texto-sm); }
 .status-linha { display: flex; align-items: center; gap: var(--esp-2); }
+
+/* ---------- Regras de combate do grupo ---------- */
+.regras-mesa { display: flex; flex-direction: column; gap: var(--esp-2); }
+.regras-mesa__item { border: 1px solid var(--cor-borda); background: var(--cor-superficie); padding: var(--esp-2) var(--esp-3); }
+.regras-mesa__item--propria { border-left: 3px solid var(--cor-primaria); }
+.regras-mesa__item summary { display: flex; flex-wrap: wrap; align-items: center; gap: var(--esp-2); cursor: pointer; }
+.regras-mesa__item summary svg { flex-shrink: 0; color: var(--cor-primaria); }
+.regras-mesa__item p { margin-top: var(--esp-2); line-height: var(--altura-linha); }
+.regras-mesa__acoes { display: flex; gap: var(--esp-2); margin-top: var(--esp-3); }
+.regras-padrao__lista { display: flex; flex-direction: column; gap: var(--esp-2); }

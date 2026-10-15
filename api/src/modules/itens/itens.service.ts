@@ -54,7 +54,7 @@ export async function criar(grupoId: string, usuarioId: string, dados: z.infer<t
 export async function lancar(modeloId: string, usuarioId: string, dados: z.infer<typeof lancarSchema>) {
   const prisma = getPrisma();
   const achado = await prisma.itemModelo.findUnique({ where: { id: modeloId } });
-  if (!achado || !(await podeUsar("itemModelo", achado, usuarioId, { semFixos: true }))) throw naoEncontrado("Item não encontrado no catálogo");
+  if (!achado || !(await podeUsar("itemModelo", achado, usuarioId))) throw naoEncontrado("Item não encontrado no catálogo");
   // Item verificado: o pré-requisito de perícia passa a ser a perícia equivalente do catálogo de quem lança.
   const modelo = achado.donoId === usuarioId || !achado.requisitoPericiaId ? achado : { ...achado, requisitoPericiaId: await periciaEquivalente(achado.requisitoPericiaId, usuarioId) };
   const total = modelo.espacos * dados.quantidade;
@@ -206,7 +206,7 @@ export async function usar(id: string, usuarioId: string) {
 
 /**
  * Perícias (ids do catálogo do mestre) em que a ficha tem total > 0, somando raça, classe e níveis.
- * Perícias base de classes fixas contam como a cópia do catálogo do mestre (mesma origem).
+ * Perícias base (modelo do catálogo) e cópias de outra pessoa contam como a cópia do catálogo do mestre (mesma origem).
  */
 export async function periciasComPontos(fichaId: string) {
   const prisma = getPrisma();

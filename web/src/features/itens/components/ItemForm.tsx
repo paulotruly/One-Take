@@ -64,7 +64,7 @@ export function ItemForm({ inicial, pericias, classes, categorias, extra, rotulo
       <Field rotulo="Categoria" erro={erros.categoriaId} dica={categorias.find((c) => c.id === v.categoriaId)?.descricao || "Crie categorias suas em Itens > Categorias."}>
         <select value={v.categoriaId} onChange={set("categoriaId")}>
           <option value="">Sem categoria</option>
-          {categorias.map((c) => <option key={c.id} value={c.id}>{c.nome}{c.fixa ? "" : " (sua)"}</option>)}
+          {categorias.map((c) => <option key={c.id} value={c.id}>{c.nome}{c.deOutro ? "" : " (sua)"}</option>)}
         </select>
       </Field>
       <Field rotulo="Descrição" erro={erros.descricao}>

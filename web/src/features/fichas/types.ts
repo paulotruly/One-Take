@@ -1,3 +1,4 @@
+import type { RegraPadrao } from "../docs/regras";
 import type { Classe, Habilidade } from "../classes/types";
 import type { AtributoResumo, CategoriaPericia, PericiaDaClasse } from "../pericias/types";
 import type { Recurso } from "../grupos/types";
@@ -15,11 +16,12 @@ export type FichaResumo = {
 };
 
 /** Cópia somente leitura de uma ficha que saiu do grupo (o jogador saiu, foi removido ou o grupo foi excluído). */
-export type MotivoArquivamento = "SAIU_DO_GRUPO" | "REMOVIDO_PELO_MESTRE" | "GRUPO_EXCLUIDO";
+export type MotivoArquivamento = "SAIU_DO_GRUPO" | "REMOVIDO_PELO_MESTRE" | "GRUPO_EXCLUIDO" | "LEVADO_PARA_OUTRA_MESA";
 export const ROTULO_MOTIVO: Record<MotivoArquivamento, string> = {
   SAIU_DO_GRUPO: "Você saiu do grupo",
   REMOVIDO_PELO_MESTRE: "O mestre removeu a ficha do grupo",
   GRUPO_EXCLUIDO: "O grupo foi excluído",
+  LEVADO_PARA_OUTRA_MESA: "Você levou o personagem para outra mesa",
 };
 export type FichaArquivadaResumo = { id: string; nome: string; nivel: number; classe: string; raca: string; grupo: string; motivo: MotivoArquivamento; arquivadaEm: string };
 type RecursoArquivado = { atual: number; max: number };
@@ -86,6 +88,8 @@ export type FichaDetalhe = {
   status: Status[];
   /** Status que o mestre pode aplicar (ativados no grupo, não automáticos, ainda não aplicados). */
   statusAplicaveis: Status[];
+  /** Regras de combate que valem no grupo: as padrão ligadas e as próprias do mestre. */
+  regrasDaMesa: { padrao: RegraPadrao[]; proprias: { id: string; titulo: string; texto: string }[] };
 };
 
 export type Convite = {
@@ -97,12 +101,16 @@ export type Convite = {
     imagemUrl: string | null;
     mestre: { nickname: string; nome: string | null; fotoUrl: string | null };
     permitirClassesRepetidas: boolean;
+    limiteCombatentes: number | null;
+    limiteVanguardistas: number | null;
+    limiteSuportes: number | null;
   };
   souMestre: boolean;
   minhaFichaId: string | null;
   vagas: { limite: number; ocupadas: number };
   pontosAtributo: number;
-  classes: (Classe & { ocupada: boolean; habilidades: Habilidade[]; pericias: PericiaDaClasse[] })[];
+  /** `ocupada`: não dá para escolher (classe já usada num grupo sem repetição, ou função cheia); `motivoOcupada` diz por quê. */
+  classes: (Classe & { ocupada: boolean; motivoOcupada: string | null; habilidades: Habilidade[]; pericias: PericiaDaClasse[] })[];
   racas: {
     id: string;
     titulo: string;
@@ -113,6 +121,26 @@ export type Convite = {
     conceito: { id: string; titulo: string } | null;
   }[];
   atributos: AtributoResumo[];
+  /** Personagens do jogador em outras mesas (ficha ativa ou arquivada) que dá para trazer; `motivoBloqueio` diz por que não. */
+  personagens: PersonagemDeOutraMesa[];
+};
+
+export type OrigemPersonagem = { tipo: "FICHA" | "ARQUIVADA"; id: string };
+
+export type PersonagemDeOutraMesa = {
+  origem: OrigemPersonagem;
+  nome: string;
+  nivel: number;
+  historia: string | null;
+  imagemUrl: string | null;
+  classeId: string;
+  racaId: string;
+  classe: string;
+  raca: string;
+  /** Mesa de onde vem. */
+  grupo: string;
+  atributos: { nome: string; dados: number }[];
+  motivoBloqueio: string | null;
 };
 
 export type CriarFichaInput = {
@@ -123,4 +151,6 @@ export type CriarFichaInput = {
   historia: string | null;
   imagemUrl: string | null;
   dados: Record<string, number>;
+  /** Levar um personagem de outra mesa (mesma classe, raça e nível; sem itens). */
+  origem?: OrigemPersonagem | null;
 };

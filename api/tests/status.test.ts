@@ -13,7 +13,8 @@ const { criarApp } = await import("../src/app.js");
 const app = criarApp({ corsOrigin: ["http://localhost:5173"] });
 
 const st = (x: Record<string, unknown>) => ({
-  id: "s", nome: "S", descricao: "", efeito: "e", tipo: "DEBUFF", gatilho: null, ordem: 100, donoId: null, criadoEm: new Date(), ...x,
+  // Padrão: status do seed (do ADMIN, outra conta) verificado.
+  id: "s", nome: "S", efeito: "e", tipo: "DEBUFF", gatilho: null, ordem: 100, donoId: OUTRO_MESTRE_ID, verificado: true, criadoEm: new Date(), ...x,
 });
 const MORTO = st({ id: "morto", nome: "Morto", gatilho: "VIDA_ZERO", ordem: 1 });
 const SEM_ENERGIA = st({ id: "sem", nome: "Sem energia vital", gatilho: "MANA_ZERO", ordem: 2 });
@@ -30,9 +31,10 @@ describe("regras de status automáticos", () => {
   it("status da ficha: automáticos pelos recursos + aplicados, só os ativados no grupo", () => {
     const atuais = { vidaAtual: 10, manaAtual: 5, esforcoAtual: 0 };
     const nomes = (l: { nome: string }[]) => l.map((s) => s.nome);
-    expect(nomes(statusDaFicha(atuais, [CANSADO, ASSUSTADO] as never, [ASSUSTADO] as never))).toEqual(["Cansado", "Assustado"]);
+    expect(nomes(statusDaFicha(atuais, [CANSADO, ASSUSTADO] as never, [{ status: ASSUSTADO, turnos: 2 }] as never))).toEqual(["Cansado", "Assustado"]);
+    expect(statusDaFicha(atuais, [CANSADO, ASSUSTADO] as never, [{ status: ASSUSTADO, turnos: 2 }] as never).map((s) => s.turnos)).toEqual([null, 2]);
     // Cansado desativado no grupo: não aparece mesmo com esforço 0; aplicado fora do grupo também não.
-    expect(nomes(statusDaFicha(atuais, [MORTO] as never, [ASSUSTADO] as never))).toEqual([]);
+    expect(nomes(statusDaFicha(atuais, [MORTO] as never, [{ status: ASSUSTADO, turnos: null }] as never))).toEqual([]);
     expect(nomes(statusDaFicha({ vidaAtual: 0, manaAtual: 0, esforcoAtual: 3 }, [MORTO, SEM_ENERGIA, CANSADO] as never, [] as never))).toEqual([
       "Morto",
       "Sem energia vital",
@@ -71,15 +73,30 @@ describe("catálogo de status (mestre)", () => {
     prismaFalso.status.create.mockImplementation(async ({ data }) => st({ id: ID, ...data }));
     const ok = await comoMestre(request(app).post("/api/status")).send({ nome: "Corajoso", efeito: "+5 em Carisma", tipo: "BUFF", gatilho: "VIDA_ZERO" });
     expect(ok.status).toBe(201);
-    expect(ok.body).toMatchObject({ nome: "Corajoso", fixo: false, automatico: false });
+    expect(ok.body).toMatchObject({ nome: "Corajoso", automatico: false });
+    expect(ok.body).not.toHaveProperty("descricao");
     expect(prismaFalso.status.create.mock.calls[0]![0].data).not.toHaveProperty("gatilho");
   });
 
-  it("status fixo não é editável (403)", async () => {
-    prismaFalso.status.findUnique.mockResolvedValue(st({ id: ID, donoId: null }));
+  it("status verificado de outra pessoa não é editável (403)", async () => {
+    prismaFalso.status.findUnique.mockResolvedValue(st({ id: ID }));
     const res = await comoMestre(request(app).patch(`/api/status/${ID}`)).send({ efeito: "outro" });
     expect(res.status).toBe(403);
-    expect(res.body.error.code).toBe("STATUS_FIXO");
+    expect(res.body.error.code).toBe("VERIFICADO");
+  });
+
+  it("o dono edita até o status automático, mas não o exclui", async () => {
+    prismaFalso.status.findUnique.mockResolvedValue(st({ id: ID, nome: "Morto", gatilho: "VIDA_ZERO", donoId: MESTRE.id }));
+    prismaFalso.status.findFirst.mockResolvedValue(null);
+    prismaFalso.status.update.mockImplementation(async ({ data }) => st({ id: ID, gatilho: "VIDA_ZERO", donoId: MESTRE.id, kits: [], ...data }));
+    const editar = await comoMestre(request(app).patch(`/api/status/${ID}`)).send({ nome: "Caído", efeito: "Fora da aventura." });
+    expect(editar.status).toBe(200);
+    expect(editar.body).toMatchObject({ nome: "Caído", automatico: true });
+
+    const excluir = await comoMestre(request(app).delete(`/api/status/${ID}`));
+    expect(excluir.status).toBe(403);
+    expect(excluir.body.error.code).toBe("STATUS_AUTOMATICO");
+    expect(prismaFalso.status.delete).not.toHaveBeenCalled();
   });
 
   it("jogador não acessa o catálogo (403)", async () => {
@@ -108,9 +125,23 @@ describe("aplicar status na ficha", () => {
     const desativado = await comoMestre(request(app).post(`/api/fichas/${FICHA}/status`)).send({ statusId: ID });
     expect(desativado.status).toBe(400);
 
-    prismaFalso.status.findUnique.mockResolvedValueOnce(st({ id: ID, donoId: OUTRO_MESTRE_ID }));
+    prismaFalso.status.findUnique.mockResolvedValueOnce(st({ id: ID, donoId: OUTRO_MESTRE_ID, verificado: false }));
     const alheio = await comoMestre(request(app).post(`/api/fichas/${FICHA}/status`)).send({ statusId: ID });
     expect(alheio.status).toBe(404);
     expect(prismaFalso.fichaStatus.upsert).not.toHaveBeenCalled();
+  });
+  it("turnos do status: só o mestre muda; 1 a 99 ao aplicar; status não aplicado = 404", async () => {
+    prismaFalso.ficha.findUnique.mockResolvedValue(ficha);
+    const jogador = await comoJogador(request(app).patch(`/api/fichas/${FICHA}/status/${ID}`)).send({ turnos: 2 });
+    expect(jogador.status).toBe(403);
+
+    const invalido = await comoMestre(request(app).post(`/api/fichas/${FICHA}/status`)).send({ statusId: ID, turnos: 0 });
+    expect(invalido.status).toBe(400);
+    expect(invalido.body.error.details[0].campo).toBe("turnos");
+
+    prismaFalso.fichaStatus.updateMany.mockResolvedValue({ count: 0 });
+    const naoAplicado = await comoMestre(request(app).patch(`/api/fichas/${FICHA}/status/${ID}`)).send({ turnos: 1 });
+    expect(naoAplicado.status).toBe(404);
+    expect(prismaFalso.fichaStatus.updateMany).toHaveBeenCalledWith({ where: { fichaId: FICHA, statusId: ID }, data: { turnos: 1 } });
   });
 });

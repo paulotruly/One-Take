@@ -40,7 +40,7 @@ describe("verificado: todo mestre vê, só leitura", () => {
       { ...classeFake({ titulo: "Minha" }), verificado: false, kits: [] },
     ]);
     const res = await comoMestre(request(app).get("/api/classes"));
-    expect(prismaFalso.classe.findMany.mock.calls[0]![0].where).toEqual({ OR: [{ donoId: MESTRE.id }, { donoId: null }, { verificado: true }, { kits: { some: { kit: { verificado: true } } } }] });
+    expect(prismaFalso.classe.findMany.mock.calls[0]![0].where).toEqual({ OR: [{ donoId: MESTRE.id }, { verificado: true }, { kits: { some: { kit: { verificado: true } } } }] });
     expect(res.body.find((c: { titulo: string }) => c.titulo === "Espadachim")).toMatchObject({ verificado: true, deOutro: true, editavel: false, kitIds: [] });
     expect(res.body.find((c: { titulo: string }) => c.titulo === "Minha")).toMatchObject({ verificado: false, deOutro: false, editavel: true, podeVerificar: false });
   });
@@ -62,14 +62,14 @@ describe("verificado: todo mestre vê, só leitura", () => {
     prismaFalso.perfil.findUnique.mockImplementation(async ({ select }) => (select?.ocultarVerificados ? { ocultarVerificados: true } : select?.cargo ? { cargo: "USUARIO" } : MESTRE));
     prismaFalso.classe.findMany.mockResolvedValue([]);
     await comoMestre(request(app).get("/api/classes"));
-    expect(prismaFalso.classe.findMany.mock.calls[0]![0].where).toEqual({ OR: [{ donoId: MESTRE.id }, { donoId: null }] });
+    expect(prismaFalso.classe.findMany.mock.calls[0]![0].where).toEqual({ OR: [{ donoId: MESTRE.id }] });
   });
 
   it("perícia verificada aparece só se o mestre não tem uma igual (mesma origem ou nome)", async () => {
     comCargo("USUARIO");
     const p = (id: string, donoId: string, nome: string, origemId: string | null) => ({
       id, donoId, nome, origemId, verificado: donoId !== MESTRE.id, descricao: "", categoria: "FISICO", atributoId: "a",
-      atributo: { id: "a", nome: "Capacidade física", descricao: "", ordem: 1, donoId: null }, _count: { classes: 0, racas: 0 }, kits: [],
+      atributo: { id: "a", nome: "Capacidade física", descricao: "", ordem: 1, donoId: OUTRO_MESTRE_ID }, _count: { classes: 0, racas: 0 }, kits: [],
     });
     prismaFalso.pericia.findMany.mockResolvedValue([
       p("minha-luta", MESTRE.id, "Luta", "base-luta"),
@@ -108,20 +108,17 @@ describe("verificado: todo mestre vê, só leitura", () => {
 describe("cargo ADMIN", () => {
   const STATUS = "88888888-0000-4000-8000-0000000000c1";
 
-  it("só o ADMIN edita status fixo, e só os não automáticos; ninguém exclui fixo", async () => {
-    prismaFalso.status.findUnique.mockResolvedValue({ id: STATUS, donoId: null, gatilho: null, nome: "Assustado" });
+  it("não há conteúdo fixo: nem o ADMIN edita o status de outra pessoa; o dono edita o dele", async () => {
+    prismaFalso.status.findUnique.mockResolvedValue({ id: STATUS, donoId: OUTRO_MESTRE_ID, verificado: true, gatilho: null, nome: "Assustado" });
     prismaFalso.status.findFirst.mockResolvedValue(null);
-    prismaFalso.status.update.mockResolvedValue({ id: STATUS, donoId: null, gatilho: null, nome: "Assustado", kits: [] });
-
-    comCargo("USUARIO");
-    expect((await comoMestre(request(app).patch(`/api/status/${STATUS}`)).send({ efeito: "novo" })).status).toBe(403);
+    prismaFalso.status.update.mockResolvedValue({ id: STATUS, donoId: MESTRE.id, gatilho: null, nome: "Assustado", kits: [] });
 
     comCargo("ADMIN");
-    expect((await comoMestre(request(app).patch(`/api/status/${STATUS}`)).send({ efeito: "novo" })).status).toBe(200);
-    expect((await comoMestre(request(app).delete(`/api/status/${STATUS}`))).status).toBe(403);
-
-    prismaFalso.status.findUnique.mockResolvedValue({ id: STATUS, donoId: null, gatilho: "VIDA_ZERO", nome: "Morto" });
     expect((await comoMestre(request(app).patch(`/api/status/${STATUS}`)).send({ efeito: "novo" })).status).toBe(403);
+
+    comCargo("USUARIO");
+    prismaFalso.status.findUnique.mockResolvedValue({ id: STATUS, donoId: MESTRE.id, verificado: false, gatilho: null, nome: "Assustado" });
+    expect((await comoMestre(request(app).patch(`/api/status/${STATUS}`)).send({ efeito: "novo" })).status).toBe(200);
   });
 
   it("só o ADMIN marca como verificado, e só coisas dele", async () => {

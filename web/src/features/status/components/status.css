@@ -1,3 +1,13 @@
 /* Categorias de status na página de status: cada uma com título que oculta/mostra a lista. */
 .status-categoria { display: flex; flex-direction: column; gap: var(--esp-2); margin-top: var(--esp-4); }
 .status-categoria__titulo h3 { margin: 0; }
+
+/* Título do status no catálogo: maior e em negrito, sem a caixa dos selos (o tipo fica no selo ao lado). */
+.status-titulo { display: inline-flex; align-items: center; gap: var(--esp-1); font-size: var(--texto-lg); font-weight: var(--peso-forte); color: var(--cor-texto); }
+.status-titulo--DEBUFF svg { color: var(--cor-perigo); }
+.status-titulo--BUFF svg { color: var(--cor-sucesso); }
+.status-titulo--MISTO svg { color: var(--cor-esforco); }
+
+/* Turnos de um status aplicado */
+.status-turnos { display: inline-flex; align-items: center; gap: var(--esp-1); color: var(--cor-texto-suave); }
+.status-turnos__campo { width: 6rem; }

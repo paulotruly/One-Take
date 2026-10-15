@@ -1,11 +1,11 @@
-// Catálogo do mestre: atributos (3 fixos + os dele) e perícias (nome, descrição, categoria, atributo).
+// Catálogo do mestre: atributos (os dele + os verificados) e perícias (nome, descrição, categoria, atributo).
 // Classes e raças usam perícias deste catálogo.
 import { SeloVerificado } from "../../verificados/pages/SeloVerificado";
 import { AcessoBadge } from "../../verificados/components/VerificadoBadge";
 import { AvisoKit } from "../../kits/components/AvisoKit";
 import { useKitAtivo } from "../../kits/api";
 import { soDoKit } from "../../kits/types";
-import { Lock, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useState } from "react";
 import { Button } from "../../../components/ui/Button";
 import { ConfirmDialog } from "../../../components/ui/ConfirmDialog";
@@ -42,7 +42,7 @@ export function PericiasPage() {
   const catalogo = useCatalogo({ comVerificados: true });
   const atributos = useAtributos();
   const { kitId } = useKitAtivo();
-  const atributosNoKit = (atributos.data ?? []).filter((a) => a.fixo || soDoKit(a.kitIds, kitId));
+  const atributosNoKit = (atributos.data ?? []).filter((a) => soDoKit(a.kitIds, kitId));
   const periciasNoKit = (catalogo.data ?? []).filter((p) => soDoKit(p.kitIds, kitId));
   const criar = useCriarPericia();
   const editar = useEditarPericia();
@@ -111,27 +111,20 @@ export function PericiasPage() {
                   <div className="pericia__nome">
                     <strong>{a.nome}</strong>
                     <SeloVerificado tipo="atributo" item={a} />
-                    {a.fixo && (
-                      <span className="selo selo--fixa" title="Atributo fixo do sistema">
-                        <Lock size={12} aria-hidden /> Fixo
-                      </span>
-                    )}
                   </div>
                   {a.descricao && <p className="pericia__descricao">{a.descricao}</p>}
                   <span className="pericia__usos">
                     {a.pericias} {a.pericias === 1 ? "perícia" : "perícias"} no seu catálogo
                   </span>
                 </div>
-                {(a.editavel ?? !a.fixo) && (
+                {a.editavel && (
                   <div className="pericia__acoes">
                     <Button pequeno variante="fantasma" onClick={() => abrirAtributo(a)}>
                       Editar
                     </Button>
-                    {!a.fixo && (
-                      <Button pequeno variante="fantasma" aria-label={`Excluir ${a.nome}`} onClick={() => pedirExclusao({ tipo: "atributo", item: a })}>
-                        Excluir
-                      </Button>
-                    )}
+                    <Button pequeno variante="fantasma" aria-label={`Excluir ${a.nome}`} onClick={() => pedirExclusao({ tipo: "atributo", item: a })}>
+                      Excluir
+                    </Button>
                   </div>
                 )}
               </li>

@@ -8,7 +8,7 @@ import { mensagemDeErro } from "../../../lib/api";
 import { HabilidadesDeck } from "../../classes/components/HabilidadesDeck";
 import { BarraRecurso } from "../../fichas/components/BarraRecurso";
 import { PainelStatus } from "../../status/components/PainelStatus";
-import { useAplicarStatusCriatura, useCriatura, useEditarCriatura, useRemoverCriatura, useRemoverStatusCriatura } from "../api";
+import { useAplicarStatusCriatura, useCriatura, useEditarCriatura, useRemoverCriatura, useRemoverStatusCriatura, useTurnosStatusCriatura } from "../api";
 
 type Props = {
   criaturaId: string | null;
@@ -23,6 +23,7 @@ export function CriaturaModal({ criaturaId, onFechar, onSumiu }: Props) {
   const remover = useRemoverCriatura();
   const aplicarStatus = useAplicarStatusCriatura(criaturaId ?? "");
   const removerStatus = useRemoverStatusCriatura(criaturaId ?? "");
+  const turnosStatus = useTurnosStatusCriatura(criaturaId ?? "");
   const c = criatura.data;
 
   function mudar(dados: { vidaAtual?: number; manaAtual?: number; esforcoAtual?: number }) {
@@ -54,12 +55,13 @@ export function CriaturaModal({ criaturaId, onFechar, onSumiu }: Props) {
           <PainelStatus
             status={c.statusDetalhado}
             aplicaveis={c.statusAplicaveis}
-            onAplicar={(id) => aplicarStatus.mutate(id)}
+            onAplicar={(statusId, turnos) => aplicarStatus.mutate({ statusId, turnos })}
             onRemover={(id) => removerStatus.mutate(id)}
-            ocupado={aplicarStatus.isPending || removerStatus.isPending}
+            onMudarTurnos={(statusId, turnos) => turnosStatus.mutate({ statusId, turnos })}
+            ocupado={aplicarStatus.isPending || removerStatus.isPending || turnosStatus.isPending}
             semAplicaveis="Nenhum status para aplicar: ative status no grupo (Editar grupo)."
           />
-          {(aplicarStatus.isError || removerStatus.isError) && <div className="aviso">{mensagemDeErro(aplicarStatus.error ?? removerStatus.error)}</div>}
+          {(aplicarStatus.isError || removerStatus.isError || turnosStatus.isError) && <div className="aviso">{mensagemDeErro(aplicarStatus.error ?? removerStatus.error ?? turnosStatus.error)}</div>}
 
           {c.atributos.length > 0 && (
             <div>

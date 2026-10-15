@@ -35,21 +35,21 @@ describe("regras de progressão", () => {
 });
 
 describe("aprimoramento de carta", () => {
-  const ap = (nivel: number, x: Record<string, unknown>) => ({
-    nivel, titulo: null, descricaoEfeito: null, condicao: null, limiteUsos: null, limitePor: null, custoMana: null, statusId: null, ...x,
-  });
+  const original = { titulo: "Bola de fogo", descricao: "Uma esfera de fogo.", descricaoEfeito: "Dano leve", condicao: null, limiteUsos: 1, limitePor: "COMBATE", custoMana: 4, statusId: null };
+  const ap = (nivel: number, x: Record<string, unknown>) => ({ nivel, ...original, ...x }) as never;
   const carta = {
-    id: "c", nivelNecessario: 1, titulo: "Bola de fogo", descricaoEfeito: "Dano leve", limiteUsos: 1, limitePor: "COMBATE", custoMana: 4, statusId: null,
-    aprimoramentos: [ap(3, { descricaoEfeito: "Dano médio" }), ap(5, { custoMana: 2, titulo: "Bola de fogo maior" })],
+    id: "c", nivelNecessario: 1, ...original,
+    aprimoramentos: [ap(3, { descricaoEfeito: "Dano médio" }), ap(5, { descricaoEfeito: "Dano médio", custoMana: 2, titulo: "Bola de fogo maior", limiteUsos: null, limitePor: null })],
   };
 
   it("vale a carta original antes do primeiro aprimoramento", () => {
     expect(aplicarAprimoramentos(carta, 2)).toMatchObject({ descricaoEfeito: "Dano leve", custoMana: 4, aprimoradaNoNivel: null, proximoAprimoramento: 3 });
   });
 
-  it("aprimoramentos se acumulam em ordem; campos nulos não mudam nada", () => {
+  it("vale a versão completa do aprimoramento de maior nível (inclusive tirar o limite)", () => {
+    expect(aplicarAprimoramentos(carta, 4)).toMatchObject({ descricaoEfeito: "Dano médio", custoMana: 4, limiteUsos: 1, aprimoradaNoNivel: 3, proximoAprimoramento: 5 });
     expect(aplicarAprimoramentos(carta, 5)).toMatchObject({
-      titulo: "Bola de fogo maior", descricaoEfeito: "Dano médio", custoMana: 2, limiteUsos: 1, limitePor: "COMBATE", aprimoradaNoNivel: 5, proximoAprimoramento: null,
+      titulo: "Bola de fogo maior", descricaoEfeito: "Dano médio", custoMana: 2, limiteUsos: null, limitePor: null, aprimoradaNoNivel: 5, proximoAprimoramento: null,
     });
   });
 
@@ -64,7 +64,9 @@ describe("regras padrão de combate", () => {
   it("todas valem por padrão; as desligadas saem", async () => {
     const { REGRAS_PADRAO, regrasPadraoAtivas } = await import("../src/regras/combate.js");
     expect(regrasPadraoAtivas([])).toHaveLength(REGRAS_PADRAO.length);
-    expect(regrasPadraoAtivas(["combate-dominio"]).map((r) => r.slug)).not.toContain("combate-dominio");
+    expect(regrasPadraoAtivas(["combate-alcance"]).map((r) => r.slug)).not.toContain("combate-alcance");
+    // Slugs de regras que saíram (Domínio de combate, Égide) são ignorados.
+    expect(regrasPadraoAtivas(["combate-dominio", "combate-egide"])).toHaveLength(REGRAS_PADRAO.length);
   });
 });
 

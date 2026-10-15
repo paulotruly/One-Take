@@ -20,7 +20,7 @@ function useEscrita<V, R>(fn: (v: V) => Promise<R>) {
   });
 }
 
-/** Categorias fixas do sistema + as do mestre. */
+/** Categorias do mestre + as verificadas. */
 export function useCategoriasItem() {
   return useQuery({ queryKey: ["itens", "categorias"], queryFn: () => api<CategoriaItem[]>("/api/categorias-item") });
 }

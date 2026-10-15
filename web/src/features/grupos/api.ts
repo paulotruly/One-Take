@@ -1,7 +1,7 @@
 // Hooks dos grupos do mestre.
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../../lib/api";
-import type { Disponiveis, Grupo, GrupoDetalhe, GrupoInput } from "./types";
+import type { Disponiveis, Grupo, GrupoDetalhe, GrupoInput, RegraDaMesa, RegraDaMesaInput } from "./types";
 
 export function useGrupos(habilitado = true) {
   return useQuery({ queryKey: ["grupos", "lista"], queryFn: () => api<Grupo[]>("/api/grupos"), enabled: habilitado });
@@ -32,3 +32,12 @@ export const useDefinirDisponiveis = (id: string) =>
 export const useNovoCodigo = (id: string) => useEscrita(() => api<GrupoDetalhe>(`/api/grupos/${id}/codigo`, { method: "POST" }));
 
 export const useExcluirGrupo = () => useEscrita((id: string) => api<void>(`/api/grupos/${id}`, { method: "DELETE" }));
+
+// ---------- Regras próprias da mesa ----------
+export const useCriarRegra = (grupoId: string) =>
+  useEscrita((dados: RegraDaMesaInput) => api<RegraDaMesa>(`/api/grupos/${grupoId}/regras`, { method: "POST", body: dados }));
+
+export const useEditarRegra = () =>
+  useEscrita(({ id, dados }: { id: string; dados: RegraDaMesaInput }) => api<RegraDaMesa>(`/api/regras-da-mesa/${id}`, { method: "PATCH", body: dados }));
+
+export const useExcluirRegra = () => useEscrita((id: string) => api<void>(`/api/regras-da-mesa/${id}`, { method: "DELETE" }));

@@ -47,7 +47,7 @@ export function apresentarItem<T extends ItemBase & { usosRestantes?: number | n
   };
 }
 
-/** Categoria e pré-requisitos precisam ser do mestre (ou fixos): perícia do catálogo dele; classe fixa ou dele. */
+/** Categoria e pré-requisitos precisam ser do mestre (ou verificados): perícia do catálogo dele; classe dele ou verificada. */
 export async function validarRequisitos(d: { requisitoPericiaId?: string | null; requisitoClasseId?: string | null; categoriaId?: string | null }, mestreId: string) {
   const prisma = getPrisma();
   await validarCategoria(d.categoriaId, mestreId);

@@ -316,23 +316,6 @@ button.topo__perfil { border: 0; background: transparent; font: inherit; cursor:
   .rodape__conteudo { flex-direction: column; align-items: flex-start; padding: var(--esp-4); }
 }
 
-/* ---------- Páginas legais (termos, privacidade) ---------- */
-.legal { gap: var(--esp-5); }
-.legal section { display: flex; flex-direction: column; gap: var(--esp-2); }
-.legal h2 { font-size: var(--texto-lg); }
-.legal ul { display: flex; flex-direction: column; gap: var(--esp-2); margin: 0; padding-left: var(--esp-5); }
-.legal p, .legal li { color: var(--cor-texto); line-height: var(--altura-linha); }
-.legal h1 { font-size: var(--texto-xl); }
-.legal h3 { font-size: var(--texto-md); }
-.legal ol { display: flex; flex-direction: column; gap: var(--esp-2); margin: 0; padding-left: var(--esp-5); }
-.legal ul ul { margin-top: var(--esp-2); }
-.legal code { padding: 0 var(--esp-1); background: var(--cor-superficie-2); font-size: 0.9em; }
-.legal__pendente { padding: 0 var(--esp-1); background: var(--cor-perigo-fundo); color: var(--cor-perigo); font-weight: var(--peso-forte); }
-.legal__tabela { overflow-x: auto; }
-.legal table { width: 100%; border-collapse: collapse; font-size: var(--texto-sm); }
-.legal th, .legal td { padding: var(--esp-2) var(--esp-3); border: 1px solid var(--cor-borda); text-align: left; vertical-align: top; }
-.legal th { background: var(--cor-superficie-2); }
-
 /* ---------- Conta: e-mail, nova senha, exclusão ---------- */
 .aviso-email { margin-bottom: var(--esp-4); padding: var(--esp-2) var(--esp-3); border-left: 4px solid var(--cor-esforco); background: var(--cor-superficie-2); font-size: var(--texto-sm); }
 .login__esqueci { margin-top: calc(var(--esp-2) * -1); font-size: var(--texto-sm); text-align: right; }

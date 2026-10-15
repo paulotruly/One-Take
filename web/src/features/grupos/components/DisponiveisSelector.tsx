@@ -72,7 +72,7 @@ export function DisponiveisSelector({ classes: cls, racas: rcs, atributos: atrs,
           <div className="checklist">
             {cls.map((c) => (
               <Caixa key={c.id} marcado={valor.classeIds.includes(c.id)} onChange={(m) => set({ classeIds: alternar(valor.classeIds, c.id, m) })}>
-                {c.titulo} {c.verificado && <VerificadoBadge />} <span className="pagina__subtitulo">· {ROTULO_GRUPO[c.grupo]}{c.fixa ? " · fixa" : ""}</span>
+                {c.titulo} {c.verificado && <VerificadoBadge />} <span className="pagina__subtitulo">· {ROTULO_GRUPO[c.grupo]}</span>
               </Caixa>
             ))}
           </div>

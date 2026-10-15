@@ -82,7 +82,10 @@ export const useEditarCriatura = () =>
   );
 
 export const useAplicarStatusCriatura = (id: string) =>
-  useEscrita((statusId: string) => api<CriaturaDetalhe>(`/api/criaturas/${id}/status`, { method: "POST", body: { statusId } }));
+  useEscrita(({ statusId, turnos }: { statusId: string; turnos: number | null }) => api<CriaturaDetalhe>(`/api/criaturas/${id}/status`, { method: "POST", body: { statusId, turnos } }));
+/** Turnos que faltam de um status aplicado (0 tira o status). */
+export const useTurnosStatusCriatura = (id: string) =>
+  useEscrita(({ statusId, turnos }: { statusId: string; turnos: number | null }) => api<CriaturaDetalhe>(`/api/criaturas/${id}/status/${statusId}`, { method: "PATCH", body: { turnos } }));
 export const useRemoverStatusCriatura = (id: string) =>
   useEscrita((statusId: string) => api<CriaturaDetalhe>(`/api/criaturas/${id}/status/${statusId}`, { method: "DELETE" }));
 

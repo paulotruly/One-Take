@@ -22,7 +22,7 @@ export function GaleriaPage() {
   const navigate = useNavigate();
   const classes = useClasses(grupo);
   const { kitId } = useKitAtivo();
-  const classesNoKit = (classes.data ?? []).filter((x) => x.fixa || soDoKit(x.kitIds, kitId));
+  const classesNoKit = (classes.data ?? []).filter((x) => soDoKit(x.kitIds, kitId));
   const duplicar = useDuplicarClasse();
   const excluir = useExcluirClasse();
   const [aExcluir, setAExcluir] = useState<Classe | null>(null);
@@ -41,7 +41,7 @@ export function GaleriaPage() {
       <div className="pagina__cabecalho">
         <div>
           <h1>Classes</h1>
-          <p className="pagina__subtitulo">Escolha uma classe para ver o kit, duplique uma fixa ou crie a sua.</p>
+          <p className="pagina__subtitulo">Escolha uma classe para ver o kit, duplique uma verificada ou crie a sua.</p>
         </div>
         <Link to="/mestre/classes/nova" className="btn btn--primario">
           <Plus size={16} aria-hidden /> Nova classe
@@ -78,7 +78,7 @@ export function GaleriaPage() {
               classe={c}
               href={`/mestre/classes/${c.id}`}
               acoes={
-                !(c.editavel ?? !c.fixa) ? (
+                !c.editavel ? (
                   <Button pequeno onClick={() => duplicarClasse(c)} disabled={duplicar.isPending}>
                     {duplicar.isPending && duplicar.variables === c.id ? "Duplicando…" : "Duplicar"}
                   </Button>

@@ -1,23 +1,23 @@
 import { randomUUID } from "node:crypto";
 import type { z } from "zod";
 import type { Atributo, Classe, ClassePericia, GrupoClasse, Pericia } from "../../generated/prisma/client.js";
-import { classeFixa, naoEncontrado } from "../../lib/errors.js";
+import { classeDeOutro, naoEncontrado } from "../../lib/errors.js";
 import { comKits, definirKits } from "../../lib/kits.js";
 import { getPrisma } from "../../lib/prisma.js";
-import { comVisao, ehAdmin, podeUsar, quemVe, visivelPara, type Quem } from "../../lib/sistema.js";
+import { comVisao, podeUsar, quemVe, visivelPara, type Quem } from "../../lib/sistema.js";
 import { previaProgressao } from "../../regras/progressao.js";
 import { apresentarAtributo, porAtributoENome } from "../atributos/atributos.service.js";
 import { comStatus } from "../habilidades/habilidades.include.js";
 import type { criarClasseSchema, editarClasseSchema } from "./classes.schemas.js";
 
 /**
- * Formato público de uma classe: acrescenta `fixa` e, se vierem os kits, `kitIds`.
+ * Formato público de uma classe: se vierem os kits, acrescenta `kitIds`.
  * Com `quem`, também `editavel`, `verificado`, `deOutro` e `podeVerificar` (e os kits só aparecem para o dono).
  */
 export function apresentarClasse<T extends Classe & { kits?: { kitId: string }[] }>(c: T, quem?: Quem) {
-  if (quem) return { ...comVisao(c, quem), fixa: c.donoId === null };
+  if (quem) return comVisao(c, quem);
   const { kits, ...resto } = c;
-  return { ...resto, fixa: c.donoId === null, ...(kits && { kitIds: kits.map((k) => k.kitId) }) };
+  return { ...resto, ...(kits && { kitIds: kits.map((k) => k.kitId) }) };
 }
 
 /** Perícias da classe achatadas: dados do catálogo + modificador da classe, por atributo e nome. */
@@ -30,9 +30,8 @@ export function apresentarPericias(vinculos: (ClassePericia & { pericia: Pericia
 }
 
 // ---------- Regras de acesso ----------
-// Leitura: classe fixa, verificado ou do próprio mestre. Classe de outro mestre = 404 (não revela que existe).
-// Escrita: só classe do próprio mestre; fixa = 403 CLASSE_FIXA (o administrador do sistema edita as fixas);
-// verificado de outra pessoa também é 403 (duplique para editar).
+// Leitura: classe verificada (selo ou kit) ou do próprio mestre. Classe de outro mestre = 404 (não revela que existe).
+// Escrita: só classe do próprio mestre; verificada de outra pessoa = 403 VERIFICADO (duplique para editar).
 
 export async function classeLegivel(id: string, usuarioId: string) {
   const classe = await getPrisma().classe.findUnique({ where: { id } });
@@ -43,8 +42,7 @@ export async function classeLegivel(id: string, usuarioId: string) {
 export async function classeEditavel(id: string, usuarioId: string) {
   const classe = await classeLegivel(id, usuarioId);
   if (classe.donoId === usuarioId) return classe;
-  if (classe.donoId === null && (await ehAdmin(usuarioId))) return classe;
-  throw classeFixa();
+  throw classeDeOutro();
 }
 
 // ---------- Casos de uso ----------
@@ -56,8 +54,8 @@ export async function listar(usuarioId: string, grupo?: GrupoClasse) {
     orderBy: [{ titulo: "asc" }],
     include: { conceito: { select: { id: true, titulo: true } }, ...comKits },
   });
-  // Fixas primeiro, depois as verificadas, depois as próprias.
-  const ordem = (c: { donoId: string | null }) => (c.donoId === null ? 0 : c.donoId === usuarioId ? 2 : 1);
+  // Verificadas primeiro, depois as próprias.
+  const ordem = (c: { donoId: string }) => (c.donoId === usuarioId ? 1 : 0);
   return classes.sort((a, b) => ordem(a) - ordem(b)).map((c) => apresentarClasse(c, quem));
 }
 
@@ -117,7 +115,7 @@ export async function excluir(id: string, usuarioId: string) {
 
 /**
  * Copia classe + habilidades + perícias para o mestre.
- * Perícias da origem que não são do catálogo do mestre (ex.: base, em classe fixa) são trocadas
+ * Perícias da origem que não são do catálogo do mestre (ex.: classe verificada de outra pessoa) são trocadas
  * pela cópia correspondente no catálogo dele (mesma origem ou mesmo nome); se não houver, é criada.
  */
 export async function duplicar(id: string, usuarioId: string) {

@@ -7,16 +7,14 @@ export type GatilhoStatus = "VIDA_ZERO" | "MANA_ZERO" | "ESFORCO_ZERO";
 export type Status = {
   id: string;
   nome: string;
-  descricao: string;
   efeito: string;
   tipo: TipoStatus;
   gatilho: GatilhoStatus | null;
   ordem: number;
-  fixo: boolean;
   automatico: boolean;
   /** Na lista do mestre: kits de RPG em que o status está (vazio = geral). */
   kitIds?: string[];
-  /** Para quem vê: pode editar (é dele, ou é fixo e ele é administrador). */
+  /** Para quem vê: pode editar (é dele). */
   editavel?: boolean;
   /** Selo verificado: todo mestre vê e usa. */
   verificado?: boolean;
@@ -30,6 +28,8 @@ export type Status = {
   verificadoPorKit?: boolean;
   /** Categoria do mestre (ex.: Elementais); null = sem categoria. Só vem se for visível para quem vê. */
   categoriaId?: string | null;
+  /** Aplicado numa ficha, NPC ou criatura: turnos que faltam (null = sem prazo). */
+  turnos?: number | null;
   categoria?: { id: string; nome: string } | null;
 };
 
@@ -38,7 +38,7 @@ export type CategoriaStatus = Visao & { id: string; nome: string; descricao: str
 
 export type StatusResumo = { id: string; nome: string; tipo: TipoStatus };
 
-export type StatusInput = { nome: string; descricao: string; efeito: string; tipo: TipoStatus; kitIds: string[]; categoriaId: string | null };
+export type StatusInput = { nome: string; efeito: string; tipo: TipoStatus; kitIds: string[]; categoriaId: string | null };
 
 export const ROTULO_TIPO: Record<TipoStatus, string> = { BUFF: "Benefício", DEBUFF: "Prejuízo", MISTO: "Misto" };
 export const LISTA_TIPOS: TipoStatus[] = ["DEBUFF", "BUFF", "MISTO"];

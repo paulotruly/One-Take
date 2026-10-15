@@ -2,7 +2,7 @@ import { Router } from "express";
 import { idDe } from "../../lib/validacao.js";
 import { usuarioDe } from "../../middleware/auth.js";
 import { editarItemSchema, moverItemSchema } from "../itens/itens.schemas.js";
-import { aplicarStatusSchema } from "../status/status.schemas.js";
+import { aplicarStatusSchema, turnosStatusSchema } from "../status/status.schemas.js";
 import { criarFichaSchema, editarFichaSchema, gastarPericiaSchema } from "./fichas.schemas.js";
 import * as service from "./fichas.service.js";
 import * as itens from "../itens/itens.service.js";
@@ -50,8 +50,13 @@ fichasRouter.post("/fichas/:id/pericias", async (req, res) => {
 });
 
 fichasRouter.post("/fichas/:id/status", async (req, res) => {
-  const { statusId } = aplicarStatusSchema.parse(req.body);
-  res.json(await service.aplicarStatus(fichaId(req.params.id), usuarioDe(req).id, statusId));
+  const { statusId, turnos } = aplicarStatusSchema.parse(req.body);
+  res.json(await service.aplicarStatus(fichaId(req.params.id), usuarioDe(req).id, statusId, turnos));
+});
+
+fichasRouter.patch("/fichas/:id/status/:statusId", async (req, res) => {
+  const { turnos } = turnosStatusSchema.parse(req.body);
+  res.json(await service.definirTurnosStatus(fichaId(req.params.id), usuarioDe(req).id, idDe(req.params.statusId, "Status não encontrado"), turnos));
 });
 
 fichasRouter.delete("/fichas/:id/status/:statusId", async (req, res) => {

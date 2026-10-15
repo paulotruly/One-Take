@@ -18,7 +18,7 @@ export type Besta = {
   conceito: { id: string; titulo: string } | null;
   /** Kits de RPG em que a criatura está (vazio = geral). */
   kitIds: string[];
-  /** Para quem vê: pode editar (é dele, ou é fixo e ele é administrador). */
+  /** Para quem vê: pode editar (é dele). */
   editavel?: boolean;
   /** Selo verificado: todo mestre vê e usa. */
   verificado?: boolean;

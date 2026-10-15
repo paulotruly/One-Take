@@ -9,8 +9,14 @@ export type Grupo = {
   limiteMembros: number;
   codigo: string;
   permitirClassesRepetidas: boolean;
+  /** Máximo de fichas por função da classe (null = sem limite; 0 = função fechada). */
+  limiteCombatentes: number | null;
+  limiteVanguardistas: number | null;
+  limiteSuportes: number | null;
   /** Kit de RPG do grupo: itens, criaturas e NPCs mostrados seguem o kit (null = tudo). */
   kitId: string | null;
+  /** Regras padrão de combate desligadas neste grupo (slugs). */
+  regrasPadraoDesativadas: string[];
   /** Na listagem: quantos jogadores já têm ficha. */
   membros: number;
 };
@@ -28,7 +34,7 @@ export type Membro = {
   vida: Recurso;
   mana: Recurso;
   esforco: Recurso;
-  status: { id: string; nome: string; tipo: "BUFF" | "DEBUFF" | "MISTO"; automatico: boolean }[];
+  status: { id: string; nome: string; tipo: "BUFF" | "DEBUFF" | "MISTO"; automatico: boolean; turnos?: number | null }[];
 };
 
 import type { Item } from "../itens/types";
@@ -44,7 +50,7 @@ export type Criatura = {
   vida: Recurso;
   mana: Recurso;
   esforco: Recurso;
-  status: { id: string; nome: string; tipo: "BUFF" | "DEBUFF" | "MISTO"; automatico: boolean }[];
+  status: { id: string; nome: string; tipo: "BUFF" | "DEBUFF" | "MISTO"; automatico: boolean; turnos?: number | null }[];
 };
 
 export type GrupoDetalhe = Omit<Grupo, "membros"> & {
@@ -54,6 +60,14 @@ export type GrupoDetalhe = Omit<Grupo, "membros"> & {
   statusAtivos: Status[];
   itensVagos: Item[];
   criaturas: Criatura[];
+  /** Regras próprias do mestre para o grupo (além ou no lugar das padrão). */
+  regrasProprias: RegraDaMesa[];
 };
 
-export type GrupoInput = Pick<Grupo, "titulo" | "sinopse" | "genero" | "imagemUrl" | "limiteMembros" | "permitirClassesRepetidas" | "kitId">;
+export type RegraDaMesa = { id: string; titulo: string; texto: string };
+export type RegraDaMesaInput = { titulo: string; texto: string };
+
+export type GrupoInput = Pick<
+  Grupo,
+  "titulo" | "sinopse" | "genero" | "imagemUrl" | "limiteMembros" | "permitirClassesRepetidas" | "limiteCombatentes" | "limiteVanguardistas" | "limiteSuportes" | "kitId" | "regrasPadraoDesativadas"
+>;

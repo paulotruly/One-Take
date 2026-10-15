@@ -43,19 +43,19 @@ Classificação feita com evidência no código (rotas, telas e testes). "Teste"
 | "Esqueceu a senha?" por código de recuperação (sem e-mail), exclusão da conta com senha e nome de usuário | `api/src/modules/conta/`, `api/src/lib/{codigo-recuperacao,supabase-auth,limite}.ts`, `web/src/pages/ContaPages.tsx`, `features/conta/`; teste (Supabase simulado) |
 | Fichas arquivadas (cópia somente leitura quando a ficha sai do grupo) | `api/src/modules/fichas/{arquivo,retrato}.ts`, `web/src/features/fichas/pages/FichaArquivadaPage.tsx`; teste |
 | Perfil (nickname, nome, foto por link); uma conta joga e pode ativar a interface de mestre | `modules/me/`, `web/src/pages/PerfilPage.tsx`, `AtivarMestrePage.tsx`; teste |
-| Classes (fixas e do mestre), arquétipos/subclasses, duplicar, imagem por link | `modules/classes/`, `modules/conceitos/`, `web/src/features/classes/`; teste |
+| Classes (do mestre e verificadas; não há fixas), arquétipos/subclasses, duplicar, imagem por link | `modules/classes/`, `modules/conceitos/`, `web/src/features/classes/`; teste |
 | Cartela de habilidades: tipos de efeito fixos, custo de mana, nível necessário, aprimoramentos, perícia do teste, status que ativa, reordenar | `modules/habilidades/`, `features/classes/pages/CartelaEditor.tsx`; teste |
-| Catálogo de perícias por mestre (cópia das 18 base no 1º acesso), atributos fixos + do mestre | `modules/pericias/`, `modules/atributos/`, `prisma/pericias-base.ts`; teste |
+| Catálogo de perícias por mestre (cópia das 18 base no 1º acesso), atributos do mestre (os 3 do seed são do ADMIN, verificados) | `modules/pericias/`, `modules/atributos/`, `prisma/pericias-base.ts`; teste |
 | Raças com deslocamento, perícias de base e arquétipo de raça | `modules/racas/`, `features/racas/`; teste |
-| Status (3 automáticos, 6 manuais fixos, próprios do mestre), aplicados em fichas, NPCs e criaturas | `modules/status/`, `regras/status.ts`, `prisma/status-base.ts`; teste |
+| Status (só efeito; 3 automáticos e os manuais do seed, do ADMIN e editáveis por ele; próprios de cada mestre), aplicados em fichas, NPCs e criaturas | `modules/status/`, `regras/status.ts`, `prisma/status-base.ts`; teste |
 | Grupos: código de entrada, limite, classes repetidas, o que vale no grupo, status ativos, regras padrão desligáveis e regras próprias | `modules/grupos/`, `regras/combate.ts`, `features/grupos/`; teste |
 | Fichas: dados por atributo, recursos, perícias somadas, cartas do nível, subir nível, pontos de perícia, teste pronto | `modules/fichas/`, `regras/ficha.ts`, `regras/teste.ts`, `features/fichas/`; teste |
-| Inventário e itens: catálogo do mestre, categorias fixas + próprias, espaços, usos, pré-requisito, passar, descartar, pegar | `modules/itens/`, `features/itens/`; teste |
+| Inventário e itens: catálogo do mestre, categorias do mestre + verificadas, espaços, usos, pré-requisito, passar, descartar, pegar | `modules/itens/`, `features/itens/`; teste |
 | Bestiário (criaturas como classes), arquétipo de criatura, invocar no grupo, morte automática | `modules/bestas/`, `modules/criaturas/`, `features/bestiario/`; teste |
 | NPCs com ficha (raça obrigatória, classe opcional, nível, dados, perícias, cartas, inventário, status) | `modules/npcs/`, `features/npcs/`; teste |
 | Kits de RPG (coleções por aventura), kit ativo no navegador, kit do grupo | `modules/kits/`, `lib/kits.ts`, `features/kits/`; teste (API) |
 | Documentação pública em `/docs` com busca por palavras; página inicial completa; Termos de uso e Política de privacidade (minutas) | `web/src/features/docs/`, `web/src/pages/HomePage.tsx`, `web/src/pages/LegalPages.tsx` (renderiza `docs/legal/*.md`) |
-| Scripts de manutenção: promover conta, fixar classe, exportar conteúdo; skill de balanceamento | `api/scripts/`, `.claude/skills/balancear/` |
+| Scripts de manutenção: promover conta, cargo, exportar conteúdo; skill de balanceamento | `api/scripts/`, `.claude/skills/balancear/` |
 | Rodapé discreto em todas as páginas, com créditos, direitos e links legais | `web/src/components/layout/Rodape.tsx` |
 
 ### Parcialmente implementado
@@ -122,7 +122,7 @@ usuário e exibidos direto pelo navegador (sem upload; o Supabase Storage não �
 api/                     API (independente: package.json, lockfile e .env próprios)
   prisma/                schema.prisma, migrations/ (23, de 20261011 a 20261013), seed.ts, pericias-base.ts, status-base.ts
   prisma.config.ts       CLI do Prisma usa DIRECT_URL
-  scripts/               promover-mestre.ts, fixar-classe.ts, exportar-conteudo.ts
+  scripts/               promover-mestre.ts, cargo.ts, exportar-conteudo.ts, concluir-exclusoes.ts
   src/index.ts, app.ts   ponto de entrada e montagem do Express
   src/env.ts             variáveis validadas com Zod
   src/lib/               prisma, errors (AppError), validacao, nickname, kits
@@ -203,7 +203,7 @@ sequenceDiagram
 Fonte da verdade: `api/prisma/schema.prisma`; explicação completa em `docs/DADOS.md`.
 ```mermaid
 erDiagram
-  Perfil ||--o{ Classe : "dono (nulo = fixa)"
+  Perfil ||--o{ Classe : "dono"
   Classe ||--o{ Habilidade : cartela
   Classe ||--o{ ClassePericia : modificador
   Pericia ||--o{ ClassePericia : ""
@@ -223,7 +223,8 @@ erDiagram
   Perfil ||--o{ Kit : ""
   Kit ||--o{ Grupo : "kit do grupo"
 ```
-Padrões do modelo: "fixo do sistema" = `donoId` nulo (classes, perícias base, atributos, status, categorias de item); a ficha guarda
+Padrões do modelo: não há conteúdo fixo (2026-10-14): classes, atributos, status e categorias de item sempre têm dono; só as
+perícias base (modelo do catálogo) têm `donoId` nulo; a ficha guarda
 só o que muda (máximos são calculados); item lançado é cópia do molde; RLS ligado sem policies; UUID em tudo.
 
 ## 1.5. Regras de negócio
@@ -238,11 +239,11 @@ Regras de jogo detalhadas em `docs/DOMINIO.md`. Os números (3 pontos de atribut
 | RN-003 | Esforço = dados extras | 1 ponto de esforço = +1 d20; com atributo 0 não compra dados; sem limite por teste. O app não desconta esforço | `src/regras/teste.ts` | `tests/teste.test.ts` |
 | RN-004 | DT livre | O mestre define a DT na sessão; não há tabela oficial (a doc mostra só as chances) | só documentação (`regras/teste.ts` calcula as chances) | `tests/teste.test.ts` (chances) |
 | RN-005 | Valores base nunca zero | Classe, criatura e NPC sem classe: vida, mana e esforço base >= 1 (Zod + CHECK no banco) | `classes.schemas.ts`, `bestas.schemas.ts`, `npcs.schemas.ts`, migrations | `tests/api.test.ts`, `tests/bestiario.test.ts` |
-| RN-006 | Conteúdo fixo é somente leitura | Classe fixa (403 `CLASSE_FIXA`), atributo fixo (`ATRIBUTO_FIXO`), status fixo (`STATUS_FIXO`), categoria fixa (`CATEGORIA_FIXA`) | `classes.service.ts`, `atributos.service.ts`, `status.service.ts`, `itens/categorias.ts` | `api.test.ts`, `status.test.ts`, `bestiario.test.ts` |
+| RN-006 | Não há conteúdo fixo; só o dono edita | Verificado de outra pessoa é só leitura (403 `VERIFICADO`); status automático o dono edita mas não exclui (403 `STATUS_AUTOMATICO`) | `lib/sistema.ts`, `classes.service.ts`, `atributos.service.ts`, `status.service.ts`, `itens/categorias.ts` | `api.test.ts`, `status.test.ts`, `bestiario.test.ts`, `verificado.test.ts` |
 | RN-007 | Conteúdo de outro mestre é invisível | Responde 404 (não 403), para não revelar que existe | `classeLegivel` e equivalentes nos services | `api.test.ts`, `grupos.test.ts`, `bestiario.test.ts` |
 | RN-008 | Progressão de nível | Por nível acima do 1: +5 vida, +5 mana, +5 esforço, +5 pontos de perícia, +2 espaços; nível N libera as cartas com nível necessário <= N | `src/regras/progressao.ts`, `src/regras/ficha.ts` | `tests/progressao.test.ts`, `grupos.test.ts` |
 | RN-009 | Subir de nível | Só o mestre sobe; +5 também nos atuais; máximo 100 (409 `NIVEL_MAXIMO`); descer de nível não existe para personagens de jogadores (NPC pode mudar o nível livremente) | `fichas.service.ts`, `npcs.service.ts` | `grupos.test.ts`, `correcoes.test.ts` |
-| RN-010 | Entrada no grupo | 1 ficha por jogador por grupo (`JA_TEM_FICHA`); o mestre não cria ficha no próprio grupo; grupo cheio (`GRUPO_CHEIO`); sem classes repetidas quando o grupo não permite (`CLASSE_REPETIDA`); classe e raça precisam estar liberadas | `fichas.service.ts` | `grupos.test.ts` |
+| RN-010 | Entrada no grupo | 1 ficha por jogador por grupo (`JA_TEM_FICHA`); o mestre não cria ficha no próprio grupo; grupo cheio (`GRUPO_CHEIO`); função da classe cheia (`FUNCAO_CHEIA`, limite por função do grupo); sem classes repetidas quando o grupo não permite (`CLASSE_REPETIDA`); classe e raça precisam estar liberadas | `fichas.service.ts` | `grupos.test.ts` |
 | RN-011 | Pontos de atributo | Soma exata de 3 entre os atributos do grupo; um atributo pode ficar com 0 | `src/regras/ficha.ts`, `fichas.service.ts` | `grupos.test.ts` |
 | RN-012 | Recursos atuais | Sempre entre 0 e o máximo; o jogador só **diminui** a vida (aumentar = 403 `SO_MESTRE_CURA`); mana e esforço nos dois sentidos | `fichas.service.ts` | `grupos.test.ts`, `correcoes.test.ts` |
 | RN-013 | Morte e cansaço | Vida 0 ou mana 0 = morto; esforço 0 = Cansado (status automáticos, calculados, não gravados) | `src/regras/status.ts` | `tests/status.test.ts` |
@@ -255,13 +256,13 @@ Regras de jogo detalhadas em `docs/DOMINIO.md`. Os números (3 pontos de atribut
 | RN-020 | Status aplicados | Só o mestre aplica; só status ativados no grupo e não automáticos (fichas e criaturas); NPC usa todos os do mestre; status do mestre é sempre manual | `status.service.ts`, `fichas.service.ts` | `status.test.ts` |
 | RN-021 | NPC | Raça obrigatória; sem classe exige vida/mana/esforço base; com classe usa a base da classe no nível; mudar nível/classe/base faz o atual acompanhar | `npcs.service.ts`, `npcs.schemas.ts` | `bestiario.test.ts` |
 | RN-022 | Catálogo de perícias por mestre | No 1º acesso à área de mestre, as 18 perícias base são copiadas para ele uma única vez (`catalogoIniciado`) | `garantirCatalogo` em `pericias.service.ts` | `api.test.ts` |
-| RN-023 | Atributos | Nome único (inclusive contra os fixos, 409 `NOME_EM_USO`); com perícias não exclui (409 `ATRIBUTO_EM_USO`) | `atributos.service.ts` | `api.test.ts` |
+| RN-023 | Atributos | Nome único por dono (409 `NOME_EM_USO`); com perícias não exclui (409 `ATRIBUTO_EM_USO`) | `atributos.service.ts` | `api.test.ts` |
 | RN-024 | Exclusão bloqueada por uso | Excluir algo referenciado por fichas/NPCs com FK `RESTRICT` responde 409 `EM_USO` | `src/middleware/error-handler.ts` (P2003) | não identificado |
 | RN-025 | Aprimoramento de carta | Nível maior que o da carta, pelo menos uma mudança, um por nível (`NIVEL_EM_USO`); acumulam; o nível necessário da carta não pode alcançar um aprimoramento | `aplicarAprimoramentos` em `src/regras/progressao.ts`, `habilidades.service.ts` | `progressao.test.ts`, `api.test.ts`, `correcoes.test.ts` |
-| RN-026 | O que vale no grupo | Só conteúdo do mestre (ou fixo); perícias marcadas precisam estar dentro dos atributos marcados; limite de membros não fica abaixo dos atuais | `grupos.service.ts` | `grupos.test.ts` |
+| RN-026 | O que vale no grupo | Só conteúdo do mestre (ou verificado); perícias marcadas precisam estar dentro dos atributos marcados; limite de membros e limite por função não ficam abaixo dos atuais | `grupos.service.ts` | `grupos.test.ts` |
 | RN-027 | Regras padrão de combate | Valem por padrão; o mestre desliga por grupo (só slugs conhecidos) e cria regras próprias | `src/regras/combate.ts`, `grupos.routes.ts` | `progressao.test.ts`, `grupos.test.ts` |
 | RN-028 | Kits de RPG | `kitIds` só com kits do próprio mestre (404); mandar `kitIds` troca a lista inteira; sem kit = geral; excluir kit não apaga conteúdo | `src/lib/kits.ts`, `modules/kits/kits.routes.ts` | `correcoes.test.ts` |
-| RN-029 | Filtro por kit | Grupo com kit: do kit + gerais (`visivelNoKit`, API e web). Kit ativo nas telas do mestre: **só o kit**, mais o que é fixo do sistema (`soDoKit`, só no web) | `api/src/lib/kits.ts`, `web/src/features/kits/types.ts` | API: `correcoes.test.ts`; web: sem testes |
+| RN-029 | Filtro por kit | Grupo com kit: do kit + gerais (`visivelNoKit`, API e web). Kit ativo nas telas do mestre: **só o kit** (`soDoKit`, só no web) | `api/src/lib/kits.ts`, `web/src/features/kits/types.ts` | API: `correcoes.test.ts`; web: sem testes |
 | RN-030 | Conta e acesso | Toda conta joga; a interface de mestre é ativada no cadastro ou depois (`POST /api/me/mestre`); rotas de gestão exigem papel MESTRE (403) | `src/app.ts`, `middleware/auth.ts`, `modules/me/` | `api.test.ts`, `bestiario.test.ts` |
 | RN-032 | Código de recuperação | 100 bits aleatórios, mostrado uma vez, guardado como SHA-256, trocado a cada uso; mesma resposta para usuário inexistente ou código errado; 10 tentativas por hora por IP | `lib/codigo-recuperacao.ts`, `conta.service.ts` | `tests/conta.test.ts` |
 | RN-034 | Troca de senha | Com o código: troca pela Admin API e as sessões anteriores são recusadas pela API | `conta.service.ts`, `middleware/auth.ts` | `tests/conta.test.ts` |
@@ -273,7 +274,7 @@ Regras de jogo detalhadas em `docs/DOMINIO.md`. Os números (3 pontos de atribut
 
 ### Pendências de confirmação (regras ambíguas)
 - Cartas de um nível: todas recebidas (comportamento atual) ou escolhidas? Perícia nova: escolhida (atual) ou pré-determinada? (DOMINIO, ROADMAP)
-- Status fixos manuais (Assustado, Furioso, Inspirado, Confiante, Envenenado, Atordoado) estão marcados como "proposta inicial" em `prisma/status-base.ts`.
+- Status manuais do seed (Assustado, Furioso, Inspirado, Confiante, Envenenado, Atordoado) são "proposta inicial" (`prisma/status-base.ts`); hoje são do ADMIN e ele edita pela interface.
 - Referências de equilíbrio da skill `balancear` são proposta inicial, ajustáveis pelo designer.
 - O grupo com kit mostra "do kit + gerais", enquanto o kit ativo mostra "só o kit": a diferença foi uma interpretação registrada em
   DECISOES (2026-10-13) e ainda não foi confirmada pelo responsável.
@@ -316,7 +317,7 @@ Regras de jogo detalhadas em `docs/DOMINIO.md`. Os números (3 pontos de atribut
 | Entradas | Zod em corpo e query; `express.json` com limite de 100 kb; ids malformados = 404; links de imagem validados como http(s) | Sem limite de tentativas em `POST /api/entrar` |
 | Banco | RLS ligado **sem policies** em todas as tabelas: a Data API do Supabase não expõe nada com a chave pública; só a API (papel `postgres`) acessa | |
 | Segredos | `.env` fora do git (`.gitignore`); `.env.example` sem valores. API: `DATABASE_URL`, `DIRECT_URL`, `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`, `TRUST_PROXY`, `CORS_ORIGIN`, `PORT`. Web: `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `VITE_API_URL`. A chave secreta do Supabase fica **só na API** | |
-| Dados pessoais | Guardados: nome de usuário, nome opcional, link de foto, data de nascimento, hash do código de recuperação, e-mail técnico interno do login (`@one-take.local`; real só em contas muito antigas criadas no painel) e o conteúdo das fichas. Nenhum e-mail de contato. O email **nunca é exposto** pela API (`/api/me` e login por nickname). Política em `/privacidade` | Política em versão inicial, a revisar |
+| Dados pessoais | Guardados: nome de usuário, nome opcional, link de foto, data de nascimento, hash do código de recuperação, e-mail técnico interno do login (`@one-take.local`; real só em contas muito antigas criadas no painel) e o conteúdo das fichas. Nenhum e-mail de contato. O email **nunca é exposto** pela API (`/api/me` e login por nickname). Minuta da política em `docs/legal/` (fora do site por enquanto) | Política em versão inicial, a revisar e voltar ao site |
 | Logs | Erros inesperados vão para `console.error(err)` no `error-handler`; o cliente recebe só `ERRO_INTERNO` | O objeto de erro completo pode conter dados da requisição; avaliar o que é logado em produção |
 | Exclusão e retenção | Exclusão da conta pelo próprio usuário (senha + nome de usuário, imediata); fichas que saem de grupos viram cópias arquivadas do jogador; detalhes na política (`docs/legal/`) | Supabase gratuito sem backups automáticos |
 | CORS | Lista de origens em `CORS_ORIGIN` | |
@@ -328,7 +329,7 @@ Regras de jogo detalhadas em `docs/DOMINIO.md`. Os números (3 pontos de atribut
   (setas, estrelas): ícones **só do `lucide-react`**; **tema claro com fundo branco**, interface simples; **cantos retos**
   (`--raio-*` = 0). Não há tema escuro.
 - **Identidade:** marca "One-Take" com o ícone `Dices` (`components/ui/Marca.tsx`, provisória segundo DECISOES); cor primária índigo
-  (`--cor-primaria: #4f46e5`); cores próprias para vida, mana, esforço, grupos de classe e origem (fixa x própria).
+  (`--cor-primaria: #4f46e5`); cores próprias para vida, mana, esforço, grupos de classe e origem (só leitura x própria).
 - **Tokens (`web/src/styles/tokens.css`):** cores, tipografia (`system-ui`, tamanhos `--texto-xs` a `--texto-xl`), espaçamentos
   `--esp-1` a `--esp-7`, larguras e transições. Componentes não usam valores literais.
 - **Componentes reutilizáveis:** `components/ui/` (Button com variantes e tamanho pequeno, Field com rótulo, dica e erro, Modal
@@ -357,10 +358,9 @@ cp api/.env.example api/.env # e web/.env.example -> web/.env; preencher sem ver
 npm run dev                  # porta 3333, com reload (tsx watch)
 npm run db:migrate           # cria/aplica migration em dev (usa DIRECT_URL)
 npm run db:deploy            # aplica migrations pendentes (produção ou banco compartilhado)
-npm run db:seed              # estrutura fixa: atributos, status, categorias, perícias base (idempotente; não cria classes)
+npm run db:seed              # conteúdo inicial na conta ADMIN + perícias base (só cria o que falta; não cria classes)
 npm run db:studio            # Prisma Studio
 npm run promover -- email    # muda o papel de uma conta (padrão MESTRE)
-npm run fixar-classe -- "Título"   # classe de um mestre vira fixa; --devolver nick desfaz
 npm run exportar -- > ../conteudo.json   # JSON para a skill de balanceamento (arquivo no .gitignore)
 npm test                     # vitest
 npm run typecheck
@@ -401,11 +401,11 @@ lá, isso é dito. Decisões novas seguem `docs/adr/README.md`.
 | ADR-002 | 2026-10-11 | Prisma 7.10 (não o 8 RC), `prisma.config.ts` com `DIRECT_URL` e adapter `pg` com `DATABASE_URL` pooled | O 8 era release candidate; setup recomendado para Prisma + Supabase | `npm audit` aponta vulnerabilidades em dependências da CLI (só dev) |
 | ADR-003 | 2026-10-11 | JWT validado via JWKS com `jose`, sem chamar o Supabase por requisição; papel no `Perfil` | Desempenho e fonte única do papel | Exige chaves assimétricas no projeto Supabase |
 | ADR-004 | 2026-10-11 | RLS ligado sem policies | A Data API não expõe dados com a chave pública | Todo acesso passa pela API |
-| ADR-005 | 2026-10-11 | Fixo = `donoId` nulo; conteúdo de outro mestre = 404 | Fonte única; não revelar existência | Padrão repetido em perícias, atributos, status e categorias |
+| ADR-005 | 2026-10-11 | Fixo = `donoId` nulo; conteúdo de outro mestre = 404 | Fonte única; não revelar existência | Substituído em 2026-10-14: não há conteúdo fixo (tudo tem dono; o compartilhado é o verificado). Continua: outro mestre = 404 |
 | ADR-006 | 2026-10-11 | Testes da API com Prisma mockado | Rodar sem banco | Integração real é manual |
 | ADR-007 | 2026-10-11 | Imagens por link externo, sem upload (decisão do produto) | Simplicidade | Links podem quebrar; upload fica como ideia |
 | ADR-008 | 2026-10-11 | Regras de jogo só na API (`src/regras/`), expostas em `GET /api/regras` | Evitar regra duplicada e documentação desatualizada | O front depende da API até para a documentação pública |
-| ADR-009 | 2026-10-11 | Um catálogo de perícias por mestre (cópia das base no 1º acesso) | Personalizar sem afetar outros mestres | Perícia base apagada só volta duplicando classe fixa |
+| ADR-009 | 2026-10-11 | Um catálogo de perícias por mestre (cópia das base no 1º acesso) | Personalizar sem afetar outros mestres | Perícia base apagada só volta duplicando classe verificada |
 | ADR-010 | 2026-10-11 | Login por nickname com email interno `@one-take.local` (decisão do produto) | Ninguém informa email | Sem "esqueci a senha"; "Confirm email" desligado |
 | ADR-011 | 2026-10-11 | TanStack Query, formulários sem biblioteca, modais com `<dialog>` nativo | Menos dependências; estados prontos | |
 | ADR-012 | 2026-10-11 | Regras de design: sem emojis, ícones lucide, tema claro, cantos retos (decisão do produto) | Preferência do produto | Obrigatórias em toda tela |
@@ -424,8 +424,8 @@ Os ids ADR-001 a ADR-018 são só uma numeração deste resumo; ainda não exist
 - **Licença:** **não há arquivo de licença** (`LICENSE`) no repositório e os `package.json` são `"private": true`, sem campo `license`.
   Sem licença, valem os direitos autorais padrão (todos reservados ao autor). O repositório estar no GitHub **não o torna open source**.
   Decisão de licenciamento pendente.
-- **Uso e distribuição:** Termos de uso (`/termos`) e Política de privacidade (`/privacidade`) em versão inicial; os termos dizem que
-  o acesso ao repositório não concede licença. O rodapé declara "© 2026 Paulo Gomes. Todos os direitos reservados."
+- **Uso e distribuição:** minutas de Termos de uso e Política de privacidade em `docs/legal/`; as páginas `/termos` e `/privacidade`
+  foram retiradas do site (links do rodapé sem destino até voltarem). Os termos dizem que o acesso ao repositório não concede licença. O rodapé declara "© 2026 One-Take. Todos os direitos reservados."
 - **Links oficiais:** repositório `https://github.com/paulotruly/One-Take` (remote `origin`); perfil `https://github.com/paulotruly`
   (link do rodapé). URLs de produção (Render, Vercel) não estão registradas no repositório.
 - **Dependências diretas e licenças** (lidas dos `package.json` em `node_modules`):
@@ -455,12 +455,12 @@ Dependências transitivas não foram auditadas.
   - `docs/ROADMAP.md`: "Status em criaturas invocadas" está em Ideias, mas já foi feito; "categorias por emoji, atributos CF/CC" descreve
     um estado antigo.
   - `docs/API.md`: as rotas de regras da mesa (`POST /api/grupos/:id/regras`, `PATCH`/`DELETE /api/regras-da-mesa/:id`) não aparecem;
-    a tabela de erros não lista `STATUS_FIXO`, `CATEGORIA_FIXA`, `NIVEL_EM_USO`, `JA_TEM_FICHA`, `GRUPO_CHEIO`, `CLASSE_REPETIDA` e
+    a tabela de erros não lista `NIVEL_EM_USO`, `JA_TEM_FICHA`, `GRUPO_CHEIO`, `CLASSE_REPETIDA` e
     `SEM_PONTOS` (citados em outras seções); o corpo de `POST /api/classes` não mostra `conceitoId` e `kitIds`.
 
 ### Decisões aguardando confirmação
 - Regras de progressão em aberto (cartas do nível, perícia nova).
-- Status fixos e referências de balanceamento como "proposta inicial".
+- Status do seed e referências de balanceamento como "proposta inicial".
 - Kit do grupo com gerais x kit ativo só com o kit.
 - Licença do código; revisão dos termos de uso e da Política de privacidade (versão inicial).
 

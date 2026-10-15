@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { idDe } from "../../lib/validacao.js";
 import { usuarioDe } from "../../middleware/auth.js";
-import { aplicarStatusSchema } from "../status/status.schemas.js";
+import { aplicarStatusSchema, turnosStatusSchema } from "../status/status.schemas.js";
 import { criarNpcSchema, editarNpcSchema, filtroNpcsSchema, npcAtributoSchema, npcPericiaSchema } from "./npcs.schemas.js";
 import * as service from "./npcs.service.js";
 
@@ -49,8 +49,13 @@ npcsRouter.put("/npcs/:id/pericias/:periciaId", async (req, res) => {
 });
 
 npcsRouter.post("/npcs/:id/status", async (req, res) => {
-  const { statusId } = aplicarStatusSchema.parse(req.body);
-  res.json(await service.aplicarStatus(npcId(req.params.id), usuarioDe(req).id, statusId));
+  const { statusId, turnos } = aplicarStatusSchema.parse(req.body);
+  res.json(await service.aplicarStatus(npcId(req.params.id), usuarioDe(req).id, statusId, turnos));
+});
+
+npcsRouter.patch("/npcs/:id/status/:statusId", async (req, res) => {
+  const { turnos } = turnosStatusSchema.parse(req.body);
+  res.json(await service.definirTurnosStatus(npcId(req.params.id), usuarioDe(req).id, idDe(req.params.statusId, "Status não encontrado"), turnos));
 });
 
 npcsRouter.delete("/npcs/:id/status/:statusId", async (req, res) => {

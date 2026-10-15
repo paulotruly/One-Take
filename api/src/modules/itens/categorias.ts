@@ -1,6 +1,7 @@
-// Categorias de item: 4 fixas do sistema (donoId nulo, somente leitura) + as que cada mestre cria.
+// Categorias de item: sempre de um mestre (não há fixas). As 4 do seed são do administrador e verificadas (todo mestre vê).
+// Categoria não entra em kit: chega aos outros só pelo selo verificado.
 // O ícone é uma chave desta lista; o front liga cada chave a um ícone do lucide.
-import { ehAdmin, ocultaVerificados, podeUsar, quemVe, visao } from "../../lib/sistema.js";
+import { ocultaVerificados, podeUsar, quemVe, visao } from "../../lib/sistema.js";
 import { Router } from "express";
 import { z } from "zod";
 import { AppError, conflito, naoEncontrado } from "../../lib/errors.js";
@@ -13,8 +14,8 @@ export const ICONES_ITEM = [
   "livro", "pergaminho", "mapa", "chave", "moeda", "roupa", "martelo", "bomba",
 ] as const;
 
-/** Ids das categorias fixas (os mesmos da migration `categorias_de_item` e do seed). */
-export const CATEGORIAS_FIXAS = {
+/** Ids das categorias do seed (os mesmos da migration `categorias_de_item`). Artefatos é a categoria padrão de item novo. */
+export const CATEGORIAS_DO_SEED = {
   armas: "00000000-0000-4000-8004-000000000001",
   artefatos: "00000000-0000-4000-8004-000000000002",
   taverna: "00000000-0000-4000-8004-000000000003",
@@ -28,32 +29,29 @@ const base = z.object({
 });
 const criarSchema = base.extend({ descricao: base.shape.descricao.default(""), icone: base.shape.icone.default("pacote") });
 
-const apresentar = (c: { id: string; nome: string; descricao: string; icone: string; ordem: number; donoId: string | null; _count?: { modelos: number; itens: number } }) => ({
-  id: c.id, nome: c.nome, descricao: c.descricao, icone: c.icone, ordem: c.ordem, fixa: c.donoId === null,
+const apresentar = (c: { id: string; nome: string; descricao: string; icone: string; ordem: number; donoId: string; _count?: { modelos: number; itens: number } }) => ({
+  id: c.id, nome: c.nome, descricao: c.descricao, icone: c.icone, ordem: c.ordem,
   ...(c._count && { usos: c._count.modelos + c._count.itens }),
 });
 
-/** A categoria precisa ser fixa, do próprio mestre ou verificada. */
+/** A categoria precisa ser do próprio mestre ou verificada. */
 export async function validarCategoria(id: string | null | undefined, mestreId: string) {
   if (!id) return;
   const c = await getPrisma().categoriaItem.findUnique({ where: { id }, select: { id: true, donoId: true, verificado: true } });
   if (!c || !(await podeUsar("categoriaItem", c, mestreId))) throw naoEncontrado("Categoria não encontrada");
 }
 
-/** A fixa só o administrador do sistema edita (e ninguém exclui). */
-async function categoriaEditavel(id: string, usuarioId: string, { excluir = false } = {}) {
+/** Editar e excluir: só o dono. */
+async function categoriaEditavel(id: string, usuarioId: string) {
   const c = await getPrisma().categoriaItem.findUnique({ where: { id } });
-  if (!c || (c.donoId !== null && c.donoId !== usuarioId && !c.verificado)) throw naoEncontrado("Categoria não encontrada");
-  if (c.donoId !== null && c.donoId !== usuarioId) throw new AppError(403, "VERIFICADO", "Esta categoria é verificada (de outra pessoa): só leitura.");
-  if (c.donoId === null && (excluir || !(await ehAdmin(usuarioId)))) {
-    throw new AppError(403, "CATEGORIA_FIXA", "As categorias do sistema não podem ser alteradas. Crie uma sua.");
-  }
+  if (!c || (c.donoId !== usuarioId && !c.verificado)) throw naoEncontrado("Categoria não encontrada");
+  if (c.donoId !== usuarioId) throw new AppError(403, "VERIFICADO", "Esta categoria é verificada (de outra pessoa): só leitura.");
   return c;
 }
 
 async function nomeLivre(usuarioId: string, nome: string, exceto?: string) {
   const igual = await getPrisma().categoriaItem.findFirst({
-    where: { nome: { equals: nome, mode: "insensitive" }, OR: [{ donoId: null }, { donoId: usuarioId }], NOT: exceto ? { id: exceto } : undefined },
+    where: { nome: { equals: nome, mode: "insensitive" }, donoId: usuarioId, NOT: exceto ? { id: exceto } : undefined },
   });
   if (igual) throw conflito("NOME_EM_USO", `Já existe a categoria "${igual.nome}".`);
 }
@@ -65,7 +63,7 @@ categoriasItemRouter.get("/categorias-item", async (req, res) => {
   const usuarioId = usuarioDe(req).id;
   const quem = await quemVe(usuarioId);
   const lista = await getPrisma().categoriaItem.findMany({
-    where: (await ocultaVerificados(usuarioId)) ? { OR: [{ donoId: null }, { donoId: usuarioId }] } : { OR: [{ donoId: null }, { donoId: usuarioId }, { verificado: true }] },
+    where: (await ocultaVerificados(usuarioId)) ? { donoId: usuarioId } : { OR: [{ donoId: usuarioId }, { verificado: true }] },
     orderBy: [{ ordem: "asc" }, { nome: "asc" }],
     include: comUsos,
   });
@@ -91,7 +89,7 @@ categoriasItemRouter.patch("/categorias-item/:id", async (req, res) => {
 /** Itens dessa categoria ficam sem categoria. */
 categoriasItemRouter.delete("/categorias-item/:id", async (req, res) => {
   const id = idDe(req.params.id, "Categoria não encontrada");
-  await categoriaEditavel(id, usuarioDe(req).id, { excluir: true });
+  await categoriaEditavel(id, usuarioDe(req).id);
   await getPrisma().categoriaItem.delete({ where: { id } });
   res.status(204).end();
 });

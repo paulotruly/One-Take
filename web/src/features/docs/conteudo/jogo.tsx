@@ -208,18 +208,27 @@ export function Recursos() {
         <li>O máximo começa no valor base da classe e sobe +{g.pontosVida} de vida, +{g.pontosMana} de mana e +{g.pontosEsforco} de esforço a cada nível.</li>
         <li>Uma ficha nova começa com tudo cheio.</li>
         <li>Durante a sessão, jogador e mestre ajustam os valores atuais (dá para tirar ou somar vários pontos de uma vez). Eles nunca passam do máximo nem ficam abaixo de zero.</li>
-        <li>A <strong>vida</strong> o jogador só diminui; aumentar (curar) é decisão do mestre.</li>
-        <li>Quando um recurso chega a 0, a ficha mostra um <strong>alerta</strong> (veja <Link to="/docs/status">Status</Link>).</li>
+        <li>A <strong>vida</strong> o jogador só diminui; aumentar (curar) é com o mestre: o jogador usa a carta ou o item, rola o dado e o mestre lança a cura na ficha.</li>
+        <li>Quando um recurso chega a 0, a ficha mostra um <strong>alerta</strong> (veja <Link to="/docs/status">Status</Link>). Vida ou mana em 0 é morte, sem volta.</li>
       </ul>
+      <h2>Recuperar vida, mana e esforço</h2>
+      <p>
+        A recuperação acontece nos <strong>interlúdios</strong> da sessão (as pausas entre uma cena e outra): o personagem se alimenta,
+        descansa, usa itens ou habilidades. Quanto cada coisa recupera é o mestre quem diz (ou está no efeito do item ou da carta).
+      </p>
+      <Destaque tipo="aviso" titulo="Carta que zera a mana">
+        Dá para usar uma carta que custa toda a mana que resta, mas mana em 0 é morte. Fique de olho no custo antes de usar.
+      </Destaque>
     </>
   );
 }
 
 export function StatusTopico() {
   const r = useRegras();
-  const automaticos = r.statusFixos.filter((s) => s.gatilho);
-  const manuais = r.statusFixos.filter((s) => !s.gatilho);
+  const automaticos = r.statusBase.filter((s) => s.gatilho);
+  const manuais = r.statusBase.filter((s) => !s.gatilho);
   const tipo = { BUFF: "Benefício", DEBUFF: "Prejuízo", MISTO: "Misto" } as const;
+  const quando: Record<string, string> = { VIDA_ZERO: "Vida em 0", MANA_ZERO: "Mana em 0", ESFORCO_ZERO: "Esforço em 0" };
   return (
     <>
       <p>
@@ -229,14 +238,22 @@ export function StatusTopico() {
       </p>
       <h2>Automáticos</h2>
       <p>Aparecem sozinhos quando um recurso chega a 0.</p>
-      <Tabela cabecalho={["Status", "Quando", "Efeito"]} linhas={automaticos.map((s) => [<strong key={s.nome}>{s.nome}</strong>, s.descricao, s.efeito])} />
+      <Tabela cabecalho={["Status", "Quando", "Efeito"]} linhas={automaticos.map((s) => [<strong key={s.nome}>{s.nome}</strong>, quando[s.gatilho ?? ""] ?? "", s.efeito])} />
       <h2>Aplicados pelo mestre</h2>
       <p>Durante a sessão, o mestre aplica e remove estes status na ficha de cada personagem. Uma carta de habilidade pode indicar qual status ela ativa.</p>
       <Tabela cabecalho={["Status", "Tipo", "Efeito"]} linhas={manuais.map((s) => [<strong key={s.nome}>{s.nome}</strong>, tipo[s.tipo], s.efeito])} />
       <p>NPCs e criaturas também recebem status, aplicados pelo mestre na ficha deles.</p>
-      <h2>Personalizável</h2>
+      <h2>Quanto tempo dura</h2>
       <ul>
-        <li>O mestre pode criar status próprios, com nome, tipo e efeito.</li>
+        <li>Depende de onde o status veio (a carta, o item ou a cena dizem). Ao aplicar, o mestre pode anotar quantos <strong>turnos</strong> ele dura.</li>
+        <li>A cada turno, o mestre tira 1 (botão -1 no status). Quando chega a 0, o status sai sozinho. Sem turnos anotados, dura até o mestre tirar.</li>
+        <li>Status diferentes <strong>se acumulam</strong>: os efeitos somam (ex.: Inspirado e Confiante juntos dão +10 num teste de Carisma).</li>
+        <li>Quando uma carta <strong>ativa um status</strong>, ele vai sempre para o <strong>alvo</strong> da carta.</li>
+      </ul>
+      <h2>Personalizável</h2>
+      <p>Os status acima são os do kit básico, verificados pelo administrador do One-Take. Nenhum status é fixo:</p>
+      <ul>
+        <li>O mestre pode criar status próprios, com nome, tipo e efeito, e editar os seus (até os automáticos, que só não podem ser excluídos).</li>
         <li>Em cada grupo, o mestre escolhe quais status valem. É opcional: um grupo pode não usar status nenhum.</li>
       </ul>
     </>
@@ -248,8 +265,8 @@ export function Atributos() {
   const f = r.ficha;
   return (
     <>
-      <p>Atributos são as capacidades gerais do personagem e agrupam as perícias. Os atributos fixos do sistema são:</p>
-      <Tabela cabecalho={["Atributo", "Descrição"]} linhas={r.atributosFixos.map((a) => [<strong key={a.nome}>{a.nome}</strong>, a.descricao])} />
+      <p>Atributos são as capacidades gerais do personagem e agrupam as perícias. Os atributos do kit básico, verificados pelo administrador do One-Take, são:</p>
+      <Tabela cabecalho={["Atributo", "Descrição"]} linhas={r.atributosBase.map((a) => [<strong key={a.nome}>{a.nome}</strong>, a.descricao])} />
       <p>O mestre pode criar outros atributos para o tema do RPG dele (por exemplo, Sanidade num jogo de terror) e escolher quais valem em cada grupo.</p>
       <h2>Pontos de atributo</h2>
       <ul>
@@ -291,7 +308,8 @@ export function Testes() {
       <h2>Esforço: dados extras</h2>
       <p>
         Antes de rolar, o jogador pode gastar <strong>pontos de esforço</strong>: cada {custo} dá <strong>+1 {d}</strong>. Quem rolaria 2{d}{" "}
-        rola 3{d} gastando {custo} de esforço.
+        rola 3{d} gastando {custo} de esforço. No máximo <strong>{t.esforcoMaximoPorRodada} {t.esforcoMaximoPorRodada === 1 ? "ponto" : "pontos"} de esforço por rodada</strong>,
+        e isso vale também para a defesa.
         {!t.esforcoComAtributoZero && " Com 0 no atributo não dá para comprar dados: continua sendo 1 dado pela metade."}
       </p>
       <Destaque tipo="aviso" titulo="Esforço acaba">
@@ -376,9 +394,10 @@ export function Habilidades() {
       />
       <h2>Cartas que melhoram com o nível</h2>
       <p>
-        Uma mesma carta pode ter <strong>aprimoramentos</strong>: a partir de um nível, ela muda (efeito mais forte, custo de mana
-        menor, novo limite, passa a ativar um status). Os aprimoramentos se acumulam, e a ficha mostra sempre a versão do nível do
-        personagem, com o selo "Aprimorada" e o próximo nível em que a carta muda.
+        Uma mesma carta pode ter <strong>aprimoramentos</strong>: a partir de um nível, ela vira outra versão de si mesma, com título,
+        descrição, efeito, custo de mana, condição, limite e status próprios (o que não mudou fica igual). Também dá para tirar coisas,
+        como o limite de uso. A ficha mostra sempre a versão do nível do personagem, com o selo "Aprimorada" e o próximo nível em que
+        a carta muda.
       </p>
       <Destaque titulo="Exemplo">
         Faísca: no nível 1 causa dano leve e custa 4 de mana. A partir do nível 2, causa dano médio e custa 2.
@@ -407,6 +426,17 @@ export function Progressao() {
       <Destaque tipo="aviso" titulo="Não existe descer de nível">
         Subir de nível é definitivo. O mestre deve ter cuidado antes de confirmar.
       </Destaque>
+      <h2>O mesmo personagem em outra mesa</h2>
+      <p>
+        Cada mesa é uma sessão. Para subir de nível, o personagem precisa participar de mais mesas. Ao entrar num grupo novo, escolha o
+        personagem em vez de criar um novo:
+      </p>
+      <ul>
+        <li>Ele vem com nome, história, imagem, classe, raça e nível. A classe e a raça precisam estar liberadas na mesa nova.</li>
+        <li>Começa com vida, mana e esforço cheios e <strong>sem itens</strong> (os itens ficam na mesa antiga).</li>
+        <li>Os pontos de perícia de todos os níveis voltam para você gastar nas perícias da mesa nova. Os atributos são distribuídos de novo.</li>
+        <li>A ficha da mesa antiga vira uma cópia arquivada. Peça ao mestre para subir o nível antes de levar o personagem.</li>
+      </ul>
       <Tabela
         cabecalho={["Nível", "Vida / mana / esforço", "Pontos de perícia", "Espaços no inventário"]}
         linhas={[1, 2, 3, 4, 5].map((n) => [
@@ -431,9 +461,9 @@ export function Inventario() {
         <li>O jogador pode <strong>passar</strong> um item para outro membro do grupo (se couber), <strong>descartar</strong> (fica vago no grupo) ou pegar um item vago.</li>
       </ul>
       <h2>Categorias</h2>
-      <p>O sistema traz 4 categorias, e cada mestre pode criar as suas (com nome, descrição e ícone), como Relíquias, Munição ou Ervas.</p>
+      <p>O kit básico traz 4 categorias, verificadas pelo administrador do One-Take, e cada mestre pode criar as suas (com nome, descrição e ícone), como Relíquias, Munição ou Ervas.</p>
       <Tabela
-        cabecalho={["Categoria do sistema", "O que costuma ser"]}
+        cabecalho={["Categoria do kit básico", "O que costuma ser"]}
         linhas={[
           ["espada", "Armas", "Espadas, arcos, cajados: o que se usa para lutar."],
           ["joia", "Artefatos", "Objetos especiais, mágicos ou raros."],
@@ -497,6 +527,76 @@ export function Grupos() {
         <li>O mestre escolhe <strong>o que vale no grupo</strong>: classes, raças, atributos e perícias. Assim o mesmo sistema serve para fantasia, terror ou ficção científica.</li>
         <li>O grupo pode ou não <strong>permitir classes repetidas</strong>. Se não permitir, cada classe só pode ser escolhida por um jogador.</li>
       </ul>
+    </>
+  );
+}
+
+export function Combate() {
+  const t = useRegras().teste;
+  return (
+    <>
+      <p>
+        O combate acontece na mesa, num grid físico. O app guarda as fichas (vida, mana, esforço, status) e mostra o teste pronto de
+        cada carta; a mesa rola os dados e aplica o resultado. Estas regras valem em todo grupo. As{" "}
+        <Link to="/docs/combate-padrao">regras padrão de combate</Link> (grid, alcance, intervenção e outras) o mestre pode desligar e trocar.
+      </p>
+      <h2>Ordem e turno</h2>
+      <ul>
+        <li>A <strong>Iniciativa</strong> define a ordem dos turnos: no início do combate, cada um testa Capacidade física + Iniciativa e o maior começa.</li>
+        <li>Cada turno é <strong>1 movimento + 1 ação</strong>. Toda ação que não é movimento é ação (atacar, usar carta, usar item). Não dá para trocar um pelo outro.</li>
+        <li>Cartas só são usadas no <strong>próprio turno</strong>. A exceção é a Intervenção defensiva, uma regra padrão que deixa defender um aliado no turno de outra pessoa.</li>
+        <li>Quando um combate começa e termina é o mestre quem define. É isso que reinicia as cartas com limite "por combate".</li>
+      </ul>
+      <h2>Ataque contra defesa</h2>
+      <Passos
+        passos={[
+          { titulo: "O atacante testa", texto: "Usa a carta (ou ataca) e rola o teste dela: dados do atributo + a perícia do teste." },
+          { titulo: "O alvo se defende", texto: "Rola os dados do atributo da perícia de defesa + o bônus dela, se tiver (veja a tabela de defesa em Habilidades). Pode gastar esforço." },
+          { titulo: "Compara os totais", texto: "Ataque maior ou igual à defesa: acerta. Empate é do atacante." },
+          { titulo: "Dano", texto: "Se acertou, rola o dano da carta e tira da vida do alvo. Uma defesa bem-sucedida evita todo o dano." },
+        ]}
+      />
+      <p>
+        O mestre pode usar uma <strong>DT</strong> no lugar da defesa (ex.: um alvo parado, um objeto). Nesse caso ele diz a DT em voz
+        alta, antes da rolagem.
+      </p>
+      <h2>Esforço</h2>
+      <p>
+        Cada ponto de esforço gasto antes de um teste dá +1 d{t.ladosDoDado}, no máximo {t.esforcoMaximoPorRodada}{" "}
+        {t.esforcoMaximoPorRodada === 1 ? "ponto" : "pontos"} por rodada, no ataque ou na defesa.
+      </p>
+      <h2>Cura, morte e recuperação</h2>
+      <ul>
+        <li><strong>Cura</strong>: o jogador usa a carta ou o item, rola o dado e o mestre lança a cura na ficha (a vida só o mestre aumenta).</li>
+        <li><strong>Morte</strong>: vida ou mana em 0, o personagem morreu. Não há volta.</li>
+        <li>Uma carta pode custar toda a mana que resta. Dá para usar, mas a mana em 0 mata: fique atento.</li>
+        <li><strong>Recuperação</strong>: nos interlúdios da sessão, comendo, descansando, com itens ou habilidades.</li>
+      </ul>
+      <h2>Status no combate</h2>
+      <ul>
+        <li>O status que uma carta ativa vai sempre para o <strong>alvo</strong>.</li>
+        <li>O mestre anota quantos turnos o status dura e tira 1 a cada turno; em 0, ele sai.</li>
+        <li>Status se acumulam: os efeitos somam.</li>
+        <li>"Perícias de defesa" são as da categoria Defesa: Reflexos, Resistência e Vontade.</li>
+      </ul>
+    </>
+  );
+}
+
+export function CombatePadrao() {
+  const { regrasPadrao } = useRegras();
+  return (
+    <>
+      <p>
+        Estas regras valem em todo grupo, a menos que o mestre desligue alguma (em Editar grupo, seção Regras de combate). O mestre
+        também pode criar regras próprias na página do grupo. Os jogadores veem as regras que valem na própria ficha, em Regras da mesa.
+      </p>
+      {regrasPadrao.map((r) => (
+        <section key={r.slug} id={r.slug}>
+          <h2>{r.titulo}</h2>
+          {r.texto.map((t, i) => <p key={i}>{t}</p>)}
+        </section>
+      ))}
     </>
   );
 }

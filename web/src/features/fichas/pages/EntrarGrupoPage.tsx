@@ -1,5 +1,5 @@
 // Entrar num grupo pelo código: mostra o grupo e cria a ficha com o que ele libera.
-import { Dices, Footprints, Info, Minus, Plus } from "lucide-react";
+import { Dices, Footprints, Info, Minus, Plus, Repeat, UserPlus } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { Avatar } from "../../../components/ui/Avatar";
@@ -14,7 +14,7 @@ import { GrupoBadge } from "../../classes/components/Selos";
 import { StatsBar } from "../../classes/components/StatsBar";
 import { useConvite, useCriarFicha } from "../api";
 import { ClasseDetalhes } from "../components/ClasseDetalhes";
-import type { Convite } from "../types";
+import type { Convite, PersonagemDeOutraMesa } from "../types";
 
 export function EntrarGrupoPage() {
   const { codigo = "" } = useParams();
@@ -85,6 +85,8 @@ function CriarFicha({ codigo, c }: { codigo: string; c: Convite }) {
   const [imagemUrl, setImagemUrl] = useState("");
   const [dados, setDados] = useState<Record<string, number>>({});
   const [detalheId, setDetalheId] = useState<string | null>(null);
+  // Personagem de outra mesa (null = personagem novo): leva nome, história, imagem, classe, raça e nível.
+  const [origem, setOrigem] = useState<PersonagemDeOutraMesa | null>(null);
   const detalhe = c.classes.find((cl) => cl.id === detalheId);
   // Subclasses agrupadas pelo arquétipo; classes avulsas no fim.
   const gruposDeClasses = Object.values(
@@ -106,16 +108,73 @@ function CriarFicha({ codigo, c }: { codigo: string; c: Convite }) {
     setDados({ ...dados, [atributoId]: novo });
   }
 
+  /** Escolher um personagem de outra mesa preenche tudo; os atributos vêm pelo nome (se a soma bater, senão o jogador distribui). */
+  function escolherPersonagem(p: PersonagemDeOutraMesa | null) {
+    setOrigem(p);
+    if (!p) {
+      setNome(""); setHistoria(""); setImagemUrl(""); setRacaId(""); setClasseId(""); setDados({});
+      return;
+    }
+    setNome(p.nome);
+    setHistoria(p.historia ?? "");
+    setImagemUrl(p.imagemUrl ?? "");
+    setRacaId(p.racaId);
+    setClasseId(p.classeId);
+    const porNome: Record<string, number> = {};
+    for (const a of c.atributos) {
+      const n = p.atributos.find((x) => x.nome === a.nome)?.dados ?? 0;
+      if (n > 0) porNome[a.id] = n;
+    }
+    const soma = Object.values(porNome).reduce((t, n) => t + n, 0);
+    setDados(soma === c.pontosAtributo ? porNome : {});
+  }
+
   function enviar(e: FormEvent) {
     e.preventDefault();
     criar.mutate(
-      { codigo, nome, racaId, classeId, historia: historia.trim() || null, imagemUrl: imagemUrl.trim() || null, dados },
+      { codigo, nome, racaId, classeId, historia: historia.trim() || null, imagemUrl: imagemUrl.trim() || null, dados, origem: origem?.origem ?? null },
       { onSuccess: (f) => navigate(`/jogador/fichas/${f.id}`, { replace: true }) },
     );
   }
 
   return (
     <form className="pagina" noValidate onSubmit={enviar}>
+      {c.personagens.length > 0 && (
+        <section className="secao">
+          <h2>Personagem novo ou de outra mesa?</h2>
+          <p className="pagina__subtitulo">
+            Cada mesa é uma sessão: para subir de nível, leve o mesmo personagem para mais mesas. Ele vem com a classe, a raça e o nível,
+            com vida, mana e esforço cheios e sem os itens. Os pontos de perícia dos níveis voltam para você gastar nesta mesa, e a ficha
+            da mesa antiga vira arquivada.
+          </p>
+          <div className="opcoes" role="radiogroup" aria-label="Personagem">
+            <button type="button" role="radio" aria-checked={!origem} className={`opcao ${!origem ? "opcao--ativa" : ""}`} onClick={() => escolherPersonagem(null)}>
+              <UserPlus size={20} aria-hidden />
+              <strong>Personagem novo</strong>
+              <span className="opcao__texto">Começa no nível 1.</span>
+            </button>
+            {c.personagens.map((p) => (
+              <button
+                key={p.origem.id}
+                type="button"
+                role="radio"
+                aria-checked={origem?.origem.id === p.origem.id}
+                disabled={!!p.motivoBloqueio}
+                title={p.motivoBloqueio ?? undefined}
+                className={`opcao ${origem?.origem.id === p.origem.id ? "opcao--ativa" : ""}`}
+                onClick={() => escolherPersonagem(p)}
+              >
+                <Repeat size={20} aria-hidden />
+                <strong>{p.nome}</strong>
+                <span className="selo">Nível {p.nivel}</span>
+                <span className="opcao__texto">{p.classe} · {p.raca}</span>
+                <span className="opcao__texto">{p.motivoBloqueio ?? `Da mesa ${p.grupo}`}</span>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
+
       <section className="secao">
         <h2>1. Personagem</h2>
         <div className="form">
@@ -131,6 +190,15 @@ function CriarFicha({ codigo, c }: { codigo: string; c: Convite }) {
         </div>
       </section>
 
+      {origem ? (
+        <section className="secao">
+          <h2>2. Raça e classe</h2>
+          <p>
+            <strong>{origem.raca}</strong> e <strong>{origem.classe}</strong>, nível {origem.nivel}: vêm com o personagem.
+          </p>
+          {(erros.racaId || erros.classeId) && <p className="campo__erro">{erros.racaId ?? erros.classeId}</p>}
+        </section>
+      ) : (<>
       <section className="secao">
         <h2>2. Raça</h2>
         {erros.racaId && <p className="campo__erro">{erros.racaId}</p>}
@@ -176,7 +244,7 @@ function CriarFicha({ codigo, c }: { codigo: string; c: Convite }) {
               role="radio"
               aria-checked={classeId === cl.id}
               disabled={cl.ocupada}
-              title={cl.ocupada ? "Outro jogador já usa esta classe" : undefined}
+              title={cl.motivoOcupada ?? undefined}
               className={`opcao ${classeId === cl.id ? "opcao--ativa" : ""}`}
               onClick={() => setClasseId(cl.id)}
             >
@@ -184,7 +252,7 @@ function CriarFicha({ codigo, c }: { codigo: string; c: Convite }) {
               <strong>{cl.titulo}</strong>
               <GrupoBadge grupo={cl.grupo} />
               <StatsBar vida={cl.pontosVida} mana={cl.pontosMana} esforco={cl.pontosEsforco} compacto />
-              <span className="opcao__texto">{cl.ocupada ? "Já escolhida por outro jogador" : cl.descricao}</span>
+              <span className="opcao__texto">{cl.motivoOcupada ?? cl.descricao}</span>
             </button>
             <Button pequeno variante="fantasma" onClick={() => setDetalheId(cl.id)}>
               <Info size={14} aria-hidden /> Ver detalhes
@@ -195,9 +263,10 @@ function CriarFicha({ codigo, c }: { codigo: string; c: Convite }) {
         </div>
         ))}
       </section>
+      </>)}
 
       <section className="secao">
-        <h2>4. Atributos</h2>
+        <h2>{origem ? "3." : "4."} Atributos</h2>
         <p className="pagina__subtitulo">
           Distribua {c.pontosAtributo} pontos. Cada ponto é um d20: nos testes você rola esses dados e fica com o maior. Restam{" "}
           <strong>{restantes}</strong>.
@@ -238,7 +307,7 @@ function CriarFicha({ codigo, c }: { codigo: string; c: Convite }) {
               <Button
                 variante="primario"
                 disabled={detalhe.ocupada}
-                title={detalhe.ocupada ? "Outro jogador já usa esta classe" : undefined}
+                title={detalhe.motivoOcupada ?? undefined}
                 onClick={() => {
                   setClasseId(detalhe.id);
                   setDetalheId(null);
@@ -254,7 +323,7 @@ function CriarFicha({ codigo, c }: { codigo: string; c: Convite }) {
       {criar.isError && <div className="aviso">{erroDeFormulario(criar.error)}</div>}
       <div className="barra-acoes">
         <Button type="submit" variante="primario" disabled={criar.isPending || !racaId || !classeId || restantes !== 0}>
-          {criar.isPending ? "Criando ficha…" : "Criar ficha e entrar no grupo"}
+          {criar.isPending ? "Criando ficha…" : origem ? `Levar ${origem.nome} para esta mesa` : "Criar ficha e entrar no grupo"}
         </Button>
       </div>
     </form>

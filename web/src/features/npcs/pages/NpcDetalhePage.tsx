@@ -22,7 +22,7 @@ import { VinculoPericiaForm } from "../../pericias/components/forms";
 import { PericiaItem } from "../../pericias/components/PericiaItem";
 import { PericiasPorAtributo } from "../../pericias/components/PericiasPorAtributo";
 import { PainelStatus } from "../../status/components/PainelStatus";
-import { useAplicarStatusNpc, useDefinirAtributoNpc, useDefinirPericiaNpc, useDuplicarNpc, useEditarNpc, useExcluirNpc, useNpc, useRemoverStatusNpc } from "../api";
+import { useAplicarStatusNpc, useDefinirAtributoNpc, useDefinirPericiaNpc, useDuplicarNpc, useEditarNpc, useExcluirNpc, useNpc, useRemoverStatusNpc, useTurnosStatusNpc } from "../api";
 import type { NpcDetalhe, PericiaDoNpc } from "../types";
 
 export function NpcDetalhePage() {
@@ -53,6 +53,7 @@ function FichaNpc({ n }: { n: NpcDetalhe }) {
   const excluirItem = useExcluirItem();
   const aplicarStatus = useAplicarStatusNpc(n.id);
   const removerStatus = useRemoverStatusNpc(n.id);
+  const turnosStatus = useTurnosStatusNpc(n.id);
   const duplicar = useDuplicarNpc();
   const editavel = n.editavel ?? true;
 
@@ -115,12 +116,13 @@ function FichaNpc({ n }: { n: NpcDetalhe }) {
       <PainelStatus
         status={n.status}
         aplicaveis={editavel ? n.statusAplicaveis : []}
-        onAplicar={(id) => aplicarStatus.mutate(id)}
+        onAplicar={(statusId, turnos) => aplicarStatus.mutate({ statusId, turnos })}
         onRemover={(id) => removerStatus.mutate(id)}
-        ocupado={!editavel || aplicarStatus.isPending || removerStatus.isPending}
+        onMudarTurnos={editavel ? (statusId, turnos) => turnosStatus.mutate({ statusId, turnos }) : undefined}
+        ocupado={!editavel || aplicarStatus.isPending || removerStatus.isPending || turnosStatus.isPending}
         semAplicaveis="Nenhum status para aplicar."
       />
-      {(aplicarStatus.isError || removerStatus.isError) && <div className="aviso">{mensagemDeErro(aplicarStatus.error ?? removerStatus.error)}</div>}
+      {(aplicarStatus.isError || removerStatus.isError || turnosStatus.isError) && <div className="aviso">{mensagemDeErro(aplicarStatus.error ?? removerStatus.error ?? turnosStatus.error)}</div>}
 
       <section className="secao">
         <h2>Recursos</h2>

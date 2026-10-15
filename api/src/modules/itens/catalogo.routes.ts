@@ -5,7 +5,7 @@ import { z } from "zod";
 import { naoEncontrado } from "../../lib/errors.js";
 import { comKitIds, comKits, definirKits, visivelNoKit } from "../../lib/kits.js";
 import { getPrisma } from "../../lib/prisma.js";
-import { comVisao, quemVe, visivelParaSemFixos, type Quem } from "../../lib/sistema.js";
+import { comVisao, quemVe, visivelPara, type Quem } from "../../lib/sistema.js";
 import { idDe } from "../../lib/validacao.js";
 import { usuarioDe } from "../../middleware/auth.js";
 import { apresentarItem, comRequisitos, validarRequisitos } from "./itens.apresentar.js";
@@ -39,7 +39,7 @@ catalogoItensRouter.get("/catalogo-itens", async (req, res) => {
   const usuarioId = usuarioDe(req).id;
   const quem = await quemVe(usuarioId);
   const modelos = await getPrisma().itemModelo.findMany({
-    where: { AND: [await visivelParaSemFixos(usuarioId), visivelNoKit(kitId)] },
+    where: { AND: [await visivelPara(usuarioId), visivelNoKit(kitId)] },
     orderBy: [{ categoria: { ordem: "asc" } }, { nome: "asc" }],
     include: incluir,
   });

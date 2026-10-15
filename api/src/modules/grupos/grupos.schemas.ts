@@ -21,6 +21,10 @@ const base = z.object({
   imagemUrl: urlOpcional(),
   limiteMembros: inteiro(1, 50),
   permitirClassesRepetidas: z.boolean(),
+  /** Máximo de fichas por função da classe; null = sem limite, 0 = função fechada. */
+  limiteCombatentes: inteiro(0, 50).nullable(),
+  limiteVanguardistas: inteiro(0, 50).nullable(),
+  limiteSuportes: inteiro(0, 50).nullable(),
   /** Regras padrão de combate desligadas neste grupo (slugs). */
   regrasPadraoDesativadas: z
     .array(z.string())
@@ -30,7 +34,13 @@ const base = z.object({
   kitId: z.guid("Kit inválido").nullable(),
 });
 
-export const criarGrupoSchema = base.extend({ kitId: base.shape.kitId.default(null), disponiveis: disponiveisSchema.optional() });
+export const criarGrupoSchema = base.extend({
+  kitId: base.shape.kitId.default(null),
+  limiteCombatentes: base.shape.limiteCombatentes.default(null),
+  limiteVanguardistas: base.shape.limiteVanguardistas.default(null),
+  limiteSuportes: base.shape.limiteSuportes.default(null),
+  disponiveis: disponiveisSchema.optional(),
+});
 export const editarGrupoSchema = base.partial().extend({
   regrasPadraoDesativadas: base.shape.regrasPadraoDesativadas.removeDefault().optional(),
 });

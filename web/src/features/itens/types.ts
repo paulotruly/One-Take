@@ -1,4 +1,4 @@
-// Itens: catálogo do mestre (moldes), itens lançados nos grupos e categorias (4 fixas + as do mestre).
+// Itens: catálogo do mestre (moldes), itens lançados nos grupos e categorias (as do mestre + as verificadas).
 import {
   Apple, Axe, Beer, Bomb, BookOpen, BowArrow, CircleDot, Coins, Crown, FlaskConical, Gem, Hammer, Key, Map, Package,
   ScrollText, Shield, Shirt, Sword, WandSparkles, type LucideIcon,
@@ -32,8 +32,8 @@ export const LISTA_ICONES_ITEM = Object.keys(ICONES_ITEM);
 /** Ícone lucide de uma chave (desconhecida = pacote). */
 export const iconeDe = (chave: string | undefined | null) => (ICONES_ITEM[chave ?? ""] ?? ICONES_ITEM.pacote!).Icone;
 
-/** Categoria de item: fixa do sistema (somente leitura) ou criada pelo mestre. */
-export type CategoriaItem = { id: string; nome: string; descricao: string; icone: string; ordem: number; fixa: boolean; usos?: number; editavel?: boolean; verificado?: boolean; deOutro?: boolean; podeVerificar?: boolean; seloProprio?: boolean; verificadoPorKit?: boolean };
+/** Categoria de item: criada pelo mestre ou verificada de outra pessoa (somente leitura). */
+export type CategoriaItem = { id: string; nome: string; descricao: string; icone: string; ordem: number; usos?: number; editavel?: boolean; verificado?: boolean; deOutro?: boolean; podeVerificar?: boolean; seloProprio?: boolean; verificadoPorKit?: boolean };
 export type CategoriaItemInput = { nome: string; descricao: string; icone: string };
 
 /** Campos comuns ao molde do catálogo e ao item no grupo. */

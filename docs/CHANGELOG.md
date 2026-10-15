@@ -6,6 +6,48 @@ Registre só o que muda comportamento, manutenção ou entendimento do sistema. 
 
 Formato de cada entrada: **Resumo**, Motivo, Arquivos/módulos, Impacto (regras ou arquitetura), Procedimentos (migrations, config) e Docs.
 
+## Não commitado (2026-10-14)
+- **Personagem entre mesas:** ao entrar num grupo, o jogador escolhe personagem novo ou um de outra mesa (ficha ativa ou arquivada).
+  Vem com classe, raça e nível (que precisam estar liberadas), recursos cheios, sem itens e com os pontos de perícia para gastar de
+  novo; a origem vira arquivada ("levado para outra mesa"). Migration `20261014190000_personagem_entre_mesas` (`classeId`/`racaId` na
+  ficha arquivada e o motivo novo); `personagens[]` no convite e `origem` em `POST /api/fichas`.
+- **Mana dos conjuradores** (no banco): Bardo 150, Feiticeiro elemental 130, Necromante 120.
+- **Regras de combate:** novos tópicos públicos Combate (turno, ataque contra defesa, dano, cura, morte, recuperação, esforço) e Regras
+  padrão de combate; as regras padrão ganharam texto completo e saíram Domínio de combate e Égide (`regras/combate.ts`). Editar grupo
+  liga e desliga as regras padrão; a página do grupo mostra as regras e cria, edita e exclui regras da mesa; a ficha mostra Regras da mesa.
+  Esforço: no máximo 1 ponto por rodada (`regras/teste.ts`).
+- **Turnos nos status:** ao aplicar, o mestre anota os turnos (opcional) e tira 1 por turno (botão -1); em 0 o status sai. Migration
+  `20261014180000_turnos_de_status_e_aprimoramento_completo`; `PATCH /api/{fichas,npcs,criaturas}/:id/status/:statusId`.
+- **Aprimoramento = carta inteira no nível**, com descrição própria, formulário preenchido com a versão anterior; dá para tirar limite
+  e status.
+- Textos do seed dos status Contido e Imobilizado sem o Domínio de combate; Em cobertura cita Reflexos, Resistência e Vontade.
+- **Selos no topo do card da classe:** a função (Combatente, Vanguardista, Suporte) virou faixa sólida na cor da função, com ícone
+  (espadas, escudo, aperto de mãos) e caixa alta; "Minha" / "Só leitura" em vidro escuro; leve degradê no topo da imagem para
+  dar contraste. O ícone da função aparece também nos outros lugares do selo. Rodapé: "© 2026 One-Take".
+- **Termos e privacidade fora do site:** saíram as rotas `/termos` e `/privacidade` (`pages/LegalPages.tsx` e o CSS `.legal`); no rodapé
+  os dois links continuam, sem destino, até as páginas voltarem. As minutas seguem em `docs/legal/`.
+- **Documentação pública:** saíram as últimas menções a conteúdo fixo (atributos "do kit básico", categorias do kit básico, status
+  automáticos no grupo novo) e o glossário trocou "Conceito" por "Arquétipo".
+- **Não há mais conteúdo fixo.** Atributos, status, categorias de item e classes sempre têm dono; o que era fixo passou para a conta
+  ADMIN (atributos e status no kit verificado dela; categorias com selo) e o dono edita tudo, inclusive os status automáticos (que não
+  podem ser excluídos: 403 `STATUS_AUTOMATICO`). Editar algo verificado de outra pessoa = 403 `VERIFICADO` (saíram `CLASSE_FIXA`,
+  `ATRIBUTO_FIXO`, `STATUS_FIXO`, `CATEGORIA_FIXA` e os campos `fixo`/`fixa` das respostas). `GET /api/regras` troca
+  `atributosFixos`/`statusFixos` por `atributosBase`/`statusBase` (do ADMIN e verificados). Saiu o script `fixar-classe`; o seed cria o
+  conteúdo inicial na conta ADMIN, só o que falta.
+  - Arquivos: `api/src/lib/sistema.ts`, `lib/errors.ts`, módulos `atributos`, `classes`, `status`, `itens/categorias.ts`, `regras`,
+    `grupos`, `prisma/seed.ts`, `prisma/status-base.ts`, `prisma/pericias-base.ts`, `scripts/cargo.ts`, `scripts/exportar-conteudo.ts`;
+    no web, as telas de classes, perícias e atributos, status, categorias de item, grupo e a documentação pública.
+- **Status só com efeito** (sem descrição) e lista de status com o título em destaque, seguido do tipo e do botão de verificado.
+  Arquivos: `status.schemas.ts`, `status.service.ts`, `StatusPage.tsx`, `StatusBadge.tsx` (`StatusTitulo`), `status.css`, `FichaPage.tsx`.
+- **Limite por função no grupo** (Combatentes, Vanguardistas, Suportes): campos no formulário do grupo, selos na página do grupo,
+  classe bloqueada com o motivo na criação da ficha e 409 `FUNCAO_CHEIA` na API. Arquivos: `grupos/funcoes.ts` (novo),
+  `grupos.schemas.ts`, `grupos.service.ts`, `fichas.service.ts`, `GrupoInfoForm.tsx`, `GrupoFormPage.tsx`, `GrupoDetalhePage.tsx`,
+  `EntrarGrupoPage.tsx`. Testes em `grupos.test.ts`.
+- Procedimentos: migration `20261014120000_sem_fixos_e_limite_por_funcao` (precisa de uma conta ADMIN se houver conteúdo fixo; junta a
+  descrição do status no efeito e apaga a coluna).
+- Docs: DOMINIO, DADOS, API, ARQUITETURA, ROADMAP, DECISOES, PROJECT_CONTEXT, CLAUDE.md, Termos de uso, documentação pública
+  (Status, Atributos, guia do mestre).
+
 ## Não commitado (2026-10-13)
 - **Tela do kit** (`/mestre/kits/:id`): o que está dentro, por tipo, com link para cada coisa e os grupos que usam o kit; serve
   também para o kit verificado. API `GET /api/kits/:id`. Arquivos: `kits.routes.ts`, `KitDetalhePage.tsx`, `KitsPage.tsx`, `router.tsx`;

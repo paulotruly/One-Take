@@ -25,7 +25,7 @@ export function HabilidadesPage() {
   }
 
   const c = classe.data;
-  const editavel = c.editavel ?? !c.fixa;
+  const editavel = !!c.editavel;
 
   return (
     <div className="pagina">
@@ -33,12 +33,12 @@ export function HabilidadesPage() {
       <div>
         <div className="classe-cabecalho__selos">
           <GrupoBadge grupo={c.grupo} />
-          <OrigemBadge fixa={c.fixa} deOutro={c.deOutro} />
+          <OrigemBadge deOutro={c.deOutro} />
         </div>
         <h1>Habilidades de {c.titulo} {c.verificado && <VerificadoBadge />}</h1>
         <p className="pagina__subtitulo">
           {c.habilidades.length} {c.habilidades.length === 1 ? "carta" : "cartas"} na cartela · toque numa carta para ver tudo
-          {editavel ? " · use as setas para reordenar" : c.deOutro ? " · verificada, somente leitura" : " · classe fixa, somente leitura"}
+          {editavel ? " · use as setas para reordenar" : " · verificada, somente leitura"}
         </p>
       </div>
       <CartelaEditor habilidades={c.habilidades} editavel={editavel} criar={criar} ordenar={ordenar} />

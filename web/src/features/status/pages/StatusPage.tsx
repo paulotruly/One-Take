@@ -1,9 +1,9 @@
-// Catálogo de status do mestre: fixos do sistema (somente leitura) + os criados por ele.
+// Catálogo de status do mestre: os dele (editáveis, inclusive os automáticos) + os verificados de outras pessoas (só leitura).
 import { SeloVerificado } from "../../verificados/pages/SeloVerificado";
 import { AvisoKit } from "../../kits/components/AvisoKit";
 import { useKitAtivo } from "../../kits/api";
 import { soDoKit } from "../../kits/types";
-import { ChevronDown, ChevronUp, Lock, Plus, Tags, Zap } from "lucide-react";
+import { ChevronDown, ChevronUp, Plus, Tags, Zap } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { KitsField } from "../../kits/components/KitsField";
 import { kitsPadrao } from "../../kits/types";
@@ -17,7 +17,7 @@ import { useOculto } from "../../../lib/useOculto";
 import { useCategoriasStatus, useCriarStatus, useEditarStatus, useExcluirStatus, useStatus } from "../api";
 import { agruparPorCategoria, type GrupoDeStatus } from "../categorias";
 import { CategoriasStatusModal } from "./CategoriasStatusModal";
-import { StatusBadge } from "../components/StatusBadge";
+import { StatusTitulo } from "../components/StatusBadge";
 import { LISTA_TIPOS, ROTULO_GATILHO, ROTULO_TIPO, type CategoriaStatus, type Status, type StatusInput, type TipoStatus } from "../types";
 
 export function StatusPage() {
@@ -40,7 +40,7 @@ export function StatusPage() {
   const fechar = () => setEmEdicao(undefined);
 
   const { kitId } = useKitAtivo();
-  const lista = (status.data ?? []).filter((s) => s.fixo || soDoKit(s.kitIds, kitId));
+  const lista = (status.data ?? []).filter((s) => soDoKit(s.kitIds, kitId));
   const automaticos = lista.filter((s) => s.automatico);
   const manuais = lista.filter((s) => !s.automatico);
   const grupos = agruparPorCategoria(manuais, categorias.data, { comVazias: true });
@@ -74,7 +74,7 @@ export function StatusPage() {
         <>
           <section className="secao">
             <h2>Automáticos</h2>
-            <p className="pagina__subtitulo">Aparecem sozinhos na ficha quando um recurso chega a 0.</p>
+            <p className="pagina__subtitulo">Aparecem sozinhos na ficha quando um recurso chega a 0. Dá para mudar o nome e o efeito, mas não excluir.</p>
             <Lista itens={automaticos} onEditar={abrir} onExcluir={setAExcluir} />
           </section>
           <section className="secao">
@@ -140,20 +140,19 @@ function Lista({ itens, onEditar, onExcluir }: { itens: Status[]; onEditar: (s: 
       {itens.map((s) => (
         <li key={s.id} className="pericia pericia--atributo">
           <div>
+            {/* Título, tipo e (por último) o selo/botão de verificado. */}
             <div className="pericia__nome">
-              <StatusBadge nome={s.nome} tipo={s.tipo} />
-              <SeloVerificado tipo="status" item={s} />
+              <StatusTitulo nome={s.nome} tipo={s.tipo} />
               <span className={`selo selo--status-${s.tipo}`}>{ROTULO_TIPO[s.tipo]}</span>
-              {s.fixo && <span className="selo selo--fixa"><Lock size={12} aria-hidden /> Fixo</span>}
               {s.gatilho && <span className="selo"><Zap size={12} aria-hidden /> {ROTULO_GATILHO[s.gatilho]}</span>}
+              <SeloVerificado tipo="status" item={s} />
             </div>
-            {s.descricao && <p className="pericia__descricao">{s.descricao}</p>}
             <p><strong>Efeito:</strong> {s.efeito}</p>
           </div>
-          {(s.editavel ?? !s.fixo) && (
+          {s.editavel && (
             <div className="pericia__acoes">
               <Button pequeno variante="fantasma" onClick={() => onEditar(s)}>Editar</Button>
-              {!s.fixo && <Button pequeno variante="fantasma" onClick={() => onExcluir(s)} aria-label={`Excluir ${s.nome}`}>Excluir</Button>}
+              {!s.automatico && <Button pequeno variante="fantasma" onClick={() => onExcluir(s)} aria-label={`Excluir ${s.nome}`}>Excluir</Button>}
             </div>
           )}
         </li>
@@ -182,13 +181,12 @@ function StatusForm({
   const [nome, setNome] = useState(inicial?.nome ?? "");
   const [tipo, setTipo] = useState<TipoStatus>(inicial?.tipo ?? "DEBUFF");
   const [efeito, setEfeito] = useState(inicial?.efeito ?? "");
-  const [descricao, setDescricao] = useState(inicial?.descricao ?? "");
   const [kitIds, setKitIds] = useState<string[]>(inicial?.kitIds ?? kitsPadrao());
   const [categoriaId, setCategoriaId] = useState(inicial?.categoriaId ?? "");
 
   function enviar(e: FormEvent) {
     e.preventDefault();
-    onEnviar({ nome, tipo, efeito, descricao, kitIds, categoriaId: categoriaId || null });
+    onEnviar({ nome, tipo, efeito, kitIds, categoriaId: categoriaId || null });
   }
 
   return (
@@ -204,10 +202,7 @@ function StatusForm({
         </Field>
       </div>
       <Field rotulo="Efeito" erro={erros.efeito} dica='O que muda para o personagem. Ex.: "-10 no total dos dados em testes físicos".'>
-        <textarea value={efeito} onChange={(e) => setEfeito(e.target.value)} maxLength={500} rows={2} />
-      </Field>
-      <Field rotulo="Descrição (opcional)" erro={erros.descricao} dica="O que o personagem está sentindo ou passando.">
-        <textarea value={descricao} onChange={(e) => setDescricao(e.target.value)} maxLength={500} rows={2} />
+        <textarea value={efeito} onChange={(e) => setEfeito(e.target.value)} maxLength={1000} rows={3} />
       </Field>
       <Field rotulo="Categoria (opcional)" erro={erros.categoriaId} dica="Para agrupar os status. Crie categorias no botão Categorias.">
         <select value={categoriaId} onChange={(e) => setCategoriaId(e.target.value)}>

@@ -45,7 +45,7 @@ export function EditarClassePage() {
 
   if (classe.isPending) return <Loading />;
   if (classe.isError) return <ErrorState mensagem={mensagemDeErro(classe.error)} onTentarNovamente={() => classe.refetch()} />;
-  if (!(classe.data.editavel ?? !classe.data.fixa)) return <Navigate to={`/mestre/classes/${id}`} replace />;
+  if (!classe.data.editavel) return <Navigate to={`/mestre/classes/${id}`} replace />;
 
   const voltar = () => navigate(`/mestre/classes/${id}`);
   return (

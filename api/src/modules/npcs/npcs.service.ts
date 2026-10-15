@@ -1,7 +1,7 @@
 // NPCs do mestre: personagens com ficha completa (raça, classe opcional, nível, dados, perícias, cartas e inventário).
 // Só o mestre dono vê e edita; de outro mestre = 404. Gerais ou exclusivos de um grupo.
 // Sem imports do serviço de itens (ele importa este arquivo).
-import { kitIdsPara, podeUsar, quemVe, visao, visivelParaSemFixos } from "../../lib/sistema.js";
+import { kitIdsPara, podeUsar, quemVe, visao, visivelPara } from "../../lib/sistema.js";
 import type { z } from "zod";
 import { naoEncontrado, requisicaoInvalida } from "../../lib/errors.js";
 import { comKits, definirKits, visivelNoKit } from "../../lib/kits.js";
@@ -29,7 +29,7 @@ export async function npcDoMestre(id: string, usuarioId: string) {
 /** Ver e duplicar: do mestre ou verificado. Editar, mexer em itens e status: só o dono (`npcDoMestre`). */
 async function npcLegivel(id: string, usuarioId: string) {
   const npc = await getPrisma().npc.findUnique({ where: { id } });
-  if (!npc || !(await podeUsar("npc", npc, usuarioId, { semFixos: true }))) throw naoEncontrado("NPC não encontrado");
+  if (!npc || !(await podeUsar("npc", npc, usuarioId))) throw naoEncontrado("NPC não encontrado");
   return npc;
 }
 
@@ -41,7 +41,7 @@ function baseDo(npc: { vidaBase: number | null; manaBase: number | null; esforco
   return { pontosVida: npc.vidaBase ?? 1, pontosMana: npc.manaBase ?? 1, pontosEsforco: npc.esforcoBase ?? 1 };
 }
 
-/** Raça precisa ser do mestre; classe, fixa ou dele; sem classe, os três valores base são obrigatórios. */
+/** Raça e classe precisam ser do mestre (ou verificadas); sem classe, os três valores base são obrigatórios. */
 async function validar(
   d: Partial<z.infer<typeof criarNpcSchema>>,
   usuarioId: string,
@@ -49,7 +49,7 @@ async function validar(
 ) {
   if (d.racaId) {
     const raca = await getPrisma().raca.findUnique({ where: { id: d.racaId }, select: { id: true, donoId: true, verificado: true } });
-    if (!raca || !(await podeUsar("raca", raca, usuarioId, { semFixos: true }))) throw naoEncontrado("Raça não encontrada");
+    if (!raca || !(await podeUsar("raca", raca, usuarioId))) throw naoEncontrado("Raça não encontrada");
   }
   if (d.classeId) await classeLegivel(d.classeId, usuarioId);
   const classeId = d.classeId !== undefined ? d.classeId : atual?.classeId ?? null;
@@ -81,7 +81,7 @@ const completo = {
 export async function listar(usuarioId: string, kitId?: string) {
   const quem = await quemVe(usuarioId);
   const npcs = await getPrisma().npc.findMany({
-    where: { AND: [await visivelParaSemFixos(usuarioId), visivelNoKit(kitId)] },
+    where: { AND: [await visivelPara(usuarioId), visivelNoKit(kitId)] },
     orderBy: { nome: "asc" },
     include: { raca: { select: { titulo: true } }, classe: { select: { titulo: true, pontosVida: true, pontosMana: true, pontosEsforco: true } }, ...comKits },
   });
@@ -121,9 +121,9 @@ export async function detalhar(id: string, usuarioId: string) {
     esforcoAtual: Math.min(n.esforcoAtual, max.pontosEsforco),
   };
   const habilidades = n.classe?.habilidades ?? [];
-  // NPC não é de um grupo: valem todos os status do mestre (fixos + próprios).
+  // NPC não é de um grupo: valem todos os status que o mestre vê (dele + verificados).
   const disponiveis = await statusDisponiveis(usuarioId, null);
-  const aplicados = n.status.map((s) => s.status);
+  const aplicados = n.status;
 
   // Para onde os itens do NPC podem ir: fichas e grupos do mestre.
   const grupos = n.donoId !== usuarioId ? [] : await prisma.grupo.findMany({
@@ -153,7 +153,7 @@ export async function detalhar(id: string, usuarioId: string) {
     morto: estaMorto(atuais),
     /** Status atuais (automáticos pelos recursos + aplicados). Efeitos são informativos. */
     status: statusDaFicha(atuais, disponiveis, aplicados),
-    statusAplicaveis: statusAplicaveis(disponiveis, aplicados.map((s) => s.id)),
+    statusAplicaveis: statusAplicaveis(disponiveis, aplicados.map((s) => s.status.id)),
     atributos: n.atributos
       .map(({ dados: d, atributo }) => ({ ...apresentarAtributo(atributo), dados: d, teste: notacaoDoTeste(d) }))
       .sort((a, b) => a.ordem - b.ordem || a.nome.localeCompare(b.nome, "pt-BR")),
@@ -274,16 +274,28 @@ export async function definirPericia(npcId: string, periciaId: string, usuarioId
 
 // ---------- Status (o mestre aplica e tira) ----------
 
-export async function aplicarStatus(npcId: string, usuarioId: string, statusId: string) {
+export async function aplicarStatus(npcId: string, usuarioId: string, statusId: string, turnos: number | null = null) {
   const npc = await npcDoMestre(npcId, usuarioId);
   await npcDoMestre(npc.id, usuarioId);
   await validarAplicacao(statusId, usuarioId, await statusDisponiveis(usuarioId, null));
-  await getPrisma().npcStatus.upsert({ where: { npcId_statusId: { npcId, statusId } }, create: { npcId, statusId }, update: {} });
+  await getPrisma().npcStatus.upsert({ where: { npcId_statusId: { npcId, statusId } }, create: { npcId, statusId, turnos }, update: { turnos } });
   return detalhar(npcId, usuarioId);
 }
 
 export async function removerStatus(npcId: string, usuarioId: string, statusId: string) {
   await npcDoMestre(npcId, usuarioId);
   await getPrisma().npcStatus.deleteMany({ where: { npcId, statusId } });
+  return detalhar(npcId, usuarioId);
+}
+
+/** O mestre muda os turnos que faltam de um status aplicado (tira 1 por turno); 0 tira o status. */
+export async function definirTurnosStatus(npcId: string, usuarioId: string, statusId: string, turnos: number | null) {
+  await npcDoMestre(npcId, usuarioId);
+  const where = { npcId, statusId };
+  if (turnos === 0) await getPrisma().npcStatus.deleteMany({ where });
+  else {
+    const r = await getPrisma().npcStatus.updateMany({ where, data: { turnos } });
+    if (r.count === 0) throw naoEncontrado("Este status não está aplicado.");
+  }
   return detalhar(npcId, usuarioId);
 }

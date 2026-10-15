@@ -32,7 +32,6 @@ import { HomePage } from "./pages/HomePage";
 import { LoginPage } from "./pages/LoginPage";
 import { PerfilPage } from "./pages/PerfilPage";
 import { NotFoundPage } from "./pages/SimplesPages";
-import { PrivacidadePage, TermosPage } from "./pages/LegalPages";
 import { ContaExcluidaPage, RecuperarSenhaPage } from "./pages/ContaPages";
 import { FichaArquivadaPage } from "./features/fichas/pages/FichaArquivadaPage";
 import { ConfiguracoesContaPage } from "./features/conta/pages/ConfiguracoesContaPage";
@@ -46,8 +45,6 @@ export const router = createBrowserRouter([
       { path: "/docs", element: <DocsPage /> },
       { path: "/docs/:slug", element: <DocsPage /> },
       { path: "/guia-do-mestre", element: <Navigate to="/docs/mestre-visao-geral" replace /> },
-      { path: "/termos", element: <TermosPage /> },
-      { path: "/privacidade", element: <PrivacidadePage /> },
     ],
   },
   { path: "/login", element: <LoginPage /> },

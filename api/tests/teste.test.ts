@@ -5,7 +5,7 @@ describe("regras de teste (d20)", () => {
   it("rola 1 d20 por ponto no atributo e +1 por ponto de esforço gasto", () => {
     expect(dadosDoTeste(2)).toBe(2);
     expect(dadosDoTeste(2, 1)).toBe(3);
-    expect(dadosDoTeste(3, 2)).toBe(5);
+    expect(dadosDoTeste(3, 2)).toBe(4); // no máximo 1 de esforço por rodada
   });
 
   it("atributo 0: sempre 1 dado, e o esforço não compra dados", () => {

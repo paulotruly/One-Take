@@ -1,5 +1,5 @@
 // Soma de perícias de um personagem (ficha ou NPC): uma linha por perícia, com quanto veio de cada fonte e o total.
-// Perícias base (das classes fixas, donoId nulo) contam como a cópia do catálogo do mestre (mesma origem).
+// Perícias base (modelo do catálogo, donoId nulo) contam como a cópia do catálogo do mestre (mesma origem).
 // Fonte única usada pela ficha, pelo NPC e pelo pré-requisito de itens.
 import type { Atributo, Pericia } from "../../generated/prisma/client.js";
 import { getPrisma } from "../../lib/prisma.js";

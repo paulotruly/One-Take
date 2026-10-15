@@ -4,8 +4,8 @@
 As minutas são um texto técnico baseado no código, **não um parecer jurídico** e não garantem conformidade com a LGPD. Antes de publicar,
 o responsável precisa preencher os campos abaixo e, de preferência, revisar com um advogado com experiência em tecnologia e proteção de dados.
 
-As páginas `/termos` e `/privacidade` do site exibem estas minutas, **com os marcadores visíveis**. Enquanto houver marcadores, o site
-não deve ser divulgado ao público.
+As páginas `/termos` e `/privacidade` foram retiradas do site em 2026-10-14 (os links do rodapé existem, mas não levam a lugar nenhum).
+As minutas continuam aqui. Enquanto não voltarem ao site, revisadas e sem marcadores, o site não deve ser divulgado ao público.
 
 ## 1. Decisões já tomadas pelo responsável (2026-10-13)
 
@@ -19,6 +19,8 @@ não deve ser divulgado ao público.
 - Encerramento do serviço: **sem aviso prévio**; a exportação fica disponível o tempo todo.
 - Denúncias: sem procedimento formal; pelo e-mail de contato.
 - Mudanças nos documentos: aviso no aplicativo.
+- Conteúdo compartilhado (2026-10-14): não há mais conteúdo fixo; o que todos veem é o conteúdo **verificado** pelo administrador
+  (kit básico). Os Termos de uso passaram a dizer isso (seção de conteúdo do One-Take). Nenhum dado pessoal novo.
 - Supabase: projeto `onetake`, região **us-west-2** (Estados Unidos), instância nano. Hospedagem: **Render** (API) e **Vercel** (site),
   ainda não publicados.
 - Encarregado: não indicado, como agente de tratamento de pequeno porte (Resolução CD/ANPD nº 2/2022, que inclui pessoas naturais e

@@ -23,7 +23,7 @@ const PARA_O_MESTRE: Recurso[] = [
 const PARA_O_JOGADOR: Recurso[] = [
   { Icone: ScrollText, titulo: "Ficha pronta", texto: "Raça, classe, dados por atributo, perícias somadas e o teste de cada perícia já calculado." },
   { Icone: Heart, titulo: "Vida, mana e esforço", texto: "Recursos sempre à vista, com os limites do nível. O mestre cura; você registra o dano." },
-  { Icone: Activity, titulo: "Status", texto: "Avisos automáticos de morte e cansaço e os status que o mestre aplica durante a sessão." },
+  { Icone: Activity, titulo: "Status", texto: "Avisos automáticos de morte e cansaço e os status que o mestre aplica durante a sessão, com os turnos que faltam. As regras da mesa ficam na ficha." },
   { Icone: Smartphone, titulo: "Feito para o celular", texto: "Ficha, cartas e inventário em telas pensadas para usar na mesa, pelo telefone." },
 ];
 

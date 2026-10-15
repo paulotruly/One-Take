@@ -48,7 +48,7 @@ async function main() {
     });
     const saida = {
       classes: classes.map((c) => ({
-        titulo: c.titulo, grupo: c.grupo, fixa: c.donoId === null, dono: c.dono?.nickname ?? null,
+        titulo: c.titulo, grupo: c.grupo, dono: c.dono?.nickname ?? null,
         vida: c.pontosVida, mana: c.pontosMana, esforco: c.pontosEsforco,
         pericias: c.pericias.map((p) => ({ nome: p.pericia.nome, atributo: p.pericia.atributo.nome, modificador: p.modificador })),
         cartas: c.habilidades.map(carta),

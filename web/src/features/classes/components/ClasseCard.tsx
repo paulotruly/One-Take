@@ -10,13 +10,13 @@ type Props = { classe: Classe; href: string; acoes?: ReactNode };
 
 export function ClasseCard({ classe, href, acoes }: Props) {
   return (
-    <article className={`classe-card ${classe.fixa ? "classe-card--fixa" : "classe-card--propria"}`}>
+    <article className="classe-card classe-card--propria">
       <Link to={href} className="classe-card__link">
         <div className="classe-card__retrato">
           <ClasseImagem url={classe.imagemUrl} titulo={classe.titulo} />
           <div className="classe-card__selos">
             <GrupoBadge grupo={classe.grupo} />
-            <OrigemBadge fixa={classe.fixa} deOutro={classe.deOutro} />
+            <OrigemBadge deOutro={classe.deOutro} />
           </div>
         </div>
         <div className="classe-card__corpo">

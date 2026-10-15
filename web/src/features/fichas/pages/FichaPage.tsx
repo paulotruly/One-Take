@@ -17,11 +17,13 @@ import { GrupoBadge } from "../../classes/components/Selos";
 import { PericiaItem } from "../../pericias/components/PericiaItem";
 import { PericiasPorAtributo } from "../../pericias/components/PericiasPorAtributo";
 import { StatusBadge } from "../../status/components/StatusBadge";
+import { AplicarStatusLinha, StatusTurnos } from "../../status/components/StatusTurnos";
+import { RegrasDaMesa } from "../../grupos/components/RegrasDaMesa";
 import { ROTULO_TIPO } from "../../status/types";
 import { useUsarItem } from "../../itens/api";
 import { ItemDetalhe, ItemLinha } from "../../itens/components/ItemCartao";
 import { LancarItemModal } from "../../itens/pages/LancarItemModal";
-import { useAplicarStatus, useEditarFicha, useExcluirFicha, useFicha, useGastarPericia, useMoverItem, useRemoverStatus, useSubirNivel } from "../api";
+import { useAplicarStatus, useEditarFicha, useExcluirFicha, useFicha, useGastarPericia, useMoverItem, useRemoverStatus, useSubirNivel, useTurnosStatus } from "../api";
 import { BarraRecurso } from "../components/BarraRecurso";
 import type { FichaDetalhe } from "../types";
 
@@ -48,7 +50,7 @@ function Ficha({ f }: { f: FichaDetalhe }) {
   const excluir = useExcluirFicha();
   const aplicarStatus = useAplicarStatus(f.id);
   const removerStatus = useRemoverStatus(f.id);
-  const [statusEscolhido, setStatusEscolhido] = useState("");
+  const turnosStatus = useTurnosStatus(f.id);
   const usar = useUsarItem();
   const [itemAbertoId, setItemAbertoId] = useState<string | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
@@ -64,7 +66,7 @@ function Ficha({ f }: { f: FichaDetalhe }) {
   const cheio = f.inventario.usados >= f.inventario.capacidade;
   // A morte já tem o aviso grande; os demais status viram alertas.
   const alertas = f.status.filter((st) => st.gatilho !== "VIDA_ZERO" && st.gatilho !== "MANA_ZERO");
-  const erroAcao = editar.error ?? gastar.error ?? mover.error ?? subir.error ?? aplicarStatus.error ?? removerStatus.error;
+  const erroAcao = editar.error ?? gastar.error ?? mover.error ?? subir.error ?? aplicarStatus.error ?? removerStatus.error ?? turnosStatus.error;
   const destinosItem = [{ id: f.id, rotulo: f.nome }, ...f.outrasFichas.map((o) => ({ id: o.id, rotulo: `${o.nome} (@${o.jogador})` }))];
 
   return (
@@ -124,10 +126,11 @@ function Ficha({ f }: { f: FichaDetalhe }) {
               <div className="alerta-status__texto">
                 <p>
                   <StatusBadge nome={st.nome} tipo={st.tipo} />{" "}
-                  <span className="pagina__subtitulo">{st.automatico ? "automático" : ROTULO_TIPO[st.tipo]}</span>
+                  <span className="pagina__subtitulo">{st.automatico ? "automático" : ROTULO_TIPO[st.tipo]}</span>{" "}
+                  <StatusTurnos status={st} ocupado={turnosStatus.isPending}
+                    onMudarTurnos={f.souMestre ? (t) => turnosStatus.mutate({ statusId: st.id, turnos: t }) : undefined} />
                 </p>
                 <p><strong>{st.efeito}</strong></p>
-                {st.descricao && <p className="pagina__subtitulo">{st.descricao}</p>}
               </div>
               {f.souMestre && !st.automatico && (
                 <Button pequeno variante="fantasma" aria-label={`Remover ${st.nome}`} title="Remover status" onClick={() => removerStatus.mutate(st.id)}>
@@ -143,21 +146,14 @@ function Ficha({ f }: { f: FichaDetalhe }) {
         <section className="painel" aria-label="Aplicar status">
           <h2 className="painel__titulo"><Activity size={18} aria-hidden /> Status</h2>
           {f.statusAplicaveis.length > 0 ? (
-            <div className="entrar-codigo__linha">
-              <select value={statusEscolhido} onChange={(e) => setStatusEscolhido(e.target.value)} aria-label="Status para aplicar">
-                <option value="">Escolha um status…</option>
-                {f.statusAplicaveis.map((st) => <option key={st.id} value={st.id}>{st.nome} ({ROTULO_TIPO[st.tipo]})</option>)}
-              </select>
-              <Button variante="primario" disabled={!statusEscolhido || aplicarStatus.isPending} onClick={() => aplicarStatus.mutate(statusEscolhido, { onSuccess: () => setStatusEscolhido("") })}>
-                Aplicar status
-              </Button>
-            </div>
+            <AplicarStatusLinha aplicaveis={f.statusAplicaveis} ocupado={aplicarStatus.isPending}
+              onAplicar={(statusId, turnos, pronto) => aplicarStatus.mutate({ statusId, turnos }, { onSuccess: pronto })} />
           ) : (
             <p className="pagina__subtitulo">
               Nenhum status para aplicar. Ative status no grupo em <Link to={`/mestre/grupos/${f.grupo.id}/editar`}>Editar grupo</Link> (seção Status).
             </p>
           )}
-          <p className="pagina__subtitulo">Para tirar um status, use o X no alerta dele.</p>
+          <p className="pagina__subtitulo">Turnos é opcional (vazio = até você tirar). A cada turno, use o -1 no alerta; em 0 o status sai. Para tirar na hora, use o X.</p>
         </section>
       )}
 
@@ -251,6 +247,13 @@ function Ficha({ f }: { f: FichaDetalhe }) {
           Cartas disponíveis no nível {f.nivel}.{f.proximasHabilidades > 0 && ` Mais ${f.proximasHabilidades} liberam em níveis maiores.`}
         </p>
         <HabilidadesDeck habilidades={f.habilidades} vazio="Nenhuma carta neste nível" />
+      </section>
+
+      {/* ---------- Regras de combate da mesa ---------- */}
+      <section className="secao">
+        <h2>Regras da mesa</h2>
+        <p className="pagina__subtitulo">Regras de combate que valem neste grupo. Toque numa regra para ler.</p>
+        <RegrasDaMesa padrao={f.regrasDaMesa.padrao} proprias={f.regrasDaMesa.proprias} />
       </section>
 
       {/* ---------- Inventário ---------- */}

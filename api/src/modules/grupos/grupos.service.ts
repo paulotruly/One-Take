@@ -12,6 +12,8 @@ import { statusDaFicha } from "../fichas/status-da-ficha.js";
 import { apresentarItem, comRequisitos } from "../itens/itens.apresentar.js";
 import { apresentarStatus } from "../status/status.service.js";
 import type { criarGrupoSchema, disponiveisSchema, editarGrupoSchema } from "./grupos.schemas.js";
+import { CAMPO_DO_LIMITE, contarPorFuncao, ROTULO_FUNCAO, type LimitesPorFuncao } from "./funcoes.js";
+import type { GrupoClasse } from "../../generated/prisma/client.js";
 import { retratos } from "../fichas/retrato.js";
 
 type Disponiveis = z.infer<typeof disponiveisSchema>;
@@ -36,21 +38,21 @@ export async function grupoDoMestre(id: string, usuarioId: string) {
 
 /**
  * Confere que tudo o que o mestre marcou pode ser usado por ele e respeita a exclusividade:
- * classes fixas ou dele, raças dele, atributos fixos ou dele, perícias do catálogo dele dentro dos atributos marcados.
+ * classes, raças e atributos dele (ou verificados), perícias do catálogo dele dentro dos atributos marcados.
  */
 async function validarDisponiveis(d: Disponiveis, usuarioId: string) {
   const prisma = getPrisma();
   const unicos = (a: string[]) => [...new Set(a)];
 
-  const todosPodem = async (tipo: TipoKit, lista: { id: string; donoId: string | null }[], semFixos = false) =>
-    (await Promise.all(lista.map((x) => podeUsar(tipo, x, usuarioId, { semFixos })))).every(Boolean);
+  const todosPodem = async (tipo: TipoKit, lista: { id: string; donoId: string | null }[]) =>
+    (await Promise.all(lista.map((x) => podeUsar(tipo, x, usuarioId)))).every(Boolean);
 
   const classes = await prisma.classe.findMany({ where: { id: { in: unicos(d.classeIds) } } });
   if (classes.length !== unicos(d.classeIds).length || !(await todosPodem("classe", classes))) {
     throw requisicaoInvalida("Alguma classe escolhida não existe ou não é sua.");
   }
   const racas = await prisma.raca.findMany({ where: { id: { in: unicos(d.racaIds) } } });
-  if (racas.length !== unicos(d.racaIds).length || !(await todosPodem("raca", racas, true))) {
+  if (racas.length !== unicos(d.racaIds).length || !(await todosPodem("raca", racas))) {
     throw requisicaoInvalida("Alguma raça escolhida não existe ou não é sua.");
   }
   const atributos = await prisma.atributo.findMany({ where: { id: { in: unicos(d.atributoIds) } } });
@@ -59,7 +61,7 @@ async function validarDisponiveis(d: Disponiveis, usuarioId: string) {
   }
   const pericias = await prisma.pericia.findMany({ where: { id: { in: unicos(d.periciaIds) } } });
   const atributosMarcados = new Set(d.atributoIds);
-  if (pericias.length !== unicos(d.periciaIds).length || !(await todosPodem("pericia", pericias, true)) || pericias.some((p) => !atributosMarcados.has(p.atributoId))) {
+  if (pericias.length !== unicos(d.periciaIds).length || !(await todosPodem("pericia", pericias)) || pericias.some((p) => !atributosMarcados.has(p.atributoId))) {
     throw requisicaoInvalida("Alguma perícia escolhida não é do seu catálogo ou está fora dos atributos marcados.");
   }
   const status = await prisma.status.findMany({ where: { id: { in: unicos(d.statusIds) } } });
@@ -147,7 +149,7 @@ export async function detalhar(id: string, usuarioId: string) {
         vida: { atual: f.vidaAtual, max: max.pontosVida },
         mana: { atual: f.manaAtual, max: max.pontosMana },
         esforco: { atual: f.esforcoAtual, max: max.pontosEsforco },
-        status: statusDaFicha(f, ativos, f.status.map((fs) => fs.status)).map(({ id, nome, tipo, automatico }) => ({ id, nome, tipo, automatico })),
+        status: statusDaFicha(f, ativos, f.status).map(({ id, nome, tipo, automatico, turnos }) => ({ id, nome, tipo, automatico, turnos })),
       };
     }),
     /** Status ativados no grupo (o mestre aplica os manuais nas fichas). */
@@ -176,8 +178,24 @@ export async function editar(id: string, usuarioId: string, dados: z.infer<typeo
       throw requisicaoInvalida(`O grupo já tem ${membros} membros; o limite não pode ser menor que isso.`);
     }
   }
+  await validarLimitesPorFuncao(id, dados);
   await getPrisma().grupo.update({ where: { id }, data: dados });
   return detalhar(id, usuarioId);
+}
+
+/** O limite de uma função não pode ficar abaixo de quantas fichas dela o grupo já tem. */
+async function validarLimitesPorFuncao(id: string, dados: Partial<LimitesPorFuncao>) {
+  const funcoes = (Object.keys(CAMPO_DO_LIMITE) as GrupoClasse[]).filter((f) => dados[CAMPO_DO_LIMITE[f]] != null);
+  if (funcoes.length === 0) return;
+  const contagem = contarPorFuncao(await getPrisma().ficha.findMany({ where: { grupoId: id }, select: { classe: { select: { grupo: true } } } }));
+  for (const f of funcoes) {
+    const limite = dados[CAMPO_DO_LIMITE[f]]!;
+    if (limite < contagem[f]) {
+      throw requisicaoInvalida(`O grupo já tem ${contagem[f]} ${ROTULO_FUNCAO[f].plural}; o limite não pode ser menor que isso.`, [
+        { campo: CAMPO_DO_LIMITE[f], mensagem: `Mínimo ${contagem[f]}` },
+      ]);
+    }
+  }
 }
 
 export async function definirDisponiveis(id: string, usuarioId: string, disponiveis: Disponiveis) {

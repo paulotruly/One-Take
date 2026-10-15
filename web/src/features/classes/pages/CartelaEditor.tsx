@@ -17,7 +17,8 @@ import {
   useExcluirAprimoramento,
   useExcluirHabilidade,
 } from "../api";
-import { AprimoramentoForm, resumoAprimoramento } from "../components/AprimoramentoForm";
+import { AprimoramentoForm } from "../components/AprimoramentoForm";
+import { resumoAprimoramento } from "../aprimoramento";
 import { HabilidadeForm } from "../components/forms";
 import { HabilidadesDeck } from "../components/HabilidadesDeck";
 import type { Aprimoramento, Habilidade, HabilidadeInput } from "../types";
@@ -111,7 +112,7 @@ export function CartelaEditor({ habilidades, editavel, criar, ordenar }: Props) 
         {cartaAprimorando && aprimEmEdicao === undefined && (
           <div className="form">
             <p className="pagina__subtitulo">
-              A partir de certo nível, a mesma carta pode mudar (efeito, custo, limite…). Na ficha, aparece a versão do nível atual.
+              A partir de certo nível, a carta pode mudar: cada aprimoramento é a carta inteira naquele nível, com descrição própria. Na ficha, aparece a versão do nível atual.
             </p>
             {(cartaAprimorando.aprimoramentos ?? []).length === 0 ? (
               <p>Esta carta ainda não muda com o nível.</p>
@@ -121,7 +122,7 @@ export function CartelaEditor({ habilidades, editavel, criar, ordenar }: Props) 
                   <li key={a.id} className="pericia pericia--atributo">
                     <div>
                       <strong>A partir do nível {a.nivel}</strong>
-                      <p className="pericia__descricao">{resumoAprimoramento(a)}</p>
+                      <p className="pericia__descricao">{resumoAprimoramento(a, cartaAprimorando)}</p>
                     </div>
                     <div className="pericia__acoes">
                       <Button pequeno variante="fantasma" onClick={() => { editarAprim.reset(); setAprimEmEdicao(a); }}>Editar</Button>

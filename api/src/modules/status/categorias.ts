@@ -19,7 +19,7 @@ const apresentar = (c: { id: string; nome: string; descricao: string; donoId: st
 export async function validarCategoriaStatus(id: string | null | undefined, mestreId: string) {
   if (!id) return;
   const c = await getPrisma().categoriaStatus.findUnique({ where: { id }, select: { id: true, donoId: true, verificado: true } });
-  if (!c || !(await podeUsar("categoriaStatus", c, mestreId, { semFixos: true }))) throw naoEncontrado("Categoria não encontrada");
+  if (!c || !(await podeUsar("categoriaStatus", c, mestreId))) throw naoEncontrado("Categoria não encontrada");
 }
 
 async function categoriaDoMestre(id: string, usuarioId: string) {

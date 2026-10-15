@@ -7,7 +7,7 @@ import { regrasPadraoAtivas } from "../../regras/combate.js";
 import { capacidadeInventario, espacosUsados, FICHA, motivoParaNaoUsar } from "../../regras/ficha.js";
 import { notacaoDoTeste } from "../../regras/teste.js";
 import { apresentarItem, comRequisitos } from "../itens/itens.apresentar.js";
-import { aplicarAprimoramentos, atributosNoNivel, habilidadesNoNivel, PROGRESSAO } from "../../regras/progressao.js";
+import { aplicarAprimoramentos, atributosNoNivel, habilidadesNoNivel, pontosPericiaGanhos, PROGRESSAO } from "../../regras/progressao.js";
 import { comStatus } from "../habilidades/habilidades.include.js";
 import { apresentarAtributo } from "../atributos/atributos.service.js";
 import { copiasDoCatalogo, somarPericias, testeDaCarta } from "../pericias/soma.js";
@@ -16,6 +16,9 @@ import { apresentarStatus, statusUsavel } from "../status/status.service.js";
 import { estaMorto } from "../../regras/status.js";
 import { statusDaFicha } from "./status-da-ficha.js";
 import type { criarFichaSchema, editarFichaSchema } from "./fichas.schemas.js";
+import { CAMPO_DO_LIMITE, contarPorFuncao, funcaoCheia, mensagemFuncaoCheia } from "../grupos/funcoes.js";
+import type { GrupoClasse } from "../../generated/prisma/client.js";
+import { origemDoPersonagem, personagensDoJogador } from "./personagem.js";
 
 // ---------- Acesso ----------
 
@@ -55,21 +58,39 @@ export async function convite(codigo: string, usuarioId: string) {
       },
       racas: { include: { raca: { include: { pericias: { include: { pericia: { include: { atributo: true } } } }, conceito: { select: { id: true, titulo: true } } } } } },
       atributos: { include: { atributo: true } },
-      fichas: { select: { jogadorId: true, classeId: true, id: true } },
+      fichas: { select: { jogadorId: true, classeId: true, id: true, classe: { select: { grupo: true } } } },
       regrasProprias: { orderBy: { criadoEm: "asc" }, select: { id: true, titulo: true, texto: true } },
     },
   });
   const classesOcupadas = new Set(g.fichas.map((f) => f.classeId));
+  const porFuncao = contarPorFuncao(g.fichas);
+  /** Por que a classe não pode ser escolhida (null = pode). */
+  const motivoOcupada = (c: { id: string; grupo: GrupoClasse }) =>
+    funcaoCheia(g, porFuncao, c.grupo) ? mensagemFuncaoCheia(g, c.grupo)
+    : !g.permitirClassesRepetidas && classesOcupadas.has(c.id) ? "Outro jogador já usa esta classe."
+    : null;
   const minhaFicha = g.fichas.find((f) => f.jogadorId === usuarioId);
+  const classesDoGrupo = new Map(g.classes.map(({ classe }) => [classe.id, classe]));
+  const racasDoGrupo = new Set(g.racas.map(({ raca }) => raca.id));
+  /** Personagens de outras mesas que o jogador pode trazer (classe e raça precisam estar liberadas aqui). */
+  const personagens = (await personagensDoJogador(usuarioId, g.id)).map((p) => {
+    const classe = classesDoGrupo.get(p.classeId);
+    const motivoBloqueio = !classe ? `A classe ${p.classe} não está liberada nesta mesa.`
+      : !racasDoGrupo.has(p.racaId) ? `A raça ${p.raca} não está liberada nesta mesa.`
+      : motivoOcupada(classe);
+    return { ...p, motivoBloqueio };
+  });
   return {
     grupo: {
       id: g.id, titulo: g.titulo, sinopse: g.sinopse, genero: g.genero, imagemUrl: g.imagemUrl,
       mestre: g.mestre, permitirClassesRepetidas: g.permitirClassesRepetidas,
+      limiteCombatentes: g.limiteCombatentes, limiteVanguardistas: g.limiteVanguardistas, limiteSuportes: g.limiteSuportes,
     },
     souMestre: g.mestreId === usuarioId,
     minhaFichaId: minhaFicha?.id ?? null,
     vagas: { limite: g.limiteMembros, ocupadas: g.fichas.length },
     pontosAtributo: FICHA.pontosAtributoIniciais,
+    personagens,
     regrasDaMesa: { padrao: regrasPadraoAtivas(g.regrasPadraoDesativadas), proprias: g.regrasProprias },
     classes: g.classes
       .map(({ classe: { habilidades, pericias, ...classe } }) => ({
@@ -77,7 +98,8 @@ export async function convite(codigo: string, usuarioId: string) {
         // Detalhes para o jogador decidir: cartela completa e perícias com modificador.
         habilidades,
         pericias: apresentarPericias(pericias),
-        ocupada: !g.permitirClassesRepetidas && classesOcupadas.has(classe.id),
+        ocupada: motivoOcupada(classe) !== null,
+        motivoOcupada: motivoOcupada(classe),
       }))
       .sort((a, b) => a.titulo.localeCompare(b.titulo, "pt-BR")),
     racas: g.racas
@@ -109,6 +131,11 @@ export async function criar(usuarioId: string, dados: z.infer<typeof criarFichaS
   if (membros >= grupo.limiteMembros) throw conflito("GRUPO_CHEIO", "O grupo já está com todas as vagas ocupadas.");
   if (!classeOk) throw requisicaoInvalida("Essa classe não está disponível neste grupo.", [{ campo: "classeId", mensagem: "Indisponível neste grupo" }]);
   if (!racaOk) throw requisicaoInvalida("Essa raça não está disponível neste grupo.", [{ campo: "racaId", mensagem: "Indisponível neste grupo" }]);
+  const funcao = classeOk.classe.grupo;
+  const limiteDaFuncao = grupo[CAMPO_DO_LIMITE[funcao]];
+  if (limiteDaFuncao != null && (await prisma.ficha.count({ where: { grupoId: grupo.id, classe: { grupo: funcao } } })) >= limiteDaFuncao) {
+    throw conflito("FUNCAO_CHEIA", mensagemFuncaoCheia(grupo, funcao));
+  }
   if (!grupo.permitirClassesRepetidas) {
     const repetida = await prisma.ficha.findFirst({ where: { grupoId: grupo.id, classeId: dados.classeId }, select: { id: true } });
     if (repetida) throw conflito("CLASSE_REPETIDA", "Outro jogador já usa essa classe e este grupo não permite classes repetidas.");
@@ -128,14 +155,30 @@ export async function criar(usuarioId: string, dados: z.infer<typeof criarFichaS
   }
 
   const c = classeOk.classe;
-  const ficha = await prisma.ficha.create({
+  // Personagem de outra mesa: mesmo nível, recursos cheios, sem itens e os pontos de perícia de todos os níveis para gastar aqui.
+  const origem = dados.origem ? await origemDoPersonagem(dados.origem, usuarioId, grupo.id, dados) : null;
+  const nivel = origem?.nivel ?? PROGRESSAO.nivelInicial;
+  const max = atributosNoNivel(c, nivel);
+  const criarFicha = prisma.ficha.create({
     data: {
       grupoId: grupo.id, jogadorId: usuarioId, nome: dados.nome, historia: dados.historia, imagemUrl: dados.imagemUrl,
-      classeId: c.id, racaId: dados.racaId, nivel: PROGRESSAO.nivelInicial,
-      vidaAtual: c.pontosVida, manaAtual: c.pontosMana, esforcoAtual: c.pontosEsforco,
+      classeId: c.id, racaId: dados.racaId, nivel, pontosPericiaDisponiveis: pontosPericiaGanhos(nivel),
+      vidaAtual: max.pontosVida, manaAtual: max.pontosMana, esforcoAtual: max.pontosEsforco,
       atributos: { create: entradas.map(([atributoId, n]) => ({ atributoId, dados: n })) },
     },
   });
+  if (!dados.origem) return detalhar((await criarFicha).id, usuarioId);
+
+  // A origem deixa de ser um personagem vivo: a ficha ativa vira arquivada (os itens ficam vagos na mesa antiga); a arquivada sai.
+  let fim;
+  if (dados.origem.tipo === "FICHA") {
+    const { retratoDaFicha } = await import("./retrato.js");
+    const retrato = await retratoDaFicha(dados.origem.id, usuarioId, "LEVADO_PARA_OUTRA_MESA");
+    fim = [prisma.fichaArquivada.create({ data: retrato }), prisma.ficha.delete({ where: { id: dados.origem.id } })];
+  } else {
+    fim = [prisma.fichaArquivada.delete({ where: { id: dados.origem.id } })];
+  }
+  const [ficha] = await prisma.$transaction([criarFicha, ...fim]);
   return detalhar(ficha.id, usuarioId);
 }
 
@@ -262,7 +305,7 @@ export async function detalhar(id: string, usuarioId: string) {
     /** Regras que valem nesta mesa: padrão ligadas + próprias do mestre. */
     regrasDaMesa: { padrao: regrasPadraoAtivas(f.grupo.regrasPadraoDesativadas), proprias: f.grupo.regrasProprias },
     /** Status atuais (automáticos + aplicados), só os ativados no grupo. Efeitos são informativos. */
-    status: statusDaFicha(atuais, ativosNoGrupo, f.status.map((fs) => fs.status)),
+    status: statusDaFicha(atuais, ativosNoGrupo, f.status),
     /** Status que o mestre pode aplicar nesta ficha (ativados no grupo, não automáticos, ainda não aplicados). */
     statusAplicaveis: ativosNoGrupo
       .filter((st) => !st.gatilho && !f.status.some((fs) => fs.statusId === st.id))
@@ -355,14 +398,14 @@ export async function excluir(id: string, usuarioId: string) {
 
 // ---------- Status (só o mestre aplica e remove) ----------
 
-export async function aplicarStatus(id: string, usuarioId: string, statusId: string) {
+export async function aplicarStatus(id: string, usuarioId: string, statusId: string, turnos: number | null = null) {
   const { ficha, souMestre } = await fichaAcessivel(id, usuarioId);
   if (!souMestre) throw proibido("Só o mestre do grupo aplica status.");
   const status = await statusUsavel(statusId, usuarioId);
   if (status.gatilho) throw requisicaoInvalida("Este status é automático: ele aparece sozinho pelos recursos da ficha.");
   const ativo = await getPrisma().statusNoGrupo.findUnique({ where: { grupoId_statusId: { grupoId: ficha.grupoId, statusId } } });
   if (!ativo) throw requisicaoInvalida("Este status não está ativado no grupo.");
-  await getPrisma().fichaStatus.upsert({ where: { fichaId_statusId: { fichaId: id, statusId } }, create: { fichaId: id, statusId }, update: {} });
+  await getPrisma().fichaStatus.upsert({ where: { fichaId_statusId: { fichaId: id, statusId } }, create: { fichaId: id, statusId, turnos }, update: { turnos } });
   return detalhar(id, usuarioId);
 }
 
@@ -370,5 +413,18 @@ export async function removerStatus(id: string, usuarioId: string, statusId: str
   const { souMestre } = await fichaAcessivel(id, usuarioId);
   if (!souMestre) throw proibido("Só o mestre do grupo remove status.");
   await getPrisma().fichaStatus.deleteMany({ where: { fichaId: id, statusId } });
+  return detalhar(id, usuarioId);
+}
+
+/** O mestre muda os turnos que faltam de um status aplicado (tira 1 por turno); 0 tira o status. */
+export async function definirTurnosStatus(id: string, usuarioId: string, statusId: string, turnos: number | null) {
+  const { souMestre } = await fichaAcessivel(id, usuarioId);
+  if (!souMestre) throw proibido("Só o mestre do grupo muda os turnos de um status.");
+  const where = { fichaId: id, statusId };
+  if (turnos === 0) await getPrisma().fichaStatus.deleteMany({ where });
+  else {
+    const r = await getPrisma().fichaStatus.updateMany({ where, data: { turnos } });
+    if (r.count === 0) throw naoEncontrado("Este status não está aplicado.");
+  }
   return detalhar(id, usuarioId);
 }

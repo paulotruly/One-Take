@@ -9,12 +9,13 @@ export function Rodape() {
           <p>
             <Link to="/" className="rodape__marca">One-Take</Link> · RPG de mesa para sessões únicas
           </p>
-          <p>© 2026 Paulo Gomes. Todos os direitos reservados. Criado e desenvolvido por Paulo Gomes.</p>
+          <p>© 2026 One-Take. Todos os direitos reservados. Criado e desenvolvido por Paulo Gomes.</p>
         </div>
         <nav className="rodape__links" aria-label="Links do rodapé">
           <Link to="/docs">Documentação</Link>
-          <Link to="/termos">Termos de uso</Link>
-          <Link to="/privacidade">Política de privacidade</Link>
+          {/* Sem destino por enquanto: as páginas de termos e privacidade voltam depois. */}
+          <a href="#" onClick={(e) => e.preventDefault()}>Termos de uso</a>
+          <a href="#" onClick={(e) => e.preventDefault()}>Política de privacidade</a>
           <a href="https://github.com/paulotruly" target="_blank" rel="noopener noreferrer">GitHub</a>
         </nav>
       </div>

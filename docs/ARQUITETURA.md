@@ -3,7 +3,7 @@
 ## Pastas
 ```
 api/
-  prisma/schema.prisma, migrations/, seed.ts (estrutura fixa: atributos, status, categorias, perícias base; sem classes)
+  prisma/schema.prisma, migrations/, seed.ts (conteúdo inicial na conta ADMIN: atributos, status, categorias; perícias base sem dono; sem classes)
   prisma.config.ts           # CLI do Prisma usa DIRECT_URL
   scripts/promover-mestre.ts   # npm run promover
   scripts/cargo.ts            # npm run cargo -- nick ADMIN|USUARIO: troca o cargo da conta (nunca pela interface)
@@ -103,8 +103,7 @@ exibido direto pelo front. Não há upload nem uso do Supabase Storage.
 6. Rodar `npm run promover -- email-do-mestre` (cria o perfil a partir de `auth.users`, se preciso).
 
 ## Web
-- Públicas: `/` (página inicial: hero, funcionalidades, como funciona, perguntas, com âncoras no topo), `/termos` e `/privacidade`
-  (`pages/LegalPages.tsx`), `/docs` e `/docs/:slug` (documentação com navegação lateral; tópicos em
+- Públicas: `/` (página inicial: hero, funcionalidades, como funciona, perguntas, com âncoras no topo), `/docs` e `/docs/:slug` (documentação com navegação lateral; tópicos em
   `features/docs/topicos.tsx`, números de `GET /api/regras`), `/guia-do-mestre` (redireciona para a documentação), `/login`, `/cadastro`
   (escolha "Sou mestre"/"Sou jogador"; papel e nome vão no `user_metadata` do Supabase). `/area` redireciona pelo papel.
 - Logado (qualquer papel): `/perfil` (nickname, nome e foto por link).
@@ -123,7 +122,7 @@ exibido direto pelo front. Não há upload nem uso do Supabase Storage.
 - `RequirePapel` exige sessão; com `papel="MESTRE"`, exige a interface de mestre ativada (senão vai para `/ativar-mestre`).
   `/jogador` vale para qualquer conta. O topo alterna **Mestrar**/**Jogar**; `/area` volta à última interface usada (localStorage).
 - Mestre também: `/mestre/npcs`, `/mestre/npcs/novo` (`?grupo=` volta ao grupo, `?kit=` já marca o kit), `/mestre/npcs/:id`, `/mestre/npcs/:id/editar`, `/mestre/bestiario`, `/mestre/bestiario/novo`, `/mestre/bestiario/:id`, `/mestre/bestiario/:id/editar`, `/mestre/itens`, `/mestre/kits`.
-  Kit ativo: guardado no navegador (`features/kits/types.ts`, try/catch); `useKitAtivo` + `soDoKit` filtram as listas (só o kit; fixos do sistema sempre) e o kit ativo é o padrão dos formulários. No grupo vale `visivelNoKit` (kit + gerais).
+  Kit ativo: guardado no navegador (`features/kits/types.ts`, try/catch); `useKitAtivo` + `soDoKit` filtram as listas (só o kit) e o kit ativo é o padrão dos formulários. No grupo vale `visivelNoKit` (kit + gerais).
   Logado: `/ativar-mestre`.
 - Layouts: `PublicLayout` (regras, guia; botões Login e Registrar-se sempre visíveis, que com sessão levam à área da conta; links no topo) e `AppLayout` (topo com marca, troca Mestrar/Jogar
   e menu do perfil com Editar perfil e Sair; navegação da interface numa **barra lateral**, que no celular vira gaveta aberta pelo botão de menu). Os dois têm o `Rodape` (`components/layout/Rodape.tsx`): créditos, direitos autorais, Documentação, Termos de uso, Política de privacidade e GitHub.

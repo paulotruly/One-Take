@@ -29,6 +29,8 @@ export const SECOES: Secao[] = [
       { slug: "atributos", titulo: "Atributos", resumo: "As capacidades gerais e os pontos (d20) da ficha.", Conteudo: jogo.Atributos },
       { slug: "testes", titulo: "Testes, DT e esforço", resumo: "Como o mestre guia uma ação e os dados decidem o resultado.", Conteudo: jogo.Testes },
       { slug: "pericias", titulo: "Perícias", resumo: "No que o personagem é bom e de onde vêm os pontos.", Conteudo: jogo.Pericias },
+      { slug: "combate", titulo: "Combate", resumo: "Turno, ataque contra defesa, dano, cura, morte e recuperação.", Conteudo: jogo.Combate },
+      { slug: "combate-padrao", titulo: "Regras padrão de combate", resumo: "Grid, alcance, intervenção, posicionamento e ataques em grupo.", Conteudo: jogo.CombatePadrao },
       { slug: "habilidades", titulo: "Habilidades (cartas)", resumo: "A cartela de cada classe.", Conteudo: jogo.Habilidades },
       { slug: "progressao", titulo: "Progressão de nível", resumo: "O que o personagem ganha a cada nível.", Conteudo: jogo.Progressao },
       { slug: "inventario", titulo: "Inventário e itens", resumo: "Espaços, categorias, usos e pré-requisitos.", Conteudo: jogo.Inventario },

@@ -2,7 +2,6 @@
 .selo--grupo-COMBATENTE { color: var(--cor-grupo-combatente); }
 .selo--grupo-VANGUARDISTA { color: var(--cor-grupo-vanguardista); }
 .selo--grupo-SUPORTE { color: var(--cor-grupo-suporte); }
-.selo--fixa { color: var(--cor-fixa); }
 .selo--propria { color: var(--cor-propria); }
 .selo--efeito { color: var(--cor-efeito); }
 .selo--nivel { color: var(--cor-fixa); }
@@ -81,7 +80,6 @@
   transition: transform var(--transicao), border-color var(--transicao);
 }
 .classe-card:hover { transform: translateY(-2px); box-shadow: var(--sombra); }
-.classe-card--fixa { border-color: color-mix(in srgb, var(--cor-fixa) 55%, transparent); }
 .classe-card--propria { border-color: color-mix(in srgb, var(--cor-propria) 55%, transparent); }
 .classe-card__link { color: inherit; display: flex; flex-direction: column; flex: 1; }
 .classe-card__link:hover { text-decoration: none; }
@@ -93,7 +91,40 @@
   justify-content: space-between;
   gap: var(--esp-1);
 }
-.classe-card__selos .selo { background: var(--cor-selo-fundo); }
+.classe-card__retrato::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 30%;
+  background: var(--gradiente-topo-imagem);
+  pointer-events: none;
+  z-index: 1;
+}
+.classe-card__selos { z-index: 2; align-items: center; }
+.classe-card__selos .selo {
+  border: 0;
+  padding: var(--esp-1) var(--esp-2);
+  font-size: var(--texto-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+/* Função: faixa sólida na cor da função, com a aresta esquerda marcada. */
+.classe-card__selos .selo--grupo {
+  background: var(--cor-grupo, var(--cor-texto));
+  color: var(--cor-sobre-selo);
+  box-shadow: inset 3px 0 0 var(--cor-selo-aresta), var(--sombra-selo);
+}
+.classe-card__selos .selo--grupo-COMBATENTE { --cor-grupo: var(--cor-grupo-combatente); }
+.classe-card__selos .selo--grupo-VANGUARDISTA { --cor-grupo: var(--cor-grupo-vanguardista); }
+.classe-card__selos .selo--grupo-SUPORTE { --cor-grupo: var(--cor-grupo-suporte); }
+/* Origem: vidro escuro discreto sobre a imagem. */
+.classe-card__selos .selo--propria,
+.classe-card__selos .selo--leitura {
+  background: var(--cor-selo-vidro);
+  color: var(--cor-sobre-selo);
+  backdrop-filter: blur(6px);
+}
 .classe-card__corpo { display: flex; flex-direction: column; gap: var(--esp-3); padding: var(--esp-4); flex: 1; }
 .classe-card__descricao {
   color: var(--cor-texto-suave);

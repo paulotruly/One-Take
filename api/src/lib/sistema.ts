@@ -1,6 +1,6 @@
 // Cargo ADMIN e conteúdo verificado.
-// O administrador (Perfil.cargo = ADMIN, trocado por `npm run cargo`) edita as coisas fixas (não automáticas) e marca coisas dele como
-// verificadas: o que é verificado aparece para todo mestre, só leitura e sempre atualizado (quem quiser mudar duplica).
+// Não há conteúdo fixo: tudo tem dono e só o dono edita. O administrador (Perfil.cargo = ADMIN, trocado por `npm run cargo`)
+// marca coisas dele como verificadas (principalmente kits): o que é verificado aparece para todo mestre, só leitura e sempre atualizado (quem quiser mudar duplica).
 // Um KIT verificado leva tudo o que está nele: cada coisa ligada ao kit conta como verificada (sem precisar marcar uma a uma).
 // Arquétipos verificados aparecem para todos; o de uma classe/raça/criatura verificada também (com só as variações visíveis).
 import type { TipoKit } from "./kits.js";
@@ -34,16 +34,10 @@ const verifs = (comKits: boolean): Verif[] =>
 export const ehVerificado = (comKits = true) => ({ OR: verifs(comKits) });
 
 /**
- * Filtro Prisma das listas: dele + fixo do sistema + verificado (a menos que a pessoa oculte os verificados).
+ * Filtro Prisma das listas: dele + verificado (a menos que a pessoa oculte os verificados).
  * `comKits: false` para o que não entra em kit (categorias de item).
  */
-export async function visivelPara(usuarioId: string, { comKits = true } = {}): Promise<{ OR: ({ donoId: string | null } | Verif)[] }> {
-  const v = (await ocultaVerificados(usuarioId)) ? [] : verifs(comKits);
-  return { OR: [{ donoId: usuarioId }, { donoId: null }, ...v] };
-}
-
-/** Mesmo filtro para recursos sem conteúdo fixo (raças, criaturas, itens, NPCs, perícias de outros, kits, arquétipos). */
-export async function visivelParaSemFixos(usuarioId: string, { comKits = true } = {}): Promise<{ OR: ({ donoId: string } | Verif)[] }> {
+export async function visivelPara(usuarioId: string, { comKits = true } = {}): Promise<{ OR: ({ donoId: string } | Verif)[] }> {
   const v = (await ocultaVerificados(usuarioId)) ? [] : verifs(comKits);
   return { OR: [{ donoId: usuarioId }, ...v] };
 }
@@ -62,12 +56,11 @@ const LIGACOES: Record<TipoKit, (id: string) => Promise<number>> = {
 type Registro = { id: string; donoId: string | null; verificado?: boolean };
 
 /**
- * O mestre pode ver/usar: é dele, é fixo do sistema (quando o recurso tem fixos), é verificado ou está num kit verificado.
+ * O mestre pode ver/usar: é dele, é verificado ou está num kit verificado.
  * Ocultar os verificados só tira das listas: o que já está em uso (num grupo, numa ficha) continua funcionando.
  */
-export async function podeUsar(tipo: TipoVerificavel, obj: Registro, usuarioId: string, { semFixos = false } = {}) {
+export async function podeUsar(tipo: TipoVerificavel, obj: Registro, usuarioId: string) {
   if (obj.donoId === usuarioId) return true;
-  if (obj.donoId === null && !semFixos) return true;
   if (obj.verificado) return true;
   return TIPOS_COM_KIT.includes(tipo) && (await LIGACOES[tipo as TipoKit](obj.id)) > 0;
 }
@@ -80,18 +73,18 @@ export async function quemVe(usuarioId: string): Promise<Quem> {
 }
 
 /**
- * Como o registro aparece para quem vê: `editavel` (é dele, ou é fixo e ele é admin), `verificado` (selo próprio ou por kit),
+ * Como o registro aparece para quem vê: `editavel` (é dele), `verificado` (selo próprio ou por kit),
  * `seloProprio`, `verificadoPorKit`, `deOutro` (de outra pessoa: só leitura) e `podeVerificar` (admin e dono).
  */
 export function visao(obj: { donoId: string | null; verificado?: boolean; kits?: { kitId: string }[] }, q: Quem) {
   const meu = obj.donoId === q.usuarioId;
   const porKit = !!obj.kits?.some((k) => q.kitsVerificados.has(k.kitId));
   return {
-    editavel: meu || (obj.donoId === null && q.admin),
+    editavel: meu,
     verificado: !!obj.verificado || porKit,
     seloProprio: !!obj.verificado,
     verificadoPorKit: porKit,
-    deOutro: !meu && obj.donoId !== null,
+    deOutro: !meu,
     podeVerificar: meu && q.admin,
   };
 }

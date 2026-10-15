@@ -1,12 +1,12 @@
 import { z } from "zod";
 import { kitIdsSchema } from "../../lib/kits.js";
 import { inteiro, texto, textoOpcional, urlOpcional } from "../../lib/validacao.js";
-import { CATEGORIAS_FIXAS } from "./categorias.js";
+import { CATEGORIAS_DO_SEED } from "./categorias.js";
 
 // Campos de um item (os mesmos no molde do catálogo e no item lançado no grupo).
 // Sem defaults aqui: no Zod 4 o default seria aplicado também no PATCH (partial).
 const campos = z.object({
-  /** Categoria fixa ou do mestre; null = sem categoria. */
+  /** Categoria do mestre ou verificada; null = sem categoria. */
   categoriaId: z.guid("Categoria inválida").nullable(),
   nome: texto(80),
   descricao: z.string().trim().max(1000),
@@ -26,7 +26,7 @@ const campos = z.object({
 });
 
 const comDefaults = campos.extend({
-  categoriaId: campos.shape.categoriaId.default(CATEGORIAS_FIXAS.artefatos),
+  categoriaId: campos.shape.categoriaId.default(CATEGORIAS_DO_SEED.artefatos),
   descricao: campos.shape.descricao.default(""),
   espacos: campos.shape.espacos.default(1),
   usosMaximos: campos.shape.usosMaximos.default(null),

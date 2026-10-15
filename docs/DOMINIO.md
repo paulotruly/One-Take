@@ -45,10 +45,9 @@ Um **arquétipo** é uma classe generalista (só título e descrição) que agru
 elemental, Bruxa assombrosa). Cada subclasse é uma classe normal; o jogador escolhe a subclasse, nunca o arquétipo.
 Classes sem arquétipo continuam valendo (avulsas). Só o mestre dono cria arquétipos e liga classes dele a eles.
 
-### Classes fixas x classes do mestre
-- **Fixas**: todo mestre vê, ninguém edita; servem de base e podem ser **duplicadas**. O sistema **começa sem classes fixas**:
-  uma classe de mestre vira fixa com `npm run fixar-classe -- "Título"` (e volta com `--devolver nick`).
-- **Do mestre**: criadas (ou duplicadas) por um mestre. Só ele vê e edita.
+### Classes do mestre e verificadas
+- **Não há classe fixa** (nem nenhum outro conteúdo fixo): toda classe é de um mestre, e só ele edita.
+- **Verificadas**: as do ADMIN com selo (ou num kit verificado) aparecem para todo mestre, só leitura, e podem ser **duplicadas**.
 
 ## Cartela de habilidades
 O **deck de cartas** da classe. Cada classe tem **uma única cartela**: o conjunto ordenado das suas
@@ -78,8 +77,10 @@ Cada carta da cartela:
   Pontaria x Reflexos; Domínio x Reflexos (projéteis), Resistência (ataque direto, sem esquiva) ou Vontade (mental ou telepático).
 - **Perícia do teste** (opcional): qual perícia o personagem testa para usar a carta. Fichas, NPCs e criaturas mostram o teste pronto
   daquele personagem (dados do atributo da perícia + total dele nela; sem a perícia, bônus 0).
-- **Aprimoramentos** (opcional): a partir de um nível, a mesma carta muda (título, efeito, condição, limite, custo de mana,
-  status). Campos não preenchidos não mudam; os aprimoramentos se acumulam por nível. A ficha mostra a versão do nível atual.
+- **Aprimoramentos** (opcional): a partir de um nível, a carta inteira daquele nível (título, descrição do nível, efeito, condição,
+  limite, custo de mana, status). O formulário vem preenchido com a versão anterior e pode ficar igual; dá para tirar o limite ou o
+  status. Vale a versão de maior nível até o nível do personagem; a ficha mostra a versão do nível atual.
+- **Ativa status**: o status vai sempre para o **alvo** da carta.
 
 ## Perícia
 Habilidade **passiva** usada em rolagens de dados. As perícias são definidas **fora das classes**,
@@ -100,8 +101,8 @@ O sistema traz 18 perícias base (Atletismo, Acrobacia, Iniciativa, Furtividade,
 Reflexos, Resistência, Diplomacia, Enganação, Intimidação, Intuição, Percepção, Vontade, Religião,
 Adestramento, Sobrevivência, Domínio). No primeiro acesso, cada mestre recebe **uma cópia própria**
 delas e pode editar, excluir e criar novas à vontade — 100% personalizável, sem afetar outros mestres.
-As classes fixas usam as perícias base do sistema; ao duplicar uma classe fixa, as perícias dela passam
-a apontar para as cópias do catálogo do mestre.
+Ao duplicar uma classe verificada de outra pessoa, as perícias dela passam a apontar para as cópias do catálogo do mestre
+(mesma origem ou mesmo nome).
 
 O modificador (classe) e os pontos (raça, níveis) somam o **bônus** da perícia, usado nos testes (ver "Atributos e testes").
 
@@ -116,7 +117,7 @@ Define de onde o personagem vem. Criada pelo mestre (só ele vê e edita). Tem:
 
 ## Atributos e testes (dados)
 Atributos agrupam as perícias e recebem os dados nos testes.
-- **Fixos do sistema** (valem para todos, não editáveis): **Capacidade física**, **Carisma** e **Conhecimento**.
+- **Do kit básico** (do ADMIN, verificados; não são fixos): **Capacidade física**, **Carisma** e **Conhecimento**. Só o dono edita.
 - O **mestre pode criar atributos** próprios (ex.: "Sorte", "Tecnologia") para o tema do RPG dele, e mover
   perícias entre atributos. Atributo com perícias não pode ser excluído (mova as perícias antes).
 - Ao criar a ficha, o personagem recebe **3 pontos de atributo** para distribuir. **Cada ponto é um d20.**
@@ -129,22 +130,47 @@ Atributos agrupam as perícias e recebem os dados nos testes.
 - **Atributo com 0 pontos**: rola sempre **1 d20** e o resultado vale a **metade** (arredondada para baixo), antes do bônus.
   Com 0, o dado nunca passa de 10.
 - **Esforço = dados extras**: cada **1 ponto de esforço** gasto antes da rolagem dá **+1 d20** (2d20 vira 3d20).
-  Interpretação: com atributo 0 o esforço não compra dados ("sempre apenas 1 dado"). Não há limite de esforço por teste.
+  Interpretação: com atributo 0 o esforço não compra dados ("sempre apenas 1 dado"). **No máximo 1 ponto de esforço por rodada**
+  (decisão de 2026-10-14), no ataque ou na defesa.
 - **DT (faixa de sucesso e falha)**: livre, o mestre define durante a sessão. Não há tabela obrigatória; a documentação
   mostra a chance de cada DT por quantidade de dados (calculada em `regras/teste.ts`).
 - O app ainda não rola dados: a ficha mostra o teste pronto de cada perícia (ex.: "2d20 + 5"). Regras em `api/src/regras/teste.ts`.
+
+## Combate (decisões de 2026-10-14)
+- **Ordem**: no início do combate, cada participante testa Capacidade física + Iniciativa; o maior total age primeiro.
+- **Turno = 1 movimento + 1 ação.** Tudo o que não é movimento é ação (atacar, usar carta, usar item). Não dá para trocar um pelo outro.
+  Cartas só no próprio turno. Exceção: a Intervenção defensiva (regra padrão), que deixa defender um aliado no turno de outra pessoa.
+- **Rodada** = uma volta na ordem de Iniciativa. **Combate**: o mestre define quando começa e termina (reinicia os limites "por combate").
+- **Ataque x defesa**: o atacante rola o teste da carta (atributo + perícia do teste); o alvo rola os dados do atributo da perícia de
+  defesa + o bônus dela, se tiver, e pode gastar esforço. Ataque ≥ defesa = acerta (**empate é do atacante**). O mestre pode usar uma
+  DT no lugar da defesa, dita em voz alta antes da rolagem.
+- **Dano** só se acertar. **Defesa bem-sucedida evita todo o dano.**
+- **Cura**: o jogador usa a carta ou o item e rola; o mestre lança a cura na ficha (a vida só o mestre aumenta).
+- **Morte**: vida ou mana em 0 = morreu, sem volta. Dá para usar uma carta que custa toda a mana restante (o jogador precisa ficar atento).
+- **Recuperação** de vida, mana e esforço: nos **interlúdios** da sessão (comer, descansar, itens, habilidades); quanto, diz o mestre
+  ou o efeito.
+- **Perícias de defesa** = as da categoria Defesa: Reflexos, Resistência e Vontade. O mestre liga perícias e atributos do jeito certo
+  no catálogo dele.
+- **Regras padrão de combate** (`api/src/regras/combate.ts`, o mestre desliga por grupo e cria regras próprias): Grid, iniciativa e
+  turno; Alcance e posicionamento (teste de Atletismo para andar mais usa só o movimento); Intervenção defensiva (fora do próprio
+  turno, Capacidade física + Iniciativa maior que o ataque, 1 por turno); Vantagem tática (cobertura +5 nas perícias de defesa,
+  terreno elevado +5 em Pontaria); Movimento velado; Ataques em grupo (dano somado quando todos acertam o mesmo alvo único).
+  **Domínio de combate e Égide de presença saíram**: status e cartas (como os escudos do Paladino) fazem esse papel.
 
 ## Grupo (o RPG do mestre)
 - Título, sinopse, gênero, imagem (link), **limite de membros** e um **código de entrada** de 6 caracteres
   (o mestre pode gerar um novo; o antigo deixa de valer).
 - **Permitir classes repetidas**: se desligado, dois jogadores do grupo não podem ter a mesma classe.
-- O mestre escolhe **o que vale no grupo**: classes (fixas ou dele), raças, atributos e, dentro dos atributos,
+- **Limite por função**: o mestre define quantas fichas o grupo aceita de cada função da classe (Combatente, Vanguardista, Suporte).
+  Vazio = sem limite; 0 = função fechada. Com a função cheia, a classe aparece bloqueada na criação da ficha (com o motivo) e a
+  API recusa (409 `FUNCAO_CHEIA`). O limite não pode ficar abaixo de quantas fichas daquela função o grupo já tem.
+- O mestre escolhe **o que vale no grupo**: classes (dele ou verificadas), raças, atributos e, dentro dos atributos,
   perícias específicas. Isso permite adaptar o sistema a temas diferentes de RPG.
 - **Kits de RPG**: o mestre junta o conteúdo de uma aventura num kit (classes, raças, atributos, perícias, status, itens do
   catálogo, criaturas e NPCs). Sem kit = **geral** (aparece em tudo); uma coisa pode estar em **vários kits**. Com um **kit ativo**
-  (escolhido na lateral), as telas mostram **só o que é do kit** (mais o que é fixo do sistema, que não entra em kit) e o que for
+  (escolhido na lateral), as telas mostram **só o que é do kit** e o que for
   criado já entra no kit; o geral aparece em **Todos**. O **grupo** pode ter um kit:
-  ao escolher, a tela marca o que vale (do kit + gerais; status fixos sempre), e itens, criaturas e NPCs mostrados no grupo seguem o kit.
+  ao escolher, a tela marca o que vale (do kit + gerais; status automáticos sempre), e itens, criaturas e NPCs mostrados no grupo seguem o kit.
   Excluir um kit não apaga nada.
 - **Conteúdo verificado**: qualquer coisa criada pelo ADMIN (classes, raças, atributos, perícias, status, categorias de item, itens do catálogo, criaturas e NPCs,
   e também **kits de RPG** e **arquétipos**) pode receber o selo **verificado**. **Kit verificado leva tudo o que está nele**: cada coisa
@@ -155,9 +181,9 @@ Atributos agrupam as perícias e recebem os dados nos testes.
   de outra pessoa segue o kit como o resto (aparece se estiver no kit ativo). Perícias de uma carta verificada contam como a perícia equivalente do mestre (mesma
   origem) na soma da ficha. Cada pessoa pode **ocultar os verificados** da própria interface (Configurações da conta); o que já está em
   uso nos grupos e fichas continua funcionando.
-- **Cargo ADMIN** (`Perfil.cargo`, trocado por `npm run cargo -- <nome de usuário> ADMIN`): edita o que é fixo e **não automático**
-  (atributos, status sem gatilho, categorias de item, classes fixas) e põe ou tira o selo verificado nas coisas dele. Fixo nunca é
-  excluído.
+- **Cargo ADMIN** (`Perfil.cargo`, trocado por `npm run cargo -- <nome de usuário> ADMIN`): põe ou tira o selo verificado nas coisas
+  dele (principalmente kits). **Não há conteúdo fixo** (decisão de 2026-10-14): o conteúdo inicial do seed (atributos, status,
+  categorias de item) é do ADMIN, que o edita como qualquer dono; os outros mestres recebem pelo kit verificado (ou selo).
 - Membro = jogador com ficha no grupo. Só entra enquanto houver vaga.
 
 ## Ficha
@@ -174,13 +200,25 @@ Criada pelo jogador ao entrar no grupo com o código (**uma ficha por jogador em
   jogador fica com uma **cópia somente leitura** do personagem (retrato do momento: atributos, perícias, cartas, inventário), em Minhas
   fichas. A cópia não depende do conteúdo do mestre e só o jogador pode apagá-la.
 
+### Personagem entre mesas (decisão de 2026-10-14)
+Ao entrar num grupo, o jogador escolhe **personagem novo** ou um personagem de **outra mesa** (ficha ativa em outro grupo, ou ficha
+arquivada que guarda a classe e a raça). O personagem levado:
+- mantém nome, história, imagem, **classe, raça e nível**; a classe e a raça **precisam estar liberadas** na mesa nova (e valem o limite
+  por função e as classes repetidas);
+- começa com **vida, mana e esforço cheios** do nível e **sem itens** (os itens ficam vagos na mesa antiga);
+- recebe de volta os **pontos de perícia** de todos os níveis, para gastar no catálogo da mesa nova; os atributos são distribuídos de
+  novo (o app preenche pelo nome do atributo, quando bate);
+- a origem deixa de ser um personagem vivo: a ficha ativa vira **arquivada** ("levado para outra mesa") e a arquivada usada sai. Assim
+  só existe uma cópia viva. O mestre da mesa antiga deve subir o nível antes de o jogador levar o personagem.
+Fichas arquivadas antes de 2026-10-14 não guardam a classe e a raça e não podem ser levadas.
+
 ## Inventário e itens
 - Todo personagem começa com **5 espaços** e ganha **+2 por nível**. Cada item ocupa **1 ou mais espaços**.
 - **Catálogo de itens do mestre** (sempre disponível para lançar no grupo vago ou direto numa ficha). Cada item tem:
   título, descrição, imagem (link), **categoria**, **efeito ao usar** (texto),
   **espaços**, **consumo** (sem limite ou N usos) e **pré-requisito para saber usar**: classe, perícia (precisa ter
   total > 0) e/ou texto livre. Pode estar em kits de RPG (nenhum = geral).
-- **Categorias de item**: 4 fixas do sistema (Armas, Artefatos, Taverna, Sebo; somente leitura) + as que cada mestre cria
+- **Categorias de item**: as 4 do seed (Armas, Artefatos, Taverna, Sebo) são do ADMIN e verificadas (só leitura para os outros) + as que cada mestre cria
   (nome, descrição e ícone escolhido de uma lista). Excluir uma categoria deixa os itens dela sem categoria.
 - O item lançado é uma **cópia** do molde: editar o catálogo não muda itens já lançados. O mestre também cria
   **itens avulsos** direto no grupo.
@@ -217,20 +255,24 @@ O One-Take é RPG de mesa com apoio de tecnologia: o app controla fichas e avisa
   **Esforço em 0 = cansaço** (status Cansado).
 - **Status** são condições/emoções com efeito de benefício, prejuízo ou misto. O efeito é **só informativo**: a ficha mostra um
   alerta, nenhum número muda.
-  - **Automáticos** (do sistema): Morto (vida 0), Sem energia vital (mana 0), Cansado (esforço 0).
-  - **Aplicados pelo mestre** durante a sessão: fixos do sistema (Assustado, Furioso, Inspirado, Confiante, Envenenado,
+  - **Automáticos** (do seed, do ADMIN): Morto (vida 0), Sem energia vital (mana 0), Cansado (esforço 0). O dono muda nome e efeito;
+    ninguém exclui. Status tem só **efeito** (sem descrição).
+  - **Aplicados pelo mestre** durante a sessão: os do kit básico (Assustado, Furioso, Inspirado, Confiante, Envenenado,
     Atordoado; proposta inicial) e os criados por cada mestre.
   - **Categorias de status** (do mestre, ex.: Elementais, Mentais): só organizam. A página de status mostra os aplicados pelo
     mestre separados por categoria (cada uma oculta com a seta); ao montar o grupo, marcar a categoria leva todos os status dela.
     Excluir a categoria não apaga os status. Categoria verificada aparece para todo mestre (só leitura); a categoria privada de outra
     pessoa não aparece nem no status verificado dela.
-  - Em cada grupo o mestre escolhe quais status valem (opcional). Grupo novo começa com os fixos marcados.
-  - Uma carta de habilidade pode indicar o status que **ativa** (campo opcional); o mestre aplica na ficha do alvo.
+  - Em cada grupo o mestre escolhe quais status valem (opcional). Grupo novo começa com os automáticos marcados (e, com kit, os do kit).
+  - Uma carta de habilidade pode indicar o status que **ativa** (campo opcional); o mestre aplica na ficha do **alvo**.
+  - **Duração**: depende de onde o status veio. Ao aplicar, o mestre pode anotar os **turnos** (1 a 99); a cada turno ele tira 1, e em 0
+    o status sai. Sem turnos = até o mestre tirar. Status diferentes **se acumulam** (os efeitos somam); aplicar o mesmo de novo troca os turnos.
   - **NPCs e criaturas** também recebem status. Valem os ativados no grupo (criatura invocada) ou todos os do mestre (NPC).
 
 ## Progressão de nível
 O One-Take dura um dia, então a progressão é **rápida, simples e fixa**:
-- O personagem sobe **1 nível por participação** (com o mesmo personagem).
+- O personagem sobe **1 nível por participação** (com o mesmo personagem). **Cada mesa (grupo) é uma sessão**: para subir de nível,
+  o personagem participa de mais mesas (ver "Personagem entre mesas").
 - **Só o mestre** sobe o nível de um jogador, manualmente.
 - A cada nível acima do 1, o personagem ganha:
   - **+5 de vida, +5 de mana e +5 de esforço** (máximos);

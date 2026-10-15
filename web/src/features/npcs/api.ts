@@ -30,7 +30,10 @@ export const useEditarNpc = (id: string) =>
 export const useDuplicarNpc = () => useEscrita((id: string) => api<NpcDetalhe>(`/api/npcs/${id}/duplicar`, { method: "POST" }));
 export const useExcluirNpc = () => useEscrita((id: string) => api<void>(`/api/npcs/${id}`, { method: "DELETE" }));
 export const useAplicarStatusNpc = (id: string) =>
-  useEscrita((statusId: string) => api<NpcDetalhe>(`/api/npcs/${id}/status`, { method: "POST", body: { statusId } }));
+  useEscrita(({ statusId, turnos }: { statusId: string; turnos: number | null }) => api<NpcDetalhe>(`/api/npcs/${id}/status`, { method: "POST", body: { statusId, turnos } }));
+/** Turnos que faltam de um status aplicado (0 tira o status). */
+export const useTurnosStatusNpc = (id: string) =>
+  useEscrita(({ statusId, turnos }: { statusId: string; turnos: number | null }) => api<NpcDetalhe>(`/api/npcs/${id}/status/${statusId}`, { method: "PATCH", body: { turnos } }));
 export const useRemoverStatusNpc = (id: string) =>
   useEscrita((statusId: string) => api<NpcDetalhe>(`/api/npcs/${id}/status/${statusId}`, { method: "DELETE" }));
 export const useDefinirAtributoNpc = (id: string) =>

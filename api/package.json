@@ -17,7 +17,6 @@
     "db:seed": "prisma db seed",
     "db:studio": "prisma studio",
     "promover": "tsx scripts/promover-mestre.ts",
-    "fixar-classe": "tsx scripts/fixar-classe.ts",
     "exportar": "tsx scripts/exportar-conteudo.ts",
     "concluir-exclusoes": "tsx scripts/concluir-exclusoes.ts",
     "cargo": "tsx scripts/cargo.ts",

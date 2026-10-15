@@ -6,7 +6,7 @@ export type TipoVerificavel =
 
 /** Campos que a API manda junto de cada coisa, para quem está vendo. */
 export type Visao = {
-  /** Pode editar (é dele, ou é fixo e ele é administrador). */
+  /** Pode editar (é dele). */
   editavel?: boolean;
   /** Tem o selo verificado: todo mestre vê e usa. */
   verificado?: boolean;

@@ -15,7 +15,7 @@ import { statusAplicaveis, statusDisponiveis, validarAplicacao } from "../status
 
 type CriaturaComBesta = Criatura & {
   besta: Pick<Besta, "titulo" | "imagemUrl" | "pontosVida" | "pontosMana" | "pontosEsforco" | "deslocamento">;
-  status?: { status: Status }[];
+  status?: { status: Status; turnos: number | null }[];
 };
 
 /** Resumo para a página do grupo: recursos atuais e máximos no nível, e status (com os ativados no grupo). */
@@ -35,7 +35,7 @@ export function apresentarCriatura(c: CriaturaComBesta, ativosNoGrupo: Status[] 
     vida: { atual: Math.min(c.vidaAtual, max.pontosVida), max: max.pontosVida },
     mana: { atual: Math.min(c.manaAtual, max.pontosMana), max: max.pontosMana },
     esforco: { atual: Math.min(c.esforcoAtual, max.pontosEsforco), max: max.pontosEsforco },
-    status: statusDaFicha(atuais, ativosNoGrupo, (c.status ?? []).map((s) => s.status)).map(({ id, nome, tipo, automatico }) => ({ id, nome, tipo, automatico })),
+    status: statusDaFicha(atuais, ativosNoGrupo, c.status ?? []).map(({ id, nome, tipo, automatico, turnos }) => ({ id, nome, tipo, automatico, turnos })),
   };
 }
 
@@ -89,14 +89,14 @@ export async function detalhar(id: string, usuarioId: string) {
   const besta = apresentarBesta((await getPrisma().besta.findUnique({ where: { id: c.bestaId }, include: bestaCompleta }))!);
   const { habilidades, ...resto } = besta;
   const ativos = await statusDisponiveis(usuarioId, c.grupoId);
-  const aplicados = c.status.map((s) => s.status);
+  const aplicados = c.status;
   const max = atributosNoNivel(c.besta, c.nivel);
   const atuais = { vidaAtual: Math.min(c.vidaAtual, max.pontosVida), manaAtual: Math.min(c.manaAtual, max.pontosMana), esforcoAtual: Math.min(c.esforcoAtual, max.pontosEsforco) };
   return {
     ...apresentarCriatura(c, ativos),
     /** Status completos (com efeito) para a ficha da criatura. */
     statusDetalhado: statusDaFicha(atuais, ativos, aplicados),
-    statusAplicaveis: statusAplicaveis(ativos, aplicados.map((s) => s.id)),
+    statusAplicaveis: statusAplicaveis(ativos, aplicados.map((s) => s.status.id)),
     grupoId: c.grupoId,
     descricao: resto.descricao,
     atributos: resto.atributos,
@@ -150,15 +150,27 @@ export async function remover(id: string, usuarioId: string) {
 
 // ---------- Status (o mestre aplica e tira; valem os ativados no grupo) ----------
 
-export async function aplicarStatus(id: string, usuarioId: string, statusId: string) {
+export async function aplicarStatus(id: string, usuarioId: string, statusId: string, turnos: number | null = null) {
   const c = await criaturaDoMestre(id, usuarioId);
   await validarAplicacao(statusId, usuarioId, await statusDisponiveis(usuarioId, c.grupoId));
-  await getPrisma().criaturaStatus.upsert({ where: { criaturaId_statusId: { criaturaId: id, statusId } }, create: { criaturaId: id, statusId }, update: {} });
+  await getPrisma().criaturaStatus.upsert({ where: { criaturaId_statusId: { criaturaId: id, statusId } }, create: { criaturaId: id, statusId, turnos }, update: { turnos } });
   return detalhar(id, usuarioId);
 }
 
 export async function removerStatus(id: string, usuarioId: string, statusId: string) {
   await criaturaDoMestre(id, usuarioId);
   await getPrisma().criaturaStatus.deleteMany({ where: { criaturaId: id, statusId } });
+  return detalhar(id, usuarioId);
+}
+
+/** O mestre muda os turnos que faltam de um status aplicado (tira 1 por turno); 0 tira o status. */
+export async function definirTurnosStatus(id: string, usuarioId: string, statusId: string, turnos: number | null) {
+  await criaturaDoMestre(id, usuarioId);
+  const where = { criaturaId: id, statusId };
+  if (turnos === 0) await getPrisma().criaturaStatus.deleteMany({ where });
+  else {
+    const r = await getPrisma().criaturaStatus.updateMany({ where, data: { turnos } });
+    if (r.count === 0) throw naoEncontrado("Este status não está aplicado.");
+  }
   return detalhar(id, usuarioId);
 }

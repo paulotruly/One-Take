@@ -1,7 +1,7 @@
 import type { z } from "zod";
 import type { Atributo, Pericia, RacaPericia } from "../../generated/prisma/client.js";
 import { AppError, naoEncontrado } from "../../lib/errors.js";
-import { comVisao, podeUsar, quemVe, visivelParaSemFixos } from "../../lib/sistema.js";
+import { comVisao, podeUsar, quemVe, visivelPara } from "../../lib/sistema.js";
 import { comKitIds, comKits, definirKits } from "../../lib/kits.js";
 import { getPrisma } from "../../lib/prisma.js";
 import { apresentarAtributo, porAtributoENome } from "../atributos/atributos.service.js";
@@ -13,7 +13,7 @@ import type { criarRacaSchema, editarRacaSchema } from "./racas.schemas.js";
 
 async function racaLegivel(id: string, usuarioId: string) {
   const raca = await getPrisma().raca.findUnique({ where: { id } });
-  if (!raca || !(await podeUsar("raca", raca, usuarioId, { semFixos: true }))) throw naoEncontrado("Raça não encontrada");
+  if (!raca || !(await podeUsar("raca", raca, usuarioId))) throw naoEncontrado("Raça não encontrada");
   return raca;
 }
 
@@ -41,7 +41,7 @@ const comPericias = {
 export async function listar(usuarioId: string) {
   const quem = await quemVe(usuarioId);
   const racas = await getPrisma().raca.findMany({
-    where: await visivelParaSemFixos(usuarioId),
+    where: await visivelPara(usuarioId),
     orderBy: { titulo: "asc" },
     include: comPericias,
   });

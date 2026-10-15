@@ -70,7 +70,11 @@
   --transicao: 150ms ease;
 
   /* Selos sobre imagens */
-  --cor-selo-fundo: rgb(255 255 255 / 92%);
+  --cor-selo-vidro: rgb(24 24 27 / 55%);
+  --cor-sobre-selo: #ffffff;
+  --cor-selo-aresta: rgb(255 255 255 / 45%);
+  --sombra-selo: 0 2px 8px rgb(0 0 0 / 25%);
+  --gradiente-topo-imagem: linear-gradient(to bottom, rgb(0 0 0 / 35%), transparent);
 
   /* Layout */
   --largura-max: 1200px;

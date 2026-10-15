@@ -1,5 +1,5 @@
 // Tópicos da documentação: guia do mestre, guia do jogador e referência.
-import { Activity, Backpack, Copy, Footprints, Layers, ListChecks, Lock, PawPrint, Shield, UserRound } from "lucide-react";
+import { Activity, Backpack, BadgeCheck, Copy, Footprints, Layers, ListChecks, Lock, PawPrint, Shield, UserRound } from "lucide-react";
 import { Link } from "react-router";
 import { Cartoes, Destaque, Passos, Tabela } from "../../../components/texto/Manual";
 import { useRegras } from "../regras";
@@ -23,8 +23,9 @@ export function MestreVisaoGeral() {
         ]}
       />
       <p>
-        Tudo o que você cria é <strong>seu</strong>: outros mestres não veem nem alteram. São compartilhados só as classes fixas, as
-        perícias base e os atributos fixos do sistema.
+        Tudo o que você cria é <strong>seu</strong>: outros mestres não veem nem alteram. Não há conteúdo fixo: o que é compartilhado
+        com todos é o conteúdo <strong>verificado</strong> pelo administrador do One-Take (como o kit básico, com atributos e status),
+        que você usa como está ou duplica para mudar.
       </p>
       <p>
         A interface de mestre é ativada na conta (no cadastro ou depois, em <strong>Mestrar</strong> no topo). A mesma conta continua
@@ -41,7 +42,7 @@ export function MestrePrimeiraSessao() {
         { titulo: "Ative a interface de mestre", texto: <>No <Link to="/cadastro">cadastro</Link>, escolha "Mestre"; ou, numa conta de jogador, toque em Mestrar no topo.</> },
         { titulo: "Revise o catálogo de perícias", texto: <>Em Perícias você já recebe 18 perícias base. Ajuste, crie novas ou crie um atributo novo. Veja <Link to="/docs/mestre-catalogo">Perícias e atributos</Link>.</> },
         { titulo: "Crie pelo menos uma raça", texto: <>Título, descrição, deslocamento e perícias de base. Veja <Link to="/docs/mestre-racas">Criando raças</Link>.</> },
-        { titulo: "Escolha ou crie as classes", texto: <>Use as fixas, duplique para adaptar ou crie do zero. Veja <Link to="/docs/mestre-classes">Criando classes e cartas</Link>.</> },
+        { titulo: "Escolha ou crie as classes", texto: <>Use as verificadas, duplique para adaptar ou crie do zero. Veja <Link to="/docs/mestre-classes">Criando classes e cartas</Link>.</> },
         { titulo: "Crie o grupo", texto: <>Informações e o que vale no grupo. Veja <Link to="/docs/mestre-grupos">Montando um grupo</Link>.</> },
         { titulo: "Compartilhe o código", texto: "Na página do grupo aparece o código de 6 caracteres. Os jogadores digitam em Minhas fichas." },
         { titulo: "Prepare itens e criaturas (opcional)", texto: <>Em Itens e Bestiário. Veja <Link to="/docs/mestre-itens">Itens</Link> e <Link to="/docs/mestre-bestiario">Bestiário</Link>.</> },
@@ -63,7 +64,7 @@ export function MestreCatalogo() {
       <Tabela
         cabecalho={["Tipo", "O que dá para fazer"]}
         linhas={[
-          [<span key="f" className="regra__inline"><Lock size={14} aria-hidden /> Fixos</span>, "Capacidade física, Carisma e Conhecimento. Valem para todos e não podem ser editados."],
+          [<span key="f" className="regra__inline"><BadgeCheck size={14} aria-hidden /> Do kit básico</span>, "Capacidade física, Carisma e Conhecimento. Verificados pelo administrador do One-Take: só leitura para você; use no grupo como estão."],
           ["Seus", "Crie quantos quiser (ex.: Sanidade, Tecnologia). Pode editar e excluir."],
         ]}
       />
@@ -99,11 +100,11 @@ export function MestreRacas() {
 export function MestreClasses() {
   return (
     <>
-      <h2>Classes fixas e classes suas</h2>
+      <h2>Classes verificadas e classes suas</h2>
       <Tabela
         cabecalho={["Opção", "Como funciona"]}
         linhas={[
-          [<span key="f" className="regra__inline"><Lock size={14} aria-hidden /> Usar uma fixa</span>, "Vêm com o sistema, são somente leitura e podem ser liberadas nos seus grupos como estão."],
+          [<span key="f" className="regra__inline"><Lock size={14} aria-hidden /> Usar uma verificada</span>, "Verificadas pelo administrador do One-Take: somente leitura, e podem ser liberadas nos seus grupos como estão."],
           [<span key="d" className="regra__inline"><Copy size={14} aria-hidden /> Duplicar</span>, "Cria uma cópia sua com cartas e perícias, para editar à vontade."],
           ["Criar do zero", "Nova classe cria só a classe; as cartas e perícias você adiciona depois, na página dela."],
         ]}
@@ -132,8 +133,9 @@ export function MestreClasses() {
       <h2>Aprimorar uma carta</h2>
       <p>
         Em <strong>Gerenciar habilidades</strong>, use <strong>Aprimorar</strong> na carta e crie um aprimoramento: o nível a partir do
-        qual ela muda e só o que muda (efeito, custo de mana, título, condição, limite ou status). O resto continua igual. Dá para ter
-        vários aprimoramentos na mesma carta, um por nível; a prévia de progressão marca em que nível cada carta é aprimorada.
+        qual ela vale e a carta inteira naquele nível. O formulário já vem preenchido com a versão anterior; mude o que quiser
+        (título, descrição do nível, efeito, custo de mana, condição, limite ou status), inclusive tirar o limite ou o status. Dá para
+        ter vários aprimoramentos na mesma carta, um por nível; a prévia de progressão marca em que nível cada carta é aprimorada.
       </p>
       <Destaque tipo="dica" titulo="Equilíbrio">
         Cartas fortes ficam melhores com nível necessário maior ou com custo de mana. Assim o personagem cresce sessão a sessão.
@@ -154,7 +156,7 @@ export function MestreKits() {
         linhas={[
           ["Sem kit (geral)", "Aparece em Todos (sem kit ativo) e pode ser usado em qualquer grupo. É o padrão."],
           ["Em um ou mais kits", "Aparece só com esses kits. A mesma coisa pode estar em vários kits (ex.: um Lobo no kit de terror e no de fantasia)."],
-          ["Kit ativo", "Escolhido no topo da navegação lateral. As listas mostram só o que é do kit (mais o que é fixo do sistema), e tudo o que você criar já entra nele. Para ver o geral, escolha Todos."],
+          ["Kit ativo", "Escolhido no topo da navegação lateral. As listas mostram só o que é do kit, e tudo o que você criar já entra nele. Para ver o geral, escolha Todos."],
           ["Grupo com kit", "Ao montar o grupo, escolha o kit: ele já marca as classes, raças, perícias e status do kit (você ajusta). Itens, criaturas e NPCs mostrados no grupo seguem o kit."],
           ["Ver o que tem", "Em Kits de RPG, toque no nome do kit (ou em Ver o que tem): a tela lista tudo o que está nele, por tipo, com link para cada coisa e os grupos que usam o kit."],
         ]}
@@ -280,13 +282,24 @@ export function MestreGrupos() {
         <li>Título, gênero, sinopse e imagem (link): é o que o jogador vê ao digitar o código.</li>
         <li><strong>Limite de membros</strong>: quantos jogadores podem entrar. Não pode ficar abaixo de quem já entrou.</li>
         <li><strong>Permitir classes repetidas</strong>: desligado, cada classe só pode ser escolhida por um jogador.</li>
+        <li>
+          <strong>Limite por função</strong>: quantos jogadores podem escolher classes Combatentes, Vanguardistas e Suportes (ex.: no máximo 1
+          Vanguardista). Vazio = sem limite; 0 = ninguém daquela função. Não pode ficar abaixo de quantos já escolheram a função; na criação
+          da ficha, a classe de uma função cheia aparece bloqueada, com o motivo.
+        </li>
       </ul>
       <h2>O que vale neste grupo</h2>
       <ul>
-        <li>Marque as <strong>classes</strong> (fixas ou suas) e as <strong>raças</strong> que os jogadores podem escolher.</li>
+        <li>Marque as <strong>classes</strong> (suas ou verificadas) e as <strong>raças</strong> que os jogadores podem escolher.</li>
         <li>Marque os <strong>atributos</strong>: marcar um atributo leva todas as perícias dele. Depois desmarque perícias específicas que não fazem sentido na aventura.</li>
         <li>Os {f.pontosAtributoIniciais} pontos de atributo (d20) da ficha são distribuídos só entre os atributos marcados.</li>
         <li>Para os jogadores conseguirem criar ficha, o grupo precisa de pelo menos uma classe, uma raça e um atributo.</li>
+      </ul>
+      <h2>Regras de combate</h2>
+      <ul>
+        <li>As <Link to="/docs/combate-padrao">regras padrão de combate</Link> valem em todo grupo novo. Em Editar grupo, seção Regras de combate, desmarque as que não quiser nesta mesa.</li>
+        <li>Na página do grupo, em Regras de combate, use <strong>Regra da mesa</strong> para criar regras próprias (título e texto). Dá para editar e excluir.</li>
+        <li>Os jogadores veem as regras que valem na ficha, em Regras da mesa.</li>
       </ul>
       <h2>Código de entrada</h2>
       <ul>
@@ -309,7 +322,10 @@ export function MestreSessao() {
           { titulo: "Compare com a DT", texto: "Igual ou maior: sucesso. A ficha mostra o teste pronto de cada perícia (ex.: 2d20 + 5)." },
         ]}
       />
-      <p>Regras completas em <Link to="/docs/testes">Testes, DT e esforço</Link>.</p>
+      <p>
+        Regras completas em <Link to="/docs/testes">Testes, DT e esforço</Link>. No combate, o ataque é contra a defesa do alvo (empate é do
+        atacante) ou contra uma DT que você diz em voz alta: veja <Link to="/docs/combate">Combate</Link>.
+      </p>
       <h2>Fichas dos membros</h2>
       <p>Na página do grupo você vê todos os membros com vida, mana e esforço. Clique num membro para abrir a ficha. Na ficha você pode:</p>
       <ul>
@@ -342,9 +358,9 @@ export function MestreStatus() {
       <p>Status mostram alertas nas fichas (ex.: Cansado: -10 no total dos dados em testes físicos). Eles não mudam números: a mesa aplica o efeito.</p>
       <h2>Catálogo</h2>
       <ul>
-        <li>Em <strong>Status</strong>, no menu, ficam os status fixos do sistema (somente leitura) e os seus.</li>
+        <li>Em <strong>Status</strong>, no menu, ficam os seus status e os verificados de outras pessoas (somente leitura). Nenhum status é fixo.</li>
         <li>Crie status próprios com nome, tipo (benefício, prejuízo ou misto) e efeito.</li>
-        <li>Os automáticos (Morto, Sem energia vital, Cansado) aparecem sozinhos quando vida, mana ou esforço chegam a 0.</li>
+        <li>Os automáticos (Morto, Sem energia vital, Cansado) aparecem sozinhos quando vida, mana ou esforço chegam a 0. Quem tem um deles pode mudar o nome e o efeito, mas não excluir.</li>
         <li>
           Para agrupar, use o botão <strong>Categorias</strong> e crie as suas (ex.: Elementais, Mentais). No status, escolha a categoria: a
           página passa a mostrar os status separados por categoria, e cada uma se oculta com a seta.
@@ -352,7 +368,7 @@ export function MestreStatus() {
       </ul>
       <h2>No grupo</h2>
       <ul>
-        <li>Ao criar ou editar o grupo, marque quais status valem ali. Um grupo novo começa com os status do sistema marcados.</li>
+        <li>Ao criar ou editar o grupo, marque quais status valem ali. Um grupo novo começa com os status automáticos marcados (e, com kit, os do kit).</li>
         <li>Com categorias, marque a categoria para levar todos os status dela de uma vez; depois desmarque os que não quiser.</li>
         <li>Status desmarcados não aparecem nas fichas daquele grupo nem podem ser aplicados.</li>
       </ul>
@@ -363,9 +379,11 @@ export function MestreStatus() {
           aplicar um status novo.
         </li>
         <li>Na ficha do personagem há a mesma coisa, no quadro <strong>Status</strong> logo abaixo do cabeçalho.</li>
+        <li><strong>Turnos</strong>: ao aplicar, anote quantos turnos o status dura (opcional). A cada turno, use o <strong>-1</strong> no status; em 0 ele sai sozinho. Sem turnos, dura até você tirar.</li>
+        <li>Status se acumulam: o mesmo personagem pode ter vários, e os efeitos somam.</li>
         <li>Se nenhum status aparece para aplicar, é porque o grupo não tem status ativados: marque em Editar grupo, seção Status.</li>
         <li>NPCs e criaturas também recebem status: na ficha do NPC e na ficha da criatura (toque nela na página do grupo).</li>
-        <li>Ao criar uma carta de habilidade, use o campo <strong>Ativa status</strong> para indicar o status que ela causa. Quando a carta for usada, aplique na ficha do alvo.</li>
+        <li>Ao criar uma carta de habilidade, use o campo <strong>Ativa status</strong> para indicar o status que ela causa. Quando a carta for usada, aplique na ficha do alvo (o status de uma carta vai sempre para o alvo).</li>
       </ul>
     </>
   );
@@ -376,7 +394,7 @@ export function MestreSubirNivel() {
   const g = r.progressao.ganhoPorNivel;
   return (
     <>
-      <p>A regra é 1 nível por participação. Na ficha de cada participante, clique em <strong>Subir nível</strong>. O personagem recebe:</p>
+      <p>A regra é 1 nível por participação. Ao fim da mesa, na ficha de cada participante, clique em <strong>Subir nível</strong> (antes de o jogador levar o personagem para outra mesa). O personagem recebe:</p>
       <ul>
         <li>+{g.pontosVida} de vida, +{g.pontosMana} de mana e +{g.pontosEsforco} de esforço (no máximo e no valor atual);</li>
         <li>{g.pontosPericia} pontos de perícia, que o jogador (ou você) usa na ficha: perícia nova do grupo com +{g.pontosPericia}, ou +{g.pontosPericia} numa que já tem;</li>
@@ -398,7 +416,8 @@ export function MestreProtecoes() {
           ["Classe ou raça", "Quando alguma ficha usa."],
           ["Perícia", "Quando alguma ficha colocou pontos nela."],
           ["Atributo", "Quando ainda tem perícias (mova antes) ou quando fichas têm dados nele."],
-          ["Classe fixa, atributo fixo", "Nunca: são do sistema."],
+          ["Status automático", "Nunca: a ficha usa ele quando vida, mana ou esforço chegam a 0 (dá para editar)."],
+          ["Coisa verificada de outra pessoa", "Nunca: é só leitura para você. Duplique para ter a sua."],
         ]}
       />
       <p>Excluir um <strong>grupo</strong> é permitido, com confirmação: apaga as criaturas invocadas e os itens dele, e as fichas saem do grupo. Cada jogador fica com uma cópia arquivada (só leitura) da própria ficha. O mesmo vale quando você remove um membro ou exclui a sua conta.</p>
@@ -430,7 +449,7 @@ export function JogadorEntrar() {
         { titulo: "Crie a conta", texto: <>No <Link to="/cadastro">cadastro</Link>, escolha "Jogador", um nome de usuário, a data de nascimento e uma senha, e guarde o código de recuperação. (Toda conta joga, inclusive a de mestre.)</> },
         { titulo: "Peça o código ao mestre", texto: "São 6 caracteres. Digite em Minhas fichas, no campo Entrar em um grupo." },
         { titulo: "Veja o grupo", texto: "Aparecem a sinopse, o gênero, o mestre, as vagas e o que dá para escolher." },
-        { titulo: "Crie a ficha", texto: `Nome, imagem e história (opcionais), raça, classe (use Ver detalhes para comparar) e ${f.pontosAtributoIniciais} pontos de atributo.` },
+        { titulo: "Crie a ficha ou traga um personagem", texto: `Nome, imagem e história (opcionais), raça, classe (use Ver detalhes para comparar) e ${f.pontosAtributoIniciais} pontos de atributo. Já jogou outra mesa? Escolha o mesmo personagem: ele vem com o nível, sem os itens.` },
         { titulo: "Pronto", texto: "A ficha aparece em Minhas fichas. Você tem uma ficha por grupo." },
       ]}
     />
@@ -475,11 +494,16 @@ export function Glossario() {
         ["DT", "Dificuldade do teste: o número que o total precisa alcançar. O mestre define na hora."],
         ["Esforço", "Recurso do personagem; cada ponto gasto antes de um teste dá +1 d20."],
         ["Bestiário", "As criaturas do mestre, montadas como classes, para invocar nos grupos."],
-        ["Conceito", "Classe, raça ou criatura generalista que agrupa variações (subclasses, sub-raças, formas)."],
+        ["Arquétipo", "Classe, raça ou criatura generalista que agrupa variações (subclasses, sub-raças, formas)."],
         ["Perícia", "Habilidade passiva em que o personagem é bom, com um valor."],
         ["Cartela", "O deck de cartas de habilidade de uma classe."],
         ["Deslocamento", "Quantos quadrados do grid o personagem anda por turno."],
         ["Item vago", "Item que está no grupo sem dono, esperando alguém pegar."],
+        ["Mesa", "Um grupo jogado numa sessão. Para subir de nível, o personagem participa de mais mesas."],
+        ["Rodada", "Uma volta completa na ordem de Iniciativa: cada participante joga um turno."],
+        ["Turno", "A vez de um participante: 1 movimento + 1 ação."],
+        ["Interlúdio", "Pausa entre cenas da sessão, quando os personagens comem, descansam e recuperam vida, mana e esforço."],
+        ["Regra da mesa", "Regra própria que o mestre cria num grupo, além ou no lugar das regras padrão de combate."],
       ]}
     />
   );

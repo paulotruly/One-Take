@@ -1,5 +1,5 @@
 // Perícias e atributos. Categorias são lista fixa do sistema (espelham o enum da API);
-// atributos vêm da API (3 fixos + os criados pelo mestre).
+// atributos vêm da API (os do mestre + os verificados).
 import { BookOpen, Eye, Footprints, HandFist, MessageCircle, Shield, Sparkles, Target, type LucideIcon } from "lucide-react";
 
 export type CategoriaPericia =
@@ -24,8 +24,8 @@ export const CATEGORIAS: Record<CategoriaPericia, { Icone: LucideIcon; rotulo: s
 };
 export const LISTA_CATEGORIAS = Object.keys(CATEGORIAS) as CategoriaPericia[];
 
-/** Atributo como vem embutido nas perícias. `fixo` = do sistema (não editável). */
-export type AtributoResumo = { id: string; nome: string; descricao: string; ordem: number; fixo: boolean; kitIds?: string[]; editavel?: boolean; verificado?: boolean; deOutro?: boolean; podeVerificar?: boolean; seloProprio?: boolean; verificadoPorKit?: boolean };
+/** Atributo como vem embutido nas perícias. */
+export type AtributoResumo = { id: string; nome: string; descricao: string; ordem: number; kitIds?: string[]; editavel?: boolean; verificado?: boolean; deOutro?: boolean; podeVerificar?: boolean; seloProprio?: boolean; verificadoPorKit?: boolean };
 
 /** Atributo na lista de atributos, com quantas perícias do mestre usam. */
 export type Atributo = AtributoResumo & { pericias: number };

@@ -95,6 +95,15 @@ describe("grupos (mestre)", () => {
     const res = await comoMestre(request(app).patch(`/api/grupos/${GRUPO}`)).send({ limiteMembros: 2 });
     expect(res.status).toBe(400);
   });
+
+  it("limite por função não pode ficar abaixo das fichas dessa função", async () => {
+    prismaFalso.grupo.findUnique.mockResolvedValue(grupo());
+    prismaFalso.ficha.findMany.mockResolvedValue([{ classe: { grupo: "SUPORTE" } }, { classe: { grupo: "SUPORTE" } }]);
+    const res = await comoMestre(request(app).patch(`/api/grupos/${GRUPO}`)).send({ limiteSuportes: 1 });
+    expect(res.status).toBe(400);
+    expect(res.body.error.details).toEqual([{ campo: "limiteSuportes", mensagem: "Mínimo 2" }]);
+    expect(prismaFalso.grupo.update).not.toHaveBeenCalled();
+  });
 });
 
 describe("criar ficha pelo código", () => {
@@ -130,6 +139,25 @@ describe("criar ficha pelo código", () => {
     expect(res.body.error.code).toBe("GRUPO_CHEIO");
   });
 
+  it("limite por função: Vanguardista cheio recusa a ficha (409 FUNCAO_CHEIA)", async () => {
+    grupoPronto({ limiteVanguardistas: 1 });
+    prismaFalso.classeNoGrupo.findUnique.mockResolvedValue({ classe: { ...classe, grupo: "VANGUARDISTA" } });
+    const res = await comoJogador(request(app).post("/api/fichas")).send(corpo);
+    expect(res.status).toBe(409);
+    expect(res.body.error.code).toBe("FUNCAO_CHEIA");
+    expect(res.body.error.message).toContain("no máximo 1 Vanguardista");
+    expect(prismaFalso.ficha.count).toHaveBeenLastCalledWith({ where: { grupoId: GRUPO, classe: { grupo: "VANGUARDISTA" } } });
+    expect(prismaFalso.ficha.create).not.toHaveBeenCalled();
+  });
+
+  it("função com limite 0 fica fechada", async () => {
+    grupoPronto({ limiteSuportes: 0 });
+    prismaFalso.classeNoGrupo.findUnique.mockResolvedValue({ classe: { ...classe, grupo: "SUPORTE" } });
+    const res = await comoJogador(request(app).post("/api/fichas")).send(corpo);
+    expect(res.status).toBe(409);
+    expect(res.body.error.message).toBe("Este grupo não aceita classes da função Suporte.");
+  });
+
   it("classe repetida recusada quando o grupo não permite", async () => {
     grupoPronto({ permitirClassesRepetidas: false });
     prismaFalso.ficha.findFirst.mockResolvedValue({ id: "outra" });
@@ -158,6 +186,29 @@ describe("criar ficha pelo código", () => {
     expect(data).toMatchObject({ grupoId: GRUPO, jogadorId: JOGADOR.id, nivel: 1, vidaAtual: 30, manaAtual: 10, esforcoAtual: 20 });
     expect(data.atributos.create).toEqual([{ atributoId: FIS, dados: 2 }, { atributoId: CAR, dados: 1 }]);
     expect(prismaFalso.grupo.findUnique.mock.calls[0]![0]).toEqual({ where: { codigo: "ABC234" } });
+  });
+  it("personagem de outra mesa: mesmo nível, recursos cheios do nível, pontos de perícia para gastar, origem arquivada sai", async () => {
+    grupoPronto();
+    const ARQ = "77777777-7777-4777-8777-777777777777";
+    prismaFalso.fichaArquivada.findFirst.mockResolvedValue({ nivel: 3, classeId: CLASSE, racaId: RACA });
+    prismaFalso.ficha.create.mockResolvedValue({ id: FICHA });
+    await comoJogador(request(app).post("/api/fichas")).send({ ...corpo, origem: { tipo: "ARQUIVADA", id: ARQ } });
+    const data = prismaFalso.ficha.create.mock.calls[0]![0].data;
+    expect(data).toMatchObject({ nivel: 3, vidaAtual: 40, manaAtual: 20, esforcoAtual: 30, pontosPericiaDisponiveis: 10 });
+    expect(prismaFalso.fichaArquivada.delete).toHaveBeenCalledWith({ where: { id: ARQ } });
+  });
+
+  it("personagem de outra mesa leva a mesma classe e raça; de outra pessoa = 404", async () => {
+    grupoPronto();
+    const ARQ = "77777777-7777-4777-8777-777777777777";
+    prismaFalso.fichaArquivada.findFirst.mockResolvedValueOnce({ nivel: 2, classeId: "88888888-8888-4888-8888-888888888888", racaId: RACA });
+    const outraClasse = await comoJogador(request(app).post("/api/fichas")).send({ ...corpo, origem: { tipo: "ARQUIVADA", id: ARQ } });
+    expect(outraClasse.status).toBe(400);
+
+    prismaFalso.fichaArquivada.findFirst.mockResolvedValueOnce(null);
+    const alheio = await comoJogador(request(app).post("/api/fichas")).send({ ...corpo, origem: { tipo: "ARQUIVADA", id: ARQ } });
+    expect(alheio.status).toBe(404);
+    expect(prismaFalso.ficha.create).not.toHaveBeenCalled();
   });
 });
 

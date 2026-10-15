@@ -5,12 +5,12 @@ import { getPrisma } from "../../lib/prisma.js";
 import type { Usuario } from "../../middleware/auth.js";
 import { apresentarAtributo, atributoUsavel, porAtributoENome } from "../atributos/atributos.service.js";
 import { classeEditavel, periciaNoCatalogo } from "../classes/classes.service.js";
-import { kitIdsPara, podeUsar, quemVe, visao, visivelParaSemFixos } from "../../lib/sistema.js";
+import { kitIdsPara, podeUsar, quemVe, visao, visivelPara } from "../../lib/sistema.js";
 import { comKits, definirKits } from "../../lib/kits.js";
 import type { criarPericiaSchema, editarPericiaSchema } from "./pericias.schemas.js";
 
 // ---------- Catálogo do mestre ----------
-// Perícias base (donoId nulo) pertencem ao sistema e são usadas pelas classes fixas.
+// Perícias base (donoId nulo) são só o modelo do catálogo: não aparecem nas listas nem entram em classes.
 // Cada mestre trabalha numa cópia própria, criada uma única vez (Perfil.catalogoIniciado).
 
 /** Copia as perícias base para o catálogo do mestre na primeira vez. Idempotente. */
@@ -56,7 +56,7 @@ function apresentar<T extends { atributo: Atributo; _count: { classes: number; r
 export async function listar(usuarioId: string, { comVerificados = false } = {}) {
   const quem = await quemVe(usuarioId);
   const pericias = await getPrisma().pericia.findMany({
-    where: comVerificados ? await visivelParaSemFixos(usuarioId) : { donoId: usuarioId },
+    where: comVerificados ? await visivelPara(usuarioId) : { donoId: usuarioId },
     include: contarUsos,
   });
   const minhas = pericias.filter((p) => p.donoId === usuarioId);
@@ -71,7 +71,7 @@ export async function listar(usuarioId: string, { comVerificados = false } = {})
 /** Copia uma perícia verificada para o catálogo do mestre (ou devolve a que ele já tem igual). */
 export async function duplicar(id: string, usuarioId: string) {
   const p = await getPrisma().pericia.findUnique({ where: { id } });
-  if (!p || !(await podeUsar("pericia", p, usuarioId, { semFixos: true }))) throw naoEncontrado("Perícia não encontrada");
+  if (!p || !(await podeUsar("pericia", p, usuarioId))) throw naoEncontrado("Perícia não encontrada");
   const novaId = await periciaNoCatalogo(p, usuarioId);
   return apresentar(await getPrisma().pericia.findUniqueOrThrow({ where: { id: novaId }, include: contarUsos }));
 }

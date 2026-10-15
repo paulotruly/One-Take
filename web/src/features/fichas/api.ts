@@ -53,8 +53,11 @@ export function useEditarFicha(id: string) {
 }
 
 export const useAplicarStatus = (id: string) =>
-  useEscrita((statusId: string) => api<FichaDetalhe>(`/api/fichas/${id}/status`, { method: "POST", body: { statusId } }));
+  useEscrita(({ statusId, turnos }: { statusId: string; turnos: number | null }) => api<FichaDetalhe>(`/api/fichas/${id}/status`, { method: "POST", body: { statusId, turnos } }));
 
+/** Turnos que faltam de um status aplicado (0 tira o status). */
+export const useTurnosStatus = (id: string) =>
+  useEscrita(({ statusId, turnos }: { statusId: string; turnos: number | null }) => api<FichaDetalhe>(`/api/fichas/${id}/status/${statusId}`, { method: "PATCH", body: { turnos } }));
 export const useRemoverStatus = (id: string) =>
   useEscrita((statusId: string) => api<FichaDetalhe>(`/api/fichas/${id}/status/${statusId}`, { method: "DELETE" }));
 

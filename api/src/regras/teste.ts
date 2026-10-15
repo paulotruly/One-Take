@@ -6,8 +6,8 @@
 // 3. Soma o bônus da perícia, se tiver (qualquer personagem testa qualquer perícia; sem ela, o bônus é 0).
 // 4. Total >= DT = sucesso. A DT (faixa de sucesso e falha) é livre: o mestre define na hora.
 // Atributo com 0 pontos: rola sempre 1 d20 e o resultado vale a METADE (arredondada para baixo).
-// Esforço: cada ponto gasto antes da rolagem dá +1 d20 (2d20 vira 3d20). Não vale com atributo 0
-// (ele rola "sempre apenas 1 dado").
+// Esforço: cada ponto gasto antes da rolagem dá +1 d20 (2d20 vira 3d20), no máximo 1 ponto por rodada.
+// Não vale com atributo 0 (ele rola "sempre apenas 1 dado"). A defesa também é um teste e também pode usar esforço.
 
 export const TESTE = {
   /** Faces do dado de teste. */
@@ -20,15 +20,16 @@ export const TESTE = {
   esforcoPorDadoExtra: 1,
   /** Se o esforço pode comprar dados quando o atributo tem 0 pontos. */
   esforcoComAtributoZero: false,
+  /** Máximo de pontos de esforço gastos por rodada (decisão de 2026-10-14). */
+  esforcoMaximoPorRodada: 1,
 } as const;
 
-/** Quantos d20 o personagem rola: pontos no atributo + dados comprados com esforço. */
+/** Quantos d20 o personagem rola: pontos no atributo + dados comprados com esforço (no máximo o da rodada). */
 export function dadosDoTeste(pontosAtributo: number, esforcoGasto = 0) {
-  if (pontosAtributo <= 0) {
-    const extras = TESTE.esforcoComAtributoZero ? Math.floor(esforcoGasto / TESTE.esforcoPorDadoExtra) : 0;
-    return TESTE.dadosComAtributoZero + extras;
-  }
-  return pontosAtributo + Math.floor(Math.max(0, esforcoGasto) / TESTE.esforcoPorDadoExtra);
+  const esforco = Math.min(Math.max(0, esforcoGasto), TESTE.esforcoMaximoPorRodada);
+  const extras = Math.floor(esforco / TESTE.esforcoPorDadoExtra);
+  if (pontosAtributo <= 0) return TESTE.dadosComAtributoZero + (TESTE.esforcoComAtributoZero ? extras : 0);
+  return pontosAtributo + extras;
 }
 
 /** Resultado de um teste já rolado: maior dado (metade se o atributo for 0) + bônus da perícia. */

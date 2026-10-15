@@ -15,7 +15,7 @@ export function ClasseCabecalho({ classe, acoes, selo }: { classe: Classe; acoes
       <div className="classe-cabecalho__info">
         <div className="classe-cabecalho__selos">
           <GrupoBadge grupo={classe.grupo} />
-          <OrigemBadge fixa={classe.fixa} deOutro={classe.deOutro} />
+          <OrigemBadge deOutro={classe.deOutro} />
         </div>
         {classe.conceito && <p className="classe-card__conceito">Subclasse de {classe.conceito.titulo}</p>}
         <h1>{classe.titulo} {selo ?? (classe.verificado && <VerificadoBadge porKit={classe.verificadoPorKit && !classe.seloProprio} />)}</h1>

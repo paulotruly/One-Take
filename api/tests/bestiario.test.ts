@@ -175,11 +175,12 @@ describe("categorias de item", () => {
   const FIXA = "00000000-0000-4000-8004-000000000001";
   const MINHA = "22222222-0000-4000-8000-0000000000c1";
 
-  it("categoria fixa do sistema não pode ser editada nem excluída", async () => {
-    prismaFalso.categoriaItem.findUnique.mockResolvedValue({ id: FIXA, nome: "Armas", donoId: null });
+  it("categoria verificada de outra pessoa não pode ser editada nem excluída (não há categoria fixa)", async () => {
+    prismaFalso.categoriaItem.findUnique.mockResolvedValue({ id: FIXA, nome: "Armas", donoId: OUTRO_MESTRE_ID, verificado: true });
     const res = await comoMestre(request(app).patch(`/api/categorias-item/${FIXA}`)).send({ nome: "Armamento" });
     expect(res.status).toBe(403);
-    expect(res.body.error.code).toBe("CATEGORIA_FIXA");
+    expect(res.body.error.code).toBe("VERIFICADO");
+    expect((await comoMestre(request(app).delete(`/api/categorias-item/${FIXA}`))).status).toBe(403);
   });
 
   it("mestre cria categoria própria com ícone da lista; nome repetido = 409", async () => {
@@ -187,7 +188,7 @@ describe("categorias de item", () => {
     prismaFalso.categoriaItem.create.mockImplementation(async ({ data }) => ({ id: MINHA, ordem: 100, ...data, _count: { modelos: 0, itens: 0 } }));
     const ok = await comoMestre(request(app).post("/api/categorias-item")).send({ nome: "Relíquias", icone: "coroa" });
     expect(ok.status).toBe(201);
-    expect(ok.body).toMatchObject({ nome: "Relíquias", icone: "coroa", fixa: false, usos: 0 });
+    expect(ok.body).toMatchObject({ nome: "Relíquias", icone: "coroa", usos: 0 });
 
     const iconeRuim = await comoMestre(request(app).post("/api/categorias-item")).send({ nome: "X", icone: "dragao" });
     expect(iconeRuim.status).toBe(400);
@@ -211,7 +212,7 @@ describe("NPCs", () => {
 
   it("NPC com classe começa cheio, com a vida da classe no nível dele", async () => {
     prismaFalso.raca.findUnique.mockResolvedValue({ donoId: MESTRE.id });
-    prismaFalso.classe.findUnique.mockResolvedValue({ id: CLASSE, donoId: null, pontosVida: 30, pontosMana: 10, pontosEsforco: 20 });
+    prismaFalso.classe.findUnique.mockResolvedValue({ id: CLASSE, donoId: OUTRO_MESTRE_ID, verificado: true, pontosVida: 30, pontosMana: 10, pontosEsforco: 20 });
     prismaFalso.npc.create.mockImplementation(async ({ data }) => ({ id: NPC, ...data }));
     prismaFalso.npc.findUnique.mockResolvedValue({ id: NPC, donoId: MESTRE.id });
     prismaFalso.npc.findUniqueOrThrow.mockRejectedValue(new Error("parar aqui"));

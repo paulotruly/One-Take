@@ -65,7 +65,8 @@ sessões nem aplica automaticamente os efeitos das cartas e dos status: a mesa d
 
 - O aplicativo, o código-fonte, o sistema de regras, os textos da documentação, o nome e a identidade visual do One-Take pertencem a
   Paulo Gomes. [CONFIRMAR SE O NOME "ONE-TAKE" TEM REGISTRO OU PEDIDO DE MARCA]
-- O conteúdo fixo do sistema (atributos, perícias base, status e categorias de itens fixos) faz parte do One-Take.
+- O conteúdo inicial e o conteúdo verificado pelo administrador do One-Take (como o kit básico, com atributos, perícias base, status e
+  categorias de itens) fazem parte do One-Take.
 - O repositório do código pode estar visível publicamente, mas isso **não** concede licença de uso, cópia, modificação ou distribuição.
   Não há licença de código aberto. Todos os direitos são reservados, salvo autorização por escrito.
 

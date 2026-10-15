@@ -1,11 +1,14 @@
 // Retrato de uma ficha para o arquivo (cópia somente leitura que fica com o jogador). Ver arquivo.ts.
 import type { MotivoArquivamento } from "../../generated/prisma/enums.js";
+import { getPrisma } from "../../lib/prisma.js";
 import { rotuloLimite } from "../../regras/limite.js";
 import { detalhar } from "./fichas.service.js";
 
 /** Retrato da ficha, calculado com as regras atuais. Não guarda dados de outras pessoas (mestre, outros membros). */
 export async function retratoDaFicha(fichaId: string, jogadorId: string, motivo: MotivoArquivamento) {
-  return { jogadorId, motivo, ...(await fotoDaFicha(fichaId, jogadorId)) };
+  const f = await getPrisma().ficha.findUniqueOrThrow({ where: { id: fichaId }, select: { classeId: true, racaId: true } });
+  // Classe e raça de origem: permitem levar o personagem para outra mesa depois.
+  return { jogadorId, motivo, classeId: f.classeId, racaId: f.racaId, ...(await fotoDaFicha(fichaId, jogadorId)) };
 }
 
 /** A ficha como o jogador a vê, sem ids nem dados de outras pessoas (também usada na exportação de dados). */

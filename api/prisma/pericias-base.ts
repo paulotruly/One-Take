@@ -2,16 +2,16 @@
 // recebe uma cópia editável delas no primeiro acesso (ver garantirCatalogo).
 import type { CategoriaPericia } from "../src/generated/prisma/enums.js";
 
-/** Atributos fixos do sistema (mesmos ids da migration `atributos`). */
-export const ATRIBUTOS_FIXOS = {
+/** Atributos iniciais do seed, criados na conta ADMIN (mesmos ids da migration `atributos`). */
+export const ATRIBUTOS_BASE = {
   fisica: { id: "00000000-0000-4000-8002-000000000001", nome: "Capacidade física", descricao: "Utilizada sempre que o corpo é levado ao limite.", ordem: 1 },
   carisma: { id: "00000000-0000-4000-8002-000000000002", nome: "Carisma", descricao: "A presença do personagem e sua capacidade de lidar com outras pessoas.", ordem: 2 },
   conhecimento: { id: "00000000-0000-4000-8002-000000000003", nome: "Conhecimento", descricao: "O intelecto e a sensibilidade do personagem diante do mundo.", ordem: 3 },
 } as const;
 
-const FIS = ATRIBUTOS_FIXOS.fisica.id;
-const CAR = ATRIBUTOS_FIXOS.carisma.id;
-const CON = ATRIBUTOS_FIXOS.conhecimento.id;
+const FIS = ATRIBUTOS_BASE.fisica.id;
+const CAR = ATRIBUTOS_BASE.carisma.id;
+const CON = ATRIBUTOS_BASE.conhecimento.id;
 
 type PericiaBase = { id: string; nome: string; descricao: string; categoria: CategoriaPericia; atributoId: string };
 

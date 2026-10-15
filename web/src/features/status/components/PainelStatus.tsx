@@ -1,23 +1,24 @@
 // Status atuais de um personagem (alertas) + aplicar/tirar (apresentação; quem usa passa as ações).
 // Usado na ficha do NPC e na ficha da criatura.
 import { Activity, X } from "lucide-react";
-import { useState } from "react";
 import { Button } from "../../../components/ui/Button";
 import { ROTULO_TIPO, type Status } from "../types";
 import { StatusBadge } from "./StatusBadge";
+import { AplicarStatusLinha, StatusTurnos } from "./StatusTurnos";
 
 type Props = {
   status: Status[];
   aplicaveis: Status[];
-  onAplicar: (statusId: string) => void;
+  onAplicar: (statusId: string, turnos: number | null) => void;
   onRemover: (statusId: string) => void;
+  /** Tirar turnos de um status aplicado (0 tira o status). Sem isso, os turnos só aparecem. */
+  onMudarTurnos?: (statusId: string, turnos: number) => void;
   ocupado?: boolean;
   /** Texto quando não há o que aplicar (ex.: "ative status no grupo"). */
   semAplicaveis?: string;
 };
 
-export function PainelStatus({ status, aplicaveis, onAplicar, onRemover, ocupado, semAplicaveis }: Props) {
-  const [escolhido, setEscolhido] = useState("");
+export function PainelStatus({ status, aplicaveis, onAplicar, onRemover, onMudarTurnos, ocupado, semAplicaveis }: Props) {
   return (
     <section className="painel" aria-label="Status">
       <h2 className="painel__titulo"><Activity size={18} aria-hidden /> Status</h2>
@@ -28,7 +29,8 @@ export function PainelStatus({ status, aplicaveis, onAplicar, onRemover, ocupado
           {status.map((st) => (
             <li key={st.id} className={`alerta-status alerta-status--${st.tipo}`}>
               <div className="alerta-status__texto">
-                <p><StatusBadge nome={st.nome} tipo={st.tipo} /> <span className="pagina__subtitulo">{st.automatico ? "automático" : ROTULO_TIPO[st.tipo]}</span></p>
+                <p><StatusBadge nome={st.nome} tipo={st.tipo} /> <span className="pagina__subtitulo">{st.automatico ? "automático" : ROTULO_TIPO[st.tipo]}</span>{" "}
+                  <StatusTurnos status={st} ocupado={ocupado} onMudarTurnos={onMudarTurnos && ((t) => onMudarTurnos(st.id, t))} /></p>
                 {st.efeito && <p><strong>{st.efeito}</strong></p>}
               </div>
               {!st.automatico && (
@@ -41,15 +43,7 @@ export function PainelStatus({ status, aplicaveis, onAplicar, onRemover, ocupado
         </ul>
       )}
       {aplicaveis.length > 0 ? (
-        <div className="entrar-codigo__linha">
-          <select value={escolhido} onChange={(e) => setEscolhido(e.target.value)} aria-label="Status para aplicar">
-            <option value="">Escolha um status…</option>
-            {aplicaveis.map((st) => <option key={st.id} value={st.id}>{st.nome} ({ROTULO_TIPO[st.tipo]})</option>)}
-          </select>
-          <Button variante="primario" disabled={!escolhido || ocupado} onClick={() => { onAplicar(escolhido); setEscolhido(""); }}>
-            Aplicar status
-          </Button>
-        </div>
+        <AplicarStatusLinha aplicaveis={aplicaveis} ocupado={ocupado} onAplicar={(id, turnos, pronto) => { onAplicar(id, turnos); pronto(); }} />
       ) : (
         semAplicaveis && <p className="pagina__subtitulo">{semAplicaveis}</p>
       )}

@@ -1,7 +1,7 @@
 // Bestiário do mestre: criaturas montadas como classes (vida/mana/esforço base, cartela, perícias) e com dados por atributo.
 // Só o mestre dono vê e edita; de outro mestre = 404.
 import type { Pericia } from "../../generated/prisma/client.js";
-import { comVisao, kitIdsPara, podeUsar, quemVe, visao, visivelParaSemFixos } from "../../lib/sistema.js";
+import { comVisao, kitIdsPara, podeUsar, quemVe, visao, visivelPara } from "../../lib/sistema.js";
 import { periciaNoCatalogo } from "../classes/classes.service.js";
 import type { z } from "zod";
 import { AppError, naoEncontrado } from "../../lib/errors.js";
@@ -18,7 +18,7 @@ import type { criarBestaSchema, editarBestaSchema } from "./bestas.schemas.js";
 /** Ver, invocar e duplicar: do mestre ou verificado. */
 export async function bestaLegivel(id: string, usuarioId: string) {
   const besta = await getPrisma().besta.findUnique({ where: { id } });
-  if (!besta || !(await podeUsar("besta", besta, usuarioId, { semFixos: true }))) throw naoEncontrado("Besta não encontrada");
+  if (!besta || !(await podeUsar("besta", besta, usuarioId))) throw naoEncontrado("Besta não encontrada");
   return besta;
 }
 
@@ -61,7 +61,7 @@ export function apresentarBesta({ pericias, atributos, ...b }: BestaComTudo) {
 export async function listar(usuarioId: string) {
   const quem = await quemVe(usuarioId);
   const bestas = await getPrisma().besta.findMany({
-    where: await visivelParaSemFixos(usuarioId),
+    where: await visivelPara(usuarioId),
     orderBy: { titulo: "asc" },
     include: { conceito: { select: { id: true, titulo: true } }, _count: { select: { habilidades: true } }, ...comKits },
   });

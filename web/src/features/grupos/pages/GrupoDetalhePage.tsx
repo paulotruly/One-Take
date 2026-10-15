@@ -24,7 +24,11 @@ import { ItemForm } from "../../itens/components/ItemForm";
 import { LancarItemModal } from "../../itens/pages/LancarItemModal";
 import { useCatalogo } from "../../pericias/api";
 import { StatusBadge } from "../../status/components/StatusBadge";
-import { useExcluirGrupo, useGrupo, useNovoCodigo } from "../api";
+import { useRegras } from "../../docs/regras";
+import { useCriarRegra, useEditarRegra, useExcluirGrupo, useExcluirRegra, useGrupo, useNovoCodigo } from "../api";
+import { RegraDaMesaForm } from "../components/RegraDaMesaForm";
+import { RegrasDaMesa } from "../components/RegrasDaMesa";
+import type { RegraDaMesa } from "../types";
 import { StatusMembroModal } from "./StatusMembroModal";
 
 export function GrupoDetalhePage() {
@@ -40,6 +44,13 @@ export function GrupoDetalhePage() {
   const pericias = useCatalogo();
   const categorias = useCategoriasItem();
   const npcs = useNpcs(grupo.data?.kitId ?? null);
+  const { regrasPadrao } = useRegras();
+  const criarRegra = useCriarRegra(id);
+  const editarRegra = useEditarRegra();
+  const excluirRegra = useExcluirRegra();
+  // Regra própria em edição: null = nova; undefined = fechado.
+  const [regraEmEdicao, setRegraEmEdicao] = useState<RegraDaMesa | null | undefined>(undefined);
+  const [regraAExcluir, setRegraAExcluir] = useState<RegraDaMesa | null>(null);
 
   const [copiado, setCopiado] = useState(false);
   const [confirmarExclusao, setConfirmarExclusao] = useState(false);
@@ -87,6 +98,9 @@ export function GrupoDetalhePage() {
             <span className="selo">{g.genero}</span>
             {g.kit && <span className="selo">Kit: {g.kit.nome}</span>}
             <span className="selo">{g.permitirClassesRepetidas ? "Classes podem repetir" : "Sem classes repetidas"}</span>
+            {([["Combatentes", g.limiteCombatentes], ["Vanguardistas", g.limiteVanguardistas], ["Suportes", g.limiteSuportes]] as const).map(
+              ([rotulo, limite]) => limite !== null && <span key={rotulo} className="selo">{limite === 0 ? `Sem ${rotulo}` : `Até ${limite} ${rotulo}`}</span>,
+            )}
           </div>
           <h1>{g.titulo}</h1>
           <p className="classe-cabecalho__descricao">{g.sinopse}</p>
@@ -240,6 +254,28 @@ export function GrupoDetalhePage() {
       </section>
 
       <section className="secao">
+        <div className="secao__cabecalho">
+          <div>
+            <h2>Regras de combate</h2>
+            <p className="pagina__subtitulo">
+              As padrão ligadas neste grupo (<Link to={`/mestre/grupos/${id}/editar`}>ligar ou desligar</Link>) e as suas. Os jogadores veem na ficha.
+            </p>
+          </div>
+          <Button onClick={() => { criarRegra.reset(); setRegraEmEdicao(null); }}><Plus size={16} aria-hidden /> Regra da mesa</Button>
+        </div>
+        <RegrasDaMesa
+          padrao={regrasPadrao.filter((r) => !g.regrasPadraoDesativadas.includes(r.slug))}
+          proprias={g.regrasProprias}
+          acoesPropria={(r) => (
+            <>
+              <Button pequeno onClick={() => { editarRegra.reset(); setRegraEmEdicao(r); }}>Editar</Button>
+              <Button pequeno variante="fantasma" onClick={() => setRegraAExcluir(r)}><Trash2 size={14} aria-hidden /> Excluir</Button>
+            </>
+          )}
+        />
+      </section>
+
+      <section className="secao">
         <h2>O que vale neste grupo</h2>
         <p className="pagina__subtitulo">
           {d.classeIds.length} classes · {d.racaIds.length} raças · {d.atributoIds.length} atributos · {d.periciaIds.length} perícias · {d.statusIds.length} status.{" "}
@@ -303,6 +339,33 @@ export function GrupoDetalhePage() {
           setFichaCriatura(null);
           setAvisoCriatura(msg);
         }}
+      />
+
+      <Modal aberto={regraEmEdicao !== undefined} onFechar={() => setRegraEmEdicao(undefined)} titulo={regraEmEdicao ? "Editar regra da mesa" : "Nova regra da mesa"}>
+        {regraEmEdicao !== undefined && (
+          <RegraDaMesaForm
+            inicial={regraEmEdicao ?? undefined}
+            enviando={criarRegra.isPending || editarRegra.isPending}
+            erros={errosDeCampo(regraEmEdicao ? editarRegra.error : criarRegra.error)}
+            erroGeral={erroDeFormulario(regraEmEdicao ? editarRegra.error : criarRegra.error)}
+            onCancelar={() => setRegraEmEdicao(undefined)}
+            onEnviar={(dados) =>
+              regraEmEdicao
+                ? editarRegra.mutate({ id: regraEmEdicao.id, dados }, { onSuccess: () => setRegraEmEdicao(undefined) })
+                : criarRegra.mutate(dados, { onSuccess: () => setRegraEmEdicao(undefined) })
+            }
+          />
+        )}
+      </Modal>
+
+      <ConfirmDialog
+        aberto={!!regraAExcluir}
+        titulo="Excluir regra da mesa"
+        mensagem={<>Excluir a regra <strong>{regraAExcluir?.titulo}</strong>?</>}
+        processando={excluirRegra.isPending}
+        erro={excluirRegra.isError ? mensagemDeErro(excluirRegra.error) : null}
+        onCancelar={() => setRegraAExcluir(null)}
+        onConfirmar={() => excluirRegra.mutate(regraAExcluir!.id, { onSuccess: () => setRegraAExcluir(null) })}
       />
 
       <ConfirmDialog

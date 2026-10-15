@@ -70,42 +70,33 @@ export function previaProgressao(classe: Base & { habilidades: ComNivel[] }) {
 
 type Aprimoramento = {
   nivel: number;
-  titulo: string | null;
-  descricaoEfeito: string | null;
+  titulo: string;
+  descricao: string;
+  descricaoEfeito: string;
   condicao: string | null;
   limiteUsos: number | null;
   limitePor: string | null;
-  custoMana: number | null;
+  custoMana: number;
   statusId: string | null;
   status?: unknown;
 };
 
+/** Campos da carta que cada aprimoramento redefine (versão completa da carta naquele nível). */
+const CAMPOS_DO_APRIMORAMENTO = ["titulo", "descricao", "descricaoEfeito", "condicao", "limiteUsos", "limitePor", "custoMana", "statusId", "status"] as const;
+
 /**
- * A carta como ela fica no nível dado: aplica, em ordem, os aprimoramentos com nível até esse nível
- * (campos nulos não mudam nada). Informa a partir de que nível a versão atual vale.
+ * A carta como ela fica no nível dado: vale a versão do aprimoramento de maior nível até esse nível (cada aprimoramento é a
+ * carta inteira naquele nível; nulo = sem condição, sem limite ou sem status). Informa a partir de que nível a versão vale.
  */
 export function aplicarAprimoramentos<T extends { nivelNecessario: number; aprimoramentos?: Aprimoramento[] }>(h: T, nivel: number) {
   const aprimoramentos: Aprimoramento[] = h.aprimoramentos ?? [];
-  const validos = aprimoramentos.filter((a) => a.nivel <= nivel).sort((a, b) => a.nivel - b.nivel);
+  const vale = aprimoramentos.filter((a) => a.nivel <= nivel).sort((a, b) => a.nivel - b.nivel).at(-1);
   const carta: Record<string, unknown> = { ...h };
-  for (const a of validos) {
-    for (const campo of ["titulo", "descricaoEfeito", "condicao", "custoMana"] as const) {
-      if (a[campo] !== null) carta[campo] = a[campo];
-    }
-    // O limite muda inteiro (vezes e período juntos).
-    if (a.limiteUsos !== null && a.limitePor !== null) {
-      carta.limiteUsos = a.limiteUsos;
-      carta.limitePor = a.limitePor;
-    }
-    if (a.statusId !== null) {
-      carta.statusId = a.statusId;
-      carta.status = a.status;
-    }
-  }
+  if (vale) for (const campo of CAMPOS_DO_APRIMORAMENTO) carta[campo] = vale[campo] ?? null;
   const proximo = aprimoramentos.filter((a) => a.nivel > nivel).sort((a, b) => a.nivel - b.nivel)[0];
   return {
     ...(carta as T),
-    aprimoradaNoNivel: validos.at(-1)?.nivel ?? null,
+    aprimoradaNoNivel: vale?.nivel ?? null,
     proximoAprimoramento: proximo?.nivel ?? null,
   };
 }

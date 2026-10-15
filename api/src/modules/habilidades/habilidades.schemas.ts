@@ -52,20 +52,17 @@ export const ordenarHabilidadesSchema = z.object({
   ids: z.array(z.guid()).min(1),
 });
 
-/** Aprimoramento: nível + o que muda. Campos ausentes/nulos continuam como na carta. */
+/** Aprimoramento: a carta inteira a partir de um nível (o formulário vem preenchido com a versão anterior). */
 export const aprimoramentoSchema = z
   .object({
     nivel: inteiro(2, 100),
-    titulo: textoOpcional(80).transform((v) => v ?? null),
-    descricaoEfeito: textoOpcional(2000).transform((v) => v ?? null),
+    titulo: texto(80),
+    descricao: texto(2000),
+    descricaoEfeito: texto(2000),
     condicao: textoOpcional(500).transform((v) => v ?? null),
     limiteUsos: limiteUsos.optional().transform((v) => v ?? null),
     limitePor: limitePor.optional().transform((v) => v ?? null),
-    custoMana: inteiro(0, 999).nullish().transform((v) => v ?? null),
+    custoMana: inteiro(0, 999),
     statusId: z.guid("Status inválido").nullish().transform((v) => v ?? null),
   })
-  .superRefine(limiteCompleto)
-  .refine(
-    (a) => [a.titulo, a.descricaoEfeito, a.condicao, a.limiteUsos, a.custoMana, a.statusId].some((v) => v !== null),
-    { message: "Mude pelo menos uma coisa na carta (efeito, custo, limite…)", path: ["descricaoEfeito"] },
-  );
+  .superRefine(limiteCompleto);

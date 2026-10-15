@@ -9,7 +9,17 @@ export type GrupoInfo = {
   imagemUrl: string;
   limiteMembros: string;
   permitirClassesRepetidas: boolean;
+  /** Máximo por função da classe; vazio = sem limite. */
+  limiteCombatentes: string;
+  limiteVanguardistas: string;
+  limiteSuportes: string;
 };
+
+const LIMITES_POR_FUNCAO = [
+  ["limiteCombatentes", "Combatentes"],
+  ["limiteVanguardistas", "Vanguardistas"],
+  ["limiteSuportes", "Suportes"],
+] as const;
 
 export function GrupoInfoForm({ valor, onChange, erros = {} }: { valor: GrupoInfo; onChange: (v: GrupoInfo) => void; erros?: Record<string, string> }) {
   const set = (campo: keyof GrupoInfo) => (e: { target: { value: string } }) => onChange({ ...valor, [campo]: e.target.value });
@@ -45,6 +55,17 @@ export function GrupoInfoForm({ valor, onChange, erros = {} }: { valor: GrupoInf
         />
         <span>Permitir classes repetidas (dois jogadores com a mesma classe)</span>
       </label>
+      <fieldset className="form__grupo">
+        <legend>Limite por função</legend>
+        <p className="pagina__subtitulo">Quantos jogadores podem escolher classes de cada função. Vazio = sem limite; 0 = função fechada.</p>
+        <div className="form__linha">
+          {LIMITES_POR_FUNCAO.map(([campo, rotulo]) => (
+            <Field key={campo} rotulo={rotulo} erro={erros[campo]}>
+              <input type="number" min={0} max={50} step={1} inputMode="numeric" value={valor[campo]} onChange={set(campo)} placeholder="Sem limite" />
+            </Field>
+          ))}
+        </div>
+      </fieldset>
     </div>
   );
 }
