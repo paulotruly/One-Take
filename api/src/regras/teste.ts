@@ -8,6 +8,8 @@
 // Atributo com 0 pontos: rola sempre 1 d20 e o resultado vale a METADE (arredondada para baixo).
 // Esforço: cada ponto gasto antes da rolagem dá +1 d20 (2d20 vira 3d20), no máximo 1 ponto por rodada.
 // Não vale com atributo 0 (ele rola "sempre apenas 1 dado"). A defesa também é um teste e também pode usar esforço.
+// Vantagem: +1 d20. Desvantagem: -1 d20; com 1 dado só, rola 2 e fica com o MENOR. Não acumulam, uma anula a outra e nenhuma
+// vale com atributo 0 (decisão de 2026-10-16).
 
 export const TESTE = {
   /** Faces do dado de teste. */
@@ -22,6 +24,8 @@ export const TESTE = {
   esforcoComAtributoZero: false,
   /** Máximo de pontos de esforço gastos por rodada (decisão de 2026-10-14). */
   esforcoMaximoPorRodada: 1,
+  /** Dados que a vantagem dá (e a desvantagem tira). */
+  dadosPorVantagem: 1,
 } as const;
 
 /** Quantos d20 o personagem rola: pontos no atributo + dados comprados com esforço (no máximo o da rodada). */
@@ -30,6 +34,21 @@ export function dadosDoTeste(pontosAtributo: number, esforcoGasto = 0) {
   const extras = Math.floor(esforco / TESTE.esforcoPorDadoExtra);
   if (pontosAtributo <= 0) return TESTE.dadosComAtributoZero + (TESTE.esforcoComAtributoZero ? extras : 0);
   return pontosAtributo + extras;
+}
+
+/**
+ * Dados do teste com vantagem e/ou desvantagem: quantos d20 rolar e se fica com o maior ou o menor.
+ * As duas juntas se anulam; atributo 0 ignora as duas.
+ */
+export function dadosComVantagem(
+  pontosAtributo: number,
+  { esforcoGasto = 0, vantagem = false, desvantagem = false }: { esforcoGasto?: number; vantagem?: boolean; desvantagem?: boolean } = {},
+): { dados: number; ficaCom: "maior" | "menor" } {
+  const dados = dadosDoTeste(pontosAtributo, esforcoGasto);
+  if (pontosAtributo <= 0 || vantagem === desvantagem) return { dados, ficaCom: "maior" };
+  if (vantagem) return { dados: dados + TESTE.dadosPorVantagem, ficaCom: "maior" };
+  if (dados > TESTE.dadosPorVantagem) return { dados: dados - TESTE.dadosPorVantagem, ficaCom: "maior" };
+  return { dados: 1 + TESTE.dadosPorVantagem, ficaCom: "menor" };
 }
 
 /** Resultado de um teste já rolado: maior dado (metade se o atributo for 0) + bônus da perícia. */

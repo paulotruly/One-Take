@@ -139,7 +139,20 @@ Atributos agrupam as perícias e recebem os dados nos testes.
 ## Combate (decisões de 2026-10-14)
 - **Ordem**: no início do combate, cada participante testa Capacidade física + Iniciativa; o maior total age primeiro.
 - **Turno = 1 movimento + 1 ação.** Tudo o que não é movimento é ação (atacar, usar carta, usar item). Não dá para trocar um pelo outro.
-  Cartas só no próprio turno. Exceção: a Intervenção defensiva (regra padrão), que deixa defender um aliado no turno de outra pessoa.
+  Cartas só no próprio turno. Exceção: as **reações** (abaixo).
+- **Quando usar cada carta (decisões de 2026-10-16):**
+  - Usar carta gasta a ação, **inclusive buffs** (Fortalecimento) e defesas usadas no próprio turno.
+  - **Reação**: carta que diz "Reação" / "use sua reação" é usada fora do próprio turno, no momento que descreve. 1 reação por
+    rodada por personagem, compartilhada com a Intervenção defensiva e o ataque de oportunidade.
+  - **Carta ligada / passiva**: vale a partir do momento em que é usada (ou em que a condição passa a valer), sem efeito retroativo.
+    Passiva com condição não gasta ação.
+  - **Carta que move**: gasta o movimento do turno e soma os quadrados dela ao deslocamento; se também ataca, o ataque gasta a ação.
+  - **Duração** ("durante N turnos", "até o seu próximo turno"): conta os turnos de **quem usou a carta**. Os turnos do status
+    aplicado por uma carta também.
+  - **Preparação** ("um turno de preparação"): gasta a ação de um turno; a carta sai no seguinte.
+  - **Invocação**: invocar gasta a ação; as criaturas agem no turno de quem invocou, sem gastar a ação dele.
+- **Vantagem / desvantagem** (`regras/teste.ts`, `dadosComVantagem`): +1 d20 / -1 d20; com 1 dado, a desvantagem rola 2 e fica com
+  o menor. Não acumulam, se anulam e não valem com atributo 0.
 - **Rodada** = uma volta na ordem de Iniciativa. **Combate**: o mestre define quando começa e termina (reinicia os limites "por combate").
 - **Ataque x defesa**: o atacante rola o teste da carta (atributo + perícia do teste); o alvo rola os dados do atributo da perícia de
   defesa + o bônus dela, se tiver, e pode gastar esforço. Ataque ≥ defesa = acerta (**empate é do atacante**). O mestre pode usar uma
@@ -153,7 +166,8 @@ Atributos agrupam as perícias e recebem os dados nos testes.
   no catálogo dele.
 - **Regras padrão de combate** (`api/src/regras/combate.ts`, o mestre desliga por grupo e cria regras próprias): Grid, iniciativa e
   turno; Alcance e posicionamento (teste de Atletismo para andar mais usa só o movimento); Intervenção defensiva (fora do próprio
-  turno, Capacidade física + Iniciativa maior que o ataque, 1 por turno); Vantagem tática (cobertura +5 nas perícias de defesa,
+  turno, Capacidade física + Iniciativa maior que o ataque, gasta a reação); Ataque de oportunidade (reação quando um inimigo sai
+  andando do alcance corpo a corpo, com carta de Dano corpo a corpo sem limite); Vantagem tática (cobertura +5 nas perícias de defesa,
   terreno elevado +5 em Pontaria); Movimento velado; Ataques em grupo (dano somado quando todos acertam o mesmo alvo único).
   **Domínio de combate e Égide de presença saíram**: status e cartas (como os escudos do Paladino) fazem esse papel.
 

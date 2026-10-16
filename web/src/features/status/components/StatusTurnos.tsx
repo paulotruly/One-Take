@@ -1,4 +1,4 @@
-// Turnos de um status aplicado (apresentação): o mestre anota quantos turnos ele dura e tira 1 por turno; em 0 o status sai.
+// Turnos de um status aplicado (apresentação): o mestre anota quantos turnos ele dura e tira 1 por turno (de quem usou a carta); em 0 o status sai.
 import { Hourglass, Minus } from "lucide-react";
 import { useState } from "react";
 import { Button } from "../../../components/ui/Button";

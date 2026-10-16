@@ -502,6 +502,13 @@ export function Glossario() {
         ["Mesa", "Um grupo jogado numa sessão. Para subir de nível, o personagem participa de mais mesas."],
         ["Rodada", "Uma volta completa na ordem de Iniciativa: cada participante joga um turno."],
         ["Turno", "A vez de um participante: 1 movimento + 1 ação."],
+        ["Reação", "O que um personagem faz fora do próprio turno: carta que diz \"Reação\", Intervenção defensiva ou ataque de oportunidade. 1 por rodada."],
+        ["Ataque de oportunidade", "Ataque que se faz, gastando a reação, quando um inimigo sai andando do seu alcance corpo a corpo."],
+        ["Vantagem", "+1 d20 no teste, ficando com o maior. Não acumula."],
+        ["Desvantagem", "-1 d20 no teste; com 1 dado só, rola 2 e fica com o menor. Anula a vantagem."],
+        ["Carta ligada", "Carta cujo efeito passa a valer a partir do momento em que é usada (ou em que a condição passa a valer) e dura o que ela diz."],
+        ["Preparação", "Gastar a ação de um turno para a carta sair no turno seguinte."],
+        ["Invocação", "Criatura trazida por uma carta. Age no turno de quem invocou, sem gastar a ação dele."],
         ["Interlúdio", "Pausa entre cenas da sessão, quando os personagens comem, descansam e recuperam vida, mana e esforço."],
         ["Regra da mesa", "Regra própria que o mestre cria num grupo, além ou no lugar das regras padrão de combate."],
       ]}

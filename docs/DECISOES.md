@@ -298,3 +298,20 @@ Formato: data — decisão. Motivo.
 - **Mana dos conjuradores (2026-10-14) — decisão do produto.** Com a recuperação só nos interlúdios, a mana base passou a cobrir cerca de
   dois combates: Bardo 100 para 150, Feiticeiro elemental 100 para 130, Necromante 100 para 120 (no banco, conta do ADMIN). Paladino
   continua 120 (tanque forte de propósito).
+
+## 2026-10-16
+- **Quando usar cada carta — decisão do produto.** A revisão do /balancear mostrou cartas que dependem de regras que não existiam
+  (reação, passiva, duração, movimento). Respostas do responsável: (1) cartas de intervenção (reação) são exceção a "cartas só no
+  próprio turno"; (2) **buff gasta a ação**; (3) carta ligada passa a funcionar a partir dali; (4) carta de movimento usa o movimento
+  do turno e **soma** os quadrados ao deslocamento; (5) "até N turnos" = turnos de **quem usou**; (6) efeito sem prazo ganha prazo no
+  texto da carta; (7) termos criados: reação (1 por rodada, junto com a Intervenção defensiva), ataque de oportunidade (regra padrão
+  `combate-oportunidade`), vantagem/desvantagem (+1/-1 d20, `TESTE.dadosPorVantagem`), preparação; "2m" virou "2 quadrados";
+  (8) invocações agem no turno de quem invocou, sem gastar a ação. Fica em texto (regras e documentação), sem campo novo na carta.
+  A Intervenção defensiva deixou de ser "1 por turno" no geral: agora gasta a reação de quem intervém.
+- **Balanceamento do Guerreiro — decisão do produto.** Nota do /balancear no nível 1 era 375 (Paladino 154): 6 ataques limitados num
+  combate de 5 turnos, Postura inabalável sem limite nem prazo e Golpe de quebra-guarda dominado pela Investida. No banco (conta paulo):
+  Varredura de alabarda 2d6+2 e 1 por combate; Investida de guerra 2d10+3, 1 por combate, soma 5 quadrados ao movimento; Golpe de
+  quebra-guarda 1d10+3 com -2 nas perícias de defesa do alvo até o fim do próximo turno do guerreiro; Postura inabalável dura até o
+  início do próximo turno e 3 por combate; Interposição marcada como Reação, sem perícia de teste (a classe não tinha Iniciativa).
+  Nota nova: 198 / 179 / 167 nos níveis 1 / 2 / 3 (Paladino 154 / 171 / 173). Também no banco: Desafio selvagem (Bárbaro) ganhou
+  "durante 2 turnos" (o texto estava cortado) e Reflexos instintivos (Lutador) troca "2m" por "2 quadrados".

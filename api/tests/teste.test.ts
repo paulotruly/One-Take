@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { chanceDeSucesso, dadosDoTeste, mediaDoTeste, notacaoDoTeste, resolverTeste } from "../src/regras/teste.js";
+import { chanceDeSucesso, dadosComVantagem, dadosDoTeste, mediaDoTeste, notacaoDoTeste, resolverTeste } from "../src/regras/teste.js";
 
 describe("regras de teste (d20)", () => {
   it("rola 1 d20 por ponto no atributo e +1 por ponto de esforço gasto", () => {
@@ -11,6 +11,20 @@ describe("regras de teste (d20)", () => {
   it("atributo 0: sempre 1 dado, e o esforço não compra dados", () => {
     expect(dadosDoTeste(0)).toBe(1);
     expect(dadosDoTeste(0, 3)).toBe(1);
+  });
+
+  it("vantagem dá +1 d20 e desvantagem tira 1; com 1 dado, rola 2 e fica com o menor", () => {
+    expect(dadosComVantagem(2, { vantagem: true })).toEqual({ dados: 3, ficaCom: "maior" });
+    expect(dadosComVantagem(2, { esforcoGasto: 1, vantagem: true })).toEqual({ dados: 4, ficaCom: "maior" });
+    expect(dadosComVantagem(2, { desvantagem: true })).toEqual({ dados: 1, ficaCom: "maior" });
+    expect(dadosComVantagem(1, { desvantagem: true })).toEqual({ dados: 2, ficaCom: "menor" });
+    expect(dadosComVantagem(1, { esforcoGasto: 1, desvantagem: true })).toEqual({ dados: 1, ficaCom: "maior" });
+  });
+
+  it("vantagem e desvantagem se anulam e não valem com atributo 0", () => {
+    expect(dadosComVantagem(2, { vantagem: true, desvantagem: true })).toEqual({ dados: 2, ficaCom: "maior" });
+    expect(dadosComVantagem(0, { vantagem: true })).toEqual({ dados: 1, ficaCom: "maior" });
+    expect(dadosComVantagem(0, { desvantagem: true })).toEqual({ dados: 1, ficaCom: "maior" });
   });
 
   it("usa o maior dado e soma o bônus da perícia (exemplo: 10 e 15 com +5 = 20)", () => {

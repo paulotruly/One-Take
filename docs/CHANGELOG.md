@@ -6,6 +6,17 @@ Registre só o que muda comportamento, manutenção ou entendimento do sistema. 
 
 Formato de cada entrada: **Resumo**, Motivo, Arquivos/módulos, Impacto (regras ou arquitetura), Procedimentos (migrations, config) e Docs.
 
+## Não commitado (2026-10-16)
+- **Quando usar cada carta:** regras fixas novas no tópico Combate (carta gasta a ação, inclusive buff; reação fora do turno, 1 por
+  rodada; carta ligada vale dali em diante; carta que move gasta o movimento e soma ao deslocamento; duração nos turnos de quem usou;
+  preparação; invocações agem no turno de quem invocou). Regra padrão nova **Ataque de oportunidade** (`combate-oportunidade`);
+  Intervenção defensiva passa a gastar a reação. Vantagem e desvantagem em `regras/teste.ts` (`dadosComVantagem`,
+  `TESTE.dadosPorVantagem`, com testes) e no tópico Testes. Glossário com Reação, Ataque de oportunidade, Vantagem, Desvantagem,
+  Carta ligada, Preparação e Invocação. Turnos dos status contam os turnos de quem usou a carta.
+- **Guerreiro rebalanceado** (no banco, conta paulo): Varredura, Investida, Quebra-guarda, Postura e Interposição (ver DECISOES).
+  Textos corrigidos: Desafio selvagem (Bárbaro) com duração e Reflexos instintivos (Lutador) em quadrados.
+- Docs: `DOMINIO.md`, `DECISOES.md`, `API.md`, documentação pública (Combate, Regras padrão, Testes, Status, Glossário).
+
 ## Não commitado (2026-10-14)
 - **Personagem entre mesas:** ao entrar num grupo, o jogador escolhe personagem novo ou um de outra mesa (ficha ativa ou arquivada).
   Vem com classe, raça e nível (que precisam estar liberadas), recursos cheios, sem itens e com os pontos de perícia para gastar de

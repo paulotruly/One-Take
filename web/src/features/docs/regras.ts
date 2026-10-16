@@ -18,6 +18,7 @@ export type Regras = {
     esforcoComAtributoZero: boolean;
     /** Máximo de pontos de esforço por rodada. */
     esforcoMaximoPorRodada: number;
+    dadosPorVantagem: number;
     chances: { dt: number; chances: { pontos: number; chance: number }[] }[];
   };
   /** Atributos e status base: os do administrador, verificados (não há conteúdo fixo). */
@@ -38,7 +39,7 @@ export type RegraDefesa = { ataque: { id: string; nome: string }; defesa: { id: 
 const PADRAO: Regras = {
   progressao: { nivelInicial: 1, nivelMaximo: 100, ganhoPorNivel: { pontosVida: 5, pontosMana: 5, pontosEsforco: 5, pontosPericia: 5 } },
   ficha: { pontosAtributoIniciais: 3, inventarioInicial: 5, inventarioPorNivel: 2 },
-  teste: { ladosDoDado: 20, dadosComAtributoZero: 1, divisorComAtributoZero: 2, esforcoPorDadoExtra: 1, esforcoComAtributoZero: false, esforcoMaximoPorRodada: 1, chances: [] },
+  teste: { ladosDoDado: 20, dadosComAtributoZero: 1, divisorComAtributoZero: 2, esforcoPorDadoExtra: 1, esforcoComAtributoZero: false, esforcoMaximoPorRodada: 1, dadosPorVantagem: 1, chances: [] },
   atributosBase: [
     { nome: "Capacidade física", descricao: "Utilizada sempre que o corpo é levado ao limite." },
     { nome: "Carisma", descricao: "A presença do personagem e sua capacidade de lidar com outras pessoas." },

@@ -246,7 +246,7 @@ export function StatusTopico() {
       <h2>Quanto tempo dura</h2>
       <ul>
         <li>Depende de onde o status veio (a carta, o item ou a cena dizem). Ao aplicar, o mestre pode anotar quantos <strong>turnos</strong> ele dura.</li>
-        <li>A cada turno, o mestre tira 1 (botão -1 no status). Quando chega a 0, o status sai sozinho. Sem turnos anotados, dura até o mestre tirar.</li>
+        <li>Os turnos contam os turnos de <strong>quem usou a carta</strong> (sem carta, os de quem tem o status): no fim de cada um, o mestre tira 1 (botão -1 no status). Quando chega a 0, o status sai sozinho. Sem turnos anotados, dura até o mestre tirar.</li>
         <li>Status diferentes <strong>se acumulam</strong>: os efeitos somam (ex.: Inspirado e Confiante juntos dão +10 num teste de Carisma).</li>
         <li>Quando uma carta <strong>ativa um status</strong>, ele vai sempre para o <strong>alvo</strong> da carta.</li>
       </ul>
@@ -312,6 +312,17 @@ export function Testes() {
         e isso vale também para a defesa.
         {!t.esforcoComAtributoZero && " Com 0 no atributo não dá para comprar dados: continua sendo 1 dado pela metade."}
       </p>
+      <h2>Vantagem e desvantagem</h2>
+      <p>
+        Algumas cartas e situações dão <strong>vantagem</strong>: o teste rola <strong>+{t.dadosPorVantagem} {d}</strong> e continua
+        ficando com o maior. A <strong>desvantagem</strong> tira {t.dadosPorVantagem} {d}; quem rolaria só 1{d} rola 2{d} e fica com o{" "}
+        <strong>menor</strong>.
+      </p>
+      <ul>
+        <li>Não acumulam: duas vantagens valem uma só. Uma vantagem e uma desvantagem juntas se anulam.</li>
+        <li>Somam com o esforço (2{d} com esforço e vantagem vira 4{d}).</li>
+        <li>Com 0 no atributo, nenhuma das duas vale: continua sendo 1 dado pela metade.</li>
+      </ul>
       <Destaque tipo="aviso" titulo="Esforço acaba">
         Esforço em 0 deixa o personagem <strong>Cansado</strong>. Guarde para os testes que importam.
       </Destaque>
@@ -544,9 +555,29 @@ export function Combate() {
       <ul>
         <li>A <strong>Iniciativa</strong> define a ordem dos turnos: no início do combate, cada um testa Capacidade física + Iniciativa e o maior começa.</li>
         <li>Cada turno é <strong>1 movimento + 1 ação</strong>. Toda ação que não é movimento é ação (atacar, usar carta, usar item). Não dá para trocar um pelo outro.</li>
-        <li>Cartas só são usadas no <strong>próprio turno</strong>. A exceção é a Intervenção defensiva, uma regra padrão que deixa defender um aliado no turno de outra pessoa.</li>
+        <li>Cartas só são usadas no <strong>próprio turno</strong>. A exceção são as <strong>reações</strong> (veja abaixo).</li>
         <li>Quando um combate começa e termina é o mestre quem define. É isso que reinicia as cartas com limite "por combate".</li>
       </ul>
+      <h2>Quando usar cada carta</h2>
+      <Tabela
+        cabecalho={["Carta", "Quando e o que gasta"]}
+        linhas={[
+          ["De ataque, buff ou defesa", "No próprio turno, gasta a ação. Buffs (Fortalecimento) e defesas usadas no seu turno também gastam a ação: naquele turno você não ataca."],
+          ["Reação", "A carta diz \"Reação\" ou \"use sua reação\". Pode ser usada fora do próprio turno, no momento que ela descreve (ex.: quando um aliado é atingido). Cada personagem tem 1 reação por rodada, que também serve para a Intervenção defensiva e o ataque de oportunidade."],
+          ["Ligada ou passiva", "Passa a funcionar a partir do momento em que é usada, ou em que a condição dela passa a valer, e não muda o que já aconteceu. Passiva com condição (ex.: abaixo de 50% da vida) não gasta ação."],
+          ["Que move", "Gasta o movimento do turno e soma os quadrados dela ao deslocamento. Se também ataca, o ataque gasta a ação."],
+          ["Com preparação", "\"Um turno de preparação\" gasta a ação de um turno; a carta sai no turno seguinte."],
+          ["Invocação", "Invocar gasta a ação. Depois, as criaturas invocadas agem no turno de quem invocou, sem gastar a ação dele."],
+        ]}
+      />
+      <p>
+        <strong>Duração</strong>: "durante N turnos" e "até o seu próximo turno" contam os turnos de <strong>quem usou a carta</strong>, não
+        de cada participante da ordem.
+      </p>
+      <Destaque titulo="Exemplo">
+        O Guerreiro usa Postura inabalável no turno dele: gasta a ação e não ataca. Até o início do próximo turno dele, o primeiro dano
+        físico que receber diminui. No turno de um inimigo, quando um aliado é atingido, ele usa Interposição como reação.
+      </Destaque>
       <h2>Ataque contra defesa</h2>
       <Passos
         passos={[
@@ -575,7 +606,7 @@ export function Combate() {
       <h2>Status no combate</h2>
       <ul>
         <li>O status que uma carta ativa vai sempre para o <strong>alvo</strong>.</li>
-        <li>O mestre anota quantos turnos o status dura e tira 1 a cada turno; em 0, ele sai.</li>
+        <li>O mestre anota quantos turnos o status dura e tira 1 no fim de cada turno de quem usou a carta; em 0, ele sai.</li>
         <li>Status se acumulam: os efeitos somam.</li>
         <li>"Perícias de defesa" são as da categoria Defesa: Reflexos, Resistência e Vontade.</li>
       </ul>

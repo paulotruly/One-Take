@@ -12,7 +12,7 @@ export const REGRAS_PADRAO = [
       "O jogo é movido por um grid físico, na mesa: o app não guarda posições.",
       "No início do combate, cada participante faz um teste de Capacidade física + Iniciativa. O maior total age primeiro, e a ordem segue assim até o fim do combate.",
       "No seu turno, o personagem tem 1 movimento e 1 ação. Movimento é andar. Tudo o que não é movimento é ação: atacar, usar uma carta, usar um item, interagir com algo. Não dá para trocar o movimento por uma segunda ação, nem o contrário.",
-      "Cartas só são usadas no próprio turno (a exceção é a Intervenção defensiva, que é uma regra, não uma carta).",
+      "Cartas só são usadas no próprio turno. A exceção são as reações: cartas que dizem \"Reação\", a Intervenção defensiva e o ataque de oportunidade, usadas fora do turno (1 reação por rodada).",
     ],
   },
   {
@@ -28,11 +28,20 @@ export const REGRAS_PADRAO = [
   {
     slug: "combate-intervencao",
     titulo: "Intervenção defensiva",
-    resumo: "Fora do próprio turno, um personagem defende o aliado atacado com Capacidade física + Iniciativa maior que o ataque. 1 por turno.",
+    resumo: "Fora do próprio turno, um personagem defende o aliado atacado com Capacidade física + Iniciativa maior que o ataque. Gasta a reação.",
     texto: [
       "Quando um aliado é atacado, outro personagem pode intervir, mesmo no turno de outra pessoa.",
       "Quem intervém faz um teste de Capacidade física + Iniciativa. Se o total for maior que o total do ataque, ele defende o aliado e o ataque não acerta. Empate: o ataque passa.",
-      "Só uma intervenção por turno.",
+      "Intervir gasta a reação do personagem: 1 por rodada, junto com cartas de reação e o ataque de oportunidade.",
+    ],
+  },
+  {
+    slug: "combate-oportunidade",
+    titulo: "Ataque de oportunidade",
+    resumo: "Inimigo que sai andando do seu alcance corpo a corpo pode levar um ataque, gastando a sua reação.",
+    texto: [
+      "Quando um inimigo sai andando do alcance corpo a corpo de um personagem, esse personagem pode gastar a reação para atacá-lo uma vez, com uma carta de Dano corpo a corpo sem limite de uso.",
+      "O ataque segue o ataque contra defesa normal. Movimentos de cartas que dizem \"sem provocar\" (ataques de oportunidade ou reações) não disparam o ataque.",
     ],
   },
   {
