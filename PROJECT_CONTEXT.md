@@ -42,7 +42,7 @@ Classificação feita com evidência no código (rotas, telas e testes). "Teste"
 | Cadastro (nome de usuário, data de nascimento e senha, pela API) e login por nome de usuário e senha (e-mail interno `<nick>@one-take.local` no Auth) | `api/src/modules/conta/`, `acesso.routes.ts`, `web/src/pages/LoginPage.tsx`, `CadastroPage.tsx`; teste |
 | "Esqueceu a senha?" por código de recuperação (sem e-mail), exclusão da conta com senha e nome de usuário | `api/src/modules/conta/`, `api/src/lib/{codigo-recuperacao,supabase-auth,limite}.ts`, `web/src/pages/ContaPages.tsx`, `features/conta/`; teste (Supabase simulado) |
 | Fichas arquivadas (cópia somente leitura quando a ficha sai do grupo) | `api/src/modules/fichas/{arquivo,retrato}.ts`, `web/src/features/fichas/pages/FichaArquivadaPage.tsx`; teste |
-| Perfil (nickname, nome, foto por link); uma conta joga e pode ativar a interface de mestre | `modules/me/`, `web/src/pages/PerfilPage.tsx`, `AtivarMestrePage.tsx`; teste |
+| Perfil (nickname, nome, foto por link); uma conta joga e pode ativar a interface de mestre | `modules/me/`, `web/src/features/conta/pages/SecaoPerfil.tsx`, `web/src/pages/AtivarMestrePage.tsx`; teste |
 | Classes (do mestre e verificadas; não há fixas), arquétipos/subclasses, duplicar, imagem por link | `modules/classes/`, `modules/conceitos/`, `web/src/features/classes/`; teste |
 | Cartela de habilidades: tipos de efeito fixos, custo de mana, nível necessário, aprimoramentos, perícia do teste, status que ativa, reordenar | `modules/habilidades/`, `features/classes/pages/CartelaEditor.tsx`; teste |
 | Catálogo de perícias por mestre (cópia das 18 base no 1º acesso), atributos do mestre (os 3 do seed são do ADMIN, verificados) | `modules/pericias/`, `modules/atributos/`, `prisma/pericias-base.ts`; teste |
@@ -326,17 +326,17 @@ Regras de jogo detalhadas em `docs/DOMINIO.md`. Os números (3 pontos de atribut
 ## 1.8. Interface e experiência do usuário
 
 - **Regras obrigatórias (CLAUDE.md):** sem emojis em código, interface, comentários e logs; nenhum caractere usado como ícone
-  (setas, estrelas): ícones **só do `lucide-react`**; **tema claro com fundo branco**, interface simples; **cantos retos**
-  (`--raio-*` = 0). Não há tema escuro.
-- **Identidade:** marca "One-Take" com o ícone `Dices` (`components/ui/Marca.tsx`, provisória segundo DECISOES); cor primária índigo
-  (`--cor-primaria: #4f46e5`); cores próprias para vida, mana, esforço, grupos de classe e origem (só leitura x própria).
+  (setas, estrelas): ícones **só do `lucide-react`**; **tema escuro dark fantasy minimalista** (ADR-019), interface simples; **cantos retos**
+  (`--raio-*` = 0). Não há tema claro nem seletor de tema.
+- **Identidade:** marca "One-Take" com o ícone `Dices` (`components/ui/Marca.tsx`, provisória segundo DECISOES); destaque dourado
+  (`--cor-primaria: #c9a25a`), botão primário também dourado (`--cor-acao`), vermelho só para ações destrutivas e perigo, títulos em Cinzel e texto em Inter; cores próprias para vida, mana, esforço, grupos de classe e origem (só leitura x própria).
 - **Tokens (`web/src/styles/tokens.css`):** cores, tipografia (`system-ui`, tamanhos `--texto-xs` a `--texto-xl`), espaçamentos
   `--esp-1` a `--esp-7`, larguras e transições. Componentes não usam valores literais.
 - **Componentes reutilizáveis:** `components/ui/` (Button com variantes e tamanho pequeno, Field com rótulo, dica e erro, Modal
   com `<dialog>` nativo, ConfirmDialog, Loading, EmptyState, ErrorState, Avatar, Marca), `components/texto/` (Destaque, Passos,
   Cartoes, Tabela, para a documentação), `components/layout/Rodape.tsx`.
 - **Layouts e navegação:** `PublicLayout` (links no topo e os botões Login e Registrar-se, sempre visíveis; com sessão aberta eles levam à área da conta) e `AppLayout` (topo com marca, troca Mestrar/Jogar,
-  menu do perfil com Editar perfil e Sair; **barra lateral** com os links da interface e o seletor de kit ativo, que no celular vira
+  menu do perfil com Perfil e conta e Sair; **barra lateral** com os links da interface e o seletor de kit ativo, que no celular vira
   gaveta). Rodapé discreto nos dois.
 - **Estados:** carregando, vazio e erro com `Loading`/`EmptyState`/`ErrorState` (com "tentar novamente"); confirmações destrutivas
   com `ConfirmDialog`; erros de validação embaixo de cada campo.
@@ -408,7 +408,7 @@ lá, isso é dito. Decisões novas seguem `docs/adr/README.md`.
 | ADR-009 | 2026-10-11 | Um catálogo de perícias por mestre (cópia das base no 1º acesso) | Personalizar sem afetar outros mestres | Perícia base apagada só volta duplicando classe verificada |
 | ADR-010 | 2026-10-11 | Login por nickname com email interno `@one-take.local` (decisão do produto) | Ninguém informa email | Sem "esqueci a senha"; "Confirm email" desligado |
 | ADR-011 | 2026-10-11 | TanStack Query, formulários sem biblioteca, modais com `<dialog>` nativo | Menos dependências; estados prontos | |
-| ADR-012 | 2026-10-11 | Regras de design: sem emojis, ícones lucide, tema claro, cantos retos (decisão do produto) | Preferência do produto | Obrigatórias em toda tela |
+| ADR-012 | 2026-10-11 | Regras de design: sem emojis, ícones lucide, tema claro, cantos retos (decisão do produto) | Preferência do produto | Obrigatórias em toda tela; a parte de tema foi substituída pelo ADR-019 |
 | ADR-013 | 2026-10-12 | Uma conta joga e mestra; `Perfil.papel = MESTRE` significa "interface de mestre ativada" | Reaproveitar a coluna existente | Não há "desativar mestre" |
 | ADR-014 | 2026-10-12 | Cartela polimórfica (`Habilidade.classeId` ou `bestaId`) | Criaturas reaproveitam cartas, telas e regras | CHECK garante exatamente um dono |
 | ADR-015 | 2026-10-12 | Item lançado é cópia do molde | O item na mão do jogador não muda se o catálogo mudar | Editar o catálogo não corrige itens já lançados |
@@ -416,7 +416,9 @@ lá, isso é dito. Decisões novas seguem `docs/adr/README.md`.
 | ADR-017 | 2026-10-13 | Kits de RPG (muitos-para-muitos) substituem "exclusivo de um grupo"; kit ativo no navegador (decisão do produto) | Organizar conteúdo por aventura | Regras antigas de exclusividade removidas; a migration converteu os dados |
 | ADR-018 | 2026-10-13 | Rótulos "Arquétipo" e "criatura" só na interface; tabelas e rotas mantêm `Conceito` e `Besta` | Não mexer no banco por causa de um rótulo | Nomes diferentes no código e na interface |
 
-Os ids ADR-001 a ADR-018 são só uma numeração deste resumo; ainda não existem arquivos separados em `docs/adr/` (ver o README de lá).
+| ADR-019 | 2026-11-04 | Tema escuro dark fantasy minimalista, com fontes no build (decisão do produto) | A interface parecia plataforma de saúde | Só um tema; build maior por causa das fontes |
+
+Os ids ADR-001 a ADR-018 são só uma numeração deste resumo, sem arquivos separados em `docs/adr/` (ver o README de lá). O ADR-019 tem arquivo próprio: [`docs/adr/ADR-019-tema-escuro-dark-fantasy.md`](docs/adr/ADR-019-tema-escuro-dark-fantasy.md).
 
 ## 1.11. Propriedade intelectual e publicação
 

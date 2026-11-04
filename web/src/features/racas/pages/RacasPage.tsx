@@ -48,65 +48,64 @@ export function RacasPage() {
         </Button>
       </div>
 
-      <ConceitosBloco
-        titulo="Arquétipos de raça"
-        nome="arquétipo de raça"
-        explicacao="Uma raça generalista (ex.: Elfo) com sub-raças (Elfo da floresta, Elfo sombrio). O jogador escolhe a sub-raça."
-        exemplo="Ex.: Elfo"
-        rotuloFilho="Sub-raça"
-        conceitos={conceitos.data?.map((c) => ({ ...c, filhos: c.subracas }))}
-        carregando={conceitos.isPending}
-        erro={conceitos.error}
-        onTentarNovamente={() => conceitos.refetch()}
-        hrefFilho={(id) => `/mestre/racas/${id}`}
-        onNovoFilho={(id) => novaRaca(id)}
-        criar={criarConceito}
-        editar={editarConceito}
-        excluir={excluirConceito}
-        selo={(c) => <SeloVerificado tipo="racaConceito" item={c} />}
-      />
-
-      <h2>Todas as raças</h2>
       <AvisoKit />
       {racas.isPending ? (
         <Loading texto="Carregando raças…" />
       ) : racas.isError ? (
         <ErrorState mensagem={mensagemDeErro(racas.error)} onTentarNovamente={() => racas.refetch()} />
-      ) : racasNoKit.length === 0 ? (
-        <EmptyState titulo="Nenhuma raça ainda" descricao="Crie a primeira raça para usar nas fichas." />
       ) : (
-        <ul className="lista-cards">
-          {racasNoKit.map((r) => (
-            <li key={r.id}>
-              <Link to={`/mestre/racas/${r.id}`} className="card-link card-link--com-imagem">
-                <div className="card-link__imagem">
-                  <ClasseImagem url={r.imagemUrl} titulo={r.titulo} />
-                </div>
-                <div className="card-link__topo">
-                  <div>
-                    {r.conceito && <span className="classe-card__conceito">{r.conceito.titulo}</span>}
-                    <h3>{r.titulo} {r.verificado && <VerificadoBadge porKit={r.verificadoPorKit && !r.seloProprio} />}</h3>
-                  </div>
-                  <span className="stat" title="Deslocamento por turno">
-                    <Footprints size={14} aria-hidden /> {r.deslocamento} quadrados
-                  </span>
-                </div>
-                <p className="card-link__descricao">{r.descricao}</p>
-                <div className="card-link__rodape card-link__pericias">
-                  {r.pericias.length === 0 ? (
-                    <span className="selo selo--leitura">Sem perícias de base</span>
-                  ) : (
-                    r.pericias.map((p) => (
-                      <span key={p.id} className="selo selo--atributo" title={p.descricao}>
-                        <CategoriaIcone categoria={p.categoria} tamanho={12} /> {p.nome} {formatarModificador(p.pontos)}
+        <ConceitosBloco
+          nome="arquétipo de raça"
+          explicacao="Uma raça generalista (ex.: Elfo) com sub-raças (Elfo da floresta, Elfo sombrio). O jogador escolhe a sub-raça."
+          exemplo="Ex.: Elfo"
+          rotuloFilho="Sub-raça"
+          conceitos={conceitos.data?.map((c) => ({ ...c, filhos: c.subracas }))}
+          carregando={conceitos.isPending}
+          erro={conceitos.error}
+          onTentarNovamente={() => conceitos.refetch()}
+          itens={racasNoKit}
+          filtrando={!!kitId}
+          vazio={<EmptyState titulo="Nenhuma raça ainda" descricao="Crie a primeira raça para usar nas fichas." />}
+          renderItens={(lista) => (
+            <ul className="lista-cards">
+              {lista.map((r) => (
+                <li key={r.id}>
+                  <Link to={`/mestre/racas/${r.id}`} className="card-link card-link--com-imagem">
+                    <div className="card-link__imagem">
+                      <ClasseImagem url={r.imagemUrl} titulo={r.titulo} />
+                    </div>
+                    <div className="card-link__topo">
+                      <div>
+                        {r.conceito && <span className="classe-card__conceito">{r.conceito.titulo}</span>}
+                        <h3>{r.titulo} {r.verificado && <VerificadoBadge porKit={r.verificadoPorKit && !r.seloProprio} />}</h3>
+                      </div>
+                      <span className="stat" title="Deslocamento por turno">
+                        <Footprints size={14} aria-hidden /> {r.deslocamento} quadrados
                       </span>
-                    ))
-                  )}
-                </div>
-              </Link>
-            </li>
-          ))}
-        </ul>
+                    </div>
+                    <p className="card-link__descricao">{r.descricao}</p>
+                    <div className="card-link__rodape card-link__pericias">
+                      {r.pericias.length === 0 ? (
+                        <span className="selo selo--leitura">Sem perícias de base</span>
+                      ) : (
+                        r.pericias.map((p) => (
+                          <span key={p.id} className="selo selo--atributo" title={p.descricao}>
+                            <CategoriaIcone categoria={p.categoria} tamanho={12} /> {p.nome} {formatarModificador(p.pontos)}
+                          </span>
+                        ))
+                      )}
+                    </div>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+          onNovoFilho={(id) => novaRaca(id)}
+          criar={criarConceito}
+          editar={editarConceito}
+          excluir={excluirConceito}
+          selo={(c) => <SeloVerificado tipo="racaConceito" item={c} />}
+        />
       )}
 
       <Modal aberto={criando !== undefined} onFechar={() => setCriando(undefined)} titulo="Nova raça">

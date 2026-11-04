@@ -1,20 +1,12 @@
+// Perfil público: nome de usuário, nome e foto.
 import { useState, type FormEvent } from "react";
-import { normalizarNickname, useEditarPerfil, useMe, type Me } from "../auth/AuthProvider";
-import { Avatar } from "../components/ui/Avatar";
-import { Button } from "../components/ui/Button";
-import { Field } from "../components/ui/Field";
-import { ErrorState, Loading } from "../components/ui/States";
-import { erroDeFormulario, errosDeCampo, mensagemDeErro } from "../lib/api";
-import { Link } from "react-router";
+import { normalizarNickname, useEditarPerfil, type Me } from "../../../auth/AuthProvider";
+import { Avatar } from "../../../components/ui/Avatar";
+import { Button } from "../../../components/ui/Button";
+import { Field } from "../../../components/ui/Field";
+import { erroDeFormulario, errosDeCampo } from "../../../lib/api";
 
-export function PerfilPage() {
-  const me = useMe();
-  if (me.isPending) return <Loading texto="Carregando perfil…" />;
-  if (me.isError) return <ErrorState mensagem={mensagemDeErro(me.error)} onTentarNovamente={() => me.refetch()} />;
-  return <FormularioPerfil me={me.data} />;
-}
-
-function FormularioPerfil({ me }: { me: Me }) {
+export function SecaoPerfil({ me }: { me: Me }) {
   const editar = useEditarPerfil();
   const [nickname, setNickname] = useState(me.nickname);
   const [nome, setNome] = useState(me.nome ?? "");
@@ -32,11 +24,11 @@ function FormularioPerfil({ me }: { me: Me }) {
   }
 
   return (
-    <div className="pagina pagina--estreita">
+    <section id="perfil" className="secao">
       <div className="perfil-cabecalho">
         <Avatar url={fotoUrl.trim() || null} nome={nome} tamanho={72} />
         <div>
-          <h1>{nome.trim() || `@${normalizarNickname(nickname)}`}</h1>
+          <h2>{nome.trim() || `@${normalizarNickname(nickname)}`}</h2>
           <p className="pagina__subtitulo">
             @{me.nickname} · {me.papel === "MESTRE" ? "Mestre e jogador" : "Jogador"}
           </p>
@@ -62,9 +54,6 @@ function FormularioPerfil({ me }: { me: Me }) {
         </div>
       </form>
 
-      <p className="pagina__subtitulo">
-        Código de recuperação da senha, seus dados e exclusão da conta ficam em <Link to="/conta">Configurações da conta</Link>.
-      </p>
-    </div>
+    </section>
   );
 }

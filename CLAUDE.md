@@ -1,7 +1,7 @@
 # One-Take
 
 Sistema de RPG de mesa para sessões únicas (one-shots). Classes prontas no estilo hero shooter:
-o jogador escolhe uma classe com kit de habilidades já definido. Etapa atual: interface do **mestre**
+o jogador escolhe uma classe com cartela de habilidades já definida. Etapa atual: interface do **mestre**
 para criar classes, raças, perícias, atributos, itens, NPCs e bestiário e conduzir grupos (status, itens, NPCs, criaturas);
 interface do jogador com fichas e inventário (uma conta joga e, se ativar, mestra); login por nome de usuário (no código, `nickname`), sem e-mail; regras públicas.
 Sessões e rolagem de dados no app ainda não existem (a ficha mostra o teste pronto).
@@ -45,7 +45,7 @@ npm run build                # typecheck + build
 - **Regras de design (obrigatórias):**
   - **Sem emojis** no código, na interface, em comentários e logs. Nada de caracteres usados como ícone na UI
     (setas, estrelas, corações): ícones **somente do `lucide-react`**.
-  - **Tema claro, fundo branco**, interface simples.
+  - **Tema escuro, dark fantasy minimalista**: dourado para destaque e ação principal, vermelho só para ações destrutivas e perigo, interface simples (ADR-019).
   - **Cantos retos**: botões e elementos quadrados/retangulares, nada arredondado (`--raio-*` = 0 nos tokens).
 - Mudança de schema: editar `schema.prisma` → `npm run db:migrate -- --name <nome>` → atualizar `docs/DADOS.md`.
 

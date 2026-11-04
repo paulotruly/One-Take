@@ -106,16 +106,16 @@ exibido direto pelo front. Não há upload nem uso do Supabase Storage.
 - Públicas: `/` (página inicial: hero, funcionalidades, como funciona, perguntas, com âncoras no topo), `/docs` e `/docs/:slug` (documentação com navegação lateral; tópicos em
   `features/docs/topicos.tsx`, números de `GET /api/regras`), `/guia-do-mestre` (redireciona para a documentação), `/login`, `/cadastro`
   (escolha "Sou mestre"/"Sou jogador"; papel e nome vão no `user_metadata` do Supabase). `/area` redireciona pelo papel.
-- Logado (qualquer papel): `/perfil` (nickname, nome e foto por link).
+- Logado (qualquer papel): `/conta` (perfil e conta na mesma página); `/perfil` redireciona para ela.
 - Jogador: `/jogador` (minhas fichas + entrar com código), `/jogador/entrar/:codigo` (criar ficha), `/jogador/fichas/:id`.
 - **Login por nickname**: o front chama `POST /api/entrar`; a API acha o email da conta pelo nickname, pede a sessão ao
   Supabase (`/auth/v1/token?grant_type=password` com a chave publishable) e devolve os tokens; o front faz `setSession`.
   O cadastro passa pela API (`POST /api/cadastro`), que cria o usuário com o e-mail interno `<nickname>@one-take.local`.
 - Sem login (fora dos layouts): `/recuperar-senha` (código de recuperação) e `/conta-excluida` (`pages/ContaPages.tsx`).
   Termos e Política (`pages/LegalPages.tsx`) renderizam as minutas de `docs/legal/` via `?raw` (o `vite.config.ts` libera ler `..`;
-  na Vercel, manter "Include files outside the root directory" ligado). `/conta` (Configurações da conta, `features/conta/pages/ConfiguracoesContaPage.tsx`): e-mail, seus dados
-  (data de nascimento e exportação), código de recuperação e, discreta no fim, a exclusão. `/perfil` é só o perfil público. Aviso de conta sem código no `AppLayout`. Jogador: `/jogador/arquivadas/:id`.
-- Mestre: `/mestre/grupos`, `/mestre/grupos/novo`, `/mestre/grupos/:id`, `/mestre/grupos/:id/editar`, `/mestre/fichas/:id`,
+  na Vercel, manter "Include files outside the root directory" ligado). `/conta` (Perfil e conta, `features/conta/pages/ConfiguracoesContaPage.tsx`): perfil público, trocar a senha, código de recuperação,
+  preferências deste navegador (`lib/preferencias.ts`), conteúdo verificado, seus dados e, discreta no fim, a exclusão. Aviso de conta sem código no `AppLayout`. Jogador: `/jogador/arquivadas/:id`.
+- Mestre: `/mestre/inicio` (painel, destino de `/area`), `/mestre/grupos`, `/mestre/grupos/novo`, `/mestre/grupos/:id`, `/mestre/grupos/:id/editar`, `/mestre/fichas/:id`,
   `/mestre` (galeria, `?grupo=` no filtro), `/mestre/racas`, `/mestre/racas/:id`, `/mestre/classes/nova` (só a classe),
   `/mestre/classes/:id` (dados, resumo das habilidades, perícias), `/mestre/classes/:id/editar`,
   `/mestre/classes/:id/habilidades` (criar/editar/reordenar/excluir cartas), `/mestre/pericias` (catálogo); `/jogador` (reservada, tela vazia); `/` redireciona conforme o papel.
@@ -125,7 +125,7 @@ exibido direto pelo front. Não há upload nem uso do Supabase Storage.
   Kit ativo: guardado no navegador (`features/kits/types.ts`, try/catch); `useKitAtivo` + `soDoKit` filtram as listas (só o kit) e o kit ativo é o padrão dos formulários. No grupo vale `visivelNoKit` (kit + gerais).
   Logado: `/ativar-mestre`.
 - Layouts: `PublicLayout` (regras, guia; botões Login e Registrar-se sempre visíveis, que com sessão levam à área da conta; links no topo) e `AppLayout` (topo com marca, troca Mestrar/Jogar
-  e menu do perfil com Editar perfil e Sair; navegação da interface numa **barra lateral**, que no celular vira gaveta aberta pelo botão de menu). Os dois têm o `Rodape` (`components/layout/Rodape.tsx`): créditos, direitos autorais, Documentação, Termos de uso, Política de privacidade e GitHub.
+  e menu do perfil com Perfil e conta e Sair; navegação da interface numa **barra lateral**, que no celular vira gaveta aberta pelo botão de menu). Os dois têm o `Rodape` (`components/layout/Rodape.tsx`): créditos, direitos autorais, Documentação, Termos de uso, Política de privacidade e GitHub.
 - Se a API responder 401, o front faz `signOut` e volta ao login.
 - Dados: TanStack Query; toda mutação invalida as queries `["classes", ...]`.
 - Erros de validação da API (`details`) aparecem embaixo de cada campo dos formulários.

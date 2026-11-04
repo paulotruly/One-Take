@@ -1,5 +1,5 @@
-import { Activity, Backpack, ChevronDown, Crown, Gamepad2, Layers, ListChecks, LogOut, Menu, Package, Settings, PawPrint, ScrollText, Shield, UserPen, UserRound, Users, X, type LucideIcon } from "lucide-react";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { Activity, Backpack, ChevronDown, Crown, Gamepad2, Home, Layers, ListChecks, LogOut, Menu, Package, PawPrint, ScrollText, Shield, UserPen, UserRound, Users, X, type LucideIcon } from "lucide-react";
+import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, Outlet, useLocation } from "react-router";
 import { Rodape } from "../components/layout/Rodape";
 import { SeletorKit } from "../features/kits/components/SeletorKit";
@@ -8,18 +8,19 @@ import { Avatar } from "../components/ui/Avatar";
 import { Button } from "../components/ui/Button";
 import { Marca } from "../components/ui/Marca";
 
-type LinkTopo = { to: string; rotulo: string; Icone: LucideIcon; /** Caminhos em que o link aparece ativo. */ ativoEm: RegExp };
+type LinkTopo = { to: string; rotulo: string; Icone: LucideIcon; /** Caminhos em que o link aparece ativo. */ ativoEm: RegExp; /** Título do bloco que começa neste link. */ bloco?: string };
 
 const LINKS: Record<Papel, LinkTopo[]> = {
   MESTRE: [
-    { to: "/mestre/grupos", rotulo: "Grupos", Icone: Shield, ativoEm: /^\/mestre\/(grupos|fichas)/ },
-    { to: "/mestre/kits", rotulo: "Kits de RPG", Icone: Package, ativoEm: /^\/mestre\/kits/ },
-    { to: "/mestre", rotulo: "Classes", Icone: Layers, ativoEm: /^\/mestre(\/classes.*)?\/?$/ },
+    { to: "/mestre/inicio", rotulo: "Início", Icone: Home, ativoEm: /^\/mestre\/inicio/ },
+    { to: "/mestre/grupos", rotulo: "Grupos", Icone: Shield, ativoEm: /^\/mestre\/(grupos|fichas)/, bloco: "Mesa" },
+    { to: "/mestre", rotulo: "Classes", Icone: Layers, ativoEm: /^\/mestre(\/classes.*)?\/?$/, bloco: "Conteúdo" },
     { to: "/mestre/racas", rotulo: "Raças", Icone: Users, ativoEm: /^\/mestre\/racas/ },
     { to: "/mestre/npcs", rotulo: "NPCs", Icone: UserRound, ativoEm: /^\/mestre\/npcs/ },
     { to: "/mestre/bestiario", rotulo: "Bestiário", Icone: PawPrint, ativoEm: /^\/mestre\/bestiario/ },
     { to: "/mestre/itens", rotulo: "Itens", Icone: Backpack, ativoEm: /^\/mestre\/itens/ },
-    { to: "/mestre/pericias", rotulo: "Perícias", Icone: ListChecks, ativoEm: /^\/mestre\/pericias/ },
+    { to: "/mestre/kits", rotulo: "Kits de RPG", Icone: Package, ativoEm: /^\/mestre\/kits/ },
+    { to: "/mestre/pericias", rotulo: "Perícias", Icone: ListChecks, ativoEm: /^\/mestre\/pericias/, bloco: "Catálogo" },
     { to: "/mestre/status", rotulo: "Status", Icone: Activity, ativoEm: /^\/mestre\/status/ },
   ],
   JOGADOR: [
@@ -62,7 +63,7 @@ export function AppLayout() {
   const troca =
     area === "MESTRE"
       ? { to: "/jogador", rotulo: "Jogar", Icone: Gamepad2, titulo: "Ir para a interface de jogador (suas fichas)" }
-      : { to: ehMestre ? "/mestre/grupos" : "/ativar-mestre", rotulo: "Mestrar", Icone: Crown, titulo: ehMestre ? "Ir para a interface de mestre" : "Ativar a interface de mestre" };
+      : { to: ehMestre ? "/mestre/inicio" : "/ativar-mestre", rotulo: "Mestrar", Icone: Crown, titulo: ehMestre ? "Ir para a interface de mestre" : "Ativar a interface de mestre" };
 
   return (
     <div className="app">
@@ -89,7 +90,7 @@ export function AppLayout() {
             )}
             {me.data ? (
               <MenuPerfil
-                ativo={pathname === "/perfil" || pathname === "/conta"}
+                ativo={pathname === "/conta"}
                 onSair={sair}
                 rotulo={
                   <>
@@ -112,13 +113,16 @@ export function AppLayout() {
         {/* Navegação lateral; no celular vira uma gaveta aberta pelo botão de menu. */}
         <nav id="navegacao-lateral" className={`lateral ${menuAberto ? "lateral--aberta" : ""}`} aria-label="Principal">
           {area === "MESTRE" && ehMestre && <SeletorKit />}
-          {links.map(({ to, rotulo, Icone, ativoEm }) => {
+          {links.map(({ to, rotulo, Icone, ativoEm, bloco }) => {
             const ativo = ativoEm.test(pathname);
             return (
-              <Link key={to} to={to} className={`lateral__link ${ativo ? "lateral__link--ativo" : ""}`} aria-current={ativo ? "page" : undefined}>
-                <Icone size={18} aria-hidden />
-                <span>{rotulo}</span>
-              </Link>
+              <Fragment key={to}>
+                {bloco && <p className="lateral__bloco">{bloco}</p>}
+                <Link to={to} className={`lateral__link ${ativo ? "lateral__link--ativo" : ""}`} aria-current={ativo ? "page" : undefined}>
+                  <Icone size={18} aria-hidden />
+                  <span>{rotulo}</span>
+                </Link>
+              </Fragment>
             );
           })}
         </nav>
@@ -138,7 +142,7 @@ export function AppLayout() {
   );
 }
 
-/** Botão do perfil no topo: abre um menu com "Editar perfil", "Configurações da conta" e "Sair". Fecha com clique fora ou Esc. */
+/** Botão do perfil no topo: abre um menu com "Perfil e conta" e "Sair". Fecha com clique fora ou Esc. */
 function MenuPerfil({ rotulo, ativo, onSair }: { rotulo: ReactNode; ativo: boolean; onSair: () => void }) {
   const [aberto, setAberto] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -171,11 +175,8 @@ function MenuPerfil({ rotulo, ativo, onSair }: { rotulo: ReactNode; ativo: boole
       </button>
       {aberto && (
         <div className="menu-perfil__lista" role="menu">
-          <Link to="/perfil" role="menuitem" className="menu-perfil__item" onClick={() => setAberto(false)}>
-            <UserPen size={16} aria-hidden /> Editar perfil
-          </Link>
           <Link to="/conta" role="menuitem" className="menu-perfil__item" onClick={() => setAberto(false)}>
-            <Settings size={16} aria-hidden /> Configurações da conta
+            <UserPen size={16} aria-hidden /> Perfil e conta
           </Link>
           <button type="button" role="menuitem" className="menu-perfil__item" onClick={() => { setAberto(false); onSair(); }}>
             <LogOut size={16} aria-hidden /> Sair

@@ -7,6 +7,7 @@ import { naoEncontrado, requisicaoInvalida } from "../../lib/errors.js";
 import { validarKitDoGrupo } from "../../lib/kits.js";
 import { getPrisma } from "../../lib/prisma.js";
 import { atributosNoNivel } from "../../regras/progressao.js";
+import { estaMorto } from "../../regras/status.js";
 import { apresentarCriatura } from "../criaturas/criaturas.service.js";
 import { statusDaFicha } from "../fichas/status-da-ficha.js";
 import { apresentarItem, comRequisitos } from "../itens/itens.apresentar.js";
@@ -95,9 +96,14 @@ export async function listar(usuarioId: string) {
   const grupos = await getPrisma().grupo.findMany({
     where: { mestreId: usuarioId },
     orderBy: { criadoEm: "desc" },
-    include: { _count: { select: { fichas: true } } },
+    include: { fichas: { select: { classe: { select: { grupo: true } } } } },
   });
-  return grupos.map(({ _count, ...g }) => ({ ...g, membros: _count.fichas }));
+  return grupos.map(({ fichas, ...g }) => ({
+    ...g,
+    membros: fichas.length,
+    /** Quantas fichas há em cada função (combatente, vanguardista, suporte). */
+    composicao: fichas.reduce<Record<string, number>>((acc, f) => ({ ...acc, [f.classe.grupo]: (acc[f.classe.grupo] ?? 0) + 1 }), {}),
+  }));
 }
 
 export async function detalhar(id: string, usuarioId: string) {
@@ -115,7 +121,7 @@ export async function detalhar(id: string, usuarioId: string) {
         include: {
           status: { include: { status: true } },
           jogador: { select: { nickname: true, nome: true, fotoUrl: true } },
-          classe: { select: { titulo: true, pontosVida: true, pontosMana: true, pontosEsforco: true } },
+          classe: { select: { titulo: true, grupo: true, pontosVida: true, pontosMana: true, pontosEsforco: true } },
           raca: { select: { titulo: true } },
         },
       },
@@ -145,7 +151,9 @@ export async function detalhar(id: string, usuarioId: string) {
         nivel: f.nivel,
         jogador: f.jogador,
         classe: f.classe.titulo,
+        funcao: f.classe.grupo,
         raca: f.raca.titulo,
+        morto: estaMorto(f),
         vida: { atual: f.vidaAtual, max: max.pontosVida },
         mana: { atual: f.manaAtual, max: max.pontosMana },
         esforco: { atual: f.esforcoAtual, max: max.pontosEsforco },

@@ -1,7 +1,7 @@
 import type { ButtonHTMLAttributes } from "react";
 
 type Props = ButtonHTMLAttributes<HTMLButtonElement> & {
-  variante?: "padrao" | "primario" | "perigo" | "fantasma";
+  variante?: "padrao" | "primario" | "perigo" | "fantasma" | "perigoSutil";
   pequeno?: boolean;
 };
 

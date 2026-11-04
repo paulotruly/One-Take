@@ -1,8 +1,8 @@
-// Rotas da conta. Públicas: cadastro e "esqueceu a senha" (código de recuperação). Logadas: novo código, exclusão e exportação.
+// Rotas da conta. Públicas: cadastro e "esqueceu a senha" (código de recuperação). Logadas: trocar senha, novo código, exclusão e exportação.
 import { Router } from "express";
 import { limitarPorOrigem } from "../../lib/limite.js";
 import { usuarioDe } from "../../middleware/auth.js";
-import { cadastroSchema, exclusaoSchema, recuperarSchema, senhaAtualSchema } from "./conta.schemas.js";
+import { alterarSenhaSchema, cadastroSchema, exclusaoSchema, recuperarSchema, senhaAtualSchema } from "./conta.schemas.js";
 import * as service from "./conta.service.js";
 
 export const contaPublicaRouter = Router();
@@ -15,6 +15,11 @@ contaPublicaRouter.post("/cadastro", limitarPorOrigem("cadastro", 10), async (re
 contaPublicaRouter.post("/senha/recuperar", limitarPorOrigem("recuperar", 10), async (req, res) => {
   const { nickname, codigo, senha } = recuperarSchema.parse(req.body);
   res.json(await service.recuperarSenha(nickname, codigo, senha));
+});
+
+contaRouter.post("/me/senha", limitarPorOrigem("senha", 10), async (req, res) => {
+  const { senhaAtual, senhaNova } = alterarSenhaSchema.parse(req.body);
+  res.json(await service.alterarSenha(usuarioDe(req).id, senhaAtual, senhaNova));
 });
 
 contaRouter.post("/me/codigo-recuperacao", limitarPorOrigem("codigo", 10), async (req, res) => {

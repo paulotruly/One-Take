@@ -41,16 +41,13 @@ export function GaleriaPage() {
       <div className="pagina__cabecalho">
         <div>
           <h1>Classes</h1>
-          <p className="pagina__subtitulo">Escolha uma classe para ver o kit, duplique uma verificada ou crie a sua.</p>
+          <p className="pagina__subtitulo">Abra uma classe para ver a cartela, duplique uma verificada ou crie a sua.</p>
         </div>
         <Link to="/mestre/classes/nova" className="btn btn--primario">
           <Plus size={16} aria-hidden /> Nova classe
         </Link>
       </div>
 
-      <ConceitosSecao />
-
-      <h2>Todas as classes</h2>
       <GrupoFilter valor={grupo} onChange={filtrar} />
 
       {duplicar.isError && <div className="aviso">Não foi possível duplicar: {mensagemDeErro(duplicar.error)}</div>}
@@ -60,42 +57,49 @@ export function GaleriaPage() {
         <Loading texto="Carregando classes…" />
       ) : classes.isError ? (
         <ErrorState mensagem={mensagemDeErro(classes.error)} onTentarNovamente={() => classes.refetch()} />
-      ) : classesNoKit.length === 0 ? (
-        <EmptyState
-          titulo={grupo ? `Nenhuma classe do grupo ${ROTULO_GRUPO[grupo]}` : "Nenhuma classe ainda"}
-          descricao="Crie uma classe do zero para começar."
-          acao={
-            <Link to="/mestre/classes/nova" className="btn btn--primario">
-              <Plus size={16} aria-hidden /> Nova classe
-            </Link>
-          }
-        />
       ) : (
-        <div className="galeria">
-          {classesNoKit.map((c) => (
-            <ClasseCard
-              key={c.id}
-              classe={c}
-              href={`/mestre/classes/${c.id}`}
-              acoes={
-                !c.editavel ? (
-                  <Button pequeno onClick={() => duplicarClasse(c)} disabled={duplicar.isPending}>
-                    {duplicar.isPending && duplicar.variables === c.id ? "Duplicando…" : "Duplicar"}
-                  </Button>
-                ) : (
-                  <>
-                    <Link to={`/mestre/classes/${c.id}/editar`} className="btn btn--pequeno">
-                      Editar
-                    </Link>
-                    <Button pequeno variante="perigo" onClick={() => { excluir.reset(); setAExcluir(c); }}>
-                      Excluir
-                    </Button>
-                  </>
-                )
+        <ConceitosSecao
+          classes={classesNoKit}
+          filtrando={!!grupo || !!kitId}
+          vazio={
+            <EmptyState
+              titulo={grupo ? `Nenhuma classe do grupo ${ROTULO_GRUPO[grupo]}` : "Nenhuma classe ainda"}
+              descricao="Crie uma classe do zero para começar."
+              acao={
+                <Link to="/mestre/classes/nova" className="btn btn--primario">
+                  <Plus size={16} aria-hidden /> Nova classe
+                </Link>
               }
             />
-          ))}
-        </div>
+          }
+          renderClasses={(lista) => (
+            <div className="galeria">
+              {lista.map((c) => (
+                <ClasseCard
+                  key={c.id}
+                  classe={c}
+                  href={`/mestre/classes/${c.id}`}
+                  acoes={
+                    !c.editavel ? (
+                      <Button pequeno onClick={() => duplicarClasse(c)} disabled={duplicar.isPending}>
+                        {duplicar.isPending && duplicar.variables === c.id ? "Duplicando…" : "Duplicar"}
+                      </Button>
+                    ) : (
+                      <>
+                        <Link to={`/mestre/classes/${c.id}/editar`} className="btn btn--pequeno">
+                          Editar
+                        </Link>
+                        <Button pequeno variante="perigo" onClick={() => { excluir.reset(); setAExcluir(c); }}>
+                          Excluir
+                        </Button>
+                      </>
+                    )
+                  }
+                />
+              ))}
+            </div>
+          )}
+        />
       )}
 
       <ConfirmDialog

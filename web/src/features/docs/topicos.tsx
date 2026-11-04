@@ -72,6 +72,7 @@ export const SECOES: Secao[] = [
     titulo: "Referência",
     Icone: BookText,
     topicos: [
+      { slug: "cola-da-mesa", titulo: "Cola da mesa", resumo: "Turno, teste e combate em uma página para imprimir.", Conteudo: mestre.ColaDaMesa },
       { slug: "glossario", titulo: "Glossário", Conteudo: mestre.Glossario },
       { slug: "limitacoes", titulo: "O que ainda não existe", resumo: "Para não procurar o que ainda não está lá.", Conteudo: mestre.Limitacoes },
     ],

@@ -1,8 +1,9 @@
-// Página do grupo para o mestre: código de entrada, membros (fichas e status), criaturas invocadas, itens vagos
-// e o que vale no grupo.
-import { Activity, Check, Copy, Droplet, Heart, PawPrint, Plus, RefreshCw, Send, Trash2, Zap } from "lucide-react";
+// Página do grupo para o mestre. Mesa: membros e criaturas, para usar na sessão. Preparação: o que falta, NPCs, itens vagos,
+// regras e o que vale no grupo.
+import { Check, ClipboardList, Copy, Link2, PawPrint, Plus, RefreshCw, Send, Swords, Trash2 } from "lucide-react";
 import { useState } from "react";
-import { Link, useNavigate, useParams } from "react-router";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router";
+import { Abas } from "../../../components/ui/Abas";
 import { Avatar } from "../../../components/ui/Avatar";
 import { Button } from "../../../components/ui/Button";
 import { ConfirmDialog } from "../../../components/ui/ConfirmDialog";
@@ -26,6 +27,8 @@ import { useCatalogo } from "../../pericias/api";
 import { StatusBadge } from "../../status/components/StatusBadge";
 import { useRegras } from "../../docs/regras";
 import { useCriarRegra, useEditarRegra, useExcluirGrupo, useExcluirRegra, useGrupo, useNovoCodigo } from "../api";
+import { BarrasDeRecurso, MembroCartao } from "../components/MembroCartao";
+import { ProntidaoGrupo } from "../components/ProntidaoGrupo";
 import { RegraDaMesaForm } from "../components/RegraDaMesaForm";
 import { RegrasDaMesa } from "../components/RegrasDaMesa";
 import type { RegraDaMesa } from "../types";
@@ -52,7 +55,11 @@ export function GrupoDetalhePage() {
   const [regraEmEdicao, setRegraEmEdicao] = useState<RegraDaMesa | null | undefined>(undefined);
   const [regraAExcluir, setRegraAExcluir] = useState<RegraDaMesa | null>(null);
 
-  const [copiado, setCopiado] = useState(false);
+  const [copiado, setCopiado] = useState<"link" | "codigo" | null>(null);
+  const [params, setParams] = useSearchParams();
+  const aba = params.get("aba") === "preparacao" ? "preparacao" : "mesa";
+  const [confirmarCodigo, setConfirmarCodigo] = useState(false);
+  const [itemAExcluir, setItemAExcluir] = useState<string | null>(null);
   const [confirmarExclusao, setConfirmarExclusao] = useState(false);
   const [criandoItem, setCriandoItem] = useState(false);
   const [itemDestino, setItemDestino] = useState("");
@@ -79,10 +86,10 @@ export function GrupoDetalhePage() {
   const itemAberto = g.itensVagos.find((i) => i.id === itemAbertoId) ?? null;
   const membroStatus = g.membros.find((m) => m.fichaId === statusDe) ?? null;
 
-  async function copiar() {
-    await navigator.clipboard.writeText(g.codigo).catch(() => undefined);
-    setCopiado(true);
-    setTimeout(() => setCopiado(false), 1500);
+  async function copiar(oque: "link" | "codigo", texto: string) {
+    await navigator.clipboard.writeText(texto).catch(() => undefined);
+    setCopiado(oque);
+    setTimeout(() => setCopiado(null), 1500);
   }
 
   return (
@@ -106,7 +113,6 @@ export function GrupoDetalhePage() {
           <p className="classe-cabecalho__descricao">{g.sinopse}</p>
           <div className="classe-cabecalho__acoes">
             <Link to={`/mestre/grupos/${id}/editar`} className="btn">Editar grupo</Link>
-            <Button variante="perigo" onClick={() => { excluir.reset(); setConfirmarExclusao(true); }}>Excluir grupo</Button>
           </div>
         </div>
       </header>
@@ -115,79 +121,47 @@ export function GrupoDetalhePage() {
         <div>
           <p className="pagina__subtitulo">Código de entrada</p>
           <p className="codigo-entrada__codigo">{g.codigo}</p>
-          <p className="pagina__subtitulo">{g.membros.length} de {g.limiteMembros} vagas ocupadas. O jogador digita o código em "Minhas fichas".</p>
+          <p className="pagina__subtitulo">{g.membros.length} de {g.limiteMembros} vagas ocupadas. Envie o link ou peça para o jogador digitar o código em "Minhas fichas".</p>
         </div>
         <div className="classe-cabecalho__acoes">
-          <Button onClick={copiar}>
-            {copiado ? <Check size={16} aria-hidden /> : <Copy size={16} aria-hidden />} {copiado ? "Copiado" : "Copiar"}
+          <Button variante="primario" onClick={() => copiar("link", `${window.location.origin}/jogador/entrar/${encodeURIComponent(g.codigo)}`)}>
+            {copiado === "link" ? <Check size={16} aria-hidden /> : <Link2 size={16} aria-hidden />} {copiado === "link" ? "Link copiado" : "Copiar convite"}
           </Button>
-          <Button onClick={() => novoCodigo.mutate()} disabled={novoCodigo.isPending} title="O código antigo deixa de funcionar">
+          <Button onClick={() => copiar("codigo", g.codigo)}>
+            {copiado === "codigo" ? <Check size={16} aria-hidden /> : <Copy size={16} aria-hidden />} {copiado === "codigo" ? "Copiado" : "Copiar código"}
+          </Button>
+          <Button onClick={() => { novoCodigo.reset(); setConfirmarCodigo(true); }} title="O código antigo deixa de funcionar">
             <RefreshCw size={16} aria-hidden /> Gerar novo
           </Button>
         </div>
       </section>
 
-      {incompleto && (
-        <div className="aviso">
-          Para os jogadores conseguirem criar fichas, libere pelo menos uma classe, uma raça e um atributo em{" "}
-          <Link to={`/mestre/grupos/${id}/editar`}>Editar grupo</Link>.
-        </div>
-      )}
 
+      <Abas
+        rotulo="Partes do grupo"
+        atual={aba}
+        onMudar={(a) => setParams(a === "mesa" ? {} : { aba: a }, { replace: true })}
+        abas={[{ id: "mesa", rotulo: "Mesa", Icone: Swords }, { id: "preparacao", rotulo: "Preparação", Icone: ClipboardList }]}
+      />
+
+      {aba === "mesa" && (
+        <>
+          {incompleto && (
+            <div className="aviso">
+              Os jogadores ainda não conseguem criar fichas. <Link to={`/mestre/grupos/${id}?aba=preparacao`}>Veja o que falta na preparação</Link>.
+            </div>
+          )}
       {/* ---------- Membros ---------- */}
       <section className="secao">
-        <h2>Membros</h2>
-        {g.membros.length === 0 ? (
-          <EmptyState compacto titulo="Ninguém entrou ainda" descricao="Compartilhe o código de entrada com os jogadores." />
-        ) : (
-          <ul className="membros">
-            {g.membros.map((m) => (
-              <li key={m.fichaId} className="membro-linha">
-                <Link to={`/mestre/fichas/${m.fichaId}`} className="membro">
-                  <Avatar url={m.imagemUrl ?? m.jogador.fotoUrl} nome={m.nome} tamanho={48} />
-                  <div className="membro__info">
-                    <strong>{m.nome}</strong>
-                    <span className="pagina__subtitulo">@{m.jogador.nickname} · {m.raca} · {m.classe} · Nível {m.nivel}</span>
-                    {m.status.length > 0 && (
-                      <span className="membro__status">{m.status.map((s) => <StatusBadge key={s.id} nome={s.nome} tipo={s.tipo} />)}</span>
-                    )}
-                  </div>
-                  <div className="stats stats--compacto">
-                    <span className="stat stat--vida"><Heart size={12} aria-hidden /> {m.vida.atual}/{m.vida.max}</span>
-                    <span className="stat stat--mana"><Droplet size={12} aria-hidden /> {m.mana.atual}/{m.mana.max}</span>
-                    <span className="stat stat--esforco"><Zap size={12} aria-hidden /> {m.esforco.atual}/{m.esforco.max}</span>
-                  </div>
-                </Link>
-                <Button pequeno onClick={() => setStatusDe(m.fichaId)} title="Aplicar ou tirar status">
-                  <Activity size={14} aria-hidden /> Status
-                </Button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-
-      {/* ---------- NPCs do kit do grupo ---------- */}
-      <section className="secao">
         <div className="secao__cabecalho">
-          <div>
-            <h2>NPCs</h2>
-            <p className="pagina__subtitulo">
-              {g.kit ? <>NPCs do kit {g.kit.nome} e os gerais.</> : <>Todos os seus NPCs (o grupo não tem kit).</>} Gerencie em <Link to="/mestre/npcs">NPCs</Link>.
-            </p>
-          </div>
-          <Link to={`/mestre/npcs/novo?grupo=${id}${g.kitId ? `&kit=${g.kitId}` : ""}`} className="btn">
-            <Plus size={16} aria-hidden /> Novo NPC
-          </Link>
+          <h2>Membros <span className="pagina__subtitulo">({g.membros.length} de {g.limiteMembros})</span></h2>
         </div>
-        {npcs.isPending ? (
-          <Loading compacto />
-        ) : npcs.isError ? (
-          <ErrorState mensagem={mensagemDeErro(npcs.error)} onTentarNovamente={() => npcs.refetch()} />
-        ) : npcs.data.length === 0 ? (
-          <EmptyState compacto titulo="Nenhum NPC para este grupo" />
+        {g.membros.length === 0 ? (
+          <EmptyState compacto titulo="Ninguém entrou ainda" descricao="Envie o link de convite ou o código aos jogadores." />
         ) : (
-          <ul className="membros">{npcs.data.map((n) => <NpcLinha key={n.id} n={n} />)}</ul>
+          <ul className="membros-grade">
+            {g.membros.map((m) => <MembroCartao key={m.fichaId} m={m} href={`/mestre/fichas/${m.fichaId}`} onStatus={() => setStatusDe(m.fichaId)} />)}
+          </ul>
         )}
       </section>
 
@@ -216,11 +190,7 @@ export function GrupoDetalhePage() {
                     {c.status.length > 0 && (
                       <span className="membro__status">{c.status.map((s) => <StatusBadge key={s.id} nome={s.nome} tipo={s.tipo} />)}</span>
                     )}
-                    <span className="stats stats--compacto">
-                      <span className="stat stat--vida"><Heart size={12} aria-hidden /> {c.vida.atual}/{c.vida.max}</span>
-                      <span className="stat stat--mana"><Droplet size={12} aria-hidden /> {c.mana.atual}/{c.mana.max}</span>
-                      <span className="stat stat--esforco"><Zap size={12} aria-hidden /> {c.esforco.atual}/{c.esforco.max}</span>
-                    </span>
+                    <BarrasDeRecurso vida={c.vida} mana={c.mana} esforco={c.esforco} />
                   </span>
                 </button>
               </li>
@@ -229,12 +199,49 @@ export function GrupoDetalhePage() {
         )}
       </section>
 
+        </>
+      )}
+
+      {aba === "preparacao" && (
+        <>
+          <ProntidaoGrupo
+            itens={[
+              { rotulo: "Classes", detalhe: `${d.classeIds.length} liberadas`, pronto: d.classeIds.length > 0, href: `/mestre/grupos/${id}/editar`, acao: "Liberar" },
+              { rotulo: "Raças", detalhe: `${d.racaIds.length} liberadas`, pronto: d.racaIds.length > 0, href: `/mestre/grupos/${id}/editar`, acao: "Liberar" },
+              { rotulo: "Atributos", detalhe: `${d.atributoIds.length} liberados`, pronto: d.atributoIds.length > 0, href: `/mestre/grupos/${id}/editar`, acao: "Liberar" },
+              { rotulo: "Jogadores", detalhe: `${g.membros.length} de ${g.limiteMembros} vagas`, pronto: g.membros.length > 0 },
+            ]}
+          />
+      {/* ---------- NPCs do kit do grupo ---------- */}
+      <section className="secao">
+        <div className="secao__cabecalho">
+          <div>
+            <h2>NPCs</h2>
+            <p className="pagina__subtitulo">
+              {g.kit ? <>NPCs do kit {g.kit.nome} e os gerais.</> : <>Todos os seus NPCs (o grupo não tem kit).</>} Gerencie em <Link to="/mestre/npcs">NPCs</Link>.
+            </p>
+          </div>
+          <Link to={`/mestre/npcs/novo?grupo=${id}${g.kitId ? `&kit=${g.kitId}` : ""}`} className="btn">
+            <Plus size={16} aria-hidden /> Novo NPC
+          </Link>
+        </div>
+        {npcs.isPending ? (
+          <Loading compacto />
+        ) : npcs.isError ? (
+          <ErrorState mensagem={mensagemDeErro(npcs.error)} onTentarNovamente={() => npcs.refetch()} />
+        ) : npcs.data.length === 0 ? (
+          <EmptyState compacto titulo="Nenhum NPC para este grupo" />
+        ) : (
+          <ul className="membros">{npcs.data.map((n) => <NpcLinha key={n.id} n={n} />)}</ul>
+        )}
+      </section>
+
       {/* ---------- Itens vagos ---------- */}
       <section className="secao">
         <div className="secao__cabecalho">
           <h2>Itens vagos no grupo</h2>
           <div className="classe-cabecalho__acoes">
-            <Button variante="primario" onClick={() => setLancando(true)}>
+            <Button onClick={() => setLancando(true)}>
               <Send size={16} aria-hidden /> Lançar do catálogo
             </Button>
             <Button onClick={() => { criarItem.reset(); setItemDestino(""); setCriandoItem(true); }}>
@@ -269,7 +276,7 @@ export function GrupoDetalhePage() {
           acoesPropria={(r) => (
             <>
               <Button pequeno onClick={() => { editarRegra.reset(); setRegraEmEdicao(r); }}>Editar</Button>
-              <Button pequeno variante="fantasma" onClick={() => setRegraAExcluir(r)}><Trash2 size={14} aria-hidden /> Excluir</Button>
+              <Button pequeno variante="perigoSutil" onClick={() => setRegraAExcluir(r)}><Trash2 size={14} aria-hidden /> Excluir</Button>
             </>
           )}
         />
@@ -282,6 +289,15 @@ export function GrupoDetalhePage() {
           <Link to={`/mestre/grupos/${id}/editar`}>Alterar</Link>
         </p>
       </section>
+
+
+          <section className="secao secao-conta">
+            <h2>Encerrar</h2>
+            <p className="pagina__subtitulo">Excluir o grupo apaga criaturas e itens dele. Cada jogador fica com uma cópia arquivada da própria ficha.</p>
+            <div><Button variante="perigo" onClick={() => { excluir.reset(); setConfirmarExclusao(true); }}>Excluir grupo</Button></div>
+          </section>
+        </>
+      )}
 
       {/* ---------- Modais ---------- */}
       <Modal aberto={!!itemAberto} onFechar={() => setItemAbertoId(null)} titulo={itemAberto?.nome ?? ""}>
@@ -297,7 +313,7 @@ export function GrupoDetalhePage() {
                   {destinos.map((m) => <option key={m.id} value={m.id}>{m.rotulo}</option>)}
                 </select>
               )}
-              <Button variante="perigo" onClick={() => excluirItem.mutate(itemAberto.id, { onSuccess: () => setItemAbertoId(null) })}>
+              <Button variante="perigo" onClick={() => { excluirItem.reset(); setItemAbertoId(null); setItemAExcluir(itemAberto.id); }}>
                 <Trash2 size={16} aria-hidden /> Excluir item
               </Button>
             </div>
@@ -357,6 +373,28 @@ export function GrupoDetalhePage() {
           />
         )}
       </Modal>
+
+      <ConfirmDialog
+        aberto={confirmarCodigo}
+        titulo="Gerar novo código"
+        rotuloConfirmar="Gerar novo"
+        mensagem={<>O código <strong>{g.codigo}</strong> e os links de convite já enviados deixam de funcionar. Quem já está no grupo continua nele.</>}
+        processando={novoCodigo.isPending}
+        erro={novoCodigo.isError ? mensagemDeErro(novoCodigo.error) : null}
+        onCancelar={() => setConfirmarCodigo(false)}
+        onConfirmar={() => novoCodigo.mutate(undefined, { onSuccess: () => setConfirmarCodigo(false) })}
+      />
+
+      <ConfirmDialog
+        aberto={!!itemAExcluir}
+        titulo="Excluir item"
+        rotuloConfirmar="Excluir"
+        mensagem={<>Excluir <strong>{g.itensVagos.find((i) => i.id === itemAExcluir)?.nome}</strong>? Não dá para desfazer.</>}
+        processando={excluirItem.isPending}
+        erro={excluirItem.isError ? mensagemDeErro(excluirItem.error) : null}
+        onCancelar={() => setItemAExcluir(null)}
+        onConfirmar={() => itemAExcluir && excluirItem.mutate(itemAExcluir, { onSuccess: () => setItemAExcluir(null) })}
+      />
 
       <ConfirmDialog
         aberto={!!regraAExcluir}

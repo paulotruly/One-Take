@@ -126,7 +126,7 @@ export function CartelaEditor({ habilidades, editavel, criar, ordenar }: Props) 
                     </div>
                     <div className="pericia__acoes">
                       <Button pequeno variante="fantasma" onClick={() => { editarAprim.reset(); setAprimEmEdicao(a); }}>Editar</Button>
-                      <Button pequeno variante="fantasma" onClick={() => excluirAprim.mutate(a.id)}>Excluir</Button>
+                      <Button pequeno variante="perigoSutil" onClick={() => excluirAprim.mutate(a.id)}>Excluir</Button>
                     </div>
                   </li>
                 ))}

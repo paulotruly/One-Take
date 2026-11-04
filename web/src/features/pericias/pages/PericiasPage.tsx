@@ -122,7 +122,7 @@ export function PericiasPage() {
                     <Button pequeno variante="fantasma" onClick={() => abrirAtributo(a)}>
                       Editar
                     </Button>
-                    <Button pequeno variante="fantasma" aria-label={`Excluir ${a.nome}`} onClick={() => pedirExclusao({ tipo: "atributo", item: a })}>
+                    <Button pequeno variante="perigoSutil" aria-label={`Excluir ${a.nome}`} onClick={() => pedirExclusao({ tipo: "atributo", item: a })}>
                       Excluir
                     </Button>
                   </div>
@@ -175,7 +175,7 @@ export function PericiasPage() {
                       <Button pequeno variante="fantasma" onClick={() => abrirPericia(p)}>
                         Editar
                       </Button>
-                      <Button pequeno variante="fantasma" aria-label={`Excluir ${p.nome}`} onClick={() => pedirExclusao({ tipo: "pericia", item: p })}>
+                      <Button pequeno variante="perigoSutil" aria-label={`Excluir ${p.nome}`} onClick={() => pedirExclusao({ tipo: "pericia", item: p })}>
                         Excluir
                       </Button>
                     </>

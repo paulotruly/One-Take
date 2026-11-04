@@ -2,7 +2,7 @@
 // Só funcionalidades implementadas; números de regra vêm de useRegras() (GET /api/regras).
 import {
   Activity, ArrowRight, Backpack, BookOpen, ChevronDown, Crown, Dices, Heart, KeyRound, Layers, ListChecks, Package, PawPrint,
-  ScrollText, Shield, Smartphone, TrendingUp, UserRound, Users, type LucideIcon,
+  HeartHandshake, ScrollText, Shield, Smartphone, Swords, TrendingUp, UserRound, Users, type LucideIcon,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { Link } from "react-router";
@@ -25,6 +25,13 @@ const PARA_O_JOGADOR: Recurso[] = [
   { Icone: Heart, titulo: "Vida, mana e esforço", texto: "Recursos sempre à vista, com os limites do nível. O mestre cura; você registra o dano." },
   { Icone: Activity, titulo: "Status", texto: "Avisos automáticos de morte e cansaço e os status que o mestre aplica durante a sessão, com os turnos que faltam. As regras da mesa ficam na ficha." },
   { Icone: Smartphone, titulo: "Feito para o celular", texto: "Ficha, cartas e inventário em telas pensadas para usar na mesa, pelo telefone." },
+];
+
+// Mesma descrição dos grupos táticos em /docs/classes.
+const PAPEIS: { Icone: LucideIcon; nome: string; texto: string; classe: string }[] = [
+  { Icone: Swords, nome: "Combatente", texto: "Causa dano e pressiona os inimigos.", classe: "COMBATENTE" },
+  { Icone: Shield, nome: "Vanguardista", texto: "Fica na linha de frente: aguenta golpes e protege os aliados.", classe: "VANGUARDISTA" },
+  { Icone: HeartHandshake, nome: "Suporte", texto: "Cura, fortalece os aliados e atrapalha os inimigos.", classe: "SUPORTE" },
 ];
 
 const PERGUNTAS: { pergunta: string; resposta: ReactNode }[] = [
@@ -141,6 +148,32 @@ export function HomePage() {
           <li><Crown size={20} aria-hidden /><div><strong>Para mestres</strong><span>que querem preparar one-shots e conduzir o grupo com tudo à mão.</span></div></li>
           <li><UserRound size={20} aria-hidden /><div><strong>Para jogadores</strong><span>que querem chegar, escolher um personagem e jogar, sem montar ficha do zero.</span></div></li>
         </ul>
+      </section>
+
+      {/* ---------- Papéis ---------- */}
+      <section id="papeis" className="home__secao" aria-labelledby="papeis-titulo">
+        <div className="home__cabecalho-secao">
+          <h2 id="papeis-titulo">Escolha o seu papel na mesa</h2>
+          <p>Como num jogo de heróis: cada classe pertence a um grupo tático e já vem com a cartela de habilidades pronta.</p>
+        </div>
+        <div className="home__papeis">
+          <ul className="home__lista-papeis">
+            {PAPEIS.map(({ Icone, nome, texto, classe }) => (
+              <li key={nome} className={`home__papel selo--grupo-${classe}`}>
+                <Icone size={26} aria-hidden />
+                <div><h3>{nome}</h3><p>{texto}</p></div>
+              </li>
+            ))}
+          </ul>
+          {/* Ilustração, não é conteúdo real do app. */}
+          <figure className="home__carta" aria-label="Exemplo de carta de habilidade">
+            <figcaption className="home__exemplo-rotulo"><Layers size={16} aria-hidden /> Exemplo de carta</figcaption>
+            <p className="home__carta-titulo">Golpe de escudo</p>
+            <p className="home__carta-tipo"><Swords size={14} aria-hidden /> Dano</p>
+            <p>Você avança e empurra o inimigo com o escudo, abrindo espaço para os aliados.</p>
+            <p className="pagina__subtitulo">Toda carta traz o tipo de efeito, o teste, o custo de mana e o nível em que é liberada.</p>
+          </figure>
+        </div>
       </section>
 
       {/* ---------- Funcionalidades ---------- */}

@@ -2,6 +2,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { naoAutenticado } from "../../lib/errors.js";
+import { limitarPorOrigem } from "../../lib/limite.js";
 import { emailInterno, nicknameSchema, normalizarNickname } from "../../lib/nickname.js";
 import { getPrisma } from "../../lib/prisma.js";
 import { pedirSessao } from "../../lib/supabase-auth.js";
@@ -25,7 +26,7 @@ const entrarSchema = z.object({ login: z.string().min(1, "Obrigatório"), senha:
  * Login por nickname: descobre o email da conta (interno ou real, nunca exposto) e pede a sessão ao Supabase.
  * Também aceita email no campo de login, para contas antigas.
  */
-acessoRouter.post("/entrar", async (req, res) => {
+acessoRouter.post("/entrar", limitarPorOrigem("entrar", 30, 15 * 60_000), async (req, res) => {
   const { login, senha } = entrarSchema.parse(req.body);
   let email = login.trim().toLowerCase();
   if (!email.includes("@") || email.startsWith("@")) {

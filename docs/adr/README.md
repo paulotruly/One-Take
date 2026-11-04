@@ -14,8 +14,8 @@ Decisões **de produto** (regras do jogo, textos, telas) continuam só em `DECIS
 de produto e de arquitetura vai nos dois: uma linha em `DECISOES.md` e o ADR com os detalhes técnicos.
 
 ## Como numerar e nomear
-- Próximo número livre: **ADR-019** (os números 001 a 018 já são usados no resumo do `PROJECT_CONTEXT.md`).
-- Arquivo: `ADR-019-titulo-curto-com-hifens.md`, por exemplo `ADR-019-rate-limit-no-login.md`.
+- Próximo número livre: **ADR-020** (os números 001 a 018 são usados no resumo do `PROJECT_CONTEXT.md`; do 019 em diante há arquivo nesta pasta).
+- Arquivo: `ADR-020-titulo-curto-com-hifens.md`, por exemplo `ADR-020-rate-limit-no-login.md`.
 - Um ADR aceito não é reescrito: se a decisão mudar, crie um ADR novo com status "Aceito" e marque o antigo como
   "Substituído por ADR-0XX".
 

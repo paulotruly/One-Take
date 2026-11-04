@@ -77,7 +77,7 @@ export function KitsPage() {
                 {!k.deOutro && (
                   <div className="pericia__acoes">
                     <Button pequeno variante="fantasma" aria-label={`Editar ${k.nome}`} onClick={() => abrir(k)}><Pencil size={14} aria-hidden /></Button>
-                    <Button pequeno variante="fantasma" aria-label={`Excluir ${k.nome}`} onClick={() => { excluir.reset(); setAExcluir(k); }}><Trash2 size={14} aria-hidden /></Button>
+                    <Button pequeno variante="perigoSutil" aria-label={`Excluir ${k.nome}`} onClick={() => { excluir.reset(); setAExcluir(k); }}><Trash2 size={14} aria-hidden /></Button>
                   </div>
                 )}
               </div>

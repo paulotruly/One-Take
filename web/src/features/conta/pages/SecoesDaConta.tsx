@@ -1,4 +1,4 @@
-// Seções de Configurações da conta: código de recuperação, seus dados e (discreta, no fim) excluir a conta.
+// Seções de Perfil e conta: código de recuperação, conteúdo verificado, seus dados e (discreta, no fim) excluir a conta.
 import { BadgeCheck, Download, KeyRound } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router";
@@ -82,7 +82,7 @@ export function SecaoVerificados({ me }: { me: Me }) {
 export function SecaoDados({ me }: { me: Me }) {
   const exportar = useExportarDados();
   return (
-    <section className="secao secao-conta">
+    <section id="dados" className="secao secao-conta">
       <h2><Download size={18} aria-hidden /> Seus dados</h2>
       <p className="pagina__subtitulo">
         Data de nascimento: {me.dataNascimento ? dataPorExtenso(me.dataNascimento) : "não informada (conta criada antes dessa regra)"}. Só você vê.

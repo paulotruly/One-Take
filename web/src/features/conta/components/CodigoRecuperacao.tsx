@@ -21,7 +21,7 @@ export function CodigoRecuperacao({ codigo, rotulo = "Continuar", onContinuar }:
       </Button>
       <p className="pagina__subtitulo">
         Guarde este código num lugar seguro (um gerenciador de senhas, uma anotação, uma foto). Se esquecer a senha, é com ele que você
-        escolhe uma nova. Ele aparece só agora; depois, dá para gerar outro em Configurações da conta.
+        escolhe uma nova. Ele aparece só agora; depois, dá para gerar outro em Perfil e conta.
       </p>
       <label className="checklist__item">
         <input type="checkbox" checked={guardei} onChange={(e) => setGuardei(e.target.checked)} />

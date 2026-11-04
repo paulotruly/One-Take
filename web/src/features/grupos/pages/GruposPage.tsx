@@ -3,6 +3,7 @@ import { Link } from "react-router";
 import { EmptyState, ErrorState, Loading } from "../../../components/ui/States";
 import { mensagemDeErro } from "../../../lib/api";
 import { ClasseImagem } from "../../classes/components/ClasseImagem";
+import { GRUPOS, ROTULO_GRUPO } from "../../classes/types";
 import { useGrupos } from "../api";
 
 export function GruposPage() {
@@ -46,9 +47,15 @@ export function GruposPage() {
                   <span className="selo">{g.genero}</span>
                 </div>
                 <p className="card-link__descricao">{g.sinopse}</p>
-                <p className="card-link__rodape">
-                  <Users size={14} aria-hidden /> {g.membros} de {g.limiteMembros} jogadores · código {g.codigo}
-                </p>
+                <div className="grupo-card__vagas">
+                  <span className="card-link__rodape"><Users size={14} aria-hidden /> {g.membros} de {g.limiteMembros} jogadores · código {g.codigo}</span>
+                  <span className="recurso__barra" aria-hidden><span className="recurso__preenchido grupo-card__preenchido" style={{ width: `${g.limiteMembros > 0 ? Math.min(100, (g.membros / g.limiteMembros) * 100) : 0}%` }} /></span>
+                  {g.membros > 0 && (
+                    <span className="carta__selos">
+                      {GRUPOS.filter((f) => g.composicao?.[f]).map((f) => <span key={f} className={`selo selo--grupo-${f}`}>{g.composicao![f]} {ROTULO_GRUPO[f]}</span>)}
+                    </span>
+                  )}
+                </div>
               </Link>
             </li>
           ))}

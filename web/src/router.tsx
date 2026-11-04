@@ -1,5 +1,6 @@
 import { createBrowserRouter, Navigate } from "react-router";
 import { RedirecionarPorPapel, RequirePapel } from "./auth/guards";
+import { PainelMestrePage } from "./features/grupos/pages/PainelMestrePage";
 import { ClasseDetalhePage } from "./features/classes/pages/ClasseDetalhePage";
 import { EditarClassePage, NovaClassePage } from "./features/classes/pages/ClasseFormPage";
 import { GaleriaPage } from "./features/classes/pages/GaleriaPage";
@@ -30,7 +31,6 @@ import { PublicLayout } from "./layouts/PublicLayout";
 import { CadastroPage } from "./pages/CadastroPage";
 import { HomePage } from "./pages/HomePage";
 import { LoginPage } from "./pages/LoginPage";
-import { PerfilPage } from "./pages/PerfilPage";
 import { NotFoundPage } from "./pages/SimplesPages";
 import { ContaExcluidaPage, RecuperarSenhaPage } from "./pages/ContaPages";
 import { FichaArquivadaPage } from "./features/fichas/pages/FichaArquivadaPage";
@@ -62,7 +62,7 @@ export const router = createBrowserRouter([
       {
         element: <AppLayout />,
         children: [
-          { path: "/perfil", element: <PerfilPage /> },
+          { path: "/perfil", element: <Navigate to="/conta" replace /> },
           { path: "/conta", element: <ConfiguracoesContaPage /> },
           { path: "/ativar-mestre", element: <AtivarMestrePage /> },
         ],
@@ -79,6 +79,7 @@ export const router = createBrowserRouter([
         element: <AppLayout />,
         children: [
           { index: true, element: <GaleriaPage /> },
+          { path: "inicio", element: <PainelMestrePage /> },
           { path: "classes/nova", element: <NovaClassePage /> },
           { path: "classes/:id", element: <ClasseDetalhePage /> },
           { path: "classes/:id/editar", element: <EditarClassePage /> },

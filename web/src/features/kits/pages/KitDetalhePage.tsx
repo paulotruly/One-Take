@@ -1,5 +1,5 @@
 // Tela do kit: o que está dentro, por tipo, com link para cada coisa. Serve para o kit do mestre e para o verificado.
-import { Check, Package } from "lucide-react";
+import { Check, ChevronRight, Package } from "lucide-react";
 import { Link, useParams } from "react-router";
 import type { ReactNode } from "react";
 import { Button } from "../../../components/ui/Button";
@@ -18,7 +18,7 @@ function Bloco({ titulo, itens, item }: { titulo: string; itens: Coisa[]; item: 
   return (
     <section className="secao">
       <h2>{titulo} <span className="pagina__subtitulo">({itens.length})</span></h2>
-      <div className="conceito__subclasses">{itens.map(item)}</div>
+      <div className="kit-grade">{itens.map(item)}</div>
     </section>
   );
 }
@@ -32,7 +32,7 @@ export function KitDetalhePage() {
   if (kit.isError) return <ErrorState mensagem={mensagemDeErro(kit.error)} onTentarNovamente={() => kit.refetch()} />;
   const k = kit.data;
   const d = k.dentro;
-  const link = (para: (c: Coisa) => string) => (c: Coisa) => <Link key={c.id} to={para(c)} className="conceito__subclasse">{c.nome}</Link>;
+  const link = (para: (c: Coisa) => string) => (c: Coisa) => <Link key={c.id} to={para(c)} className="kit-item">{c.nome} <ChevronRight size={14} aria-hidden /></Link>;
   const vazio = Object.entries(d).every(([tipo, l]) => tipo === "grupos" || l.length === 0);
 
   return (
@@ -51,6 +51,14 @@ export function KitDetalhePage() {
         )}
       </div>
 
+      {!vazio && (
+        <p className="pagina__subtitulo kit-resumo">
+          {[[d.classes.length, "classes"], [d.racas.length, "raças"], [d.bestas.length, "criaturas"], [d.npcs.length, "NPCs"], [d.itens.length, "itens"]]
+            .filter(([n]) => n)
+            .map(([n, r]) => `${n} ${r}`)
+            .join(" · ")}
+        </p>
+      )}
       {vazio && (
         <p className="pagina__subtitulo">
           Vazio por enquanto. {k.deOutro ? "" : "Para pôr algo no kit, marque o kit no campo Kits de RPG do formulário de cada coisa."}
@@ -62,8 +70,8 @@ export function KitDetalhePage() {
       <Bloco titulo="NPCs" itens={d.npcs} item={link((c) => `/mestre/npcs/${c.id}`)} />
       <Bloco titulo="Atributos" itens={d.atributos} item={link(() => "/mestre/pericias")} />
       <Bloco titulo="Perícias" itens={d.pericias} item={(c) => (
-        <Link key={c.id} to="/mestre/pericias" className="conceito__subclasse">
-          {c.nome} <span className="pagina__subtitulo">({d.pericias.find((p) => p.id === c.id)?.atributo})</span>
+        <Link key={c.id} to="/mestre/pericias" className="kit-item">
+          <span>{c.nome} <span className="pagina__subtitulo">({d.pericias.find((p) => p.id === c.id)?.atributo})</span></span> <ChevronRight size={14} aria-hidden />
         </Link>
       )} />
       <Bloco titulo="Status" itens={d.status} item={(c) => (

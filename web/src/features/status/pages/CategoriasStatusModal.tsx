@@ -68,7 +68,7 @@ export function CategoriasStatusModal({ aberto, onFechar }: { aberto: boolean; o
                   {!c.deOutro && (
                     <span className="pericia__acoes">
                       <Button pequeno variante="fantasma" aria-label={`Editar ${c.nome}`} onClick={() => abrir(c)}><Pencil size={14} aria-hidden /></Button>
-                      <Button pequeno variante="fantasma" aria-label={`Excluir ${c.nome}`} title="Os status dela ficam sem categoria" disabled={excluir.isPending}
+                      <Button pequeno variante="perigoSutil" aria-label={`Excluir ${c.nome}`} title="Os status dela ficam sem categoria" disabled={excluir.isPending}
                         onClick={() => excluir.mutate(c.id)}>
                         <Trash2 size={14} aria-hidden />
                       </Button>

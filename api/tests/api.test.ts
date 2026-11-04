@@ -689,3 +689,28 @@ describe("erros", () => {
     expect(res.body.error.code).toBe("JSON_INVALIDO");
   });
 });
+
+describe("calculadora de chance (GET /api/regras/chance)", () => {
+  it("usa a regra de teste: atributo, bônus, DT e esforço", async () => {
+    const res = await request(app).get("/api/regras/chance").query({ pontos: 2, bonus: 5, dt: 15 });
+    expect(res.status).toBe(200);
+    // Precisa de 10 no maior de 2d20: 1 - (9/20)^2.
+    expect(res.body.chance).toBeCloseTo(1 - (9 / 20) ** 2);
+    expect(res.body.notacao).toBe("2d20 + 5");
+    const comEsforco = await request(app).get("/api/regras/chance").query({ pontos: 2, bonus: 5, dt: 15, esforco: 1 });
+    expect(comEsforco.body.chance).toBeCloseTo(1 - (9 / 20) ** 3);
+    expect(comEsforco.body.notacao).toBe("3d20 + 5");
+  });
+
+  it("atributo 0: o esforço não compra dados e o dado vale a metade", async () => {
+    const res = await request(app).get("/api/regras/chance").query({ pontos: 0, dt: 5, esforco: 1 });
+    expect(res.body.chance).toBeCloseTo(11 / 20); // precisa de 10 ou mais no dado
+    expect(res.body.notacao).toBe("1d20 ÷ 2");
+  });
+
+  it("recusa valores inválidos", async () => {
+    expect((await request(app).get("/api/regras/chance").query({ pontos: -1, dt: 10 })).status).toBe(400);
+    expect((await request(app).get("/api/regras/chance").query({ pontos: 1 })).status).toBe(400);
+    expect((await request(app).get("/api/regras/chance").query({ pontos: 1, dt: 10, esforco: 5 })).status).toBe(400);
+  });
+});

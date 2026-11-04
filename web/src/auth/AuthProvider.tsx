@@ -54,9 +54,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
-    const { data } = supabase.auth.onAuthStateChange((_evento, nova) => {
+    const { data } = supabase.auth.onAuthStateChange((evento, nova) => {
       setSession(nova);
-      if (!nova) queryClient.clear();
+      // Só ao sair: o aviso inicial de "sem sessão" apagaria as consultas públicas ainda em andamento.
+      if (evento === "SIGNED_OUT") queryClient.clear();
     });
     return () => data.subscription.unsubscribe();
   }, [queryClient]);

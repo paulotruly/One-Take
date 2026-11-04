@@ -1,6 +1,7 @@
 // Hooks da conta logada: código de recuperação, exclusão e exportação dos dados.
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../../lib/api";
+import { supabase } from "../../lib/supabase";
 
 /** Gera um código de recuperação novo (com a senha atual); o anterior deixa de valer. */
 /** Preferência: esconder da interface o conteúdo verificado de outras pessoas. Muda todas as listas. */
@@ -17,6 +18,17 @@ export function useGerarCodigo() {
   return useMutation({
     mutationFn: (senha: string) => api<{ codigoRecuperacao: string }>("/api/me/codigo-recuperacao", { method: "POST", body: { senha } }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["me"] }),
+  });
+}
+
+/** Troca a senha e continua conectado com a sessão nova que a API devolve (as outras deixam de valer). */
+export function useAlterarSenha() {
+  return useMutation({
+    mutationFn: async (dados: { senhaAtual: string; senhaNova: string }) => {
+      const tokens = await api<{ access_token: string; refresh_token: string }>("/api/me/senha", { method: "POST", body: dados });
+      const { error } = await supabase.auth.setSession(tokens);
+      if (error) throw new Error("A senha foi trocada. Entre de novo com a senha nova.");
+    },
   });
 }
 

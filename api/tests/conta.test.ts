@@ -366,3 +366,54 @@ describe("baixar meus dados", () => {
     expect(prismaFalso.ficha.findMany.mock.calls[0]![0].where).toEqual({ jogadorId: MESTRE.id });
   });
 });
+
+describe("trocar a senha logado", () => {
+  beforeEach(() => {
+    zerarLimites();
+    chamadas = [];
+    respostas = {};
+    logarComo(MESTRE);
+    prismaFalso.perfil.findUniqueOrThrow.mockResolvedValue({ id: MESTRE.id, email: "mestre@one-take.local" });
+    prismaFalso.perfil.update.mockResolvedValue({});
+  });
+
+  const trocar = (corpo: object) => request(app).post("/api/me/senha").set("Authorization", `Bearer ${tokenMestre}`).send(corpo);
+
+  it("confere a senha atual, troca, encerra as outras sessões e devolve uma sessão nova", async () => {
+    respostas.senhaCerta = "senha-certa";
+    // A senha nova também precisa abrir sessão: o Supabase falso aceita a senha certa, então a nova vira a certa depois do PUT.
+    const original = globalThis.fetch;
+    globalThis.fetch = ((url: string | URL, init?: RequestInit) => {
+      if (String(url).includes("/auth/v1/admin/users/")) respostas.senhaCerta = "nova-senha";
+      return original(url, init);
+    }) as typeof fetch;
+    const res = await trocar({ senhaAtual: "senha-certa", senhaNova: "nova-senha" });
+    globalThis.fetch = original;
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ access_token: "acc", refresh_token: "ref" });
+    expect(chamadas.find((c) => c.method === "PUT")!.body).toEqual({ password: "nova-senha" });
+    expect(prismaFalso.perfil.update.mock.calls.at(-1)![0].data.sessoesValidasDesde).toBeInstanceOf(Date);
+  });
+
+  it("senha atual errada: 401 no campo certo e nada muda", async () => {
+    const res = await trocar({ senhaAtual: "errada", senhaNova: "nova-senha" });
+    expect(res.status).toBe(401);
+    expect(JSON.stringify(res.body)).toContain("senhaAtual");
+    expect(chamadas.some((c) => c.method === "PUT")).toBe(false);
+  });
+
+  it("recusa senha nova curta", async () => {
+    expect((await trocar({ senhaAtual: "senha-certa", senhaNova: "123" })).status).toBe(400);
+  });
+});
+
+describe("limite no login", () => {
+  it("limita tentativas de login por origem (429)", async () => {
+    zerarLimites();
+    prismaFalso.perfil.findUnique.mockResolvedValue(null);
+    const status: number[] = [];
+    for (let i = 0; i < 31; i++) status.push((await request(app).post("/api/entrar").send({ login: "ninguem", senha: "x" })).status);
+    expect(status[0]).toBe(401);
+    expect(status.at(-1)).toBe(429);
+  });
+});

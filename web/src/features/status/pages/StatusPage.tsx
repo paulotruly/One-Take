@@ -152,7 +152,7 @@ function Lista({ itens, onEditar, onExcluir }: { itens: Status[]; onEditar: (s: 
           {s.editavel && (
             <div className="pericia__acoes">
               <Button pequeno variante="fantasma" onClick={() => onEditar(s)}>Editar</Button>
-              {!s.automatico && <Button pequeno variante="fantasma" onClick={() => onExcluir(s)} aria-label={`Excluir ${s.nome}`}>Excluir</Button>}
+              {!s.automatico && <Button pequeno variante="perigoSutil" onClick={() => onExcluir(s)} aria-label={`Excluir ${s.nome}`}>Excluir</Button>}
             </div>
           )}
         </li>

@@ -8,7 +8,8 @@ Base local: `http://localhost:3333`. JSON em tudo.
 | GET | `/api/nicknames/:nickname` | `{ disponivel, motivo? }` |
 | POST | `/api/cadastro` | corpo `{ nickname, senha, dataNascimento ("AAAA-MM-DD", idade mínima 12 anos), papel? (JOGADOR), nome? }` → `201 { access_token, refresh_token, codigoRecuperacao }`. Cria o usuário no Supabase Auth (e-mail interno do nome de usuário, já confirmado) e o perfil; o código de recuperação aparece só nesta resposta. 409 `NICKNAME_EM_USO`; 503 `AUTH_NAO_CONFIGURADO` sem a chave secreta. Limite: 10 por hora por IP |
 | POST | `/api/senha/recuperar` | `{ nickname, codigo, senha }` → `{ codigoRecuperacao }` (código novo; o usado deixa de valer). Troca a senha no Auth e encerra as sessões anteriores. Usuário inexistente, conta sem código ou código errado = mesma resposta 400 `RECUPERACAO_INVALIDA`. Limite: 10 por hora por IP |
-| POST | `/api/entrar` | corpo `{ login, senha }` (login = nickname, com ou sem @, ou email antigo) → `{ access_token, refresh_token }` do Supabase; erro = 401 "Nickname ou senha incorretos." |
+| POST | `/api/entrar` | corpo `{ login, senha }` (login = nickname, com ou sem @, ou email antigo) → `{ access_token, refresh_token }` do Supabase; erro = 401 "Nickname ou senha incorretos." Limite: 30 a cada 15 minutos por IP (429 `MUITAS_TENTATIVAS`) |
+| GET | `/api/regras/chance` | query `pontos` (0–20), `dt` (1–200), `bonus?` (-50 a 100), `esforco?` (0 até o máximo da rodada) → `{ chance (0..1), media, notacao }`. Calculadora da documentação; não usa o banco |
 | GET | `/api/regras` | `{ progressao, ficha: { pontosAtributoIniciais, inventarioInicial, inventarioPorNivel }, teste: { ladosDoDado, dadosComAtributoZero, divisorComAtributoZero, esforcoPorDadoExtra, esforcoComAtributoZero, esforcoMaximoPorRodada, dadosPorVantagem, chances: [{ dt, chances: [{ pontos, chance }] }] }, atributosBase, statusBase (do ADMIN e verificados; status com `nome, efeito, tipo, gatilho`), regrasPadrao: [{ slug, titulo, resumo, texto: string[] }], conta: { idadeMinima }, defesas: [{ ataque: { id, nome }, defesa: { id, nome }, quando }] }` (defesas pelas perícias base) |
 
 ## Autenticação
@@ -41,7 +42,7 @@ Formato único:
 | 409 | `ATRIBUTO_EM_USO` | excluir atributo que ainda tem perícias |
 | 409 | `EMAIL_EM_USO` | login de uma conta cujo email já pertence a outro perfil ativo (raro) |
 | 400 | `RECUPERACAO_INVALIDA` | nome de usuário ou código de recuperação incorretos (resposta única, sem dizer qual) |
-| 401 | `SENHA_INCORRETA` | reautenticação com a senha errada (gerar código, excluir conta) |
+| 401 | `SENHA_INCORRETA` | reautenticação com a senha errada (trocar senha, gerar código, excluir conta) |
 | 409 | `EXCLUSAO_EM_ANDAMENTO` | outra execução da exclusão da mesma conta começou há menos de 5 minutos |
 | 429 | `MUITAS_TENTATIVAS` | limite de tentativas por IP |
 | 502 | `AUTH_FALHOU` | o Supabase Auth não respondeu como esperado |
@@ -128,7 +129,7 @@ A prévia de progressão tem `aprimoradas[]` por nível.
 ## Grupos (mestre)
 | Método | Rota | Corpo | Resposta |
 |---|---|---|---|
-| GET | `/api/grupos` | — | grupos do mestre com `membros` (nº de fichas) |
+| GET | `/api/grupos` | — | grupos do mestre com `membros` (nº de fichas) e `composicao` (fichas por função: `{ COMBATENTE?, VANGUARDISTA?, SUPORTE? }`). No detalhe (`GET /api/grupos/:id`), cada membro traz também `funcao` e `morto` |
 | POST | `/api/grupos` | `{ titulo, sinopse, genero, imagemUrl?, limiteMembros, permitirClassesRepetidas, limiteCombatentes?, limiteVanguardistas?, limiteSuportes? (0–50 ou null = sem limite; padrão null), kitId? (null), disponiveis? }` | `201 GrupoDetalhe` (código gerado) |
 | GET | `/api/grupos/:id` | — | `GrupoDetalhe`: grupo (com `kitId` e `kit { id, nome }`) + `disponiveis { classeIds, racaIds, atributoIds, periciaIds, statusIds }` + `membros[]` (ficha, jogador, classe, raça, nível, vida/mana/esforço atual/max, status) + `statusAtivos[]` + `itensVagos: Item[]` + `criaturas: Criatura[]` |
 | PATCH | `/api/grupos/:id` | subconjunto (limite não pode ficar abaixo dos membros; limite por função não fica abaixo das fichas daquela função, 400 com o campo) | `GrupoDetalhe` |
@@ -261,12 +262,13 @@ A `Criatura` no grupo traz `status[]` (resumo). `PATCH /api/fichas/:id`: o jogad
 ## Conta (logado)
 | Método | Rota | Corpo | Resposta |
 |---|---|---|---|
+| POST | `/api/me/senha` | `{ senhaAtual, senhaNova }` | `{ access_token, refresh_token }`: sessão nova para quem trocou; as outras deixam de valer. 401 `SENHA_INCORRETA` no campo `senhaAtual`. Limite: 10 por hora por IP |
 | POST | `/api/me/codigo-recuperacao` | `{ senha }` (senha atual) | `{ codigoRecuperacao }`; o anterior deixa de valer. 401 `SENHA_INCORRETA` |
 | GET | `/api/me/exportacao` | — | JSON com todos os dados da conta (portabilidade), como anexo `one-take-meus-dados.json`: conta, fichas (sem dados de outros jogadores), fichas arquivadas e o conteúdo do mestre. Sem o e-mail técnico do login nem hashes de links |
 | POST | `/api/me/exclusao` | `{ senha, confirmacao }` (`confirmacao` = o próprio nome de usuário) | `{ excluida: true }`; exclusão definitiva imediata (ver DOMINIO). Nome de usuário que não confere = 400 |
 
 Sessões: a API recusa (401) tokens cuja autenticação (claim `amr` do JWT, ou `iat`) é anterior a `Perfil.sessoesValidasDesde`
-(gravado ao trocar a senha com o código de recuperação) e qualquer token de conta com `exclusaoIniciadaEm`. Token de usuário que não existe mais no Auth não
+(gravado ao trocar a senha, logado ou com o código de recuperação) e qualquer token de conta com `exclusaoIniciadaEm`. Token de usuário que não existe mais no Auth não
 recria o perfil.
 
 ## Fichas arquivadas (jogador)

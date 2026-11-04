@@ -77,8 +77,8 @@
   gap: var(--esp-4);
   flex-wrap: wrap;
   padding: var(--esp-6);
-  background: var(--cor-texto);
-  color: var(--cor-fundo);
+  border: 1px solid var(--cor-borda);
+  background: var(--cor-superficie);
 }
 
 /* ---------- Busca ---------- */
@@ -98,3 +98,16 @@
   .docs__busca-movel { display: block; }
   .docs__lateral .docs__busca { display: none; }
 }
+
+/* ---------- Calculadora e cola ---------- */
+.calculadora__campos { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(130px, 100%), 1fr)); gap: var(--esp-3); }
+.calculadora__resultado strong { color: var(--cor-primaria); font-size: var(--texto-xl); }
+.docs__imprimir { margin: 0; }
+@media print {
+  .topo, .rodape, .docs__lateral, .docs__busca-movel, .docs__abrir-menu, .docs__paginacao, .docs__imprimir { display: none !important; }
+  .docs { display: block; }
+  .cola h2 { break-after: avoid; }
+}
+.cola { display: flex; flex-direction: column; gap: var(--esp-3); }
+.cola h2 { margin-top: var(--esp-3); }
+.cola ul, .cola ol { margin: 0; }

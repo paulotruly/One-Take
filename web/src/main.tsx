@@ -4,7 +4,11 @@ import { createRoot } from "react-dom/client";
 import { RouterProvider } from "react-router";
 import { AuthProvider } from "./auth/AuthProvider";
 import { ApiError } from "./lib/api";
+import { aplicarPreferencias } from "./lib/preferencias";
+import { atualizarTitulo } from "./lib/titulo";
 import { router } from "./router";
+import "@fontsource-variable/cinzel";
+import "@fontsource-variable/inter";
 import "./styles/tokens.css";
 import "./styles/base.css";
 import "./styles/layout.css";
@@ -19,6 +23,10 @@ import "./features/itens/components/itens.css";
 import "./features/bestiario/components/bestiario.css";
 import "./features/docs/docs.css";
 import "./styles/mobile.css"; // por último: ajustes de celular
+
+aplicarPreferencias();
+atualizarTitulo(window.location.pathname);
+router.subscribe((estado) => atualizarTitulo(estado.location.pathname));
 
 const queryClient = new QueryClient({
   defaultOptions: {

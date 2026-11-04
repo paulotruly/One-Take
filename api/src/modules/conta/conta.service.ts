@@ -91,6 +91,30 @@ export async function recuperarSenha(nickname: string, codigo: string, senha: st
   return { codigoRecuperacao: novo.codigo };
 }
 
+// ---------- Trocar a senha ----------
+
+/**
+ * Troca a senha com a conta logada, conferindo a atual. As outras sessões deixam de valer; devolve uma sessão nova para quem trocou.
+ * A folga cobre a diferença de relógio com o Supabase, para a sessão nova não nascer inválida.
+ */
+export async function alterarSenha(perfilId: string, senhaAtual: string, senhaNova: string) {
+  const prisma = getPrisma();
+  const p = await prisma.perfil.findUniqueOrThrow({ where: { id: perfilId } });
+  try {
+    await conferirSenha(p.email, senhaAtual);
+  } catch (erro) {
+    if (erro instanceof AppError && erro.code === "SENHA_INCORRETA") {
+      throw new AppError(401, "SENHA_INCORRETA", "Senha atual incorreta.", [{ campo: "senhaAtual", mensagem: "Senha incorreta" }]);
+    }
+    throw erro;
+  }
+  await definirSenha(p.id, senhaNova);
+  await prisma.perfil.update({ where: { id: perfilId }, data: { sessoesValidasDesde: new Date(Date.now() - 5_000) } });
+  const sessao = await pedirSessao(p.email, senhaNova);
+  if (!sessao) throw new AppError(502, "AUTH_FALHOU", "A senha foi trocada, mas não deu para continuar conectado. Entre com a senha nova.");
+  return sessao;
+}
+
 // ---------- Exclusão ----------
 
 /** Exclui a conta na hora, com a senha e o próprio nickname digitado como confirmação. */

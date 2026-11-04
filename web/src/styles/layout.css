@@ -23,10 +23,11 @@
   justify-content: center;
   width: 40px;
   height: 40px;
-  background: var(--cor-texto);
-  color: var(--cor-fundo);
+  border: 1px solid var(--cor-borda-destaque);
+  color: var(--cor-primaria);
+  transition: border-color var(--transicao), color var(--transicao);
 }
-.marca:hover { text-decoration: none; background: var(--cor-primaria); }
+.marca:hover { text-decoration: none; border-color: var(--cor-primaria); color: var(--cor-primaria-hover); }
 /* Links no topo: só na área pública (na área logada a navegação fica na lateral). */
 .topo__nav { display: flex; align-items: stretch; gap: var(--esp-1); height: 100%; margin-right: auto; }
 .topo__link {
@@ -36,8 +37,10 @@
   padding: 0 var(--esp-3);
   border-bottom: 2px solid transparent;
   color: var(--cor-texto-suave);
-  font-size: var(--texto-sm);
+  font-size: var(--texto-xs);
   font-weight: var(--peso-forte);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-rotulo);
 }
 .topo__link:hover { text-decoration: none; color: var(--cor-texto); background: var(--cor-superficie-2); }
 .topo__link--ativo { color: var(--cor-texto); border-bottom-color: var(--cor-primaria); }
@@ -129,6 +132,7 @@ button.topo__perfil { border: 0; background: transparent; font: inherit; cursor:
   background: var(--cor-fundo);
   overflow-y: auto;
 }
+.lateral__bloco { margin: var(--esp-4) 0 var(--esp-1); padding: 0 var(--esp-3); color: var(--cor-texto-suave); font-size: var(--texto-xs); font-weight: var(--peso-forte); text-transform: uppercase; letter-spacing: var(--tracking-rotulo); }
 .lateral__link {
   display: flex;
   align-items: center;
@@ -186,7 +190,7 @@ button.topo__perfil { border: 0; background: transparent; font: inherit; cursor:
   justify-content: center;
   min-height: 100vh;
   padding: var(--esp-5) var(--esp-4);
-  background: var(--cor-superficie-2);
+  background: var(--cor-fundo);
 }
 .login__cartao {
   display: flex;
@@ -195,7 +199,7 @@ button.topo__perfil { border: 0; background: transparent; font: inherit; cursor:
   width: min(460px, 100%);
   padding: var(--esp-6);
   border: 1px solid var(--cor-borda);
-  background: var(--cor-fundo);
+  background: var(--cor-superficie);
 }
 .login__cartao > .btn { width: 100%; }
 .login__topo { display: flex; align-items: center; gap: var(--esp-4); }
@@ -249,7 +253,7 @@ button.topo__perfil { border: 0; background: transparent; font: inherit; cursor:
   border: 1px solid var(--cor-borda);
   color: var(--cor-texto);
 }
-.card-link:hover { text-decoration: none; border-color: var(--cor-texto-suave); box-shadow: var(--sombra); }
+.card-link:hover { color: inherit; text-decoration: none; border-color: var(--cor-borda-destaque); box-shadow: var(--sombra); }
 .card-link__topo { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--esp-3); }
 .card-link__descricao { color: var(--cor-texto-suave); font-size: var(--texto-sm); }
 .card-link__rodape { margin-top: auto; font-size: var(--texto-xs); color: var(--cor-texto-suave); }
@@ -276,8 +280,8 @@ button.topo__perfil { border: 0; background: transparent; font: inherit; cursor:
   justify-content: center;
   width: 36px;
   height: 36px;
-  background: var(--cor-texto);
-  color: var(--cor-fundo);
+  border: 1px solid var(--cor-borda-destaque);
+  color: var(--cor-primaria);
   font-weight: var(--peso-forte);
 }
 .passo__titulo { font-weight: var(--peso-forte); }
@@ -346,3 +350,18 @@ button.topo__perfil { border: 0; background: transparent; font: inherit; cursor:
 .ficha-arquivada__lista li { display: flex; justify-content: space-between; gap: var(--esp-3); flex-wrap: wrap; padding: var(--esp-2) 0; border-bottom: 1px solid var(--cor-borda); font-size: var(--texto-sm); }
 .ficha-arquivada__cartas { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr)); gap: var(--esp-3); margin: 0; padding: 0; list-style: none; }
 .ficha-arquivada__cartas li { display: flex; flex-direction: column; gap: var(--esp-2); }
+
+/* ---------- Início do mestre ---------- */
+.painel-mestre__passo { display: flex; justify-content: space-between; align-items: center; gap: var(--esp-4); flex-wrap: wrap; }
+.painel-mestre__grupos { display: flex; flex-direction: column; gap: var(--esp-2); margin: 0; padding: 0; list-style: none; }
+.painel-mestre__grupo { display: flex; align-items: center; gap: var(--esp-3); padding: var(--esp-3) var(--esp-4); border: 1px solid var(--cor-borda); background: var(--cor-superficie); color: var(--cor-texto); transition: border-color var(--transicao); }
+.painel-mestre__grupo:hover { border-color: var(--cor-borda-destaque); color: var(--cor-texto); text-decoration: none; }
+.painel-mestre__grupo > svg:first-child { flex-shrink: 0; color: var(--cor-primaria); }
+.painel-mestre__grupo > .membro__info { flex: 1; min-width: 0; }
+.painel-mestre__contagens { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(140px, 100%), 1fr)); gap: var(--esp-3); }
+.painel-mestre__contagem { display: flex; flex-direction: column; gap: var(--esp-1); padding: var(--esp-4); border: 1px solid var(--cor-borda); background: var(--cor-superficie); color: var(--cor-primaria); transition: border-color var(--transicao); }
+.painel-mestre__contagem:hover { border-color: var(--cor-borda-destaque); text-decoration: none; }
+.painel-mestre__contagem strong { color: var(--cor-texto); font-size: var(--texto-lg); }
+
+/* ---------- Perfil e conta ---------- */
+.conta-atalhos { display: flex; flex-wrap: wrap; gap: var(--esp-2) var(--esp-4); padding-bottom: var(--esp-3); border-bottom: 1px solid var(--cor-borda); font-size: var(--texto-sm); }

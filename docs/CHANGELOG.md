@@ -6,6 +6,23 @@ Registre só o que muda comportamento, manutenção ou entendimento do sistema. 
 
 Formato de cada entrada: **Resumo**, Motivo, Arquivos/módulos, Impacto (regras ou arquitetura), Procedimentos (migrations, config) e Docs.
 
+## Não commitado (2026-11-04)
+- **Novo visual dark fantasy minimalista:** tema escuro no app inteiro, destaque e botão primário em dourado, vermelho só para ações destrutivas e perigo, títulos em Cinzel e texto em Inter, cantoneiras nos
+  cards principais e linha com losango abaixo dos títulos. Motivo: a interface clara parecia uma plataforma de saúde. Arquivos: `web/src/styles/`, `web/src/components/ui/ui.css`
+  e CSS das features. Impacto: tokens novos `--cor-acao*`, `--cor-perigo-forte*` e `--cor-borda-*`; `--cor-primaria` agora é o dourado; dependências novas `@fontsource-variable/cinzel` e
+  `@fontsource-variable/inter`, servidas pelo próprio build. Sem mudança de fluxo, API ou banco. Procedimento: `npm install` em `web/`.
+- **Listas agrupadas por arquétipo:** Classes, Raças e Bestiário deixam de ter um carrossel de arquétipos separado da lista. Cada arquétipo vira um grupo recolhível com seus itens
+  embaixo, e o restante fica em "Sem arquétipo". Motivo: a mesma variação aparecia duas vezes e a relação entre arquétipo e item não ficava visível. Arquivos: `ConceitosBloco.tsx`, `ConceitosSecao.tsx`,
+  `GaleriaPage.tsx`, `RacasPage.tsx`, `BestiarioPage.tsx`, `classes.css`. Sem mudança de API ou banco.
+- **Cartela por nível:** a página da classe mostra as cartas agrupadas por nível, com seletor de nível (recursos e cartas liberadas), filtro por tipo e navegação entre cartas no pop-up. "Kit" da classe passa a se chamar **cartela**; "Kit de RPG" continua igual.
+- **Grupo em abas:** Mesa (membros com barras de recurso, função e morte em destaque; criaturas) e Preparação (checklist do que falta, NPCs, itens, regras, excluir). Link de convite; confirmação ao gerar código novo e ao excluir item. Lista de grupos com barra de vagas e composição. `GET /api/grupos` traz `composicao`; os membros, `funcao` e `morto`.
+- **Início do mestre** (`/mestre/inicio`) com grupos recentes, conteúdo e próximo passo; `/area` abre nele. Menu lateral em blocos (Mesa, Conteúdo, Catálogo).
+- **Perfil e conta** na mesma página (`/perfil` redireciona para `/conta`). **Trocar a senha logado** (`POST /api/me/senha`), preferências no navegador (texto, densidade, interface ao entrar) e limite de 30 tentativas de login por 15 minutos por IP.
+- **Home** com os papéis (Combatente, Vanguardista, Suporte) e uma carta de exemplo. **Regras:** Cola da mesa para imprimir e calculadora de chance em Testes (`GET /api/regras/chance`).
+- **Pequenos ajustes:** excluir e remover sempre em vermelho, cards compactos no celular, Kit de RPG em cards, ícone e título da aba por página.
+- **Correção:** para visitantes sem login, as consultas públicas eram apagadas durante a carga (`AuthProvider` limpava o cache no aviso inicial de "sem sessão"), e a documentação e a home ficavam com os números padrão do código, sem a tabela de chances. Agora limpa só em `SIGNED_OUT`.
+- Docs: `CLAUDE.md`, `AGENTS.md`, `PROJECT_CONTEXT.md`, `DECISOES.md`, `API.md`, `ARQUITETURA.md`, `ROADMAP.md`, ADR-019, Política de privacidade (preferências no navegador), documentação pública.
+
 ## Não commitado (2026-10-16)
 - **Quando usar cada carta:** regras fixas novas no tópico Combate (carta gasta a ação, inclusive buff; reação fora do turno, 1 por
   rodada; carta ligada vale dali em diante; carta que move gasta o movimento e soma ao deslocamento; duração nos turnos de quem usou;

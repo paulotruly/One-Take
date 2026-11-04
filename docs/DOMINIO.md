@@ -19,13 +19,13 @@ O login é por nome de usuário e senha. **Não há e-mail na conta.**
 - **Idade mínima de 12 anos**: o cadastro pede a data de nascimento (só o dono vê). Contas antigas podem não ter a data.
 - **Código de recuperação**: no cadastro, o app mostra um código (ex.: `7KQ2M-9XH4T-AB3CD-EF5GH`) uma única vez, e a pessoa só entra
   depois de confirmar que guardou. **Esqueceu a senha?** = nome de usuário + código + senha nova; depois da troca, o código usado deixa de
-  valer, o app mostra um novo e as sessões anteriores deixam de valer. Em Configurações da conta dá para gerar um código novo (com a senha).
+  valer, o app mostra um novo e as sessões anteriores deixam de valer. Em Perfil e conta dá para gerar um código novo (com a senha).
   Contas antigas sem código veem um aviso para gerar.
 - **Baixar meus dados**: um arquivo JSON com a conta, as fichas, as fichas arquivadas e o conteúdo do mestre, a qualquer momento.
-- **Excluir a conta**: em Configurações da conta (link discreto no fim), com a senha e o próprio nome de usuário digitado. A exclusão é
+- **Excluir a conta**: em Perfil e conta (link discreto no fim), com a senha e o próprio nome de usuário digitado. A exclusão é
   **imediata e definitiva**: apaga o perfil, o login, as fichas (inclusive as arquivadas), os grupos e todo o conteúdo do mestre. Os
   jogadores dos grupos dele ficam com a ficha arquivada.
-- Tudo isso fica em **Configurações da conta** (`/conta`), separado de **Editar perfil** (`/perfil`: nome de usuário, nome e foto).
+- Tudo isso fica em **Perfil e conta** (`/conta`), junto com nome de usuário, nome e foto. Logado, dá para **trocar a senha** com a senha atual: as outras sessões deixam de valer.
 
 ## Classe
 É o "herói" que o jogador escolhe. Tem:
@@ -193,7 +193,7 @@ Atributos agrupam as perícias e recebem os dados nos testes.
   kit). O arquétipo aparece se for verificado ou se tiver variação verificada (só as variações verificadas aparecem para os outros). Verificado aparece para todo mestre, **só leitura** e sempre atualizado: dá para usar nos grupos, lançar os
   itens, invocar as criaturas e **duplicar** (classe, criatura, NPC; a perícia é copiada para o catálogo). Com kit ativo, o verificado
   de outra pessoa segue o kit como o resto (aparece se estiver no kit ativo). Perícias de uma carta verificada contam como a perícia equivalente do mestre (mesma
-  origem) na soma da ficha. Cada pessoa pode **ocultar os verificados** da própria interface (Configurações da conta); o que já está em
+  origem) na soma da ficha. Cada pessoa pode **ocultar os verificados** da própria interface (Perfil e conta); o que já está em
   uso nos grupos e fichas continua funcionando.
 - **Cargo ADMIN** (`Perfil.cargo`, trocado por `npm run cargo -- <nome de usuário> ADMIN`): põe ou tira o selo verificado nas coisas
   dele (principalmente kits). **Não há conteúdo fixo** (decisão de 2026-10-14): o conteúdo inicial do seed (atributos, status,

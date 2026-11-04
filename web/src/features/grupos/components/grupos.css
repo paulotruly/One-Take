@@ -67,3 +67,32 @@
 .regras-mesa__item p { margin-top: var(--esp-2); line-height: var(--altura-linha); }
 .regras-mesa__acoes { display: flex; gap: var(--esp-2); margin-top: var(--esp-3); }
 .regras-padrao__lista { display: flex; flex-direction: column; gap: var(--esp-2); }
+
+/* ---------- Grupo: membros, recursos e prontidão ---------- */
+.membros-grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr)); gap: var(--esp-3); margin: 0; padding: 0; list-style: none; }
+.membro-cartao { display: flex; flex-direction: column; gap: var(--esp-3); padding: var(--esp-4); border: 1px solid var(--cor-borda); background: var(--cor-superficie); transition: border-color var(--transicao); }
+.membro-cartao:hover { border-color: var(--cor-borda-destaque); }
+.membro-cartao--morto { border-color: var(--cor-perigo); background: var(--cor-perigo-fundo); }
+.membro-cartao__link { display: flex; flex-direction: column; gap: var(--esp-3); flex: 1; color: var(--cor-texto); }
+.membro-cartao__link:hover { color: var(--cor-texto); text-decoration: none; }
+.membro-cartao__topo { display: flex; align-items: center; gap: var(--esp-3); }
+.membro-cartao__selos { display: flex; flex-wrap: wrap; gap: var(--esp-1); }
+.barras-recurso { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--esp-2); }
+.barra-mini { display: flex; flex-direction: column; gap: var(--esp-1); min-width: 0; font-size: var(--texto-xs); }
+.barra-mini__valor { display: inline-flex; align-items: center; gap: var(--esp-1); white-space: nowrap; }
+.barra-mini .recurso__barra { display: block; height: 6px; }
+.barra-mini__preenchido, .grupo-card__preenchido { display: block; }
+.grupo-card__vagas { display: flex; flex-direction: column; gap: var(--esp-2); padding: 0 var(--esp-5) var(--esp-5); margin-top: auto; }
+.grupo-card__vagas .recurso__barra { display: block; height: 6px; }
+.grupo-card__preenchido { background: var(--cor-primaria); }
+.prontidao { gap: var(--esp-3); }
+.prontidao__lista { display: flex; flex-direction: column; gap: var(--esp-2); margin: 0; padding: 0; list-style: none; }
+.prontidao__item { display: flex; align-items: center; gap: var(--esp-3); color: var(--cor-texto-suave); }
+.prontidao__item > span { flex: 1; min-width: 0; }
+.prontidao__item--pronto > svg { color: var(--cor-sucesso); }
+
+/* ---------- Kit de RPG ---------- */
+.kit-grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(220px, 100%), 1fr)); gap: var(--esp-2); }
+.kit-item { display: flex; justify-content: space-between; align-items: center; gap: var(--esp-2); padding: var(--esp-3) var(--esp-4); border: 1px solid var(--cor-borda); background: var(--cor-superficie); color: var(--cor-texto); font-size: var(--texto-sm); transition: border-color var(--transicao); }
+.kit-item:hover { border-color: var(--cor-borda-destaque); color: var(--cor-texto); text-decoration: none; }
+.kit-item > svg { flex-shrink: 0; color: var(--cor-primaria); }

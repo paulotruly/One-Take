@@ -1,13 +1,21 @@
-// Arquétipos do mestre na galeria (container: dados + mutações).
+// Classes do mestre agrupadas por arquétipo na galeria (container: dados + mutações).
+import type { ReactNode } from "react";
 import { SeloVerificado } from "../../verificados/pages/SeloVerificado";
 import { useConceitos, useCriarConceito, useEditarConceito, useExcluirConceito } from "../api";
+import type { Classe } from "../types";
 import { ConceitosBloco } from "./ConceitosBloco";
 
-export function ConceitosSecao() {
+type Props = {
+  classes: Classe[];
+  filtrando: boolean;
+  renderClasses: (classes: Classe[]) => ReactNode;
+  vazio: ReactNode;
+};
+
+export function ConceitosSecao({ classes, filtrando, renderClasses, vazio }: Props) {
   const conceitos = useConceitos();
   return (
     <ConceitosBloco
-      titulo="Arquétipos"
       nome="arquétipo"
       explicacao="Uma classe generalista (ex.: Bruxa) com subclasses (Bruxa elemental, Bruxa assombrosa). O jogador escolhe a subclasse."
       exemplo="Ex.: Bruxa"
@@ -16,7 +24,10 @@ export function ConceitosSecao() {
       carregando={conceitos.isPending}
       erro={conceitos.error}
       onTentarNovamente={() => conceitos.refetch()}
-      hrefFilho={(id) => `/mestre/classes/${id}`}
+      itens={classes}
+      filtrando={filtrando}
+      renderItens={renderClasses}
+      vazio={vazio}
       hrefNovoFilho={(id) => `/mestre/classes/nova?conceito=${id}`}
       criar={useCriarConceito()}
       editar={useEditarConceito()}

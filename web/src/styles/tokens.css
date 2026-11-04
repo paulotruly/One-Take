@@ -1,56 +1,72 @@
 /*
- * Tokens de design (tema claro, fundo branco). TODO o visual sai daqui: para trocar o tema, mude estes valores.
- * Componentes não usam cores/tamanhos literais.
+ * Tokens de design (dark fantasy minimalista, tema escuro). TODO o visual sai daqui: para trocar o tema, mude estes valores.
+ * Componentes não usam cores/tamanhos literais. Pares de texto e fundo atendem AA (4.5:1); contorno de campo, 3:1.
  */
 :root {
-  /* Superfícies e texto */
-  --cor-fundo: #ffffff;
-  --cor-superficie: #ffffff;
-  --cor-superficie-2: #f4f4f5;
-  --cor-borda: #e4e4e7;
-  --cor-texto: #18181b;
-  --cor-texto-suave: #71717a;
-  --cor-overlay: rgb(24 24 27 / 40%);
+  color-scheme: dark;
 
-  /* Ações */
-  --cor-primaria: #4f46e5;
-  --cor-primaria-hover: #4338ca;
-  --cor-primaria-texto: #ffffff;
-  --cor-perigo: #dc2626;
-  --cor-perigo-fundo: #fef2f2;
-  --cor-sucesso: #059669;
+  /* Superfícies e texto */
+  --cor-fundo: #0e0f11;
+  --cor-superficie: #16181b;
+  --cor-superficie-2: #1f2226;
+  --cor-borda: #2a2c30;
+  --cor-borda-campo: #72726e; /* contorno de campos e botões: precisa ser visível */
+  --cor-borda-destaque: #8a7148; /* bronze: hover e cantoneiras */
+  --cor-texto: #e8e3d9;
+  --cor-texto-suave: #9a968c;
+  --cor-overlay: rgb(0 0 0 / 70%);
+
+  /* Destaque: dourado em links, foco, ícones ativos e títulos */
+  --cor-primaria: #c9a25a;
+  --cor-primaria-hover: #e3b866;
+  --cor-primaria-texto: #0e0f11;
+
+  /* Ação principal: botão primário em dourado preenchido */
+  --cor-acao: #c9a25a;
+  --cor-acao-hover: #e3b866;
+  --cor-acao-texto: #0e0f11;
+
+  /* Perigo: vermelho só para ações destrutivas e alertas graves */
+  --cor-perigo: #ef6b63;
+  --cor-perigo-fundo: #2a1214;
+  --cor-perigo-forte: #a3191f;
+  --cor-perigo-forte-texto: #f5efe4;
+  --cor-sucesso: #4cc38a;
 
   /* Origem da classe */
-  --cor-fixa: #b45309;
-  --cor-propria: #4f46e5;
-  --cor-verificado: #1d9bf0; /* selo verificado (azul) */
-  --cor-sobre-verificado: #ffffff; /* check branco dentro do selo */
+  --cor-fixa: #e0a04a;
+  --cor-propria: #c9a25a;
+  --cor-verificado: #4fb3f6; /* selo verificado (azul) */
+  --cor-sobre-verificado: #0e0f11; /* check escuro dentro do selo */
 
   /* Grupos */
-  --cor-grupo-combatente: #dc2626;
-  --cor-grupo-vanguardista: #2563eb;
-  --cor-grupo-suporte: #059669;
+  --cor-grupo-combatente: #ef6b63;
+  --cor-grupo-vanguardista: #6ea4f5;
+  --cor-grupo-suporte: #4cc38a;
 
   /* Atributos base */
-  --cor-vida: #e11d48;
-  --cor-mana: #2563eb;
-  --cor-esforco: #d97706;
+  --cor-vida: #f2708c;
+  --cor-mana: #6ea4f5;
+  --cor-esforco: #e8a33d;
 
   /* Habilidades e perícias */
-  --cor-efeito: #7c3aed;
-  --cor-atributo: #0369a1;
+  --cor-efeito: #b79af5;
+  --cor-atributo: #5cb8e6;
 
   /* Tipografia */
-  --fonte-base: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --fonte-titulo: var(--fonte-base);
+  --fonte-base: "Inter Variable", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --fonte-titulo: "Cinzel Variable", Georgia, "Times New Roman", serif;
   --texto-xs: 0.75rem;
   --texto-sm: 0.875rem;
   --texto-md: 1rem;
   --texto-lg: 1.25rem;
   --texto-xl: 1.75rem;
   --peso-normal: 400;
+  --peso-titulo: 500;
   --peso-forte: 600;
   --altura-linha: 1.5;
+  --tracking-titulo: 0.06em;
+  --tracking-rotulo: 0.08em;
 
   /* Espaçamento */
   --esp-1: 0.25rem;
@@ -66,18 +82,43 @@
   --raio-md: 0;
   --raio-lg: 0;
   --raio-pilula: 0;
-  --sombra: 0 8px 30px rgb(0 0 0 / 12%);
-  --transicao: 150ms ease;
+  --sombra: 0 8px 30px rgb(0 0 0 / 55%);
+  --transicao: 200ms ease;
 
   /* Selos sobre imagens */
-  --cor-selo-vidro: rgb(24 24 27 / 55%);
-  --cor-sobre-selo: #ffffff;
-  --cor-selo-aresta: rgb(255 255 255 / 45%);
-  --sombra-selo: 0 2px 8px rgb(0 0 0 / 25%);
-  --gradiente-topo-imagem: linear-gradient(to bottom, rgb(0 0 0 / 35%), transparent);
+  --cor-selo-vidro: rgb(14 15 17 / 70%);
+  --cor-sobre-selo: #f5efe4;
+  --cor-sobre-grupo: #0e0f11; /* texto sobre as cores claras dos grupos */
+  --cor-selo-aresta: rgb(232 227 217 / 40%);
+  --sombra-selo: 0 2px 8px rgb(0 0 0 / 45%);
+  --gradiente-topo-imagem: linear-gradient(to bottom, rgb(0 0 0 / 50%), transparent);
 
   /* Layout */
   --largura-max: 1200px;
   --card-classe-largura: 220px;
   --card-habilidade-largura: 160px;
+}
+
+/* Preferências deste navegador (lib/preferencias.ts). */
+:root[data-texto="grande"] { font-size: 112.5%; }
+:root[data-densidade="compacta"] {
+  --esp-3: 0.5rem;
+  --esp-4: 0.75rem;
+  --esp-5: 1rem;
+  --esp-6: 1.5rem;
+  --esp-7: 2rem;
+}
+
+/* Impressão: papel branco, sem gastar tinta. */
+@media print {
+  :root {
+    color-scheme: light;
+    --cor-fundo: #ffffff;
+    --cor-superficie: #ffffff;
+    --cor-superficie-2: #ffffff;
+    --cor-borda: #999999;
+    --cor-texto: #000000;
+    --cor-texto-suave: #333333;
+    --cor-primaria: #000000;
+  }
 }

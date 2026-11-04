@@ -146,7 +146,7 @@ export function BestaDetalhePage() {
                 acoes={!editavel ? undefined :
                   <>
                     <Button pequeno variante="fantasma" onClick={() => { vincular.reset(); setPericiaEmEdicao(p); }}>Modificador</Button>
-                    <Button pequeno variante="fantasma" onClick={() => desvincular.mutate(p.id)} aria-label={`Remover ${p.nome}`}>Remover</Button>
+                    <Button pequeno variante="perigoSutil" onClick={() => desvincular.mutate(p.id)} aria-label={`Remover ${p.nome}`}>Remover</Button>
                   </>
                 }
               />

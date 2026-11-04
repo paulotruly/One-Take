@@ -54,7 +54,7 @@ Formato: data — decisão. Motivo.
 - **Classe não pode começar com vida, mana ou esforço zerados — decisão do produto.** Mínimo 1 em cada, ao criar e ao editar
   (Zod + CHECK no banco, migration `pontos_base_minimo_1`). Interpretado como "nenhum dos três pode ser zero".
 - **Mensagens de limite numérico próprias** ("Deve ser no mínimo 1") em vez do texto genérico do Zod.
-- **Regras de design — decisão do produto:** sem emojis (só ícones `lucide-react`), tema claro com fundo branco, interface simples,
+- **Regras de design — decisão do produto:** sem emojis (só ícones `lucide-react`), tema claro com fundo branco (substituído em 2026-11-04 pelo tema escuro, ver ADR-019), interface simples,
   cantos retos em tudo (`--raio-*` = 0). Categorias de perícia ganharam ícones: Corpo a corpo = HandFist, Magia = Sparkles,
   Pontaria = Target, Físico = Footprints, Defesa = Shield, Social = MessageCircle, Conhecimento = BookOpen, Percepção = Eye.
   Atributos: Vida = Heart, Mana = Droplet, Esforço = Zap. Classe fixa = Lock.
@@ -315,3 +315,15 @@ Formato: data — decisão. Motivo.
   início do próximo turno e 3 por combate; Interposição marcada como Reação, sem perícia de teste (a classe não tinha Iniciativa).
   Nota nova: 198 / 179 / 167 nos níveis 1 / 2 / 3 (Paladino 154 / 171 / 173). Também no banco: Desafio selvagem (Bárbaro) ganhou
   "durante 2 turnos" (o texto estava cortado) e Reflexos instintivos (Lutador) troca "2m" por "2 quadrados".
+
+## 2026-11-04
+- **Tema escuro dark fantasy minimalista — decisão do produto.** A interface clara parecia uma plataforma de saúde. O app inteiro passa a usar fundo escuro,
+  destaque e botão primário em dourado, vermelho só para ações destrutivas e perigo (um botão de criar não pode parecer de apagar), títulos em Cinzel e texto em Inter. Cantos retos e ícones só do `lucide-react` continuam. Fluxos e estrutura das
+  telas não mudaram. Detalhes técnicos em [`adr/ADR-019-tema-escuro-dark-fantasy.md`](adr/ADR-019-tema-escuro-dark-fantasy.md).
+- **Listas agrupadas por arquétipo — decisão do produto.** Em Classes, Raças e Bestiário, cada arquétipo vira um grupo recolhível com suas variações embaixo, e o que não tem arquétipo fica em
+  "Sem arquétipo". Com filtro de grupo ou kit ativo, arquétipos sem item visível ficam de fora. Item ligado a um arquétipo que não está na lista cai em "Sem arquétipo", para não sumir.
+- **"Cartela" no lugar de "kit" da classe — decisão do produto.** O conjunto de cartas de uma classe é a cartela; "kit" fica só para Kit de RPG, a coleção de uma aventura. Evita dois significados para a mesma palavra.
+- **Grupo em Mesa e Preparação — decisão do produto.** A página do grupo separa o que se usa durante a sessão do que se ajusta antes dela. Interpretado: NPCs e itens vagos ficam em Preparação; criaturas ficam em Mesa, porque são invocadas durante a cena.
+- **Trocar a senha logado encerra as outras sessões.** Mesmo comportamento da recuperação por código; quem trocou recebe uma sessão nova. A marca de validade recua 5 segundos para cobrir diferença de relógio com o Supabase.
+- **Limite de login: 30 tentativas a cada 15 minutos por IP.** Mais folgado que cadastro e recuperação, porque jogadores na mesma mesa podem dividir o mesmo IP. Interpretado, sem número definido pelo produto.
+- **Preferências ficam no navegador,** sem coluna nova no banco: tamanho do texto e densidade dependem do aparelho.

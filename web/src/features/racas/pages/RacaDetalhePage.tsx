@@ -126,7 +126,7 @@ export function RacaDetalhePage() {
                     </Button>
                     <Button
                       pequeno
-                      variante="fantasma"
+                      variante="perigoSutil"
                       aria-label={`Remover ${p.nome}`}
                       onClick={() => { desvincular.reset(); setExclusao({ tipo: "pericia", pericia: p }); }}
                     >

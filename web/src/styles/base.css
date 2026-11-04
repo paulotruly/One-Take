@@ -17,9 +17,17 @@ body {
 h1,
 h2,
 h3 {
-  font-family: var(--fonte-titulo);
   line-height: 1.2;
   margin: 0;
+}
+
+/* Serifa só em títulos grandes; em tamanho pequeno ela perde leitura. */
+h1,
+h2 {
+  color: var(--cor-primaria);
+  font-family: var(--fonte-titulo);
+  font-weight: var(--peso-titulo);
+  letter-spacing: var(--tracking-titulo);
 }
 
 h1 { font-size: var(--texto-xl); }
@@ -33,7 +41,7 @@ a {
   text-decoration: none;
 }
 
-a:hover { text-decoration: underline; }
+a:hover { color: var(--cor-primaria-hover); text-decoration: underline; }
 
 img { display: block; max-width: 100%; }
 

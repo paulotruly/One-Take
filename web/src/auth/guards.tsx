@@ -1,6 +1,7 @@
 import { Navigate, Outlet, useLocation } from "react-router";
 import { ErrorState, Loading } from "../components/ui/States";
 import { mensagemDeErro } from "../lib/api";
+import { lerPreferencias } from "../lib/preferencias";
 import { interfaceLembrada, useAuth, useMe, type Papel } from "./AuthProvider";
 
 /**
@@ -20,7 +21,7 @@ export function RequirePapel({ papel }: { papel?: Papel }) {
   return <Outlet />;
 }
 
-/** Depois do login: volta à interface usada por último (mestre só se estiver ativada). */
+/** Depois do login: abre a interface escolhida nas preferências ou a usada por último (mestre só se estiver ativada). */
 export function RedirecionarPorPapel() {
   const { session } = useAuth();
   const me = useMe();
@@ -28,6 +29,7 @@ export function RedirecionarPorPapel() {
   if (!session) return <Navigate to="/login" replace />;
   if (me.isPending) return <Loading />;
   if (me.isError) return <ErrorState mensagem={mensagemDeErro(me.error)} onTentarNovamente={() => me.refetch()} />;
-  const mestre = me.data.papel === "MESTRE" && interfaceLembrada() !== "JOGADOR";
-  return <Navigate to={mestre ? "/mestre/grupos" : "/jogador"} replace />;
+  const preferida = lerPreferencias().interfaceInicial;
+  const mestre = me.data.papel === "MESTRE" && (preferida === "ultima" ? interfaceLembrada() !== "JOGADOR" : preferida === "MESTRE");
+  return <Navigate to={mestre ? "/mestre/inicio" : "/jogador"} replace />;
 }

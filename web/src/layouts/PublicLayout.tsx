@@ -4,6 +4,7 @@ import { Rodape } from "../components/layout/Rodape";
 import { Marca } from "../components/ui/Marca";
 
 const ANCORAS = [
+  { href: "#papeis", rotulo: "Papéis" },
   { href: "#funcionalidades", rotulo: "Funcionalidades" },
   { href: "#como-funciona", rotulo: "Como funciona" },
   { href: "#perguntas", rotulo: "Perguntas" },

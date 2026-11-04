@@ -69,7 +69,7 @@ export function HabilidadesDeck({ habilidades, acoes, vazio }: { habilidades: Ha
             <HabilidadeDetalhe habilidade={aberta} />
             {acoes && (
               <div className="modal__acoes modal__acoes--quebra">
-                <Button onClick={() => depoisDeFechar(acoes.onExcluir)(aberta)}>
+                <Button variante="perigo" onClick={() => depoisDeFechar(acoes.onExcluir)(aberta)}>
                   <Trash2 size={16} aria-hidden /> Excluir
                 </Button>
                 {acoes.onAprimorar && (

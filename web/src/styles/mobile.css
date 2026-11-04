@@ -18,6 +18,9 @@ p, li, td, th, dd, dt, h1, h2, h3, h4, summary, .campo__dica, .card-link__descri
 
   /* Botões podem quebrar linha (rótulos longos) e, nas barras de ação, dividem a largura. */
   .btn { white-space: normal; text-align: center; }
+
+  /* Área de toque mínima. */
+  .btn, .lateral__link { min-height: 44px; }
   .modal__acoes, .barra-acoes, .hero__acoes, .disponiveis__atalhos, .recurso__acoes, .pericia__acoes { flex-wrap: wrap; }
   .modal__acoes > .btn, .barra-acoes > .btn { flex: 1 1 auto; }
 

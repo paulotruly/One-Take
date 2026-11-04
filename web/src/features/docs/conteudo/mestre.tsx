@@ -1,6 +1,7 @@
 // Tópicos da documentação: guia do mestre, guia do jogador e referência.
-import { Activity, Backpack, BadgeCheck, Copy, Footprints, Layers, ListChecks, Lock, PawPrint, Shield, UserRound } from "lucide-react";
+import { Activity, Backpack, BadgeCheck, Copy, Footprints, Layers, ListChecks, Lock, PawPrint, Printer, Shield, UserRound } from "lucide-react";
 import { Link } from "react-router";
+import { Button } from "../../../components/ui/Button";
 import { Cartoes, Destaque, Passos, Tabela } from "../../../components/texto/Manual";
 import { useRegras } from "../regras";
 
@@ -44,7 +45,7 @@ export function MestrePrimeiraSessao() {
         { titulo: "Crie pelo menos uma raça", texto: <>Título, descrição, deslocamento e perícias de base. Veja <Link to="/docs/mestre-racas">Criando raças</Link>.</> },
         { titulo: "Escolha ou crie as classes", texto: <>Use as verificadas, duplique para adaptar ou crie do zero. Veja <Link to="/docs/mestre-classes">Criando classes e cartas</Link>.</> },
         { titulo: "Crie o grupo", texto: <>Informações e o que vale no grupo. Veja <Link to="/docs/mestre-grupos">Montando um grupo</Link>.</> },
-        { titulo: "Compartilhe o código", texto: "Na página do grupo aparece o código de 6 caracteres. Os jogadores digitam em Minhas fichas." },
+        { titulo: "Envie o convite", texto: "Na página do grupo, copie o link de convite, ou passe o código de 6 caracteres para os jogadores digitarem em Minhas fichas." },
         { titulo: "Prepare itens e criaturas (opcional)", texto: <>Em Itens e Bestiário. Veja <Link to="/docs/mestre-itens">Itens</Link> e <Link to="/docs/mestre-bestiario">Bestiário</Link>.</> },
         { titulo: "Conduza a sessão", texto: <>Peça testes, aplique status, lance itens e invoque criaturas. Veja <Link to="/docs/mestre-sessao">Durante a sessão</Link>.</> },
         { titulo: "No fim, suba o nível", texto: <>Na ficha de cada participante, use Subir nível. Veja <Link to="/docs/mestre-subir-nivel">Subir de nível</Link>.</> },
@@ -88,7 +89,7 @@ export function MestreRacas() {
         <li>Na página da raça, em <strong>Perícias de base</strong>, adicione perícias do catálogo com a quantidade de pontos. Elas somam na ficha de quem escolher a raça.</li>
         <li>Não há raças fixas: cada mestre cria as suas. Um grupo precisa de pelo menos uma raça liberada.</li>
         <li>
-          <strong>Arquétipos de raça</strong>: em Raças, crie um arquétipo (ex.: Elfo) e use <strong>Sub-raça</strong> no bloco dele, ou escolha o
+          <strong>Arquétipos de raça</strong>: em Raças, crie um arquétipo (ex.: Elfo) e use <strong>Sub-raça</strong> no grupo dele, ou escolha o
           arquétipo no campo "Arquétipo de raça" de qualquer raça. Excluir o arquétipo não apaga as sub-raças.
         </li>
       </ul>
@@ -112,7 +113,8 @@ export function MestreClasses() {
       <h2>Arquétipos</h2>
       <ul>
         <li>Em <strong>Classes &gt; Novo arquétipo</strong>: título e descrição (ex.: Bruxa).</li>
-        <li>No bloco do arquétipo, use <strong>Subclasse</strong> para criar uma classe já ligada a ele, ou escolha o arquétipo no campo "Arquétipo" de qualquer classe sua.</li>
+        <li>A lista de classes fica agrupada por arquétipo; as classes sem arquétipo ficam em <strong>Sem arquétipo</strong>. Clique no título de um grupo para recolher ou abrir.</li>
+        <li>No grupo do arquétipo, use <strong>Subclasse</strong> para criar uma classe já ligada a ele, ou escolha o arquétipo no campo "Arquétipo" de qualquer classe sua.</li>
         <li>O jogador escolhe a subclasse; na criação da ficha elas aparecem agrupadas pelo arquétipo.</li>
         <li>Excluir o arquétipo não apaga as subclasses: elas viram classes avulsas.</li>
       </ul>
@@ -182,7 +184,7 @@ export function MestreVerificados() {
           ["Usar", "Libere no grupo, lance o item, invoque a criatura ou escolha a raça e a classe num NPC, como faria com o que é seu."],
           ["Usar um kit verificado", "Em Kits de RPG, escolha Usar este kit (as telas mostram só o conteúdo dele) ou escolha o kit ao montar o grupo. O que você criar fica fora dele."],
           ["Mudar", "Duplique a classe, a criatura ou o NPC para ter a sua versão. Perícias: Copiar para o meu catálogo, em Perícias."],
-          ["Não ver", "Em Configurações da conta, marque Ocultar o conteúdo verificado. O que já está nos seus grupos e fichas continua funcionando."],
+          ["Não ver", "Em Perfil e conta, marque Ocultar o conteúdo verificado. O que já está nos seus grupos e fichas continua funcionando."],
         ]}
       />
       <Destaque tipo="dica" titulo="Com um kit ativo">
@@ -303,7 +305,8 @@ export function MestreGrupos() {
       </ul>
       <h2>Código de entrada</h2>
       <ul>
-        <li>Na página do grupo: <strong>Copiar</strong> o código ou <strong>Gerar novo</strong> (o antigo deixa de funcionar na hora).</li>
+        <li>Na página do grupo: <strong>Copiar convite</strong> (um link que já abre a entrada no grupo), <strong>Copiar código</strong> ou <strong>Gerar novo</strong> (depois de confirmar, o código e os links antigos deixam de funcionar).</li>
+        <li>A página tem duas abas: <strong>Mesa</strong>, com membros e criaturas para usar na sessão, e <strong>Preparação</strong>, com o que falta para jogar, NPCs, itens vagos, regras e o que vale no grupo.</li>
         <li>Quem já entrou continua no grupo mesmo se o código mudar.</li>
       </ul>
     </>
@@ -477,6 +480,48 @@ export function JogadorFicha() {
 
 // ---------- Referência ----------
 
+export function ColaDaMesa() {
+  const t = useRegras().teste;
+  const d = "d" + t.ladosDoDado;
+  return (
+    <div className="cola">
+      <p className="docs__imprimir"><Button onClick={() => window.print()}><Printer size={16} aria-hidden /> Imprimir</Button></p>
+      <h2>Teste</h2>
+      <ol>
+        <li>O mestre diz o atributo, a perícia e a DT.</li>
+        <li>Role 1 {d} por ponto no atributo e fique com o maior.</li>
+        <li>Some o bônus da perícia. Total maior ou igual à DT é sucesso.</li>
+      </ol>
+      <ul>
+        <li><strong>Atributo 0:</strong> {t.dadosComAtributoZero} {d}, e o resultado vale a metade (para baixo).</li>
+        <li><strong>Esforço:</strong> antes de rolar, cada {t.esforcoPorDadoExtra} ponto dá +1 {d}. No máximo {t.esforcoMaximoPorRodada} por rodada, e não vale com atributo 0.</li>
+        <li><strong>Vantagem:</strong> +{t.dadosPorVantagem} {d}. <strong>Desvantagem:</strong> -{t.dadosPorVantagem} {d}; com 1 dado, rola 2 e fica com o menor. Não acumulam e uma anula a outra.</li>
+      </ul>
+      <h2>Turno</h2>
+      <ul>
+        <li><strong>Iniciativa:</strong> no início do combate, todos testam Capacidade física + Iniciativa. O maior começa.</li>
+        <li>Cada turno é <strong>1 movimento + 1 ação</strong>. Não dá para trocar um pelo outro.</li>
+        <li><strong>Reação:</strong> 1 por rodada, fora do próprio turno, quando a carta permitir.</li>
+        <li><strong>Duração:</strong> "durante N turnos" conta os turnos de quem usou a carta.</li>
+      </ul>
+      <h2>Ataque e defesa</h2>
+      <ol>
+        <li>O atacante rola o teste da carta.</li>
+        <li>O alvo rola a perícia de defesa e pode gastar esforço.</li>
+        <li>Ataque maior ou igual à defesa acerta. Empate é do atacante.</li>
+        <li>Se acertou, role o dano da carta. Defesa bem-sucedida evita todo o dano.</li>
+      </ol>
+      <h2>Fim da linha</h2>
+      <ul>
+        <li><strong>Morte:</strong> vida ou mana em 0. Não há volta.</li>
+        <li><strong>Cansado:</strong> esforço em 0.</li>
+        <li><strong>Status:</strong> vai para o alvo, se acumula e perde 1 turno no fim de cada turno de quem usou a carta.</li>
+      </ul>
+      <p className="pagina__subtitulo">O mestre pode desligar ou trocar as <Link to="/docs/combate-padrao">regras padrão de combate</Link> em cada grupo.</p>
+    </div>
+  );
+}
+
 export function Glossario() {
   return (
     <Tabela
@@ -488,6 +533,8 @@ export function Glossario() {
         ["Código de entrada", "Os 6 caracteres que o jogador digita para entrar num grupo."],
         ["Ficha", "O personagem de um jogador dentro de um grupo."],
         ["Classe", "O herói pronto que o jogador escolhe: recursos, cartas e perícias."],
+        ["Cartela", "O conjunto de cartas de habilidade de uma classe ou criatura."],
+        ["Kit de RPG", "Coleção do mestre com o conteúdo de uma aventura: classes, raças, perícias, status, itens, criaturas e NPCs. Não confunda com a cartela."],
         ["Raça", "A origem do personagem: deslocamento e perícias de base."],
         ["Atributo", "Capacidade geral (ex.: Capacidade física) que recebe os d20 dos testes."],
         ["d20", "Dado de 20 faces. Nos testes, rola-se um por ponto no atributo e vale o maior."],

@@ -6,9 +6,9 @@
   gap: var(--esp-2);
   min-height: 38px;
   padding: var(--esp-2) var(--esp-4);
-  border: 1px solid var(--cor-borda);
+  border: 1px solid var(--cor-borda-campo);
   border-radius: var(--raio-sm);
-  background: var(--cor-fundo);
+  background: transparent;
   color: var(--cor-texto);
   font-size: var(--texto-sm);
   font-weight: var(--peso-forte);
@@ -16,14 +16,16 @@
   transition: background var(--transicao), border-color var(--transicao);
   white-space: nowrap;
 }
-.btn:hover:not(:disabled) { border-color: var(--cor-texto-suave); }
+.btn:hover:not(:disabled) { border-color: var(--cor-primaria); color: var(--cor-primaria-hover); text-decoration: none; }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.btn--primario { background: var(--cor-primaria); border-color: var(--cor-primaria); color: var(--cor-primaria-texto); }
-.btn--primario:hover:not(:disabled) { background: var(--cor-primaria-hover); border-color: var(--cor-primaria-hover); }
+.btn--primario { background: var(--cor-acao); border-color: var(--cor-acao); color: var(--cor-acao-texto); text-transform: uppercase; letter-spacing: var(--tracking-rotulo); }
+.btn--primario:hover:not(:disabled) { background: var(--cor-acao-hover); border-color: var(--cor-acao-hover); color: var(--cor-acao-texto); }
 .btn--perigo { background: transparent; border-color: var(--cor-perigo); color: var(--cor-perigo); }
-.btn--perigo:hover:not(:disabled) { background: var(--cor-perigo-fundo); border-color: var(--cor-perigo); }
+.btn--perigo:hover:not(:disabled) { background: var(--cor-perigo-fundo); border-color: var(--cor-perigo); color: var(--cor-perigo); }
 .btn--fantasma { background: transparent; border-color: transparent; }
-.btn--fantasma:hover:not(:disabled) { background: var(--cor-superficie-2); border-color: transparent; }
+.btn--fantasma:hover:not(:disabled) { background: var(--cor-superficie-2); border-color: transparent; color: var(--cor-texto); }
+.btn--perigoSutil { background: transparent; border-color: transparent; color: var(--cor-perigo); }
+.btn--perigoSutil:hover:not(:disabled) { background: var(--cor-perigo-fundo); border-color: transparent; color: var(--cor-perigo); }
 .btn--pequeno { min-height: 30px; padding: var(--esp-1) var(--esp-3); font-size: var(--texto-xs); }
 
 /* ---------- Campos ---------- */
@@ -37,14 +39,56 @@
   width: 100%;
   min-height: 40px;
   padding: var(--esp-2) var(--esp-3);
-  border: 1px solid var(--cor-borda);
+  border: 1px solid var(--cor-borda-campo);
   border-radius: var(--raio-sm);
   background: var(--cor-fundo);
+  transition: border-color var(--transicao);
 }
+.campo input:focus,
+.campo select:focus,
+.campo textarea:focus { border-color: var(--cor-primaria); }
 .campo textarea { resize: vertical; min-height: 4.5rem; }
 .campo--invalido input,
 .campo--invalido select,
 .campo--invalido textarea { border-color: var(--cor-perigo); }
+
+/* ---------- Ornamento: um único detalhe recorrente, só com CSS ---------- */
+/* Cantoneiras finas nos cards principais. */
+.moldura, .classe-card, .card-link, .home__exemplo, .landing__chamada, .login__cartao { position: relative; }
+.moldura::after, .classe-card::after, .card-link::after, .home__exemplo::after, .landing__chamada::after, .login__cartao::after {
+  --canto: linear-gradient(var(--cor-borda-destaque), var(--cor-borda-destaque));
+  content: "";
+  position: absolute;
+  inset: var(--esp-1);
+  background:
+    var(--canto) left top / 12px 1px, var(--canto) left top / 1px 12px,
+    var(--canto) right top / 12px 1px, var(--canto) right top / 1px 12px,
+    var(--canto) left bottom / 12px 1px, var(--canto) left bottom / 1px 12px,
+    var(--canto) right bottom / 12px 1px, var(--canto) right bottom / 1px 12px;
+  background-repeat: no-repeat;
+  pointer-events: none;
+}
+/* Linha fina com losango central, abaixo dos títulos de página e de seção. */
+.divisor-losango, .pagina__cabecalho h1::after, .home__cabecalho-secao h2::after {
+  content: "";
+  display: block;
+  width: 140px;
+  height: 9px;
+  background: var(--cor-borda-destaque);
+  clip-path: polygon(0 4px, calc(50% - 4px) 4px, 50% 0, calc(50% + 4px) 4px, 100% 4px, 100% 5px, calc(50% + 4px) 5px, 50% 100%, calc(50% - 4px) 5px, 0 5px);
+}
+.pagina__cabecalho h1::after, .home__cabecalho-secao h2::after { margin-top: var(--esp-3); }
+
+@media (prefers-reduced-motion: reduce) {
+  .btn, .campo input, .campo select, .campo textarea, .marca, .classe-card { transition: none; }
+  .classe-card:hover { transform: none; }
+}
+
+/* ---------- Abas ---------- */
+.abas { display: flex; gap: var(--esp-1); border-bottom: 1px solid var(--cor-borda); overflow-x: auto; }
+.abas__aba { display: inline-flex; align-items: center; gap: var(--esp-2); min-height: 44px; padding: 0 var(--esp-4); border: 0; border-bottom: 2px solid transparent; background: none; color: var(--cor-texto-suave); font-size: var(--texto-sm); font-weight: var(--peso-forte); white-space: nowrap; cursor: pointer; transition: color var(--transicao), border-color var(--transicao); }
+.abas__aba:hover { color: var(--cor-texto); }
+.abas__aba[aria-selected="true"] { border-bottom-color: var(--cor-primaria); color: var(--cor-primaria); }
 
 /* ---------- Modal ---------- */
 .modal {
@@ -107,7 +151,7 @@
 /* ---------- Link de voltar ---------- */
 .link-voltar { display: inline-flex; align-items: center; gap: var(--esp-1); font-size: var(--texto-sm); }
 
-/* Selo verificado: como o das redes sociais, check branco dentro do selo azul. */
+/* Selo verificado: como o das redes sociais, check dentro do selo azul. */
 .selo-verificado {
   display: inline-flex;
   align-items: center;
@@ -118,7 +162,7 @@
   white-space: nowrap;
   vertical-align: middle;
 }
-/* Botão de verificar (ADMIN): o próprio selo, cinza quando não é verificado e azul (check branco) quando é. */
+/* Botão de verificar (ADMIN): o próprio selo, cinza quando não é verificado e azul quando é. */
 .botao-verificar .botao-verificar__icone { fill: none; stroke: var(--cor-texto-suave); }
 .botao-verificar:hover .botao-verificar__icone { stroke: var(--cor-verificado); }
 .botao-verificar--ativo .botao-verificar__icone,

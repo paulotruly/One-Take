@@ -32,5 +32,7 @@ export const recuperarSchema = z.object({
 
 export const senhaAtualSchema = z.object({ senha: senhaAtual });
 
+export const alterarSenhaSchema = z.object({ senhaAtual, senhaNova: senhaSchema });
+
 /** Exclusão: senha + o próprio nickname digitado (evita exclusão por engano). */
 export const exclusaoSchema = z.object({ senha: senhaAtual, confirmacao: z.string("Obrigatório").min(1, "Obrigatório") });

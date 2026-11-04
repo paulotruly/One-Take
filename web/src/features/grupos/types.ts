@@ -1,3 +1,5 @@
+import type { Grupo as GrupoClasse } from "../classes/types";
+
 export type Disponiveis = { classeIds: string[]; racaIds: string[]; atributoIds: string[]; periciaIds: string[]; statusIds: string[] };
 
 export type Grupo = {
@@ -19,6 +21,8 @@ export type Grupo = {
   regrasPadraoDesativadas: string[];
   /** Na listagem: quantos jogadores já têm ficha. */
   membros: number;
+  /** Na listagem: quantas fichas há em cada função. */
+  composicao?: Partial<Record<GrupoClasse, number>>;
 };
 
 export type Recurso = { atual: number; max: number };
@@ -30,7 +34,10 @@ export type Membro = {
   nivel: number;
   jogador: { nickname: string; nome: string | null; fotoUrl: string | null };
   classe: string;
+  /** Função da classe (Combatente, Vanguardista, Suporte). */
+  funcao: GrupoClasse;
   raca: string;
+  morto: boolean;
   vida: Recurso;
   mana: Recurso;
   esforco: Recurso;

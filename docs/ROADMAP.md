@@ -47,4 +47,3 @@
 - Desfazer gasto de pontos de perícia (descer de nível não existe por regra).
 - "Desativar" a interface de mestre.
 - Jogador criar itens próprios (hoje só o mestre cria).
-- Limite de tentativas no login por nickname.

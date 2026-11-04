@@ -60,7 +60,7 @@ você escrever informações pessoais neles. Evite colocar dados pessoais seus o
   senha e de outras ações sensíveis. Ele não é gravado no banco de dados do One-Take.
 - **Registros de erro:** quando ocorre um erro inesperado, o servidor registra uma mensagem técnica do erro. Esses registros ficam no
   provedor de hospedagem da API (seção 7) por 7 dias.
-- **No seu navegador:** a sessão de login e duas preferências (a última interface usada e o kit ativo do mestre) ficam guardadas no
+- **No seu navegador:** a sessão de login e preferências (a última interface usada, o kit ativo do mestre, o tamanho do texto, a densidade, a interface ao entrar e as seções recolhidas) ficam guardadas no
   armazenamento local do navegador (veja a seção 13).
 
 O One-Take não usa ferramentas de análise de audiência, publicidade, perfis de comportamento nem cookies de rastreamento.
@@ -238,7 +238,9 @@ O aplicativo não cria cookies próprios. Ele usa o armazenamento local do naveg
 
 - a sessão de login (necessária para você continuar conectado);
 - a última interface usada (jogador ou mestre);
-- o kit de RPG ativo na área do mestre.
+- o kit de RPG ativo na área do mestre;
+- as preferências de tamanho do texto, densidade e interface ao entrar;
+- as seções recolhidas nas listas.
 
 Sair da conta apaga a sessão. As preferências podem ser apagadas limpando os dados do site no navegador. Sites de onde vêm imagens
 colocadas por usuários podem usar cookies próprios (seção 7).

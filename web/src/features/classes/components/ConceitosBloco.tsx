@@ -1,6 +1,6 @@
-// Bloco de "conceitos" (arquétipo, arquétipo de raça, arquétipo de criatura): lista, criar, editar e excluir.
-// Recebe os dados e as mutações de quem usa; aqui só ficam o desenho e o estado dos modais.
-import { ChevronDown, ChevronUp, GitBranch, Plus } from "lucide-react";
+// Lista agrupada por "conceito" (arquétipo, arquétipo de raça, arquétipo de criatura): cada um vira um grupo com suas variações
+// embaixo, e o que não tem conceito fica em "Sem arquétipo". Recebe os dados e as mutações de quem usa; aqui só ficam o desenho e o estado dos modais.
+import { ChevronDown, ChevronUp, Plus } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router";
 import type { UseMutationResult } from "@tanstack/react-query";
@@ -17,11 +17,9 @@ import { erroDeFormulario, errosDeCampo, mensagemDeErro } from "../../../lib/api
 
 export type ConceitoVisao = Visao & { id: string; titulo: string; descricao: string; filhos: { id: string; titulo: string }[] };
 type Dados = { titulo: string; descricao: string };
+type ItemAgrupavel = { id: string; conceito?: { id: string } | null };
 
-
-type Props = {
-  /** Ex.: "Arquétipos". */
-  titulo: string;
+type Props<T extends ItemAgrupavel> = {
   /** Ex.: "arquétipo". */
   nome: string;
   explicacao: string;
@@ -32,7 +30,13 @@ type Props = {
   carregando: boolean;
   erro: unknown;
   onTentarNovamente: () => void;
-  hrefFilho: (id: string) => string;
+  /** Itens já filtrados pela tela (grupo, kit). */
+  itens: T[];
+  /** Com filtro ativo, arquétipos sem nenhum item visível ficam de fora. */
+  filtrando: boolean;
+  renderItens: (itens: T[]) => ReactNode;
+  /** Mostrado quando não há nenhum grupo nem item. */
+  vazio: ReactNode;
   /** Link para criar uma variação já ligada ao conceito; sem ele, o botão não aparece. */
   hrefNovoFilho?: (conceitoId: string) => string;
   onNovoFilho?: (conceitoId: string) => void;
@@ -43,14 +47,44 @@ type Props = {
   selo?: (c: ConceitoVisao) => ReactNode;
 };
 
-export function ConceitosBloco(p: Props) {
+type GrupoProps = {
+  chave: string;
+  titulo: string;
+  total: number;
+  avulso?: boolean;
+  selo?: ReactNode;
+  acoes?: ReactNode;
+  descricao?: string;
+  children: ReactNode;
+};
+
+function GrupoConceito(p: GrupoProps) {
+  const [oculto, alternar] = useOculto(p.chave);
+  return (
+    <section className={`conceito-grupo ${p.avulso ? "conceito-grupo--avulso" : ""}`}>
+      <div className="conceito-grupo__cabecalho">
+        <h2>
+          <button type="button" className="conceito-grupo__alternar" onClick={alternar} aria-expanded={!oculto} title={oculto ? "Mostrar" : "Ocultar"}>
+            {oculto ? <ChevronDown size={20} aria-hidden /> : <ChevronUp size={20} aria-hidden />}
+            {p.titulo}
+            <span className="pagina__subtitulo">({p.total})</span>
+          </button>
+        </h2>
+        {p.selo}
+        {p.acoes && <div className="conceito-grupo__acoes">{p.acoes}</div>}
+      </div>
+      {!oculto && p.descricao && <p className="pagina__subtitulo conceito-grupo__descricao">{p.descricao}</p>}
+      {!oculto && p.children}
+    </section>
+  );
+}
+
+export function ConceitosBloco<T extends ItemAgrupavel>(p: Props<T>) {
   const [emEdicao, setEmEdicao] = useState<ConceitoVisao | null | undefined>(undefined);
   const [aExcluir, setAExcluir] = useState<ConceitoVisao | null>(null);
   const [titulo, setTitulo] = useState("");
   const [descricao, setDescricao] = useState("");
   const salvando = emEdicao ? p.editar : p.criar;
-  const [oculto, alternarOculto] = useOculto(p.nome);
-  const total = p.conceitos?.length ?? 0;
 
   function abrir(c: ConceitoVisao | null) {
     p.criar.reset();
@@ -68,66 +102,80 @@ export function ConceitosBloco(p: Props) {
     else p.criar.mutate(dados, { onSuccess: fechar });
   }
 
+  const conceitos = p.conceitos ?? [];
+  const idsConceitos = new Set(conceitos.map((c) => c.id));
+  const grupos = conceitos
+    .map((c) => ({ conceito: c, itens: p.itens.filter((i) => i.conceito?.id === c.id) }))
+    .filter((g) => g.itens.length > 0 || (!p.filtrando && !g.conceito.deOutro));
+  // Arquétipo fora da lista (ex.: cópia de item de outro mestre): o item não pode sumir.
+  const avulsos = p.itens.filter((i) => !i.conceito || !idsConceitos.has(i.conceito.id));
+
   return (
-    <section className="secao">
-      <div className="secao__cabecalho">
-        <div>
-          <button type="button" className="conceitos__alternar" onClick={alternarOculto} aria-expanded={!oculto}
-            title={oculto ? "Mostrar" : "Ocultar"}>
-            <h2>{p.titulo}{total > 0 && <span className="pagina__subtitulo"> ({total})</span>}</h2>
-            {oculto ? <ChevronDown size={20} aria-hidden /> : <ChevronUp size={20} aria-hidden />}
-            <span className="sr-only">{oculto ? "Mostrar" : "Ocultar"}</span>
-          </button>
-          {!oculto && <p className="pagina__subtitulo">{p.explicacao}</p>}
-        </div>
+    <>
+      <div className="conceitos-barra">
+        <p className="pagina__subtitulo">{p.explicacao}</p>
         <Button onClick={() => abrir(null)}>
           <Plus size={16} aria-hidden /> Novo {p.nome}
         </Button>
       </div>
 
-      {oculto ? null : p.carregando ? (
+      {p.erro ? <ErrorState mensagem={mensagemDeErro(p.erro)} onTentarNovamente={p.onTentarNovamente} /> : null}
+
+      {p.carregando ? (
         <Loading compacto />
-      ) : p.erro ? (
-        <ErrorState mensagem={mensagemDeErro(p.erro)} onTentarNovamente={p.onTentarNovamente} />
-      ) : !p.conceitos || p.conceitos.length === 0 ? (
-        <p className="pagina__subtitulo">Nenhum {p.nome} ainda.</p>
+      ) : grupos.length === 0 && avulsos.length === 0 ? (
+        p.vazio
+      ) : grupos.length === 0 ? (
+        p.renderItens(avulsos)
       ) : (
-        <ul className="conceitos">
-          {p.conceitos.map((c) => (
-            <li key={c.id} className="conceito">
-              <div className="conceito__topo">
-                <h3><GitBranch size={18} aria-hidden /> {c.titulo} {p.selo ? p.selo(c) : c.verificado && <VerificadoBadge />}</h3>
-                {(c.deOutro || c.verificado) && <AcessoBadge item={c} />}
-                {!c.deOutro && (
-                  <div className="pericia__acoes">
+        <div className="conceitos-grupos">
+          {grupos.map(({ conceito: c, itens }) => (
+            <GrupoConceito
+              key={c.id}
+              chave={`${p.nome}:${c.id}`}
+              titulo={c.titulo}
+              total={itens.length}
+              descricao={c.descricao}
+              selo={
+                <>
+                  {p.selo ? p.selo(c) : c.verificado && <VerificadoBadge />}
+                  {(c.deOutro || c.verificado) && <AcessoBadge item={c} />}
+                </>
+              }
+              acoes={
+                !c.deOutro && (
+                  <>
+                    {p.hrefNovoFilho && (
+                      <Link to={p.hrefNovoFilho(c.id)} className="btn btn--pequeno">
+                        <Plus size={14} aria-hidden /> {p.rotuloFilho}
+                      </Link>
+                    )}
+                    {p.onNovoFilho && (
+                      <Button pequeno onClick={() => p.onNovoFilho!(c.id)}>
+                        <Plus size={14} aria-hidden /> {p.rotuloFilho}
+                      </Button>
+                    )}
                     <Button pequeno variante="fantasma" onClick={() => abrir(c)}>Editar</Button>
-                    <Button pequeno variante="fantasma" onClick={() => { p.excluir.reset(); setAExcluir(c); }}>Excluir</Button>
-                  </div>
-                )}
-              </div>
-              <p className="pericia__descricao conceito__descricao" title={c.descricao}>{c.descricao}</p>
-              <div className="conceito__subclasses">
-                {c.filhos.length === 0 && !c.deOutro ? (
-                  <span className="aviso-inline">Sem {p.rotuloFilho.toLowerCase()} ainda: crie pelo menos uma.</span>
-                ) : (
-                  c.filhos.map((s) => (
-                    <Link key={s.id} to={p.hrefFilho(s.id)} className="conceito__subclasse">{s.titulo}</Link>
-                  ))
-                )}
-                {p.hrefNovoFilho && !c.deOutro && (
-                  <Link to={p.hrefNovoFilho(c.id)} className="btn btn--pequeno">
-                    <Plus size={14} aria-hidden /> {p.rotuloFilho}
-                  </Link>
-                )}
-                {p.onNovoFilho && !c.deOutro && (
-                  <Button pequeno onClick={() => p.onNovoFilho!(c.id)}>
-                    <Plus size={14} aria-hidden /> {p.rotuloFilho}
-                  </Button>
-                )}
-              </div>
-            </li>
+                    <Button pequeno variante="perigo" onClick={() => { p.excluir.reset(); setAExcluir(c); }}>Excluir</Button>
+                  </>
+                )
+              }
+            >
+              {itens.length > 0 ? (
+                p.renderItens(itens)
+              ) : (
+                <p className="pagina__subtitulo">
+                  {c.filhos.length === 0 ? `Sem ${p.rotuloFilho.toLowerCase()} ainda: crie pelo menos uma.` : "Nenhuma variação visível aqui."}
+                </p>
+              )}
+            </GrupoConceito>
           ))}
-        </ul>
+          {avulsos.length > 0 && (
+            <GrupoConceito chave={`${p.nome}:avulsos`} titulo="Sem arquétipo" total={avulsos.length} avulso>
+              {p.renderItens(avulsos)}
+            </GrupoConceito>
+          )}
+        </div>
       )}
 
       <Modal aberto={emEdicao !== undefined} onFechar={fechar} titulo={emEdicao ? `Editar ${p.nome}` : `Novo ${p.nome}`}>
@@ -155,6 +203,6 @@ export function ConceitosBloco(p: Props) {
         onCancelar={() => setAExcluir(null)}
         onConfirmar={() => aExcluir && p.excluir.mutate(aExcluir.id, { onSuccess: () => setAExcluir(null) })}
       />
-    </section>
+    </>
   );
 }

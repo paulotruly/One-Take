@@ -1,5 +1,5 @@
-import { Plus } from "lucide-react";
-// Página da classe: dados, atalho para a tela de habilidades e perícias (escolhidas do catálogo).
+import { Pencil, Plus } from "lucide-react";
+// Página da classe: dados, cartela por nível e perícias (escolhidas do catálogo).
 // Toda a lógica de dados/estado de modais fica aqui; os componentes só desenham.
 import { SeloVerificado } from "../../verificados/pages/SeloVerificado";
 import { useState } from "react";
@@ -18,8 +18,7 @@ import { PericiasPorAtributo } from "../../pericias/components/PericiasPorAtribu
 import type { PericiaDaClasse } from "../../pericias/types";
 import { useClasse, useDuplicarClasse, useExcluirClasse, useProgressao } from "../api";
 import { ClasseCabecalho } from "../components/ClasseCabecalho";
-import { HabilidadesResumo } from "../components/HabilidadesResumo";
-import { ProgressaoPrevia } from "../components/ProgressaoPrevia";
+import { CartelaPorNivel } from "../components/CartelaPorNivel";
 
 type Exclusao = { tipo: "classe" } | { tipo: "pericia"; pericia: PericiaDaClasse } | null;
 
@@ -109,22 +108,21 @@ export function ClasseDetalhePage() {
       {duplicar.isError && <div className="aviso">Não foi possível duplicar: {mensagemDeErro(duplicar.error)}</div>}
 
       <section className="secao">
-        <h2>Habilidades</h2>
-        <HabilidadesResumo
-          habilidades={c.habilidades}
-          href={`/mestre/classes/${id}/habilidades`}
-          rotuloLink={editavel ? "Gerenciar habilidades" : "Ver habilidades"}
-        />
-      </section>
-
-      <section className="secao">
-        <h2>Progressão de nível</h2>
+        <h2>Cartela</h2>
         {progressao.isPending ? (
-          <Loading compacto texto="Calculando progressão…" />
+          <Loading compacto texto="Carregando a cartela…" />
         ) : progressao.isError ? (
           <ErrorState mensagem={mensagemDeErro(progressao.error)} onTentarNovamente={() => progressao.refetch()} />
         ) : (
-          <ProgressaoPrevia progressao={progressao.data} habilidades={c.habilidades} />
+          <CartelaPorNivel
+            habilidades={c.habilidades}
+            progressao={progressao.data}
+            acao={
+              <Link to={`/mestre/classes/${id}/habilidades`} className="btn">
+                {editavel ? <><Pencil size={16} aria-hidden /> Editar cartela</> : "Ver cartas em grade"}
+              </Link>
+            }
+          />
         )}
       </section>
 
@@ -168,7 +166,7 @@ export function ClasseDetalhePage() {
                       </Button>
                       <Button
                         pequeno
-                        variante="fantasma"
+                        variante="perigoSutil"
                         aria-label={`Remover ${p.nome}`}
                         onClick={() => pedirExclusao({ tipo: "pericia", pericia: p })}
                       >

@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Pencil, Sparkles, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Lock, Pencil, Sparkles, Trash2 } from "lucide-react";
 import { Button } from "../../../components/ui/Button";
 import { ComNegrito } from "../../../components/texto/ComNegrito";
 import { rotuloLimite, type Habilidade } from "../types";
@@ -19,18 +19,21 @@ export type AcoesCarta = {
 /**
  * Carta pequena do deck: tipo, custo, nível e título. Clicar abre os detalhes (onAbrir).
  * Com `acoes`, mostra uma barra de ícones (mover, editar, aprimorar, excluir) que cabe na carta.
+ * `bloqueada`: ainda não liberada no nível escolhido; `marca`: selo de destaque (ex.: "Nova").
  */
-export function HabilidadeCard({ habilidade: h, onAbrir, acoes }: { habilidade: Habilidade; onAbrir: () => void; acoes?: AcoesCarta }) {
+export function HabilidadeCard({ habilidade: h, onAbrir, acoes, bloqueada, marca }: { habilidade: Habilidade; onAbrir: () => void; acoes?: AcoesCarta; bloqueada?: boolean; marca?: string }) {
   return (
-    <article className="carta">
+    <article className={`carta ${bloqueada ? "carta--bloqueada" : ""}`}>
       <button type="button" className="carta__abrir" onClick={onAbrir} title="Ver detalhes da carta">
         <span className="carta__topo">
           <EfeitoBadge tipo={h.tipoEfeito} />
+          {bloqueada && <Lock size={14} aria-label="Ainda não liberada neste nível" />}
         </span>
         <strong className="carta__titulo">{h.titulo}</strong>
         <span className="carta__selos">
           <CustoManaBadge custo={h.custoMana} />
           <NivelBadge nivel={h.nivelNecessario} />
+          {marca && <span className="selo selo--novo">{marca}</span>}
           {h.aprimoradaNoNivel && <span className="selo selo--novo" title="Esta carta já mudou por causa do nível">Aprimorada</span>}
           {!h.aprimoradaNoNivel && (h.aprimoramentos?.length ?? 0) > 0 && (
             <span className="selo selo--novo" title="Muda em níveis maiores">+{h.aprimoramentos!.length} nv</span>
@@ -57,7 +60,7 @@ export function HabilidadeCard({ habilidade: h, onAbrir, acoes }: { habilidade: 
               <Sparkles size={14} aria-hidden />
             </Button>
           )}
-          <Button pequeno variante="fantasma" aria-label={`Excluir ${h.titulo}`} title="Excluir" onClick={acoes.onExcluir}>
+          <Button pequeno variante="perigoSutil" aria-label={`Excluir ${h.titulo}`} title="Excluir" onClick={acoes.onExcluir}>
             <Trash2 size={14} aria-hidden />
           </Button>
         </div>

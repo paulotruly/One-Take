@@ -10,7 +10,7 @@ As convenções obrigatórias de código e design estão em [`CLAUDE.md`](CLAUDE
   (ex.: `api/src/regras/`, `api/src/lib/`, `web/src/components/ui/`).
 - Preserve as tecnologias, a arquitetura e os padrões adotados (módulos `routes -> service -> schemas`, `AppError`, Zod sem defaults
   em PATCH, regras de jogo em `api/src/regras/`, hooks em `features/*/api.ts`, estilo só por `tokens.css`), salvo decisão explícita.
-- Respeite as regras de design: sem emojis, ícones só do `lucide-react`, tema claro com fundo branco, cantos retos.
+- Respeite as regras de design: sem emojis, ícones só do `lucide-react`, tema escuro dark fantasy minimalista, cantos retos.
 - Não invente funcionalidades, regras de negócio, endpoints ou estruturas de dados. Regra nova vem do responsável pelo produto.
 - Faça só o escopo pedido. Evite refatorações não relacionadas.
 - Não remova comentários nem documentação úteis sem necessidade.

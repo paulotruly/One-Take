@@ -6,6 +6,7 @@ import { CategoriaIcone } from "../../pericias/components/CategoriaIcone";
 import { CATEGORIAS, LISTA_CATEGORIAS } from "../../pericias/types";
 import { LISTA_TIPOS_EFEITO, TIPOS_EFEITO } from "../../classes/types";
 import { iconeDe } from "../../itens/types";
+import { CalculadoraChance } from "../CalculadoraChance";
 import { useRegras } from "../regras";
 
 const pct = (x: number) => `${Math.round(x * 100)}%`;
@@ -78,16 +79,18 @@ export function Contas() {
       </ul>
       <h2>Perfil</h2>
       <ul>
-        <li>Toque no seu nome, no topo, para abrir o menu do perfil: <strong>Editar perfil</strong> ou <strong>Sair</strong>.</li>
+        <li>Toque no seu nome, no topo, para abrir o menu: <strong>Perfil e conta</strong> ou <strong>Sair</strong>.</li>
         <li>As páginas da interface ficam na <strong>barra lateral</strong>; no celular, abra pelo botão de menu no canto do topo.</li>
         <li>Dá para mudar o <strong>nome de usuário</strong> (usado para entrar e exibido como @usuario), o nome de exibição e a foto (link de uma imagem).</li>
         <li>Se trocar o nome de usuário, passe a entrar com o novo.</li>
       </ul>
       <h2>Senha, dados e exclusão</h2>
       <ul>
-        <li>Tudo isso fica em <strong>Configurações da conta</strong> (no menu do perfil, no topo). Editar perfil é só nome de usuário, nome e foto.</li>
+        <li>Tudo isso fica em <strong>Perfil e conta</strong> (no menu do topo), junto com o perfil.</li>
+        <li><strong>Trocar a senha</strong>: com a senha atual, você troca e continua conectado. Outros aparelhos precisam entrar de novo.</li>
+        <li><strong>Preferências</strong>: tamanho do texto, densidade e a interface que abre ao entrar. Valem só no navegador em que você escolheu.</li>
         <li><strong>Código de recuperação</strong>: ao criar a conta, o app mostra um código uma única vez. Guarde: é com ele que você troca
-          a senha se esquecer. Em Configurações da conta dá para gerar um código novo (com a senha); o anterior deixa de valer.</li>
+          a senha se esquecer. Em Perfil e conta dá para gerar um código novo (com a senha); o anterior deixa de valer.</li>
         <li><strong>Esqueceu a senha?</strong> Use o link na tela de login: informe o nome de usuário, o código e a senha nova. Depois da
           troca, o app mostra um código novo, e as sessões abertas em outros aparelhos são encerradas.</li>
         <li><strong>Baixar meus dados</strong>: a seção Seus dados gera um arquivo com tudo o que está na sua conta, a qualquer momento.</li>
@@ -326,6 +329,9 @@ export function Testes() {
       <Destaque tipo="aviso" titulo="Esforço acaba">
         Esforço em 0 deixa o personagem <strong>Cansado</strong>. Guarde para os testes que importam.
       </Destaque>
+      <h2>Calcule a sua chance</h2>
+      <p>Monte um teste e veja a chance de alcançar a DT, já com a regra de atributo 0 e esforço:</p>
+      <CalculadoraChance />
       <h2>DT: a faixa de sucesso e falha</h2>
       <p>
         A <strong>DT</strong> (dificuldade do teste) é livre: o mestre define na hora, conforme a cena. Não existe tabela obrigatória. A
