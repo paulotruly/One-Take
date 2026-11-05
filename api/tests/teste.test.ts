@@ -14,17 +14,24 @@ describe("regras de teste (d20)", () => {
   });
 
   it("vantagem dá +1 d20 e desvantagem tira 1; com 1 dado, rola 2 e fica com o menor", () => {
-    expect(dadosComVantagem(2, { vantagem: true })).toEqual({ dados: 3, ficaCom: "maior" });
-    expect(dadosComVantagem(2, { esforcoGasto: 1, vantagem: true })).toEqual({ dados: 4, ficaCom: "maior" });
-    expect(dadosComVantagem(2, { desvantagem: true })).toEqual({ dados: 1, ficaCom: "maior" });
-    expect(dadosComVantagem(1, { desvantagem: true })).toEqual({ dados: 2, ficaCom: "menor" });
-    expect(dadosComVantagem(1, { esforcoGasto: 1, desvantagem: true })).toEqual({ dados: 1, ficaCom: "maior" });
+    expect(dadosComVantagem(2, { vantagens: 1 })).toEqual({ dados: 3, ficaCom: "maior" });
+    expect(dadosComVantagem(2, { esforcoGasto: 1, vantagens: 1 })).toEqual({ dados: 4, ficaCom: "maior" });
+    expect(dadosComVantagem(2, { desvantagens: 1 })).toEqual({ dados: 1, ficaCom: "maior" });
+    expect(dadosComVantagem(1, { desvantagens: 1 })).toEqual({ dados: 2, ficaCom: "menor" });
+    expect(dadosComVantagem(1, { esforcoGasto: 1, desvantagens: 1 })).toEqual({ dados: 1, ficaCom: "maior" });
   });
 
   it("vantagem e desvantagem se anulam e não valem com atributo 0", () => {
-    expect(dadosComVantagem(2, { vantagem: true, desvantagem: true })).toEqual({ dados: 2, ficaCom: "maior" });
-    expect(dadosComVantagem(0, { vantagem: true })).toEqual({ dados: 1, ficaCom: "maior" });
-    expect(dadosComVantagem(0, { desvantagem: true })).toEqual({ dados: 1, ficaCom: "maior" });
+    expect(dadosComVantagem(2, { vantagens: 1, desvantagens: 1 })).toEqual({ dados: 2, ficaCom: "maior" });
+    expect(dadosComVantagem(0, { vantagens: 1 })).toEqual({ dados: 1, ficaCom: "maior" });
+    expect(dadosComVantagem(0, { desvantagens: 1 })).toEqual({ dados: 1, ficaCom: "maior" });
+  });
+
+  it("vantagens e desvantagens acumulam e se anulam uma a uma", () => {
+    expect(dadosComVantagem(2, { vantagens: 2 })).toEqual({ dados: 4, ficaCom: "maior" });
+    expect(dadosComVantagem(2, { vantagens: 2, desvantagens: 1 })).toEqual({ dados: 3, ficaCom: "maior" });
+    expect(dadosComVantagem(1, { desvantagens: 2 })).toEqual({ dados: 3, ficaCom: "menor" });
+    expect(dadosComVantagem(2, { desvantagens: 2 })).toEqual({ dados: 2, ficaCom: "menor" });
   });
 
   it("usa o maior dado e soma o bônus da perícia (exemplo: 10 e 15 com +5 = 20)", () => {

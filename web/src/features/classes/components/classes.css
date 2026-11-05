@@ -180,13 +180,29 @@
 .painel__descricao { color: var(--cor-texto-suave); font-size: var(--texto-sm); }
 .resumo-habilidades { display: flex; flex-direction: column; gap: var(--esp-2); margin: 0; padding: 0; list-style: none; font-size: var(--texto-sm); }
 .resumo-habilidades li { display: flex; align-items: center; gap: var(--esp-2); }
-/* Cartas pequenas em grade; os detalhes abrem num pop-up. */
+/* Cartas pequenas em uma linha com rolagem; os detalhes abrem num pop-up. */
+.cartas-linha { display: flex; align-items: stretch; gap: var(--esp-2); min-width: 0; max-width: 100%; }
+.cartas-linha__seta { flex: none; align-self: center; width: 36px; min-height: 64px; padding: 0; }
 .deck {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(var(--card-habilidade-largura), 1fr));
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: stretch;
   gap: var(--esp-3);
+  /* O respiro de cima evita cortar a carta, que sobe 2px no hover. */
+  padding-top: var(--esp-1);
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
 }
-@media (max-width: 420px) { .deck { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--esp-2); } }
+.deck::-webkit-scrollbar { display: none; }
+.deck > .carta { flex: 0 0 var(--card-habilidade-largura); scroll-snap-align: start; }
+.deck--arrastavel { cursor: grab; }
+.deck--arrastando { cursor: grabbing; scroll-snap-type: none; user-select: none; }
+.deck--arrastando .carta__abrir { cursor: grabbing; }
+@media (max-width: 420px) { .deck { gap: var(--esp-2); } }
+/* No toque, deslizar basta: as setas só tirariam espaço das cartas. */
+@media (pointer: coarse) { .cartas-linha__seta { display: none; } }
 
 /* ---------- Carta (habilidade) ---------- */
 .carta {
@@ -246,8 +262,6 @@
 .cartela { display: flex; flex-direction: column; gap: var(--esp-4); }
 .cartela__nivel { display: flex; justify-content: space-between; align-items: center; gap: var(--esp-3); flex-wrap: wrap; }
 .cartela__resumo { display: flex; align-items: center; gap: var(--esp-3); flex-wrap: wrap; padding: var(--esp-3) var(--esp-4); border: 1px solid var(--cor-borda); background: var(--cor-superficie); }
-.cartela__bloco { display: flex; flex-direction: column; gap: var(--esp-3); }
-.cartela__titulo-nivel { color: var(--cor-texto-suave); font-size: var(--texto-xs); text-transform: uppercase; letter-spacing: var(--tracking-rotulo); }
 .cartela__detalhe { display: flex; flex-direction: column; gap: var(--esp-4); }
 .cartela__detalhe .modal__acoes { justify-content: space-between; align-items: center; }
 .filtro__opcao--icone { display: inline-flex; align-items: center; gap: var(--esp-1); }

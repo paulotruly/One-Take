@@ -29,7 +29,7 @@ export function NovoGrupoPage() {
 export function EditarGrupoPage() {
   const { id = "" } = useParams();
   const grupo = useGrupo(id);
-  if (grupo.isPending) return <Loading texto="Carregando grupo…" />;
+  if (grupo.isPending) return <Loading texto="Carregando mesa…" />;
   if (grupo.isError) return <ErrorState mensagem={mensagemDeErro(grupo.error)} onTentarNovamente={() => grupo.refetch()} />;
   return <Formulario grupo={grupo.data} />;
 }
@@ -129,10 +129,10 @@ function Formulario({ grupo }: { grupo?: GrupoDetalhe }) {
 
   return (
     <div className="pagina">
-      <LinkVoltar to={grupo ? `/mestre/grupos/${grupo.id}` : "/mestre/grupos"}>{grupo ? grupo.titulo : "Grupos"}</LinkVoltar>
+      <LinkVoltar to={grupo ? `/mestre/grupos/${grupo.id}` : "/mestre/grupos"}>{grupo ? grupo.titulo : "Mesas"}</LinkVoltar>
       <div>
-        <h1>{grupo ? "Editar grupo" : "Novo grupo"}</h1>
-        <p className="pagina__subtitulo">O grupo é o seu RPG: os jogadores entram com o código e criam a ficha com o que você liberar aqui.</p>
+        <h1>{grupo ? "Editar mesa" : "Nova mesa"}</h1>
+        <p className="pagina__subtitulo">A mesa é o seu RPG: os jogadores entram com o código e criam a ficha com o que você liberar aqui.</p>
       </div>
 
       <div className="grupo-form">
@@ -141,10 +141,10 @@ function Formulario({ grupo }: { grupo?: GrupoDetalhe }) {
           <GrupoInfoForm valor={info} onChange={setInfo} erros={errosDeCampo(erro)} />
         </section>
         <section className="secao">
-          <h2>O que vale neste grupo</h2>
+          <h2>O que vale nesta mesa</h2>
           <Field
             rotulo="Kit de RPG"
-            dica={kitId ? "Trocar o kit marca de novo o que vale (do kit + gerais). Itens, criaturas e NPCs do grupo seguem o kit." : "Sem kit: você marca tudo à mão e o grupo vê todos os itens, criaturas e NPCs."}
+            dica={kitId ? "Trocar o kit marca de novo o que vale (do kit + gerais). Itens, criaturas e NPCs da mesa seguem o kit." : "Sem kit: você marca tudo à mão e a mesa vê todos os itens, criaturas e NPCs."}
           >
             <select value={kitId ?? ""} onChange={(e) => trocarKit(e.target.value || null)} disabled={carregando}>
               <option value="">Sem kit</option>
@@ -170,7 +170,7 @@ function Formulario({ grupo }: { grupo?: GrupoDetalhe }) {
         <section className="secao">
           <h2>Regras de combate</h2>
           <p className="pagina__subtitulo">
-            As regras padrão valem em todo grupo. Desmarque as que não quiser nesta mesa; regras próprias você cria na página do grupo.
+            As regras padrão valem em toda mesa. Desmarque as que não quiser nesta mesa; regras próprias você cria na página da mesa.
           </p>
           <div className="regras-padrao__lista">
             {regrasPadrao.map((r) => (
@@ -189,7 +189,7 @@ function Formulario({ grupo }: { grupo?: GrupoDetalhe }) {
           Cancelar
         </Button>
         <Button variante="primario" onClick={() => salvar().catch(() => undefined)} disabled={enviando || carregando}>
-          {enviando ? "Salvando…" : grupo ? "Salvar grupo" : "Criar grupo"}
+          {enviando ? "Salvando…" : grupo ? "Salvar mesa" : "Criar mesa"}
         </Button>
       </div>
     </div>

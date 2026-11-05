@@ -62,8 +62,6 @@ Classificação feita com evidência no código (rotas, telas e testes). "Teste"
 - **Teste de ação:** a ficha mostra o teste pronto ("2d20 + 5"), mas **o app não rola dados** nem desconta esforço (decisão: esforço manual).
 - **Deploy:** há `web/vercel.json` (rewrite de SPA) e `npm run build`/`start` na API, mas o procedimento de deploy no Render e na Vercel
   **não está documentado** ("Em andamento" no ROADMAP). Não há `render.yaml` no repositório.
-- **Progressão:** as regras existem, mas o próprio DOMINIO deixa em aberto se as cartas de um nível são todas recebidas ou escolhidas
-  e se a perícia nova é escolhida ou pré-determinada (hoje: recebe todas; a perícia é escolhida na ficha).
 
 ### Planejado (ROADMAP, sem código)
 - Sessões, rolagem de dados no app (com gasto de esforço), combate.
@@ -273,11 +271,8 @@ Regras de jogo detalhadas em `docs/DOMINIO.md`. Os números (3 pontos de atribut
 | RN-031 | Login e nickname | Login por nickname (ou email antigo); senha errada = 401 genérico; nickname 3–20 `[a-z0-9_.-]`, único (409 `NICKNAME_EM_USO`) | `modules/acesso/acesso.routes.ts`, `src/lib/nickname.ts`, `me.schemas.ts` | `api.test.ts` |
 
 ### Pendências de confirmação (regras ambíguas)
-- Cartas de um nível: todas recebidas (comportamento atual) ou escolhidas? Perícia nova: escolhida (atual) ou pré-determinada? (DOMINIO, ROADMAP)
 - Status manuais do seed (Assustado, Furioso, Inspirado, Confiante, Envenenado, Atordoado) são "proposta inicial" (`prisma/status-base.ts`); hoje são do ADMIN e ele edita pela interface.
 - Referências de equilíbrio da skill `balancear` são proposta inicial, ajustáveis pelo designer.
-- O grupo com kit mostra "do kit + gerais", enquanto o kit ativo mostra "só o kit": a diferença foi uma interpretação registrada em
-  DECISOES (2026-10-13) e ainda não foi confirmada pelo responsável.
 
 ## 1.6. Padrões e convenções
 
@@ -461,7 +456,6 @@ Dependências transitivas não foram auditadas.
     `SEM_PONTOS` (citados em outras seções); o corpo de `POST /api/classes` não mostra `conceitoId` e `kitIds`.
 
 ### Decisões aguardando confirmação
-- Regras de progressão em aberto (cartas do nível, perícia nova).
 - Status do seed e referências de balanceamento como "proposta inicial".
 - Kit do grupo com gerais x kit ativo só com o kit.
 - Licença do código; revisão dos termos de uso e da Política de privacidade (versão inicial).

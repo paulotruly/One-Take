@@ -8,7 +8,7 @@ export function GrupoFilter({ valor, onChange }: Props) {
     ...GRUPOS.map((g) => ({ valor: g, rotulo: ROTULO_GRUPO[g] })),
   ];
   return (
-    <div className="filtro" role="group" aria-label="Filtrar por grupo">
+    <div className="filtro" role="group" aria-label="Filtrar por função">
       {opcoes.map((o) => (
         <button
           key={o.rotulo}

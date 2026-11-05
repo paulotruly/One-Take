@@ -118,7 +118,7 @@ export function KitsPage() {
       <ConfirmDialog
         aberto={!!aExcluir}
         titulo="Excluir kit"
-        mensagem={<>Excluir o kit <strong>{aExcluir?.nome}</strong>? Nada é apagado: o que estava só nele vira geral, e os grupos que usavam o kit ficam sem kit.</>}
+        mensagem={<>Excluir o kit <strong>{aExcluir?.nome}</strong>? Nada é apagado: o que estava só nele vira geral, e as mesas que usavam o kit ficam sem kit.</>}
         processando={excluir.isPending}
         erro={excluir.isError ? mensagemDeErro(excluir.error) : null}
         onCancelar={() => setAExcluir(null)}

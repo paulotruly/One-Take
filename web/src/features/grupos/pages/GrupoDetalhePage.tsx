@@ -70,11 +70,11 @@ export function GrupoDetalhePage() {
   const [fichaCriatura, setFichaCriatura] = useState<string | null>(null);
   const [avisoCriatura, setAvisoCriatura] = useState<string | null>(null);
 
-  if (grupo.isPending) return <Loading texto="Carregando grupo…" />;
+  if (grupo.isPending) return <Loading texto="Carregando mesa…" />;
   if (grupo.isError) {
     return (
       <div className="pagina">
-        <LinkVoltar to="/mestre/grupos">Grupos</LinkVoltar>
+        <LinkVoltar to="/mestre/grupos">Mesas</LinkVoltar>
         <ErrorState mensagem={mensagemDeErro(grupo.error)} onTentarNovamente={() => grupo.refetch()} />
       </div>
     );
@@ -94,7 +94,7 @@ export function GrupoDetalhePage() {
 
   return (
     <div className="pagina">
-      <LinkVoltar to="/mestre/grupos">Grupos</LinkVoltar>
+      <LinkVoltar to="/mestre/grupos">Mesas</LinkVoltar>
 
       <header className="classe-cabecalho">
         <div className="classe-cabecalho__retrato classe-cabecalho__retrato--paisagem">
@@ -112,7 +112,7 @@ export function GrupoDetalhePage() {
           <h1>{g.titulo}</h1>
           <p className="classe-cabecalho__descricao">{g.sinopse}</p>
           <div className="classe-cabecalho__acoes">
-            <Link to={`/mestre/grupos/${id}/editar`} className="btn">Editar grupo</Link>
+            <Link to={`/mestre/grupos/${id}/editar`} className="btn">Editar mesa</Link>
           </div>
         </div>
       </header>
@@ -138,10 +138,10 @@ export function GrupoDetalhePage() {
 
 
       <Abas
-        rotulo="Partes do grupo"
+        rotulo="Partes da mesa"
         atual={aba}
         onMudar={(a) => setParams(a === "mesa" ? {} : { aba: a }, { replace: true })}
-        abas={[{ id: "mesa", rotulo: "Mesa", Icone: Swords }, { id: "preparacao", rotulo: "Preparação", Icone: ClipboardList }]}
+        abas={[{ id: "mesa", rotulo: "Em jogo", Icone: Swords }, { id: "preparacao", rotulo: "Preparação", Icone: ClipboardList }]}
       />
 
       {aba === "mesa" && (
@@ -170,7 +170,7 @@ export function GrupoDetalhePage() {
         <div className="secao__cabecalho">
           <div>
             <h2>Criaturas</h2>
-            <p className="pagina__subtitulo">Criaturas invocadas por você neste grupo. Toque numa para abrir a ficha: recursos, testes e cartas do nível.</p>
+            <p className="pagina__subtitulo">Criaturas invocadas por você nesta mesa. Toque numa para abrir a ficha: recursos, testes e cartas do nível.</p>
           </div>
           <Button variante="primario" onClick={() => setInvocando(true)}>
             <PawPrint size={16} aria-hidden /> Invocar criatura
@@ -178,7 +178,7 @@ export function GrupoDetalhePage() {
         </div>
         {avisoCriatura && <p className="sucesso">{avisoCriatura}</p>}
         {g.criaturas.length === 0 ? (
-          <EmptyState compacto titulo="Nenhuma criatura no grupo" descricao="Invoque criaturas do seu bestiário quando a cena pedir." />
+          <EmptyState compacto titulo="Nenhuma criatura na mesa" descricao="Invoque criaturas do seu bestiário quando a cena pedir." />
         ) : (
           <ul className="criaturas">
             {g.criaturas.map((c) => (
@@ -218,7 +218,7 @@ export function GrupoDetalhePage() {
           <div>
             <h2>NPCs</h2>
             <p className="pagina__subtitulo">
-              {g.kit ? <>NPCs do kit {g.kit.nome} e os gerais.</> : <>Todos os seus NPCs (o grupo não tem kit).</>} Gerencie em <Link to="/mestre/npcs">NPCs</Link>.
+              {g.kit ? <>NPCs do kit {g.kit.nome} e os gerais.</> : <>Todos os seus NPCs (a mesa não tem kit).</>} Gerencie em <Link to="/mestre/npcs">NPCs</Link>.
             </p>
           </div>
           <Link to={`/mestre/npcs/novo?grupo=${id}${g.kitId ? `&kit=${g.kitId}` : ""}`} className="btn">
@@ -230,7 +230,7 @@ export function GrupoDetalhePage() {
         ) : npcs.isError ? (
           <ErrorState mensagem={mensagemDeErro(npcs.error)} onTentarNovamente={() => npcs.refetch()} />
         ) : npcs.data.length === 0 ? (
-          <EmptyState compacto titulo="Nenhum NPC para este grupo" />
+          <EmptyState compacto titulo="Nenhum NPC para esta mesa" />
         ) : (
           <ul className="membros">{npcs.data.map((n) => <NpcLinha key={n.id} n={n} />)}</ul>
         )}
@@ -239,7 +239,7 @@ export function GrupoDetalhePage() {
       {/* ---------- Itens vagos ---------- */}
       <section className="secao">
         <div className="secao__cabecalho">
-          <h2>Itens vagos no grupo</h2>
+          <h2>Itens vagos na mesa</h2>
           <div className="classe-cabecalho__acoes">
             <Button onClick={() => setLancando(true)}>
               <Send size={16} aria-hidden /> Lançar do catálogo
@@ -265,7 +265,7 @@ export function GrupoDetalhePage() {
           <div>
             <h2>Regras de combate</h2>
             <p className="pagina__subtitulo">
-              As padrão ligadas neste grupo (<Link to={`/mestre/grupos/${id}/editar`}>ligar ou desligar</Link>) e as suas. Os jogadores veem na ficha.
+              As padrão ligadas nesta mesa (<Link to={`/mestre/grupos/${id}/editar`}>ligar ou desligar</Link>) e as suas. Os jogadores veem na ficha.
             </p>
           </div>
           <Button onClick={() => { criarRegra.reset(); setRegraEmEdicao(null); }}><Plus size={16} aria-hidden /> Regra da mesa</Button>
@@ -283,7 +283,7 @@ export function GrupoDetalhePage() {
       </section>
 
       <section className="secao">
-        <h2>O que vale neste grupo</h2>
+        <h2>O que vale nesta mesa</h2>
         <p className="pagina__subtitulo">
           {d.classeIds.length} classes · {d.racaIds.length} raças · {d.atributoIds.length} atributos · {d.periciaIds.length} perícias · {d.statusIds.length} status.{" "}
           <Link to={`/mestre/grupos/${id}/editar`}>Alterar</Link>
@@ -293,8 +293,8 @@ export function GrupoDetalhePage() {
 
           <section className="secao secao-conta">
             <h2>Encerrar</h2>
-            <p className="pagina__subtitulo">Excluir o grupo apaga criaturas e itens dele. Cada jogador fica com uma cópia arquivada da própria ficha.</p>
-            <div><Button variante="perigo" onClick={() => { excluir.reset(); setConfirmarExclusao(true); }}>Excluir grupo</Button></div>
+            <p className="pagina__subtitulo">Excluir a mesa apaga criaturas e itens dela. Cada jogador fica com uma cópia arquivada da própria ficha.</p>
+            <div><Button variante="perigo" onClick={() => { excluir.reset(); setConfirmarExclusao(true); }}>Excluir mesa</Button></div>
           </section>
         </>
       )}
@@ -322,7 +322,7 @@ export function GrupoDetalhePage() {
       </Modal>
 
       <Modal aberto={criandoItem} onFechar={() => setCriandoItem(false)} titulo="Item avulso" largo>
-        <p className="pagina__subtitulo">Um item só deste grupo, sem entrar no catálogo. Para reaproveitar em outras sessões, crie em Itens.</p>
+        <p className="pagina__subtitulo">Um item só desta mesa, sem entrar no catálogo. Para reaproveitar em outras sessões, crie em Itens.</p>
         <ItemForm
           key={criandoItem ? "aberto" : "fechado"}
           pericias={(pericias.data ?? []).map((p) => ({ id: p.id, rotulo: `${p.nome} (${p.atributo.nome})` }))}
@@ -330,9 +330,9 @@ export function GrupoDetalhePage() {
           categorias={categorias.data ?? []}
           rotulo="Criar item"
           extra={
-            <Field rotulo="Entregar para" dica="Sem destino, o item fica vago no grupo." erro={errosDeCampo(criarItem.error).fichaId}>
+            <Field rotulo="Entregar para" dica="Sem destino, o item fica vago na mesa." erro={errosDeCampo(criarItem.error).fichaId}>
               <select value={itemDestino} onChange={(e) => setItemDestino(e.target.value)}>
-                <option value="">Ninguém (vago no grupo)</option>
+                <option value="">Ninguém (vago na mesa)</option>
                 {destinos.map((m) => <option key={m.id} value={m.id}>{m.rotulo}</option>)}
               </select>
             </Field>
@@ -378,7 +378,7 @@ export function GrupoDetalhePage() {
         aberto={confirmarCodigo}
         titulo="Gerar novo código"
         rotuloConfirmar="Gerar novo"
-        mensagem={<>O código <strong>{g.codigo}</strong> e os links de convite já enviados deixam de funcionar. Quem já está no grupo continua nele.</>}
+        mensagem={<>O código <strong>{g.codigo}</strong> e os links de convite já enviados deixam de funcionar. Quem já está na mesa continua nela.</>}
         processando={novoCodigo.isPending}
         erro={novoCodigo.isError ? mensagemDeErro(novoCodigo.error) : null}
         onCancelar={() => setConfirmarCodigo(false)}
@@ -408,8 +408,8 @@ export function GrupoDetalhePage() {
 
       <ConfirmDialog
         aberto={confirmarExclusao}
-        titulo="Excluir grupo"
-        mensagem={<>Excluir <strong>{g.titulo}</strong>? As criaturas e todos os itens do grupo serão apagados, e as {g.membros.length} fichas saem dele (cada jogador fica com uma cópia arquivada da sua). Não dá para desfazer.</>}
+        titulo="Excluir mesa"
+        mensagem={<>Excluir <strong>{g.titulo}</strong>? As criaturas e todos os itens da mesa serão apagados, e as {g.membros.length} fichas saem dela (cada jogador fica com uma cópia arquivada da sua). Não dá para desfazer.</>}
         processando={excluir.isPending}
         erro={excluir.isError ? mensagemDeErro(excluir.error) : null}
         onCancelar={() => setConfirmarExclusao(false)}

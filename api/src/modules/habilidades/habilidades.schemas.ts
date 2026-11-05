@@ -1,9 +1,11 @@
 import { z } from "zod";
 import { LimiteUso, TipoEfeito } from "../../generated/prisma/enums.js";
 import { inteiro, texto, textoOpcional } from "../../lib/validacao.js";
+import { PROGRESSAO } from "../../regras/progressao.js";
 
 const limiteUsos = inteiro(1, 99).nullable();
 const limitePor = z.enum(LimiteUso, "Escolha combate ou sessão").nullable();
+const dt = inteiro(1, 99).nullable();
 
 /** Limite: os dois juntos (vezes e período) ou nenhum. No PATCH, mandar um exige mandar o outro. */
 function limiteCompleto(v: { limiteUsos?: number | null; limitePor?: string | null }, ctx: z.RefinementCtx) {
@@ -25,8 +27,12 @@ const base = z.object({
   descricaoEfeito: texto(2000),
   limiteUsos,
   limitePor,
-  nivelNecessario: inteiro(1, 100),
+  nivelNecessario: inteiro(1, PROGRESSAO.nivelMaximo),
   custoMana: inteiro(0, 999),
+  /** DT para a carta funcionar, em cartas que ninguém pode impedir (opcional; exige perícia do teste). */
+  dt,
+  /** Alcance em texto curto (opcional). */
+  alcance: textoOpcional(40),
   /** Status que a carta ativa (opcional). */
   statusId: z.guid("Status inválido").nullable(),
   /** Perícia que o personagem testa para usar a carta (opcional). */
@@ -39,6 +45,7 @@ export const criarHabilidadeSchema = base
   .extend({
     nivelNecessario: base.shape.nivelNecessario.default(1),
     custoMana: base.shape.custoMana.default(0),
+    dt: dt.default(null),
     statusId: base.shape.statusId.default(null),
     periciaId: base.shape.periciaId.default(null),
     periciasDefesaIds: base.shape.periciasDefesaIds.default([]),
@@ -55,7 +62,7 @@ export const ordenarHabilidadesSchema = z.object({
 /** Aprimoramento: a carta inteira a partir de um nível (o formulário vem preenchido com a versão anterior). */
 export const aprimoramentoSchema = z
   .object({
-    nivel: inteiro(2, 100),
+    nivel: inteiro(2, PROGRESSAO.nivelMaximo),
     titulo: texto(80),
     descricao: texto(2000),
     descricaoEfeito: texto(2000),
@@ -63,6 +70,8 @@ export const aprimoramentoSchema = z
     limiteUsos: limiteUsos.optional().transform((v) => v ?? null),
     limitePor: limitePor.optional().transform((v) => v ?? null),
     custoMana: inteiro(0, 999),
+    dt: dt.optional().transform((v) => v ?? null),
+    alcance: textoOpcional(40).transform((v) => v ?? null),
     statusId: z.guid("Status inválido").nullish().transform((v) => v ?? null),
   })
   .superRefine(limiteCompleto);

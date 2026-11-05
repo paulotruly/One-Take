@@ -100,7 +100,7 @@ function Ficha({ f }: { f: FichaDetalhe }) {
             )}
             <Button onClick={() => { editar.reset(); setEditando(true); }}>Editar personagem</Button>
             <Button variante="perigo" onClick={() => { excluir.reset(); setConfirmarSaida(true); }}>
-              {f.souMestre ? "Remover do grupo" : "Sair do grupo"}
+              {f.souMestre ? "Remover da mesa" : "Sair da mesa"}
             </Button>
           </div>
         </div>
@@ -150,7 +150,7 @@ function Ficha({ f }: { f: FichaDetalhe }) {
               onAplicar={(statusId, turnos, pronto) => aplicarStatus.mutate({ statusId, turnos }, { onSuccess: pronto })} />
           ) : (
             <p className="pagina__subtitulo">
-              Nenhum status para aplicar. Ative status no grupo em <Link to={`/mestre/grupos/${f.grupo.id}/editar`}>Editar grupo</Link> (seção Status).
+              Nenhum status para aplicar. Ative status na mesa em <Link to={`/mestre/grupos/${f.grupo.id}/editar`}>Editar mesa</Link> (seção Status).
             </p>
           )}
           <p className="pagina__subtitulo">Turnos é opcional (vazio = até você tirar). A cada turno, use o -1 no alerta; em 0 o status sai. Para tirar na hora, use o X.</p>
@@ -163,7 +163,7 @@ function Ficha({ f }: { f: FichaDetalhe }) {
         <div className="recursos">
           <BarraRecurso rotulo="Vida" Icone={Heart} tipo="vida" atual={f.vida.atual} max={f.vida.max} editavel podeAumentar={f.souMestre} ocupado={editar.isPending}
             onMudar={(v) => editar.mutate({ vidaAtual: v })} />
-          <BarraRecurso rotulo="Mana" Icone={Droplet} tipo="mana" atual={f.mana.atual} max={f.mana.max} editavel ocupado={editar.isPending}
+          <BarraRecurso rotulo="Mana" Icone={Droplet} tipo="mana" atual={f.mana.atual} max={f.mana.max} editavel podeAumentar={f.souMestre} ocupado={editar.isPending}
             onMudar={(v) => editar.mutate({ manaAtual: v })} />
           <BarraRecurso rotulo="Esforço" Icone={Zap} tipo="esforco" atual={f.esforco.atual} max={f.esforco.max} editavel ocupado={editar.isPending}
             onMudar={(v) => editar.mutate({ esforcoAtual: v })} />
@@ -252,7 +252,7 @@ function Ficha({ f }: { f: FichaDetalhe }) {
       {/* ---------- Regras de combate da mesa ---------- */}
       <section className="secao">
         <h2>Regras da mesa</h2>
-        <p className="pagina__subtitulo">Regras de combate que valem neste grupo. Toque numa regra para ler.</p>
+        <p className="pagina__subtitulo">Regras de combate que valem nesta mesa. Toque numa regra para ler.</p>
         <RegrasDaMesa padrao={f.regrasDaMesa.padrao} proprias={f.regrasDaMesa.proprias} />
       </section>
 
@@ -331,7 +331,7 @@ function Ficha({ f }: { f: FichaDetalhe }) {
                 </select>
               )}
               <Button onClick={() => mover.mutate({ itemId: itemAberto.id, fichaId: null }, { onSuccess: () => setItemAbertoId(null) })}>
-                <Trash2 size={16} aria-hidden /> Descartar (fica vago no grupo)
+                <Trash2 size={16} aria-hidden /> Descartar (fica vago na mesa)
               </Button>
             </div>
           </div>
@@ -350,7 +350,7 @@ function Ficha({ f }: { f: FichaDetalhe }) {
         rotuloConfirmar="Subir nível"
         mensagem={
           <>
-            {f.nome} vai para o nível {f.nivel + 1}: +5 de vida, mana e esforço, +5 pontos de perícia, novas cartas e +2 espaços no inventário.{" "}
+            {f.nome} vai para o nível {f.nivel + 1}: +5 de vida, mana e esforço, +{f.custoPericia} pontos de perícia, novas cartas e +2 espaços no inventário.{" "}
             <strong>Não dá para descer de nível depois.</strong>
           </>
         }
@@ -362,9 +362,9 @@ function Ficha({ f }: { f: FichaDetalhe }) {
 
       <ConfirmDialog
         aberto={confirmarSaida}
-        titulo={f.souMestre ? "Remover do grupo" : "Sair do grupo"}
+        titulo={f.souMestre ? "Remover da mesa" : "Sair da mesa"}
         rotuloConfirmar={f.souMestre ? "Remover" : "Sair"}
-        mensagem={<>A ficha de <strong>{f.nome}</strong> sai do grupo e os itens dela ficam vagos lá. {f.souMestre ? "O jogador" : "Você"} fica com uma cópia arquivada do personagem, só para leitura.</>}
+        mensagem={<>A ficha de <strong>{f.nome}</strong> sai da mesa e os itens dela ficam vagos lá. {f.souMestre ? "O jogador" : "Você"} fica com uma cópia arquivada do personagem, só para leitura.</>}
         processando={excluir.isPending}
         erro={excluir.isError ? mensagemDeErro(excluir.error) : null}
         onCancelar={() => setConfirmarSaida(false)}

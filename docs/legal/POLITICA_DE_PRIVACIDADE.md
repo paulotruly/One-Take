@@ -43,7 +43,7 @@ partir do nome de usuário (terminado em `@one-take.local`). Ele não recebe men
 
 - **Como jogador:** fichas de personagem (nome, história, link de imagem, raça, classe, nível, atributos, perícias, recursos como vida,
   mana e esforço, status e inventário) e as cópias arquivadas das suas fichas.
-- **Como mestre:** grupos (título, sinopse, gênero, imagem, código de entrada, configurações), classes, raças, atributos, perícias,
+- **Como mestre:** mesas (título, sinopse, gênero, imagem, código de entrada, configurações), classes, raças, atributos, perícias,
   habilidades, status, itens, categorias, criaturas, NPCs, kits e regras da mesa.
 
 Esse conteúdo é, em geral, ficção. Mas textos livres (nome de personagem, história, descrições) podem conter informações pessoais se
@@ -76,7 +76,7 @@ A LGPD exige que cada uso de dados pessoais tenha uma justificativa legal (art. 
 | Conferir a idade mínima | Data de nascimento | Execução de contrato (inciso V) e cumprimento de obrigação legal (inciso II), por causa das regras de proteção de crianças (LGPD, art. 14) |
 | Entregar uma cópia dos seus dados quando você pedir | Todos os dados da sua conta | Cumprimento de obrigação legal (inciso II): direito de portabilidade e de acesso (LGPD, art. 18) |
 | Mostrar seu perfil a quem joga com você | Nome de usuário, nome e link de foto | Execução de contrato (inciso V) |
-| Guardar e exibir fichas, grupos e conteúdo do mestre | Conteúdo da seção 3.2 | Execução de contrato (inciso V) |
+| Guardar e exibir fichas, mesas e conteúdo do mestre | Conteúdo da seção 3.2 | Execução de contrato (inciso V) |
 | Manter cópias arquivadas das fichas dos jogadores | Fichas arquivadas | Execução de contrato (inciso V), em favor do jogador dono da ficha |
 | Proteger as contas contra abuso: limitar tentativas repetidas, encerrar sessões antigas depois da troca de senha e registrar erros para corrigir falhas | IP (só na memória, por até uma hora), marcas técnicas da conta, registros de erro | Legítimo interesse (inciso IX): o uso é pequeno, temporário e serve para proteger as próprias contas dos usuários |
 | Atender pedidos de titulares e obrigações legais | Os dados necessários a cada pedido | Cumprimento de obrigação legal (inciso II) e exercício regular de direitos (inciso VI), quando aplicável |
@@ -99,10 +99,10 @@ pedido de forma separada e poderá ser revogado.
 | Data de nascimento e código de recuperação | Só você (o código, só na hora em que é gerado) |
 | Senha | Ninguém (nem a equipe do One-Take tem acesso à senha em texto) |
 | Se um nome de usuário já existe | Qualquer pessoa, na tela de cadastro (para avisar que o nome está em uso) |
-| Nome de usuário, nome e foto do mestre de um grupo | Pessoas logadas que têm o código de entrada do grupo |
-| Nome de usuário de um jogador e nome do personagem dele | Os outros membros do mesmo grupo |
-| Ficha completa e nome de usuário, nome e foto do jogador | O próprio jogador e o mestre do grupo |
-| Conteúdo criado pelo mestre | O próprio mestre; os membros dos grupos dele veem o que ele liberou no grupo (classes, raças, regras, itens entregues) |
+| Nome de usuário, nome e foto do mestre de uma mesa | Pessoas logadas que têm o código de entrada da mesa |
+| Nome de usuário de um jogador e nome do personagem dele | Os outros membros da mesma mesa |
+| Ficha completa e nome de usuário, nome e foto do jogador | O próprio jogador e o mestre da mesa |
+| Conteúdo criado pelo mestre | O próprio mestre; os membros das mesas dele veem o que ele liberou na mesa (classes, raças, regras, itens entregues) |
 | Fichas arquivadas | Só o jogador dono |
 
 ## 7. Compartilhamento com fornecedores
@@ -266,12 +266,12 @@ O tratamento por fornecedores estrangeiros não afasta os direitos dos titulares
 2. A exclusão é **imediata e definitiva**:
    - o seu acesso (login e sessões) é apagado do serviço de autenticação;
    - são apagados o seu perfil (nome de usuário, nome, foto, data de nascimento, código de recuperação), as suas fichas (inclusive as
-     arquivadas) e todo o conteúdo que você criou como mestre, incluindo os seus grupos;
-   - itens das suas fichas em grupos de outros mestres ficam no grupo, sem dono.
-3. O que **continua existindo**, porque pertence a outras pessoas: se você era mestre, cada jogador dos seus grupos fica com uma cópia
-   arquivada da própria ficha. Essa cópia guarda o título do grupo e textos que você criou usados na ficha (nome e descrição da classe e
+     arquivadas) e todo o conteúdo que você criou como mestre, incluindo as suas mesas;
+   - itens das suas fichas em mesas de outros mestres ficam na mesa, sem dono.
+3. O que **continua existindo**, porque pertence a outras pessoas: se você era mestre, cada jogador das suas mesas fica com uma cópia
+   arquivada da própria ficha. Essa cópia guarda o título da mesa e textos que você criou usados na ficha (nome e descrição da classe e
    da raça, cartas e itens), mas não guarda o seu nome de usuário nem outros dados seus (o inventário aparece só como lista de nomes e
-   descrições, porque os itens em si são apagados com os grupos).
+   descrições, porque os itens em si são apagados com as mesas).
 4. Cópias de segurança e registros dos fornecedores seguem o que está descrito na seção 9.
 
 Se a exclusão falhar no meio (por exemplo, por uma queda de um fornecedor), a conta fica bloqueada e a exclusão é retomada até terminar.

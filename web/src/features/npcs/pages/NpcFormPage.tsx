@@ -28,7 +28,7 @@ export function NovoNpcPage() {
   const voltar = grupo ? `/mestre/grupos/${grupo}` : "/mestre/npcs";
   return (
     <div className="pagina pagina--estreita">
-      <LinkVoltar to={voltar}>{grupo ? "Grupo" : "NPCs"}</LinkVoltar>
+      <LinkVoltar to={voltar}>{grupo ? "Mesa" : "NPCs"}</LinkVoltar>
       <h1>Novo NPC</h1>
       {opcoes.racas.length === 0 && <div className="aviso">Crie pelo menos uma raça antes: todo NPC tem raça.</div>}
       <NpcForm

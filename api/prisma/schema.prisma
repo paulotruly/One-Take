@@ -162,6 +162,10 @@ model Habilidade {
   nivelNecessario Int                       @default(1)
   /// Mana gasta ao usar a carta. 0 = não custa mana.
   custoMana       Int                       @default(0)
+  /// DT para a carta funcionar, em cartas que ninguém pode impedir. Opcional; exige perícia do teste.
+  dt              Int?
+  /// Alcance em texto curto (ex.: Corpo a corpo, 6 quadrados, Pessoal). Opcional.
+  alcance         String?
   /// Status que a carta ativa (no alvo ou em quem usa), opcional.
   statusId        String?                   @db.Uuid
   status          Status?                   @relation(fields: [statusId], references: [id], onDelete: SetNull)
@@ -636,6 +640,10 @@ model HabilidadeAprimoramento {
   limiteUsos      Int?
   limitePor       LimiteUso?
   custoMana       Int        @default(0)
+  /// DT neste nível (nula = sem DT).
+  dt              Int?
+  /// Alcance neste nível (nulo = sem alcance).
+  alcance         String?
   statusId        String?    @db.Uuid
   status          Status?    @relation(fields: [statusId], references: [id], onDelete: SetNull)
   criadoEm        DateTime   @default(now())

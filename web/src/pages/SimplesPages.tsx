@@ -6,7 +6,7 @@ export function JogadorPage() {
   return (
     <EmptyState
       titulo="Minhas fichas"
-      descricao="Em breve você vai criar fichas e entrar nos grupos com o código do mestre."
+      descricao="Em breve você vai criar fichas e entrar nas mesas com o código do mestre."
     />
   );
 }

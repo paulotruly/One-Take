@@ -80,7 +80,7 @@ export function LancarItemModal({ grupoId, kitId = null, npc, aberto, onFechar, 
           ) : (
             <Field rotulo="Para quem">
               <select value={destino} onChange={(e) => setDestino(e.target.value)}>
-                <option value="">Ninguém (vago no grupo)</option>
+                <option value="">Ninguém (vago na mesa)</option>
                 {destinos.map((d) => <option key={d.id} value={d.id}>{d.rotulo}</option>)}
               </select>
             </Field>
@@ -102,7 +102,7 @@ export function LancarItemModal({ grupoId, kitId = null, npc, aberto, onFechar, 
                   {
                     onSuccess: () => {
                       const para = npc?.nome ?? destinos.find((d) => d.id === destino)?.rotulo;
-                      setUltimo(`${escolhido.nome} lançado ${para ? `para ${para}` : "vago no grupo"}.`);
+                      setUltimo(`${escolhido.nome} lançado ${para ? `para ${para}` : "vago na mesa"}.`);
                       setEscolhido(null);
                     },
                   },

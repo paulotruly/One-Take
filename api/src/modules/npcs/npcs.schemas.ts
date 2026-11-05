@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { kitIdsSchema } from "../../lib/kits.js";
+import { PROGRESSAO } from "../../regras/progressao.js";
 import { inteiro, texto, urlOpcional } from "../../lib/validacao.js";
 
 // Sem defaults aqui: no Zod 4 o default seria aplicado também no PATCH (partial).
@@ -10,7 +11,7 @@ const base = z.object({
   /** Raça é obrigatória; classe é opcional (NPC simples = só raça). */
   racaId: z.guid("Escolha uma raça"),
   classeId: z.guid("Classe inválida").nullable(),
-  nivel: inteiro(1, 100),
+  nivel: inteiro(1, PROGRESSAO.nivelMaximo),
   /** Vida, mana e esforço base (nível 1): obrigatórios quando o NPC não tem classe. */
   vidaBase: inteiro(1, 9999).nullable(),
   manaBase: inteiro(1, 9999).nullable(),

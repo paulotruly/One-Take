@@ -18,9 +18,9 @@ export type FichaResumo = {
 /** Cópia somente leitura de uma ficha que saiu do grupo (o jogador saiu, foi removido ou o grupo foi excluído). */
 export type MotivoArquivamento = "SAIU_DO_GRUPO" | "REMOVIDO_PELO_MESTRE" | "GRUPO_EXCLUIDO" | "LEVADO_PARA_OUTRA_MESA";
 export const ROTULO_MOTIVO: Record<MotivoArquivamento, string> = {
-  SAIU_DO_GRUPO: "Você saiu do grupo",
-  REMOVIDO_PELO_MESTRE: "O mestre removeu a ficha do grupo",
-  GRUPO_EXCLUIDO: "O grupo foi excluído",
+  SAIU_DO_GRUPO: "Você saiu da mesa",
+  REMOVIDO_PELO_MESTRE: "O mestre removeu a ficha da mesa",
+  GRUPO_EXCLUIDO: "A mesa foi excluída",
   LEVADO_PARA_OUTRA_MESA: "Você levou o personagem para outra mesa",
 };
 export type FichaArquivadaResumo = { id: string; nome: string; nivel: number; classe: string; raca: string; grupo: string; motivo: MotivoArquivamento; arquivadaEm: string };
@@ -38,7 +38,7 @@ export type FichaArquivada = FichaArquivadaResumo & {
     pericias: { nome: string; atributo: string; total: number; teste: string }[];
     habilidades: {
       titulo: string; descricao: string; tipoEfeito: string; descricaoEfeito: string; condicao: string | null; limite: string | null;
-      custoMana: number; nivelNecessario: number; teste: string | null; defesa?: string[] | string | null;
+      custoMana: number; nivelNecessario: number; teste: string | null; dt?: number | null; alcance?: string | null; defesa?: string[] | string | null;
     }[];
     inventario: { nome: string; descricao: string; efeito: string | null; espacos: number; categoria: string | null; usosRestantes: number | null }[];
   };
@@ -86,7 +86,7 @@ export type FichaDetalhe = {
   morto: boolean;
   /** Status atuais (automáticos + aplicados pelo mestre). Efeitos são só avisos. */
   status: Status[];
-  /** Status que o mestre pode aplicar (ativados no grupo, não automáticos, ainda não aplicados). */
+  /** Status que o mestre pode aplicar (ativados no grupo, ainda não aplicados; automáticos também). */
   statusAplicaveis: Status[];
   /** Regras de combate que valem no grupo: as padrão ligadas e as próprias do mestre. */
   regrasDaMesa: { padrao: RegraPadrao[]; proprias: { id: string; titulo: string; texto: string }[] };

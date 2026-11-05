@@ -37,15 +37,14 @@ export async function statusDisponiveis(mestreId: string, grupoId: string | null
 /** Status manuais que ainda podem ser aplicados (disponíveis, não automáticos, ainda não aplicados), ordenados. */
 export function statusAplicaveis(disponiveis: Status[], aplicadosIds: string[]) {
   return disponiveis
-    .filter((st) => !st.gatilho && !aplicadosIds.includes(st.id))
+    .filter((st) => !aplicadosIds.includes(st.id))
     .map(apresentarStatus)
     .sort((a, b) => a.ordem - b.ordem || a.nome.localeCompare(b.nome, "pt-BR"));
 }
 
-/** Confere se o status pode ser aplicado manualmente ali (existe, é do mestre, não é automático, está disponível). */
+/** Confere se o status pode ser aplicado manualmente ali (existe, é do mestre, está disponível). Automático também vale (ex.: carta que cansa). */
 export async function validarAplicacao(statusId: string, mestreId: string, disponiveis: Status[]) {
   const status = await statusUsavel(statusId, mestreId);
-  if (status.gatilho) throw new AppError(400, "REQUISICAO_INVALIDA", "Este status é automático: ele aparece sozinho pelos recursos.");
   if (!disponiveis.some((d) => d.id === statusId)) throw new AppError(400, "REQUISICAO_INVALIDA", "Este status não está ativado no grupo.");
   return status;
 }

@@ -155,7 +155,7 @@ describe("criar ficha pelo código", () => {
     prismaFalso.classeNoGrupo.findUnique.mockResolvedValue({ classe: { ...classe, grupo: "SUPORTE" } });
     const res = await comoJogador(request(app).post("/api/fichas")).send(corpo);
     expect(res.status).toBe(409);
-    expect(res.body.error.message).toBe("Este grupo não aceita classes da função Suporte.");
+    expect(res.body.error.message).toBe("Esta mesa não aceita classes da função Suporte.");
   });
 
   it("classe repetida recusada quando o grupo não permite", async () => {
@@ -194,8 +194,22 @@ describe("criar ficha pelo código", () => {
     prismaFalso.ficha.create.mockResolvedValue({ id: FICHA });
     await comoJogador(request(app).post("/api/fichas")).send({ ...corpo, origem: { tipo: "ARQUIVADA", id: ARQ } });
     const data = prismaFalso.ficha.create.mock.calls[0]![0].data;
-    expect(data).toMatchObject({ nivel: 3, vidaAtual: 40, manaAtual: 20, esforcoAtual: 30, pontosPericiaDisponiveis: 10 });
+    expect(data).toMatchObject({ nivel: 3, vidaAtual: 40, manaAtual: 20, esforcoAtual: 30, pontosPericiaDisponiveis: 4 });
     expect(prismaFalso.fichaArquivada.delete).toHaveBeenCalledWith({ where: { id: ARQ } });
+  });
+
+  it("personagem morto não vai para outra mesa", async () => {
+    grupoPronto();
+    const ARQ = "77777777-7777-4777-8777-777777777777";
+    prismaFalso.fichaArquivada.findFirst.mockResolvedValueOnce({ nivel: 2, classeId: CLASSE, racaId: RACA, conteudo: { vida: { atual: 0 }, mana: { atual: 5 } } });
+    const arquivada = await comoJogador(request(app).post("/api/fichas")).send({ ...corpo, origem: { tipo: "ARQUIVADA", id: ARQ } });
+    expect(arquivada.status).toBe(409);
+    expect(arquivada.body.error.code).toBe("PERSONAGEM_MORTO");
+
+    prismaFalso.ficha.findFirst.mockResolvedValueOnce({ nivel: 2, classeId: CLASSE, racaId: RACA, vidaAtual: 10, manaAtual: 0, esforcoAtual: 3 });
+    const ativa = await comoJogador(request(app).post("/api/fichas")).send({ ...corpo, origem: { tipo: "FICHA", id: ARQ } });
+    expect(ativa.status).toBe(409);
+    expect(prismaFalso.ficha.create).not.toHaveBeenCalled();
   });
 
   it("personagem de outra mesa leva a mesma classe e raça; de outra pessoa = 404", async () => {
@@ -230,7 +244,7 @@ describe("ficha: permissões e progressão", () => {
     expect(prismaFalso.ficha.update).not.toHaveBeenCalled();
   });
 
-  it("subir nível: +1 nível, +5 nos atuais e +5 pontos de perícia", async () => {
+  it("subir nível: +1 nível, +5 nos atuais e +2 pontos de perícia", async () => {
     prismaFalso.ficha.findUnique.mockResolvedValue(ficha({ nivel: 2 }));
     prismaFalso.ficha.update.mockResolvedValue({});
     await comoMestre(request(app).post(`/api/fichas/${FICHA}/subir-nivel`));
@@ -239,7 +253,7 @@ describe("ficha: permissões e progressão", () => {
       vidaAtual: { increment: 5 },
       manaAtual: { increment: 5 },
       esforcoAtual: { increment: 5 },
-      pontosPericiaDisponiveis: { increment: 5 },
+      pontosPericiaDisponiveis: { increment: 2 },
     });
   });
 

@@ -40,7 +40,7 @@ export const editarModeloSchema = campos.extend({ kitIds: kitIdsSchema }).partia
 
 export const lancarSchema = z.object({
   /** Grupo onde o item entra (obrigatório, a não ser que vá para um NPC). */
-  grupoId: z.guid("Escolha o grupo").optional(),
+  grupoId: z.guid("Escolha a mesa").optional(),
   /** Ficha que recebe; ausente/nulo = fica vago no grupo. */
   fichaId: z.guid().nullish(),
   /** NPC que recebe (no lugar de grupo/ficha). */
@@ -65,5 +65,5 @@ export const moverItemSchema = z.object({
   /** NPC de destino (só o mestre). */
   npcId: z.guid("NPC inválido").optional(),
   /** Grupo onde o item fica vago (só o mestre; necessário para item de NPC sem grupo). */
-  grupoId: z.guid("Grupo inválido").optional(),
+  grupoId: z.guid("Mesa inválida").optional(),
 });

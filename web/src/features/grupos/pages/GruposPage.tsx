@@ -12,25 +12,25 @@ export function GruposPage() {
     <div className="pagina">
       <div className="pagina__cabecalho">
         <div>
-          <h1>Grupos</h1>
-          <p className="pagina__subtitulo">Cada grupo é um RPG seu. Os jogadores entram com o código e criam a ficha lá dentro.</p>
+          <h1>Mesas</h1>
+          <p className="pagina__subtitulo">Cada mesa é um RPG seu. Os jogadores entram com o código e criam a ficha lá dentro.</p>
         </div>
         <Link to="/mestre/grupos/novo" className="btn btn--primario">
-          <Plus size={16} aria-hidden /> Novo grupo
+          <Plus size={16} aria-hidden /> Nova mesa
         </Link>
       </div>
 
       {grupos.isPending ? (
-        <Loading texto="Carregando grupos…" />
+        <Loading texto="Carregando mesas…" />
       ) : grupos.isError ? (
         <ErrorState mensagem={mensagemDeErro(grupos.error)} onTentarNovamente={() => grupos.refetch()} />
       ) : grupos.data.length === 0 ? (
         <EmptyState
-          titulo="Nenhum grupo ainda"
-          descricao="Crie o primeiro grupo e compartilhe o código com os jogadores."
+          titulo="Nenhuma mesa ainda"
+          descricao="Crie a primeira mesa e compartilhe o código com os jogadores."
           acao={
             <Link to="/mestre/grupos/novo" className="btn btn--primario">
-              <Plus size={16} aria-hidden /> Novo grupo
+              <Plus size={16} aria-hidden /> Nova mesa
             </Link>
           }
         />

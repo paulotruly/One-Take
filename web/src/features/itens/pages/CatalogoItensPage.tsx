@@ -75,7 +75,7 @@ export function CatalogoItensPage() {
       <div className="pagina__cabecalho">
         <div>
           <h1>Itens</h1>
-          <p className="pagina__subtitulo">Seu catálogo de itens. Lance um item num grupo a qualquer momento: vago para o grupo ou direto numa ficha.</p>
+          <p className="pagina__subtitulo">Seu catálogo de itens. Lance um item numa mesa a qualquer momento: vago para a mesa ou direto numa ficha.</p>
         </div>
         <div className="classe-cabecalho__acoes">
           <Button onClick={() => setGerenciandoCategorias(true)}>
@@ -134,7 +134,7 @@ export function CatalogoItensPage() {
                 </>
               )}
               <Button variante="primario" onClick={() => abrirLancar(aberto)}>
-                <Send size={16} aria-hidden /> Lançar num grupo
+                <Send size={16} aria-hidden /> Lançar numa mesa
               </Button>
             </div>
           </>
@@ -163,8 +163,8 @@ export function CatalogoItensPage() {
 
       <Modal aberto={!!lancando} onFechar={() => setLancando(null)} titulo={`Lançar: ${lancando?.nome ?? ""}`}>
         <div className="form">
-          <p className="pagina__subtitulo">O item entra vago no grupo; dali você entrega a um jogador (ou ele mesmo pega). Para mandar direto a uma ficha, use a página do grupo.</p>
-          <Field rotulo="Grupo">
+          <p className="pagina__subtitulo">O item entra vago na mesa; dali você entrega a um jogador (ou ele mesmo pega). Para mandar direto a uma ficha, use a página da mesa.</p>
+          <Field rotulo="Mesa">
             <select value={destinoGrupo} onChange={(e) => setDestinoGrupo(e.target.value)}>
               <option value="">Escolha…</option>
               {gruposParaLancar.map((g) => <option key={g.id} value={g.id}>{g.titulo}</option>)}
@@ -199,7 +199,7 @@ export function CatalogoItensPage() {
       <ConfirmDialog
         aberto={!!aExcluir}
         titulo="Excluir item do catálogo"
-        mensagem={<>Excluir <strong>{aExcluir?.nome}</strong> do catálogo? Os itens já lançados nos grupos continuam lá.</>}
+        mensagem={<>Excluir <strong>{aExcluir?.nome}</strong> do catálogo? Os itens já lançados nas mesas continuam lá.</>}
         processando={excluir.isPending}
         erro={excluir.isError ? mensagemDeErro(excluir.error) : null}
         onCancelar={() => setAExcluir(null)}

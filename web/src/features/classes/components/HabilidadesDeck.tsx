@@ -1,9 +1,10 @@
 import { Pencil, Sparkles, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "../../../components/ui/Button";
 import { Modal } from "../../../components/ui/Modal";
 import { EmptyState } from "../../../components/ui/States";
 import type { Habilidade } from "../types";
+import { CartasLinha } from "./CartasLinha";
 import { HabilidadeCard, HabilidadeDetalhe } from "./HabilidadeCard";
 
 type Acoes = {
@@ -16,12 +17,20 @@ type Acoes = {
 };
 
 /**
- * A cartela: cartas pequenas em grade; clicar numa carta abre os detalhes num pop-up.
+ * A cartela: cartas pequenas em uma linha com rolagem; clicar numa carta abre os detalhes num pop-up.
  * Sem `acoes` = somente leitura.
  */
 export function HabilidadesDeck({ habilidades, acoes, vazio }: { habilidades: Habilidade[]; acoes?: Acoes; vazio?: string }) {
   const [abertaId, setAbertaId] = useState<string | null>(null);
   const aberta = habilidades.find((h) => h.id === abertaId) ?? null;
+  const movidaId = useRef<string | null>(null);
+
+  // A carta reordenada pode sair da parte visível da linha: rola até ela quando a nova ordem chega.
+  useEffect(() => {
+    if (!movidaId.current) return;
+    document.querySelector(`[data-carta="${movidaId.current}"]`)?.scrollIntoView({ block: "nearest", inline: "nearest" });
+    movidaId.current = null;
+  }, [habilidades]);
 
   if (habilidades.length === 0) {
     return <EmptyState compacto titulo={vazio ?? "Nenhuma habilidade ainda"} descricao={acoes ? "Crie a primeira carta." : undefined} />;
@@ -30,6 +39,7 @@ export function HabilidadesDeck({ habilidades, acoes, vazio }: { habilidades: Ha
   function mover(indice: number, direcao: -1 | 1) {
     const ids = habilidades.map((h) => h.id);
     const alvo = indice + direcao;
+    movidaId.current = ids[indice]!;
     [ids[indice], ids[alvo]] = [ids[alvo]!, ids[indice]!];
     acoes?.onReordenar(ids);
   }
@@ -42,7 +52,7 @@ export function HabilidadesDeck({ habilidades, acoes, vazio }: { habilidades: Ha
 
   return (
     <>
-      <div className="deck">
+      <CartasLinha>
         {habilidades.map((h, i) => (
           <HabilidadeCard
             key={h.id}
@@ -61,7 +71,7 @@ export function HabilidadesDeck({ habilidades, acoes, vazio }: { habilidades: Ha
             }
           />
         ))}
-      </div>
+      </CartasLinha>
 
       <Modal aberto={!!aberta} onFechar={() => setAbertaId(null)} titulo={aberta?.titulo ?? ""}>
         {aberta && (

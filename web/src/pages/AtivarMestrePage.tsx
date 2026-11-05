@@ -26,7 +26,7 @@ export function AtivarMestrePage() {
         <p>Com a interface de mestre você:</p>
         <ul className="lista-simples">
           <li>cria classes, raças, perícias, atributos, status, itens e criaturas do bestiário;</li>
-          <li>cria grupos, recebe os jogadores pelo código e conduz a sessão (fichas, status, itens, criaturas);</li>
+          <li>cria mesas, recebe os jogadores pelo código e conduz a sessão (fichas, status, itens, criaturas);</li>
           <li>alterna entre Mestrar e Jogar no topo da tela, quando quiser.</li>
         </ul>
         <p className="pagina__subtitulo">Seu catálogo de mestre (perícias base) só é criado no primeiro acesso, para não ocupar espaço de quem nunca mestra.</p>

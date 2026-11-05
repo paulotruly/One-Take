@@ -15,8 +15,8 @@ não crie a conta. Você pode ler as páginas públicas (início, documentação
 ## 3. O que é o One-Take
 
 O One-Take é um sistema de RPG de mesa para sessões únicas, com um aplicativo web de apoio. Jogadores escolhem classes prontas, criam
-fichas e entram em grupos com um código. Mestres criam o conteúdo (classes, raças, atributos, perícias, habilidades, status, itens,
-criaturas, NPCs e kits) e conduzem os grupos.
+fichas e entram em mesas com um código. Mestres criam o conteúdo (classes, raças, atributos, perícias, habilidades, status, itens,
+criaturas, NPCs e kits) e conduzem as mesas.
 
 O aplicativo **apoia** o jogo: guarda fichas, calcula valores pelas regras e mostra os testes prontos. Ele não rola dados, não conduz
 sessões nem aplica automaticamente os efeitos das cartas e dos status: a mesa decide e aplica.
@@ -41,17 +41,17 @@ sessões nem aplica automaticamente os efeitos das cartas e dos status: a mesa d
 
 ## 6. Responsabilidades de jogadores e mestres
 
-- **Todos:** usar o aplicativo de boa-fé, respeitar os outros participantes e não tentar acessar contas, grupos ou dados de outras pessoas.
-- **Mestres:** o mestre controla os próprios grupos: decide o que vale na mesa, quem fica (pode remover membros), sobe o nível dos
+- **Todos:** usar o aplicativo de boa-fé, respeitar os outros participantes e não tentar acessar contas, mesas ou dados de outras pessoas.
+- **Mestres:** o mestre controla as próprias mesas: decide o que vale em cada uma, quem fica (pode remover membros), sobe o nível dos
   personagens e aplica status. O mestre é responsável pelo conteúdo que cria e libera para os jogadores.
-- **Jogadores:** o jogador controla a própria ficha dentro das regras do grupo e pode sair do grupo quando quiser.
+- **Jogadores:** o jogador controla a própria ficha dentro das regras da mesa e pode sair da mesa quando quiser.
 
-## 7. Grupos, códigos de entrada, fichas e permissões
+## 7. Mesas, códigos de entrada, fichas e permissões
 
-- Quem tem o código de entrada de um grupo e está logado vê a apresentação do grupo e pode criar uma ficha, se houver vaga. Compartilhe
-  o código só com quem você quer no grupo. O mestre pode gerar um código novo a qualquer momento (o antigo deixa de valer).
+- Quem tem o código de entrada de uma mesa e está logado vê a apresentação da mesa e pode criar uma ficha, se houver vaga. Compartilhe
+  o código só com quem você quer na mesa. O mestre pode gerar um código novo a qualquer momento (o antigo deixa de valer).
 - O mestre vê as fichas completas dos membros; os membros veem os nomes dos personagens e os nomes de usuário uns dos outros.
-- **Fichas arquivadas:** quando uma ficha sai de um grupo (o jogador sai, o mestre remove o membro, o grupo é excluído ou o mestre
+- **Fichas arquivadas:** quando uma ficha sai de uma mesa (o jogador sai, o mestre remove o membro, a mesa é excluída ou o mestre
   exclui a conta), o jogador fica com uma cópia somente leitura do personagem, que só ele pode apagar.
 
 ## 8. Conteúdo criado por você
@@ -65,7 +65,7 @@ sessões nem aplica automaticamente os efeitos das cartas e dos status: a mesa d
 
 - O aplicativo, o código-fonte, o sistema de regras, os textos da documentação, o nome e a identidade visual do One-Take pertencem a
   Paulo Gomes. [CONFIRMAR SE O NOME "ONE-TAKE" TEM REGISTRO OU PEDIDO DE MARCA]
-- O conteúdo inicial e o conteúdo verificado pelo administrador do One-Take (como o kit básico, com atributos, perícias base, status e
+- O conteúdo inicial e o conteúdo verificado pelo administrador do One-Take (como o conteúdo básico, com atributos, perícias base, status e
   categorias de itens) fazem parte do One-Take.
 - O repositório do código pode estar visível publicamente, mas isso **não** concede licença de uso, cópia, modificação ou distribuição.
   Não há licença de código aberto. Todos os direitos são reservados, salvo autorização por escrito.
@@ -82,7 +82,7 @@ O One-Take não usa o seu conteúdo para outros fins (como divulgação ou venda
 
 ## 11. O que não é permitido
 
-- Tentar acessar contas, grupos ou dados de outras pessoas, ou contornar as permissões do aplicativo.
+- Tentar acessar contas, mesas ou dados de outras pessoas, ou contornar as permissões do aplicativo.
 - Sobrecarregar, atacar ou testar a segurança do serviço sem autorização, ou automatizar cadastros e pedidos de links.
 - Usar o aplicativo para assédio, discriminação, ameaças, conteúdo ilegal ou que viole direitos de terceiros.
 - Publicar dados pessoais de outras pessoas sem autorização.
@@ -95,12 +95,12 @@ manutenção ou por falhas de fornecedores. Faremos esforços razoáveis para ma
 disponibilidade contínua. O serviço pode ser encerrado **sem aviso prévio**. Por isso, você pode **baixar todos os seus dados** a
 qualquer momento, em Configurações da conta > Seus dados (arquivo JSON).
 
-## 13. Exclusão de conta, fichas e grupos
+## 13. Exclusão de conta, fichas e mesas
 
 - **Conta:** você pode excluir a conta em Configurações da conta. A exclusão é confirmada com a sua senha e o seu nome de usuário e, depois de confirmada, é
   imediata e definitiva. O que é apagado e o que continua existindo está descrito na [política de privacidade](/privacidade), seção 15.
-- **Ficha:** sair do grupo tira a ficha do grupo e deixa uma cópia arquivada com você; você pode apagar a cópia quando quiser.
-- **Grupo:** o mestre pode excluir um grupo; os jogadores ficam com as cópias arquivadas das fichas deles.
+- **Ficha:** sair da mesa tira a ficha da mesa e deixa uma cópia arquivada com você; você pode apagar a cópia quando quiser.
+- **Mesa:** o mestre pode excluir uma mesa; os jogadores ficam com as cópias arquivadas das fichas deles.
 
 ## 14. Segurança e limites técnicos
 

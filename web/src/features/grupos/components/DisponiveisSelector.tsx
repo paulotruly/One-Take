@@ -131,7 +131,7 @@ export function DisponiveisSelector({ classes: cls, racas: rcs, atributos: atrs,
         <legend>
           Status <span className="pagina__subtitulo">({valor.statusIds.length} de {status.length})</span>
         </legend>
-        <p className="pagina__subtitulo">Opcional. Só os status marcados aparecem nas fichas deste grupo e podem ser aplicados.</p>
+        <p className="pagina__subtitulo">Opcional. Só os status marcados aparecem nas fichas desta mesa e podem ser aplicados.</p>
         <div className="disponiveis__atalhos">
           <button type="button" className="link-botao" onClick={() => todos("statusIds", status.map((s) => s.id), true)}>Marcar todos</button>
           <button type="button" className="link-botao" onClick={() => todos("statusIds", status.map((s) => s.id), false)}>Limpar</button>

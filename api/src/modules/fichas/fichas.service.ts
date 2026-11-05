@@ -32,7 +32,7 @@ export async function fichaAcessivel(id: string, usuarioId: string) {
 
 async function grupoPorCodigo(codigo: string) {
   const grupo = await getPrisma().grupo.findUnique({ where: { codigo: codigo.trim().toUpperCase() } });
-  if (!grupo) throw naoEncontrado("Código de grupo inválido");
+  if (!grupo) throw naoEncontrado("Código de mesa inválido");
   return grupo;
 }
 
@@ -118,7 +118,7 @@ export async function convite(codigo: string, usuarioId: string) {
 export async function criar(usuarioId: string, dados: z.infer<typeof criarFichaSchema>) {
   const prisma = getPrisma();
   const grupo = await grupoPorCodigo(dados.codigo);
-  if (grupo.mestreId === usuarioId) throw proibido("O mestre não cria ficha no próprio grupo.");
+  if (grupo.mestreId === usuarioId) throw proibido("O mestre não cria ficha na própria mesa.");
 
   const [jaTem, membros, classeOk, racaOk, atributos] = await Promise.all([
     prisma.ficha.findUnique({ where: { grupoId_jogadorId: { grupoId: grupo.id, jogadorId: usuarioId } }, select: { id: true } }),
@@ -127,10 +127,10 @@ export async function criar(usuarioId: string, dados: z.infer<typeof criarFichaS
     prisma.racaNoGrupo.findUnique({ where: { grupoId_racaId: { grupoId: grupo.id, racaId: dados.racaId } } }),
     prisma.atributoNoGrupo.findMany({ where: { grupoId: grupo.id }, select: { atributoId: true } }),
   ]);
-  if (jaTem) throw conflito("JA_TEM_FICHA", "Você já tem uma ficha neste grupo.");
+  if (jaTem) throw conflito("JA_TEM_FICHA", "Você já tem uma ficha nesta mesa.");
   if (membros >= grupo.limiteMembros) throw conflito("GRUPO_CHEIO", "O grupo já está com todas as vagas ocupadas.");
-  if (!classeOk) throw requisicaoInvalida("Essa classe não está disponível neste grupo.", [{ campo: "classeId", mensagem: "Indisponível neste grupo" }]);
-  if (!racaOk) throw requisicaoInvalida("Essa raça não está disponível neste grupo.", [{ campo: "racaId", mensagem: "Indisponível neste grupo" }]);
+  if (!classeOk) throw requisicaoInvalida("Essa classe não está disponível nesta mesa.", [{ campo: "classeId", mensagem: "Indisponível nesta mesa" }]);
+  if (!racaOk) throw requisicaoInvalida("Essa raça não está disponível nesta mesa.", [{ campo: "racaId", mensagem: "Indisponível nesta mesa" }]);
   const funcao = classeOk.classe.grupo;
   const limiteDaFuncao = grupo[CAMPO_DO_LIMITE[funcao]];
   if (limiteDaFuncao != null && (await prisma.ficha.count({ where: { grupoId: grupo.id, classe: { grupo: funcao } } })) >= limiteDaFuncao) {
@@ -138,14 +138,14 @@ export async function criar(usuarioId: string, dados: z.infer<typeof criarFichaS
   }
   if (!grupo.permitirClassesRepetidas) {
     const repetida = await prisma.ficha.findFirst({ where: { grupoId: grupo.id, classeId: dados.classeId }, select: { id: true } });
-    if (repetida) throw conflito("CLASSE_REPETIDA", "Outro jogador já usa essa classe e este grupo não permite classes repetidas.");
+    if (repetida) throw conflito("CLASSE_REPETIDA", "Outro jogador já usa essa classe e esta mesa não permite classes repetidas.");
   }
 
   // Dados: só atributos do grupo, soma exata dos pontos iniciais.
   const permitidos = new Set(atributos.map((a) => a.atributoId));
   const entradas = Object.entries(dados.dados).filter(([, n]) => n > 0);
   if (entradas.some(([id]) => !permitidos.has(id))) {
-    throw requisicaoInvalida("Algum atributo não está disponível neste grupo.", [{ campo: "dados", mensagem: "Atributo fora do grupo" }]);
+    throw requisicaoInvalida("Algum atributo não está disponível nesta mesa.", [{ campo: "dados", mensagem: "Atributo fora da mesa" }]);
   }
   const soma = entradas.reduce((t, [, n]) => t + n, 0);
   if (soma !== FICHA.pontosAtributoIniciais) {
@@ -306,9 +306,9 @@ export async function detalhar(id: string, usuarioId: string) {
     regrasDaMesa: { padrao: regrasPadraoAtivas(f.grupo.regrasPadraoDesativadas), proprias: f.grupo.regrasProprias },
     /** Status atuais (automáticos + aplicados), só os ativados no grupo. Efeitos são informativos. */
     status: statusDaFicha(atuais, ativosNoGrupo, f.status),
-    /** Status que o mestre pode aplicar nesta ficha (ativados no grupo, não automáticos, ainda não aplicados). */
+    /** Status que o mestre pode aplicar nesta ficha (ativados no grupo, ainda não aplicados; automáticos também, ex.: carta que cansa). */
     statusAplicaveis: ativosNoGrupo
-      .filter((st) => !st.gatilho && !f.status.some((fs) => fs.statusId === st.id))
+      .filter((st) => !f.status.some((fs) => fs.statusId === st.id))
       .map(apresentarStatus)
       .sort((a, b) => a.ordem - b.ordem || a.nome.localeCompare(b.nome, "pt-BR")),
     outrasFichas: f.grupo.fichas.filter((o) => o.id !== f.id).map((o) => ({ id: o.id, nome: o.nome, jogador: o.jogador.nickname })),
@@ -330,6 +330,10 @@ export async function editar(id: string, usuarioId: string, dados: z.infer<typeo
   if (!souMestre && dados.vidaAtual !== undefined && limitar(dados.vidaAtual, max.pontosVida)! > vidaHoje) {
     throw new AppError(403, "SO_MESTRE_CURA", "Só o mestre aumenta a vida. Você pode diminuir.");
   }
+  const manaHoje = Math.min(ficha.manaAtual, max.pontosMana);
+  if (!souMestre && dados.manaAtual !== undefined && limitar(dados.manaAtual, max.pontosMana)! > manaHoje) {
+    throw new AppError(403, "SO_MESTRE_CURA", "Só o mestre aumenta a mana. Você pode diminuir.");
+  }
   await getPrisma().ficha.update({
     where: { id },
     data: {
@@ -345,7 +349,7 @@ export async function editar(id: string, usuarioId: string, dados: z.infer<typeo
 /** Só o mestre do grupo. +1 nível: máximos e atuais sobem pelo ganho e a ficha recebe pontos de perícia. */
 export async function subirNivel(id: string, usuarioId: string) {
   const { ficha, souMestre } = await fichaAcessivel(id, usuarioId);
-  if (!souMestre) throw proibido("Só o mestre do grupo sobe o nível.");
+  if (!souMestre) throw proibido("Só o mestre da mesa sobe o nível.");
   if (ficha.nivel >= PROGRESSAO.nivelMaximo) throw new AppError(409, "NIVEL_MAXIMO", `O nível máximo é ${PROGRESSAO.nivelMaximo}.`);
   const g = PROGRESSAO.ganhoPorNivel;
   await getPrisma().ficha.update({
@@ -361,7 +365,7 @@ export async function subirNivel(id: string, usuarioId: string) {
   return detalhar(id, usuarioId);
 }
 
-/** Gasta os pontos de um nível: perícia nova com +5 ou +5 numa que já tem (mesma operação). */
+/** Gasta os pontos de um nível: perícia nova ou mais pontos numa que já tem (mesma operação). */
 export async function gastarPontosPericia(id: string, usuarioId: string, periciaId: string) {
   const atual = await detalhar(id, usuarioId);
   const custo = PROGRESSAO.ganhoPorNivel.pontosPericia;
@@ -400,18 +404,17 @@ export async function excluir(id: string, usuarioId: string) {
 
 export async function aplicarStatus(id: string, usuarioId: string, statusId: string, turnos: number | null = null) {
   const { ficha, souMestre } = await fichaAcessivel(id, usuarioId);
-  if (!souMestre) throw proibido("Só o mestre do grupo aplica status.");
+  if (!souMestre) throw proibido("Só o mestre da mesa aplica status.");
   const status = await statusUsavel(statusId, usuarioId);
-  if (status.gatilho) throw requisicaoInvalida("Este status é automático: ele aparece sozinho pelos recursos da ficha.");
   const ativo = await getPrisma().statusNoGrupo.findUnique({ where: { grupoId_statusId: { grupoId: ficha.grupoId, statusId } } });
-  if (!ativo) throw requisicaoInvalida("Este status não está ativado no grupo.");
+  if (!ativo) throw requisicaoInvalida("Este status não está ativado na mesa.");
   await getPrisma().fichaStatus.upsert({ where: { fichaId_statusId: { fichaId: id, statusId } }, create: { fichaId: id, statusId, turnos }, update: { turnos } });
   return detalhar(id, usuarioId);
 }
 
 export async function removerStatus(id: string, usuarioId: string, statusId: string) {
   const { souMestre } = await fichaAcessivel(id, usuarioId);
-  if (!souMestre) throw proibido("Só o mestre do grupo remove status.");
+  if (!souMestre) throw proibido("Só o mestre da mesa remove status.");
   await getPrisma().fichaStatus.deleteMany({ where: { fichaId: id, statusId } });
   return detalhar(id, usuarioId);
 }
@@ -419,7 +422,7 @@ export async function removerStatus(id: string, usuarioId: string, statusId: str
 /** O mestre muda os turnos que faltam de um status aplicado (tira 1 por turno); 0 tira o status. */
 export async function definirTurnosStatus(id: string, usuarioId: string, statusId: string, turnos: number | null) {
   const { souMestre } = await fichaAcessivel(id, usuarioId);
-  if (!souMestre) throw proibido("Só o mestre do grupo muda os turnos de um status.");
+  if (!souMestre) throw proibido("Só o mestre da mesa muda os turnos de um status.");
   const where = { fichaId: id, statusId };
   if (turnos === 0) await getPrisma().fichaStatus.deleteMany({ where });
   else {

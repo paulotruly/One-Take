@@ -24,6 +24,9 @@ import "./features/bestiario/components/bestiario.css";
 import "./features/docs/docs.css";
 import "./styles/mobile.css"; // por último: ajustes de celular
 
+// Dados falsos para ver as telas logadas (npm run dev:mock); fora do build de produção.
+if (import.meta.env.MODE === "mock") await import("./mock/instalar");
+
 aplicarPreferencias();
 atualizarTitulo(window.location.pathname);
 router.subscribe((estado) => atualizarTitulo(estado.location.pathname));

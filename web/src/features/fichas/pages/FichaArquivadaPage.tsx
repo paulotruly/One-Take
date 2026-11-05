@@ -83,10 +83,11 @@ export function FichaArquivadaPage() {
                 <h3>{h.titulo}</h3>
                 <p className="pagina__subtitulo">
                   {TIPOS_EFEITO[h.tipoEfeito as TipoEfeito]?.rotulo ?? h.tipoEfeito} · Nível {h.nivelNecessario}
-                  {h.custoMana > 0 && ` · ${h.custoMana} de mana`}{h.teste && ` · Teste ${h.teste}`}
+                  {h.custoMana > 0 && ` · ${h.custoMana} de mana`}{h.teste && ` · Teste ${h.teste}`}{h.dt && `, DT ${h.dt}`}
                 </p>
                 <p><ComNegrito texto={h.descricaoEfeito} /></p>
                 {h.defesa && h.defesa.length > 0 && <p className="pagina__subtitulo">Defesa do alvo: {[h.defesa].flat().join(" ou ")}</p>}
+                {h.alcance && <p className="pagina__subtitulo">Alcance: {h.alcance}</p>}
                 {h.condicao && <p className="pagina__subtitulo">Condição: {h.condicao}</p>}
                 {h.limite && <p className="pagina__subtitulo">Limite: {h.limite}</p>}
               </li>

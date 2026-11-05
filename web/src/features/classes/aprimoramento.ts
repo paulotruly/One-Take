@@ -2,7 +2,7 @@
 import { rotuloLimite, type Aprimoramento, type AprimoramentoInput, type Habilidade } from "./types";
 
 type Versao = Omit<AprimoramentoInput, "nivel"> & { status?: { nome: string } | null };
-export type CartaComAprimoramentos = Pick<Habilidade, "titulo" | "descricao" | "descricaoEfeito" | "condicao" | "limiteUsos" | "limitePor" | "custoMana" | "statusId" | "nivelNecessario"> & {
+export type CartaComAprimoramentos = Pick<Habilidade, "titulo" | "descricao" | "descricaoEfeito" | "condicao" | "limiteUsos" | "limitePor" | "custoMana" | "dt" | "alcance" | "periciaId" | "statusId" | "nivelNecessario"> & {
   status?: { nome: string } | null;
   aprimoramentos?: Aprimoramento[];
 };
@@ -19,6 +19,8 @@ export function versaoAntes(carta: CartaComAprimoramentos, nivel: number): Versa
     limiteUsos: v.limiteUsos ?? null,
     limitePor: v.limitePor ?? null,
     custoMana: v.custoMana,
+    dt: v.dt ?? null,
+    alcance: v.alcance ?? null,
     statusId: v.statusId ?? null,
     status: v.status ?? null,
   };
@@ -31,6 +33,8 @@ export function resumoAprimoramento(a: Aprimoramento, carta: CartaComAprimoramen
   if (a.titulo !== antes.titulo) partes.push(`título "${a.titulo}"`);
   if (a.descricaoEfeito !== antes.descricaoEfeito) partes.push(`efeito: ${a.descricaoEfeito}`);
   if (a.custoMana !== antes.custoMana) partes.push(`custo ${a.custoMana} de mana`);
+  if ((a.dt ?? null) !== antes.dt) partes.push(a.dt ? `DT ${a.dt}` : "sem DT");
+  if ((a.alcance ?? null) !== antes.alcance) partes.push(a.alcance ? `alcance: ${a.alcance}` : "sem alcance");
   if ((a.condicao ?? null) !== antes.condicao) partes.push(a.condicao ? `condição: ${a.condicao}` : "sem condição");
   if (a.limiteUsos !== antes.limiteUsos || a.limitePor !== antes.limitePor) partes.push(`limite: ${rotuloLimite(a.limiteUsos, a.limitePor) ?? "sem limite"}`);
   if (a.statusId !== antes.statusId) partes.push(a.status ? `ativa ${a.status.nome}` : "não ativa status");

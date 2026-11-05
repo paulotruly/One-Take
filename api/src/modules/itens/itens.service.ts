@@ -41,7 +41,7 @@ export async function criar(grupoId: string, usuarioId: string, dados: z.infer<t
   const { fichaId, ...campos } = dados;
   if (fichaId) {
     const ficha = await garantirEspacoFicha(fichaId, campos.espacos);
-    if (ficha.grupoId !== grupoId) throw naoEncontrado("Ficha de destino não encontrada neste grupo");
+    if (ficha.grupoId !== grupoId) throw naoEncontrado("Ficha de destino não encontrada nesta mesa");
   }
   const item = await getPrisma().item.create({
     data: { ...campos, grupoId, fichaId: fichaId ?? null, usosRestantes: campos.usosMaximos },
@@ -66,16 +66,16 @@ export async function lancar(modeloId: string, usuarioId: string, dados: z.infer
     // Item com NPC não pertence a grupo nenhum (NPCs não são de um grupo).
     destino = { grupoId: null, fichaId: null, npcId: npc.id };
   } else {
-    if (!dados.grupoId) throw requisicaoInvalida("Escolha o grupo ou o NPC que recebe o item.", [{ campo: "grupoId", mensagem: "Obrigatório" }]);
+    if (!dados.grupoId) throw requisicaoInvalida("Escolha a mesa ou o NPC que recebe o item.", [{ campo: "grupoId", mensagem: "Obrigatório" }]);
     await grupoDoMestre(dados.grupoId, usuarioId);
     if (dados.fichaId) {
       const ficha = await garantirEspacoFicha(dados.fichaId, total);
-      if (ficha.grupoId !== dados.grupoId) throw naoEncontrado("Ficha de destino não encontrada neste grupo");
+      if (ficha.grupoId !== dados.grupoId) throw naoEncontrado("Ficha de destino não encontrada nesta mesa");
     }
     destino = { grupoId: dados.grupoId, fichaId: dados.fichaId ?? null, npcId: null };
   }
 
-  const { id: _id, donoId: _d, criadoEm: _c, atualizadoEm: _a, ...campos } = modelo;
+  const { id: _id, donoId: _d, criadoEm: _c, atualizadoEm: _a, verificado: _v, ...campos } = modelo;
   await prisma.item.createMany({
     data: Array.from({ length: dados.quantidade }, () => ({ ...campos, modeloId, ...destino, usosRestantes: campos.usosMaximos })),
   });
@@ -137,7 +137,7 @@ export async function mover(id: string, usuarioId: string, destino: z.infer<type
 
   if (!souMestre) {
     if (!item.grupoId || item.npcId) throw naoEncontrado("Item não encontrado");
-    if (destino.npcId || destino.grupoId) throw proibido("Só o mestre manda itens para NPCs ou outros grupos.");
+    if (destino.npcId || destino.grupoId) throw proibido("Só o mestre manda itens para NPCs ou outras mesas.");
     const minhaFicha = await prisma.ficha.findUnique({
       where: { grupoId_jogadorId: { grupoId: item.grupoId, jogadorId: usuarioId } },
       select: { id: true },
@@ -164,13 +164,13 @@ export async function mover(id: string, usuarioId: string, destino: z.infer<type
     const ficha = await garantirEspacoFicha(destino.fichaId, item.espacos);
     const mesmoGrupo = ficha.grupoId === item.grupoId;
     // Jogador: só dentro do grupo. Mestre: qualquer ficha dos grupos dele (ex.: o NPC entrega um item).
-    if (!mesmoGrupo && !(souMestre && ficha.grupo.mestreId === usuarioId)) throw naoEncontrado("Ficha de destino não encontrada neste grupo");
+    if (!mesmoGrupo && !(souMestre && ficha.grupo.mestreId === usuarioId)) throw naoEncontrado("Ficha de destino não encontrada nesta mesa");
     return apresentarItem(await prisma.item.update({ where: { id }, data: { fichaId: ficha.id, npcId: null, grupoId: ficha.grupoId }, include: comRequisitos }));
   }
 
   // Vago num grupo.
   const grupoId = destino.grupoId ?? item.grupoId;
-  if (!grupoId) throw requisicaoInvalida("Este item é de um NPC sem grupo: escolha o grupo onde ele fica vago.", [{ campo: "grupoId", mensagem: "Escolha o grupo" }]);
+  if (!grupoId) throw requisicaoInvalida("Este item é de um NPC sem mesa: escolha a mesa onde ele fica vago.", [{ campo: "grupoId", mensagem: "Escolha a mesa" }]);
   if (destino.grupoId && destino.grupoId !== item.grupoId) await grupoDoMestre(destino.grupoId, usuarioId);
   if (item.fichaId === null && item.npcId === null && item.grupoId === grupoId) return apresentarItem(item);
   return apresentarItem(await prisma.item.update({ where: { id }, data: { fichaId: null, npcId: null, grupoId }, include: comRequisitos }));
@@ -184,7 +184,7 @@ export async function mover(id: string, usuarioId: string, destino: z.infer<type
 export async function usar(id: string, usuarioId: string) {
   const item = await itemCompleto(id);
   const souMestre = mestreDoItem(item) === usuarioId;
-  if (!item.fichaId && !item.npcId) throw requisicaoInvalida("Este item está vago no grupo: pegue-o antes de usar.");
+  if (!item.fichaId && !item.npcId) throw requisicaoInvalida("Este item está vago na mesa: pegue-o antes de usar.");
   if (item.npcId && !souMestre) throw naoEncontrado("Item não encontrado");
   if (item.fichaId && !souMestre && item.ficha?.jogadorId !== usuarioId) throw naoEncontrado("Item não encontrado");
 

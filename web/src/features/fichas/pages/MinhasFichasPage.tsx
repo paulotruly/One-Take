@@ -24,12 +24,12 @@ export function MinhasFichasPage() {
     <div className="pagina">
       <div>
         <h1>Minhas fichas</h1>
-        <p className="pagina__subtitulo">Uma ficha por grupo. Para entrar num grupo novo, use o código que o mestre passou.</p>
+        <p className="pagina__subtitulo">Uma ficha por mesa. Para entrar numa mesa nova, use o código que o mestre passou.</p>
       </div>
 
       <form className="painel entrar-codigo" onSubmit={entrar}>
         <label htmlFor="codigo" className="campo__rotulo">
-          Entrar em um grupo
+          Entrar em uma mesa
         </label>
         <div className="entrar-codigo__linha">
           <input
@@ -78,7 +78,7 @@ export function MinhasFichasPage() {
       {arquivadas.data && arquivadas.data.length > 0 && (
         <section className="secao">
           <h2><Archive size={18} aria-hidden /> Fichas arquivadas</h2>
-          <p className="pagina__subtitulo">Personagens que saíram de um grupo. São cópias só para leitura; só você pode apagá-las.</p>
+          <p className="pagina__subtitulo">Personagens que saíram de uma mesa. São cópias só para leitura; só você pode apagá-las.</p>
           <ul className="lista-cards">
             {arquivadas.data.map((f) => (
               <li key={f.id}>

@@ -30,7 +30,7 @@ export function CriaturaModal({ criaturaId, onFechar, onSumiu }: Props) {
     if (!c) return;
     editar.mutate(
       { id: c.id, dados },
-      { onSuccess: (r) => r.removida && onSumiu(`${c.nome} morreu e saiu do grupo.`) },
+      { onSuccess: (r) => r.removida && onSumiu(`${c.nome} morreu e saiu da mesa.`) },
     );
   }
 
@@ -51,7 +51,7 @@ export function CriaturaModal({ criaturaId, onFechar, onSumiu }: Props) {
             <BarraRecurso rotulo="Mana" Icone={Droplet} tipo="mana" atual={c.mana.atual} max={c.mana.max} editavel ocupado={editar.isPending} onMudar={(v) => mudar({ manaAtual: v })} />
             <BarraRecurso rotulo="Esforço" Icone={Zap} tipo="esforco" atual={c.esforco.atual} max={c.esforco.max} editavel ocupado={editar.isPending} onMudar={(v) => mudar({ esforcoAtual: v })} />
           </div>
-          <p className="pagina__subtitulo">Vida ou mana em 0: a criatura morre e some do grupo sozinha.</p>
+          <p className="pagina__subtitulo">Vida ou mana em 0: a criatura morre e some da mesa sozinha.</p>
           <PainelStatus
             status={c.statusDetalhado}
             aplicaveis={c.statusAplicaveis}
@@ -59,7 +59,7 @@ export function CriaturaModal({ criaturaId, onFechar, onSumiu }: Props) {
             onRemover={(id) => removerStatus.mutate(id)}
             onMudarTurnos={(statusId, turnos) => turnosStatus.mutate({ statusId, turnos })}
             ocupado={aplicarStatus.isPending || removerStatus.isPending || turnosStatus.isPending}
-            semAplicaveis="Nenhum status para aplicar: ative status no grupo (Editar grupo)."
+            semAplicaveis="Nenhum status para aplicar: ative status na mesa (Editar mesa)."
           />
           {(aplicarStatus.isError || removerStatus.isError || turnosStatus.isError) && <div className="aviso">{mensagemDeErro(aplicarStatus.error ?? removerStatus.error ?? turnosStatus.error)}</div>}
 
@@ -93,7 +93,7 @@ export function CriaturaModal({ criaturaId, onFechar, onSumiu }: Props) {
             <Button
               variante="perigo"
               disabled={remover.isPending}
-              onClick={() => remover.mutate(c.id, { onSuccess: () => onSumiu(`${c.nome} saiu do grupo.`) })}
+              onClick={() => remover.mutate(c.id, { onSuccess: () => onSumiu(`${c.nome} saiu da mesa.`) })}
             >
               <LogOut size={16} aria-hidden /> Remover (fugiu, sumiu)
             </Button>

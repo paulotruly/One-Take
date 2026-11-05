@@ -108,7 +108,7 @@ export function StatusPage() {
       <ConfirmDialog
         aberto={!!aExcluir}
         titulo="Excluir status"
-        mensagem={<>Excluir <strong>{aExcluir?.nome}</strong>? Ele sai das fichas e dos grupos, e as cartas que o ativavam ficam sem status.</>}
+        mensagem={<>Excluir <strong>{aExcluir?.nome}</strong>? Ele sai das fichas e das mesas, e as cartas que o ativavam ficam sem status.</>}
         processando={excluir.isPending}
         erro={excluir.isError ? mensagemDeErro(excluir.error) : null}
         onCancelar={() => setAExcluir(null)}

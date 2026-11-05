@@ -14,10 +14,10 @@ type Recurso = { Icone: LucideIcon; titulo: string; texto: string };
 const PARA_O_MESTRE: Recurso[] = [
   { Icone: Layers, titulo: "Classes e cartas", texto: "Classes com vida, mana e esforço base e uma cartela de habilidades: tipo de efeito, custo de mana, nível e aprimoramentos." },
   { Icone: ListChecks, titulo: "Raças, perícias e atributos", texto: "Um catálogo só seu. Crie atributos para o tema da aventura e escolha as perícias de cada classe e raça." },
-  { Icone: Shield, titulo: "Grupos com código", texto: "Defina o limite de jogadores, o que vale na mesa, os status ativos e as regras da mesa. Os jogadores entram com um código." },
+  { Icone: Shield, titulo: "Mesas com código", texto: "Defina o limite de jogadores, o que vale na mesa, os status ativos e as regras da mesa. Os jogadores entram com um código." },
   { Icone: PawPrint, titulo: "Bestiário e NPCs", texto: "Criaturas montadas como classes e invocadas no nível escolhido. NPCs com ficha, cartas e inventário." },
-  { Icone: Backpack, titulo: "Catálogo de itens", texto: "Categorias, espaços, usos e pré-requisitos. Lance itens no grupo ou direto na ficha de um jogador." },
-  { Icone: Package, titulo: "Kits de RPG", texto: "Junte o conteúdo de uma aventura num kit e use-o para montar o grupo em poucos cliques." },
+  { Icone: Backpack, titulo: "Catálogo de itens", texto: "Categorias, espaços, usos e pré-requisitos. Lance itens na mesa ou direto na ficha de um jogador." },
+  { Icone: Package, titulo: "Kits de RPG", texto: "Junte o conteúdo de uma aventura num kit e use-o para montar a mesa em poucos cliques." },
 ];
 
 const PARA_O_JOGADOR: Recurso[] = [
@@ -45,7 +45,7 @@ const PERGUNTAS: { pergunta: string; resposta: ReactNode }[] = [
   },
   {
     pergunta: "Posso jogar e mestrar com a mesma conta?",
-    resposta: "Sim. Toda conta joga, e a interface de mestre pode ser ativada no cadastro ou depois. Só não dá para ter ficha no seu próprio grupo.",
+    resposta: "Sim. Toda conta joga, e a interface de mestre pode ser ativada no cadastro ou depois. Só não dá para ter ficha no seu própria mesa.",
   },
   {
     pergunta: "Preciso de um mapa ou grid no app?",
@@ -55,7 +55,7 @@ const PERGUNTAS: { pergunta: string; resposta: ReactNode }[] = [
     pergunta: "Dá para usar em outros temas além de fantasia?",
     resposta: (
       <>
-        Sim. O mestre cria raças, classes, perícias e atributos próprios e escolhe o que vale em cada grupo.{" "}
+        Sim. O mestre cria raças, classes, perícias e atributos próprios e escolhe o que vale em cada mesa.{" "}
         <Link to="/docs/mestre-temas">Veja exemplos de adaptação</Link>.
       </>
     ),
@@ -95,7 +95,7 @@ export function HomePage() {
 
   const passos = [
     { Icone: Crown, quem: "Mestre", titulo: "Monte o mundo", texto: "Crie a conta, ative a interface de mestre e cadastre classes, raças, perícias, itens e criaturas, ou organize tudo num kit." },
-    { Icone: KeyRound, quem: "Mestre", titulo: "Crie o grupo", texto: "Escolha o que vale na mesa e compartilhe o código de entrada com os jogadores." },
+    { Icone: KeyRound, quem: "Mestre", titulo: "Crie a mesa", texto: "Escolha o que vale na mesa e compartilhe o código de entrada com os jogadores." },
     { Icone: Users, quem: "Jogadores", titulo: "Entrem e montem a ficha", texto: `Com o código, cada jogador escolhe raça e classe liberadas e distribui ${r.ficha.pontosAtributoIniciais} pontos de atributo (cada ponto é um ${d}).` },
     { Icone: Dices, quem: "Todos", titulo: "Joguem", texto: `O mestre pede atributo + perícia e uma dificuldade. O jogador rola 1 ${d} por ponto, fica com o maior e soma o bônus da perícia.` },
     { Icone: TrendingUp, quem: "Mestre", titulo: "Suba o nível", texto: `Ao fim da sessão, cada personagem pode subir um nível: +${ganho.pontosVida} de vida, +${ganho.pontosMana} de mana, +${ganho.pontosEsforco} de esforço, +${ganho.pontosPericia} pontos de perícia, as cartas do novo nível e +${r.ficha.inventarioPorNivel} espaços no inventário.` },
@@ -145,7 +145,7 @@ export function HomePage() {
           </p>
         </div>
         <ul className="home__publico">
-          <li><Crown size={20} aria-hidden /><div><strong>Para mestres</strong><span>que querem preparar one-shots e conduzir o grupo com tudo à mão.</span></div></li>
+          <li><Crown size={20} aria-hidden /><div><strong>Para mestres</strong><span>que querem preparar one-shots e conduzir a mesa com tudo à mão.</span></div></li>
           <li><UserRound size={20} aria-hidden /><div><strong>Para jogadores</strong><span>que querem chegar, escolher um personagem e jogar, sem montar ficha do zero.</span></div></li>
         </ul>
       </section>
@@ -154,7 +154,7 @@ export function HomePage() {
       <section id="papeis" className="home__secao" aria-labelledby="papeis-titulo">
         <div className="home__cabecalho-secao">
           <h2 id="papeis-titulo">Escolha o seu papel na mesa</h2>
-          <p>Como num jogo de heróis: cada classe pertence a um grupo tático e já vem com a cartela de habilidades pronta.</p>
+          <p>Como num jogo de heróis: cada classe tem uma função e já vem com a cartela de habilidades pronta.</p>
         </div>
         <div className="home__papeis">
           <ul className="home__lista-papeis">
@@ -234,7 +234,7 @@ export function HomePage() {
       <section className="landing__chamada" aria-labelledby="chamada-titulo">
         <div>
           <h2 id="chamada-titulo">Pronto para a próxima sessão?</h2>
-          <p className="home__chamada-texto">Crie a conta, monte o grupo e chame a mesa.</p>
+          <p className="home__chamada-texto">Crie a conta, monte a mesa e chame os jogadores.</p>
         </div>
         <div className="hero__acoes">
           {session ? (

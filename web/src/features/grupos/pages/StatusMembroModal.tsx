@@ -18,7 +18,7 @@ export function StatusMembroModal({ grupoId, membro, statusAtivos, onFechar }: P
   const remover = useRemoverStatus(fichaId);
   const turnos = useTurnosStatus(fichaId);
   const aplicados = membro?.status ?? [];
-  const aplicaveis = statusAtivos.filter((s) => !s.automatico && !aplicados.some((a) => a.id === s.id));
+  const aplicaveis = statusAtivos.filter((s) => !aplicados.some((a) => a.id === s.id));
 
   return (
     <Modal aberto={!!membro} onFechar={onFechar} titulo={`Status de ${membro?.nome ?? ""}`}>
@@ -45,7 +45,7 @@ export function StatusMembroModal({ grupoId, membro, statusAtivos, onFechar }: P
             onAplicar={(statusId, t, pronto) => aplicar.mutate({ statusId, turnos: t }, { onSuccess: pronto })} />
         ) : (
           <p className="pagina__subtitulo">
-            Sem status para aplicar. Ative status em <Link to={`/mestre/grupos/${grupoId}/editar`}>Editar grupo</Link>.
+            Sem status para aplicar. Ative status em <Link to={`/mestre/grupos/${grupoId}/editar`}>Editar mesa</Link>.
           </p>
         )}
         {(aplicar.isError || remover.isError || turnos.isError) && <div className="aviso">{mensagemDeErro(aplicar.error ?? remover.error ?? turnos.error)}</div>}

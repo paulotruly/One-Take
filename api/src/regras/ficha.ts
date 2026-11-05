@@ -8,7 +8,14 @@ export const FICHA = {
   inventarioInicial: 5,
   /** Espaços de inventário ganhos a cada nível acima do inicial. */
   inventarioPorNivel: 2,
+  /** No interlúdio, a mana sobe até esta fração do máximo (decisão de 2026-11-05). */
+  manaNoInterludio: 0.8,
 } as const;
+
+/** Mana depois de um interlúdio: sobe até a fração do máximo; quem já tem mais não perde nada. */
+export function manaAposInterludio(atual: number, maximo: number) {
+  return Math.max(atual, Math.floor(maximo * FICHA.manaNoInterludio));
+}
 
 /** Espaços de inventário no nível dado. */
 export function capacidadeInventario(nivel: number) {

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { kitIdsSchema } from "../../lib/kits.js";
+import { PROGRESSAO } from "../../regras/progressao.js";
 import { inteiro, texto, urlOpcional } from "../../lib/validacao.js";
 
 // Vida, mana e esforço base (nível 1): como nas classes, nenhum pode ser zero.
@@ -32,7 +33,7 @@ export const bestaAtributoSchema = z.object({ dados: inteiro(0, 20) });
 
 export const invocarSchema = z.object({
   bestaId: z.guid("Escolha uma criatura"),
-  nivel: inteiro(1, 100).default(1),
+  nivel: inteiro(1, PROGRESSAO.nivelMaximo).default(1),
   /** Quantas criaturas iguais invocar de uma vez. */
   quantidade: inteiro(1, 20).default(1),
 });

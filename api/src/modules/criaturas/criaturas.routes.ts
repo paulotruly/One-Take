@@ -12,7 +12,7 @@ const criaturaId = (v: unknown) => idDe(v, "Criatura não encontrada");
 
 criaturasRouter.post("/grupos/:id/criaturas", async (req, res) => {
   const dados = invocarSchema.parse(req.body);
-  res.status(201).json(await service.invocar(idDe(req.params.id, "Grupo não encontrado"), usuarioDe(req).id, dados));
+  res.status(201).json(await service.invocar(idDe(req.params.id, "Mesa não encontrada"), usuarioDe(req).id, dados));
 });
 
 criaturasRouter.get("/criaturas/:id", async (req, res) => {

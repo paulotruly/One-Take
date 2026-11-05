@@ -5,6 +5,7 @@ import { Button } from "../../../components/ui/Button";
 import { Modal } from "../../../components/ui/Modal";
 import { EmptyState } from "../../../components/ui/States";
 import { TIPOS_EFEITO, type Habilidade, type Progressao, type TipoEfeito } from "../types";
+import { CartasLinha } from "./CartasLinha";
 import { HabilidadeCard, HabilidadeDetalhe } from "./HabilidadeCard";
 import { StatsBar } from "./StatsBar";
 
@@ -25,9 +26,8 @@ export function CartelaPorNivel({ habilidades, progressao, acao }: Props) {
   const primeiroNivel = progressao.niveis[0]?.nivel ?? 1;
   const tipos = [...new Set(habilidades.map((h) => h.tipoEfeito))];
   const visiveis = habilidades.filter((h) => !tipo || h.tipoEfeito === tipo);
-  const niveisDasCartas = [...new Set(visiveis.map((h) => h.nivelNecessario))].sort((a, b) => a - b);
-  // A ordem do pop-up segue a da tela (por nível), para as setas andarem de carta em carta.
-  const ordem = niveisDasCartas.flatMap((n) => visiveis.filter((h) => h.nivelNecessario === n));
+  // Uma linha só, por nível; o pop-up segue a mesma ordem, para as setas andarem de carta em carta.
+  const ordem = [...visiveis].sort((a, b) => a.nivelNecessario - b.nivelNecessario);
   const indice = ordem.findIndex((h) => h.id === abertaId);
   const aberta = indice >= 0 ? ordem[indice]! : null;
 
@@ -83,22 +83,17 @@ export function CartelaPorNivel({ habilidades, progressao, acao }: Props) {
       {habilidades.length === 0 ? (
         <EmptyState compacto titulo="Nenhuma carta na cartela ainda" />
       ) : (
-        niveisDasCartas.map((n) => (
-          <section key={n} className="cartela__bloco">
-            <h3 className="cartela__titulo-nivel">Cartas do nível {n}</h3>
-            <div className="deck">
-              {visiveis.filter((h) => h.nivelNecessario === n).map((h) => (
-                <HabilidadeCard
-                  key={h.id}
-                  habilidade={h}
-                  bloqueada={!liberadas.has(h.id)}
-                  marca={aprimoradas.has(h.id) ? "Aprimorada" : novas.has(h.id) && nivel > primeiroNivel ? "Nova" : undefined}
-                  onAbrir={() => setAbertaId(h.id)}
-                />
-              ))}
-            </div>
-          </section>
-        ))
+        <CartasLinha>
+          {ordem.map((h) => (
+            <HabilidadeCard
+              key={h.id}
+              habilidade={h}
+              bloqueada={!liberadas.has(h.id)}
+              marca={aprimoradas.has(h.id) ? "Aprimorada" : novas.has(h.id) && nivel > primeiroNivel ? "Nova" : undefined}
+              onAbrir={() => setAbertaId(h.id)}
+            />
+          ))}
+        </CartasLinha>
       )}
 
       <Modal aberto={!!aberta} onFechar={() => setAbertaId(null)} titulo={aberta?.titulo ?? ""}>

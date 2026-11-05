@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { manaAposInterludio } from "../src/regras/ficha.js";
 import { aplicarAprimoramentos, atributosNoNivel, habilidadesNoNivel, pontosPericiaGanhos, previaProgressao } from "../src/regras/progressao.js";
 
 const base = { pontosVida: 40, pontosMana: 5, pontosEsforco: 15 };
@@ -8,6 +9,14 @@ const cartas = [
   { id: "c", nivelNecessario: 7 },
 ];
 
+describe("mana no interlúdio", () => {
+  it("sobe até 80% do máximo e nunca tira de quem já tem mais", () => {
+    expect(manaAposInterludio(10, 120)).toBe(96);
+    expect(manaAposInterludio(110, 120)).toBe(110);
+    expect(manaAposInterludio(1, 5)).toBe(4);
+  });
+});
+
 describe("regras de progressão", () => {
   it("+5 vida, mana e esforço por nível acima do 1", () => {
     expect(atributosNoNivel(base, 1)).toEqual(base);
@@ -16,8 +25,8 @@ describe("regras de progressão", () => {
 
   it("+5 pontos de perícia por nível, acumulados", () => {
     expect(pontosPericiaGanhos(1)).toBe(0);
-    expect(pontosPericiaGanhos(2)).toBe(5);
-    expect(pontosPericiaGanhos(4)).toBe(15);
+    expect(pontosPericiaGanhos(2)).toBe(2);
+    expect(pontosPericiaGanhos(4)).toBe(6);
   });
 
   it("nível N libera todas as cartas de nível ≤ N", () => {
@@ -29,7 +38,7 @@ describe("regras de progressão", () => {
     expect(previaProgressao({ ...base, habilidades: cartas.slice(0, 2) }).niveis).toHaveLength(5);
     const previa = previaProgressao({ ...base, habilidades: cartas });
     expect(previa.niveis.map((n) => n.nivel)).toEqual([1, 2, 3, 4, 5, 6, 7]);
-    expect(previa.niveis[1]).toMatchObject({ nivel: 2, pontosVida: 45, pontosPericia: 5, habilidades: ["a", "b"], novasHabilidades: ["b"] });
+    expect(previa.niveis[1]).toMatchObject({ nivel: 2, pontosVida: 45, pontosPericia: 2, habilidades: ["a", "b"], novasHabilidades: ["b"] });
     expect(previa.niveis[6]!.novasHabilidades).toEqual(["c"]);
   });
 });

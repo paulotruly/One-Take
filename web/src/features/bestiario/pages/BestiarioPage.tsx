@@ -28,7 +28,7 @@ export function BestiarioPage() {
         <div>
           <h1>Bestiário</h1>
           <p className="pagina__subtitulo">
-            Criaturas funcionam como classes: vida, mana e esforço, perícias, dados por atributo e cartas com nível. No grupo, você invoca
+            Criaturas funcionam como classes: vida, mana e esforço, perícias, dados por atributo e cartas com nível. Na mesa, você invoca
             as criaturas no nível que quiser e acompanha a ficha de cada uma.
           </p>
         </div>

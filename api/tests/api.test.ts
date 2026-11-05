@@ -40,7 +40,7 @@ describe("regras públicas", () => {
     prismaFalso.atributo.findMany.mockResolvedValue([{ nome: "Capacidade física", descricao: "x" }]);
     const res = await request(app).get("/api/regras");
     expect(res.status).toBe(200);
-    expect(res.body.ficha).toEqual({ pontosAtributoIniciais: 3, inventarioInicial: 5, inventarioPorNivel: 2 });
+    expect(res.body.ficha).toEqual({ pontosAtributoIniciais: 3, inventarioInicial: 5, inventarioPorNivel: 2, manaNoInterludio: 0.8 });
     expect(res.body.progressao.ganhoPorNivel.pontosVida).toBe(5);
     expect(res.body.atributosBase[0].nome).toBe("Capacidade física");
     expect(prismaFalso.atributo.findMany.mock.calls[0]![0].where).toMatchObject({ dono: { cargo: "ADMIN" } });
@@ -271,7 +271,7 @@ describe("classes", () => {
     prismaFalso.classe.findUniqueOrThrow.mockResolvedValue({ ...fixa, habilidades: [{ id: "h", nivelNecessario: 2 }] });
     const res = await comoMestre(request(app).get(`/api/classes/${fixa.id}/progressao`));
     expect(res.status).toBe(200);
-    expect(res.body.ganhoPorNivel).toEqual({ pontosVida: 5, pontosMana: 5, pontosEsforco: 5, pontosPericia: 5 });
+    expect(res.body.ganhoPorNivel).toEqual({ pontosVida: 5, pontosMana: 5, pontosEsforco: 5, pontosPericia: 2 });
     expect(res.body.niveis[1]).toMatchObject({ nivel: 2, pontosVida: 45, novasHabilidades: ["h"] });
   });
 

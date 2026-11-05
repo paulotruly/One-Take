@@ -8,7 +8,7 @@ export type Regras = {
     nivelMaximo: number;
     ganhoPorNivel: { pontosVida: number; pontosMana: number; pontosEsforco: number; pontosPericia: number };
   };
-  ficha: { pontosAtributoIniciais: number; inventarioInicial: number; inventarioPorNivel: number };
+  ficha: { pontosAtributoIniciais: number; inventarioInicial: number; inventarioPorNivel: number; manaNoInterludio: number };
   /** Regras de teste (api/src/regras/teste.ts) e tabela de chances por DT, sem bônus. */
   teste: {
     ladosDoDado: number;
@@ -37,8 +37,8 @@ export type RegraDefesa = { ataque: { id: string; nome: string }; defesa: { id: 
 
 /** Usado só enquanto /api/regras carrega (mesmos valores da regra atual). */
 const PADRAO: Regras = {
-  progressao: { nivelInicial: 1, nivelMaximo: 100, ganhoPorNivel: { pontosVida: 5, pontosMana: 5, pontosEsforco: 5, pontosPericia: 5 } },
-  ficha: { pontosAtributoIniciais: 3, inventarioInicial: 5, inventarioPorNivel: 2 },
+  progressao: { nivelInicial: 1, nivelMaximo: 10, ganhoPorNivel: { pontosVida: 5, pontosMana: 5, pontosEsforco: 5, pontosPericia: 2 } },
+  ficha: { pontosAtributoIniciais: 3, inventarioInicial: 5, inventarioPorNivel: 2, manaNoInterludio: 0.8 },
   teste: { ladosDoDado: 20, dadosComAtributoZero: 1, divisorComAtributoZero: 2, esforcoPorDadoExtra: 1, esforcoComAtributoZero: false, esforcoMaximoPorRodada: 1, dadosPorVantagem: 1, chances: [] },
   atributosBase: [
     { nome: "Capacidade física", descricao: "Utilizada sempre que o corpo é levado ao limite." },

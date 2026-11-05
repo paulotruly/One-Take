@@ -30,9 +30,17 @@ async function defesasValidas(ids: string[], usuarioId: string) {
   return unicos;
 }
 
+/** A DT é o alvo do teste da carta: sem perícia do teste, não há o que rolar. */
+function exigirPericiaParaDt(dt: number | null | undefined, periciaId: string | null) {
+  if (dt !== null && dt !== undefined && !periciaId) {
+    throw requisicaoInvalida("Para usar DT, a carta precisa de uma perícia do teste.", [{ campo: "dt", mensagem: "Escolha a perícia do teste da carta" }]);
+  }
+}
+
 /** A classe (ou besta) precisa existir e ser do mestre. Nova habilidade entra no fim da cartela. */
 export async function criar(dono: DonoCartela, usuarioId: string, dados: z.infer<typeof criarHabilidadeSchema>) {
   await donoEditavel(dono, usuarioId);
+  exigirPericiaParaDt(dados.dt, dados.periciaId);
   if (dados.statusId) await statusUsavel(dados.statusId, usuarioId);
   if (dados.periciaId) await periciaDoMestre(dados.periciaId, usuarioId);
   const prisma = getPrisma();
@@ -46,7 +54,8 @@ export async function criar(dono: DonoCartela, usuarioId: string, dados: z.infer
 }
 
 export async function editar(id: string, usuarioId: string, dados: z.infer<typeof editarHabilidadeSchema>) {
-  await habilidadeEditavel(id, usuarioId);
+  const atual = await habilidadeEditavel(id, usuarioId);
+  exigirPericiaParaDt(dados.dt === undefined ? atual.dt : dados.dt, dados.periciaId === undefined ? atual.periciaId : dados.periciaId);
   if (dados.nivelNecessario !== undefined) {
     const primeiro = await getPrisma().habilidadeAprimoramento.findFirst({ where: { habilidadeId: id }, orderBy: { nivel: "asc" }, select: { nivel: true } });
     if (primeiro && dados.nivelNecessario >= primeiro.nivel) {
@@ -88,7 +97,8 @@ export async function ordenar(dono: DonoCartela, usuarioId: string, ids: string[
 
 type DadosAprimoramento = z.infer<typeof aprimoramentoSchema>;
 
-async function validarAprimoramento(h: { id: string; nivelNecessario: number }, dados: Partial<DadosAprimoramento>, usuarioId: string, exceto?: string) {
+async function validarAprimoramento(h: { id: string; nivelNecessario: number; periciaId: string | null }, dados: Partial<DadosAprimoramento>, usuarioId: string, exceto?: string) {
+  exigirPericiaParaDt(dados.dt, h.periciaId);
   if (dados.nivel !== undefined) {
     if (dados.nivel <= h.nivelNecessario) {
       throw requisicaoInvalida(`O aprimoramento precisa ser num nível maior que ${h.nivelNecessario} (nível da carta).`, [

@@ -11,7 +11,7 @@ export function AvisoKit() {
     <div className="aviso-kit" role="status">
       <Package size={16} aria-hidden />
       <span>
-        Mostrando só o kit <strong>{kit.nome}</strong> {kit.verificado && <VerificadoBadge />} (o geral aparece em Todos). {kit.deOutro ? "É um kit verificado: o que você criar fica fora dele." : "O que você criar aqui entra no kit."}
+        Mostrando o kit <strong>{kit.nome}</strong> {kit.verificado && <VerificadoBadge />} e o conteúdo geral. {kit.deOutro ? "É um kit verificado: o que você criar fica fora dele." : "O que você criar aqui entra no kit."}
       </span>
       <Button pequeno variante="fantasma" onClick={() => definir(null)}>
         <X size={14} aria-hidden /> Mostrar tudo

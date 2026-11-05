@@ -46,8 +46,8 @@ export function ComoFunciona() {
       <p>Uma aventura no One-Take segue sempre o mesmo caminho:</p>
       <Passos
         passos={[
-          { titulo: "O mestre prepara o grupo", texto: "Monta o RPG dele, escolhe quais classes, raças e perícias valem ali e recebe um código de entrada." },
-          { titulo: "O jogador entra com o código", texto: "Digita o código no app e vê o grupo: sinopse, gênero, vagas e as opções liberadas." },
+          { titulo: "O mestre prepara a mesa", texto: "Monta o RPG dele, escolhe quais classes, raças e perícias valem ali e recebe um código de entrada." },
+          { titulo: "O jogador entra com o código", texto: "Digita o código no app e vê a mesa: sinopse, gênero, vagas e as opções liberadas." },
           { titulo: "O jogador cria a ficha", texto: "Escolhe raça e classe, distribui os dados de atributo e, se quiser, escreve a história do personagem." },
           { titulo: "A sessão acontece", texto: "Vida, mana e esforço sobem e descem, itens são coletados e as cartas de habilidade são usadas." },
           { titulo: "Fim da sessão: sobe de nível", texto: "Quem participou com o mesmo personagem sobe 1 nível, dado pelo mestre." },
@@ -68,8 +68,8 @@ export function Contas() {
       </p>
       <Cartoes
         itens={[
-          { Icone: User, titulo: "Jogador", texto: "Interface simples: entra nos grupos com o código do mestre e cria uma ficha em cada um. Toda conta joga." },
-          { Icone: Crown, titulo: "Mestre", texto: "Carrega também a interface de mestre: classes, raças, perícias, itens, bestiário e grupos. Quem é mestre continua podendo jogar nos grupos de outros mestres." },
+          { Icone: User, titulo: "Jogador", texto: "Interface simples: entra nas mesas com o código do mestre e cria uma ficha em cada uma. Toda conta joga." },
+          { Icone: Crown, titulo: "Mestre", texto: "Carrega também a interface de mestre: classes, raças, perícias, itens, bestiário e mesas. Quem é mestre continua podendo jogar nas mesas de outros mestres." },
         ]}
       />
       <ul>
@@ -95,7 +95,7 @@ export function Contas() {
           troca, o app mostra um código novo, e as sessões abertas em outros aparelhos são encerradas.</li>
         <li><strong>Baixar meus dados</strong>: a seção Seus dados gera um arquivo com tudo o que está na sua conta, a qualquer momento.</li>
         <li><strong>Excluir a conta</strong>: no fim das configurações, informe a senha e digite o seu nome de usuário. A exclusão é imediata e
-          definitiva. Os jogadores dos seus grupos ficam com uma cópia arquivada das fichas deles.</li>
+          definitiva. Os jogadores das suas mesas ficam com uma cópia arquivada das fichas deles.</li>
       </ul>
     </>
   );
@@ -108,8 +108,8 @@ export function Ficha() {
   return (
     <>
       <p>
-        A ficha é o personagem de um jogador <strong>dentro de um grupo</strong>. Cada jogador tem uma ficha por grupo e pode ter fichas
-        em vários grupos.
+        A ficha é o personagem de um jogador <strong>dentro de uma mesa</strong>. Cada jogador tem uma ficha por mesa e pode ter fichas
+        em várias mesas.
       </p>
       <Cartoes
         itens={[
@@ -129,9 +129,9 @@ export function Ficha() {
 export function Classes() {
   return (
     <>
-      <p>A classe é o herói que o jogador escolhe. Ela já vem pronta, então o personagem nasce jogável. Cada classe pertence a um grupo tático:</p>
+      <p>A classe é o herói que o jogador escolhe. Ela já vem pronta, então o personagem nasce jogável. Cada classe tem uma função:</p>
       <Tabela
-        cabecalho={["Grupo", "Papel na mesa"]}
+        cabecalho={["Função", "Papel na mesa"]}
         linhas={[
           [<strong key="c">Combatente</strong>, "Causa dano e pressiona os inimigos."],
           [<strong key="v">Vanguardista</strong>, "Fica na linha de frente: aguenta golpes e protege os aliados."],
@@ -184,7 +184,8 @@ export function Racas() {
 }
 
 export function Recursos() {
-  const { ganhoPorNivel: g } = useRegras().progressao;
+  const { progressao, ficha } = useRegras();
+  const g = progressao.ganhoPorNivel;
   return (
     <>
       <p>São os três recursos do personagem. A ficha mostra o valor <strong>atual</strong> e o <strong>máximo</strong> de cada um.</p>
@@ -211,13 +212,17 @@ export function Recursos() {
         <li>O máximo começa no valor base da classe e sobe +{g.pontosVida} de vida, +{g.pontosMana} de mana e +{g.pontosEsforco} de esforço a cada nível.</li>
         <li>Uma ficha nova começa com tudo cheio.</li>
         <li>Durante a sessão, jogador e mestre ajustam os valores atuais (dá para tirar ou somar vários pontos de uma vez). Eles nunca passam do máximo nem ficam abaixo de zero.</li>
-        <li>A <strong>vida</strong> o jogador só diminui; aumentar (curar) é com o mestre: o jogador usa a carta ou o item, rola o dado e o mestre lança a cura na ficha.</li>
+        <li>A <strong>vida</strong> e a <strong>mana</strong> o jogador só diminui; aumentar é com o mestre: o jogador usa a carta ou o item, rola o dado e o mestre lança a cura na ficha.</li>
         <li>Quando um recurso chega a 0, a ficha mostra um <strong>alerta</strong> (veja <Link to="/docs/status">Status</Link>). Vida ou mana em 0 é morte, sem volta.</li>
       </ul>
       <h2>Recuperar vida, mana e esforço</h2>
       <p>
         A recuperação acontece nos <strong>interlúdios</strong> da sessão (as pausas entre uma cena e outra): o personagem se alimenta,
         descansa, usa itens ou habilidades. Quanto cada coisa recupera é o mestre quem diz (ou está no efeito do item ou da carta).
+      </p>
+      <p>
+        A <strong>mana</strong> sobe até <strong>{Math.round(ficha.manaNoInterludio * 100)}% do máximo</strong> em cada interlúdio: quem já tem mais não perde nada. Para ir além disso, só com
+        itens ou cartas.
       </p>
       <Destaque tipo="aviso" titulo="Carta que zera a mana">
         Dá para usar uma carta que custa toda a mana que resta, mas mana em 0 é morte. Fique de olho no custo antes de usar.
@@ -254,10 +259,10 @@ export function StatusTopico() {
         <li>Quando uma carta <strong>ativa um status</strong>, ele vai sempre para o <strong>alvo</strong> da carta.</li>
       </ul>
       <h2>Personalizável</h2>
-      <p>Os status acima são os do kit básico, verificados pelo administrador do One-Take. Nenhum status é fixo:</p>
+      <p>Os status acima são os do conteúdo básico, verificados pelo administrador do One-Take. Nenhum status é fixo:</p>
       <ul>
         <li>O mestre pode criar status próprios, com nome, tipo e efeito, e editar os seus (até os automáticos, que só não podem ser excluídos).</li>
-        <li>Em cada grupo, o mestre escolhe quais status valem. É opcional: um grupo pode não usar status nenhum.</li>
+        <li>Em cada mesa, o mestre escolhe quais status valem. É opcional: uma mesa pode não usar status nenhum.</li>
       </ul>
     </>
   );
@@ -268,12 +273,12 @@ export function Atributos() {
   const f = r.ficha;
   return (
     <>
-      <p>Atributos são as capacidades gerais do personagem e agrupam as perícias. Os atributos do kit básico, verificados pelo administrador do One-Take, são:</p>
+      <p>Atributos são as capacidades gerais do personagem e agrupam as perícias. Os atributos do conteúdo básico, verificados pelo administrador do One-Take, são:</p>
       <Tabela cabecalho={["Atributo", "Descrição"]} linhas={r.atributosBase.map((a) => [<strong key={a.nome}>{a.nome}</strong>, a.descricao])} />
-      <p>O mestre pode criar outros atributos para o tema do RPG dele (por exemplo, Sanidade num jogo de terror) e escolher quais valem em cada grupo.</p>
+      <p>O mestre pode criar outros atributos para o tema do RPG dele (por exemplo, Sanidade num jogo de terror) e escolher quais valem em cada mesa.</p>
       <h2>Pontos de atributo</h2>
       <ul>
-        <li>Ao criar a ficha, o jogador distribui <strong>{f.pontosAtributoIniciais} pontos</strong> entre os atributos do grupo. Um atributo pode ficar com 0.</li>
+        <li>Ao criar a ficha, o jogador distribui <strong>{f.pontosAtributoIniciais} pontos</strong> entre os atributos da mesa. Um atributo pode ficar com 0.</li>
         <li>Cada ponto é um <strong>dado de {r.teste.ladosDoDado} faces</strong> nos testes daquele atributo.</li>
       </ul>
       <p>
@@ -322,7 +327,7 @@ export function Testes() {
         <strong>menor</strong>.
       </p>
       <ul>
-        <li>Não acumulam: duas vantagens valem uma só. Uma vantagem e uma desvantagem juntas se anulam.</li>
+        <li>Acumulam: duas vantagens dão +2 dados. Uma vantagem anula uma desvantagem.</li>
         <li>Somam com o esforço (2{d} com esforço e vantagem vira 4{d}).</li>
         <li>Com 0 no atributo, nenhuma das duas vale: continua sendo 1 dado pela metade.</li>
       </ul>
@@ -388,6 +393,8 @@ export function Habilidades() {
           ["Efeito", "O que a carta causa."],
           ["Perícia do teste (opcional)", "Qual perícia o personagem testa para usar a carta. A ficha mostra o teste pronto daquele personagem (ex.: Luta 2d20 + 5)."],
           ["Defesa do alvo (opcional)", "Perícias que o alvo pode usar para se defender da carta (uma ou mais). Ao escolher a perícia do teste, as defesas da tabela abaixo são marcadas sozinhas; o mestre ajusta."],
+          ["Alcance (opcional)", "Até onde a carta chega. Ex.: Pessoal, Corpo a corpo, 6 quadrados."],
+          ["DT (opcional)", "Em cartas que ninguém pode impedir: o número que o teste precisa alcançar para a carta funcionar."],
           ["Condição (opcional)", "O que precisa acontecer para poder usar. Ex.: ter acertado dois ataques seguidos."],
           ["Limite (opcional)", "Quantas vezes pode ser usada: N vezes por combate ou N vezes por sessão. Sem limite, à vontade."],
           [<span key="m" className="regra__inline"><Droplet size={14} aria-hidden /> Custo de mana</span>, "Quanta mana gasta. Muitas cartas não custam nada."],
@@ -445,14 +452,15 @@ export function Progressao() {
       </Destaque>
       <h2>O mesmo personagem em outra mesa</h2>
       <p>
-        Cada mesa é uma sessão. Para subir de nível, o personagem precisa participar de mais mesas. Ao entrar num grupo novo, escolha o
+        Cada mesa é jogada numa sessão. Para subir de nível, o personagem precisa participar de mais mesas. Ao entrar numa mesa nova, escolha o
         personagem em vez de criar um novo:
       </p>
       <ul>
         <li>Ele vem com nome, história, imagem, classe, raça e nível. A classe e a raça precisam estar liberadas na mesa nova.</li>
         <li>Começa com vida, mana e esforço cheios e <strong>sem itens</strong> (os itens ficam na mesa antiga).</li>
         <li>Os pontos de perícia de todos os níveis voltam para você gastar nas perícias da mesa nova. Os atributos são distribuídos de novo.</li>
-        <li>A ficha da mesa antiga vira uma cópia arquivada. Peça ao mestre para subir o nível antes de levar o personagem.</li>
+        <li>A ficha da mesa antiga vira uma cópia arquivada, com os itens que ele tinha, de recordação. Peça ao mestre para subir o nível antes de levar o personagem.</li>
+        <li>Personagem morto não pode ser levado.</li>
       </ul>
       <Tabela
         cabecalho={["Nível", "Vida / mana / esforço", "Pontos de perícia", "Espaços no inventário"]}
@@ -474,13 +482,13 @@ export function Inventario() {
       <ul>
         <li>Todo personagem começa com <strong>{f.inventarioInicial} espaços</strong> e ganha +{f.inventarioPorNivel} por nível: quanto mais experiente, mais bagagem aguenta.</li>
         <li>Cada item ocupa <strong>1 ou mais espaços</strong> (um arco longo pode ocupar 2, uma poção 1).</li>
-        <li>Os itens são criados pelo <strong>mestre</strong>, que entrega a um personagem ou deixa vago no grupo.</li>
-        <li>O jogador pode <strong>passar</strong> um item para outro membro do grupo (se couber), <strong>descartar</strong> (fica vago no grupo) ou pegar um item vago.</li>
+        <li>Os itens são criados pelo <strong>mestre</strong>, que entrega a um personagem ou deixa vago na mesa.</li>
+        <li>O jogador pode <strong>passar</strong> um item para outro membro da mesa (se couber), <strong>descartar</strong> (fica vago na mesa) ou pegar um item vago.</li>
       </ul>
       <h2>Categorias</h2>
-      <p>O kit básico traz 4 categorias, verificadas pelo administrador do One-Take, e cada mestre pode criar as suas (com nome, descrição e ícone), como Relíquias, Munição ou Ervas.</p>
+      <p>O conteúdo básico traz 4 categorias, verificadas pelo administrador do One-Take, e cada mestre pode criar as suas (com nome, descrição e ícone), como Relíquias, Munição ou Ervas.</p>
       <Tabela
-        cabecalho={["Categoria do kit básico", "O que costuma ser"]}
+        cabecalho={["Categoria do conteúdo básico", "O que costuma ser"]}
         linhas={[
           ["espada", "Armas", "Espadas, arcos, cajados: o que se usa para lutar."],
           ["joia", "Artefatos", "Objetos especiais, mágicos ou raros."],
@@ -502,6 +510,7 @@ export function Inventario() {
           Alguns itens têm <strong>pré-requisito para saber usar</strong>: uma classe (só arqueiros), uma perícia (só quem tem Pontaria) ou
           uma condição em texto. Quem não cumpre pode carregar o item, mas não usa.
         </li>
+        <li>Passar, pegar ou descartar um item <strong>não gasta a ação</strong>. Só usar gasta.</li>
       </ul>
       <Destaque tipo="dica" titulo="Na prática">
         <span className="regra__inline"><Package size={14} aria-hidden /> O mestre lança "Poção de vida" (2 usos) para o ladino.</span> O
@@ -525,8 +534,8 @@ export function Criaturas() {
         <li>a mesma progressão: cada nível acima do 1 dá +{g.pontosVida} de vida, +{g.pontosMana} de mana, +{g.pontosEsforco} de esforço e as cartas daquele nível.</li>
       </ul>
       <p>
-        Durante a sessão, o mestre <strong>invoca</strong> criaturas no grupo, no nível que quiser, e acompanha a ficha de cada
-        uma (o posicionamento fica no grid físico da mesa). Uma criatura some do grupo quando o mestre remove (fugiu, sumiu) ou sozinha quando{" "}
+        Durante a sessão, o mestre <strong>invoca</strong> criaturas na mesa, no nível que quiser, e acompanha a ficha de cada
+        uma (o posicionamento fica no grid físico da mesa). Uma criatura some da mesa quando o mestre remove (fugiu, sumiu) ou sozinha quando{" "}
         <strong>morre</strong>: vida ou mana em 0, a mesma regra dos personagens.
       </p>
       <p>Como as classes, uma criatura pode ser uma <strong>forma</strong> de um arquétipo de criatura (ex.: Lobo, com Lobo das neves e Lobo alfa).</p>
@@ -537,12 +546,12 @@ export function Criaturas() {
 export function Grupos() {
   return (
     <>
-      <p>O grupo é o RPG de um mestre. Ele tem título, sinopse, gênero, imagem e um <strong>limite de membros</strong>.</p>
+      <p>A mesa é o RPG de um mestre. Ela tem título, sinopse, gênero, imagem e um <strong>limite de membros</strong>.</p>
       <ul>
         <li>Para entrar, o jogador digita o <strong>código de entrada</strong> de 6 caracteres que o mestre compartilha.</li>
-        <li>Só dá para entrar enquanto houver <strong>vaga</strong>. Cada jogador tem uma ficha por grupo.</li>
-        <li>O mestre escolhe <strong>o que vale no grupo</strong>: classes, raças, atributos e perícias. Assim o mesmo sistema serve para fantasia, terror ou ficção científica.</li>
-        <li>O grupo pode ou não <strong>permitir classes repetidas</strong>. Se não permitir, cada classe só pode ser escolhida por um jogador.</li>
+        <li>Só dá para entrar enquanto houver <strong>vaga</strong>. Cada jogador tem uma ficha por mesa.</li>
+        <li>O mestre escolhe <strong>o que vale na mesa</strong>: classes, raças, atributos e perícias. Assim o mesmo sistema serve para fantasia, terror ou ficção científica.</li>
+        <li>A mesa pode ou não <strong>permitir classes repetidas</strong>. Se não permitir, cada classe só pode ser escolhida por um jogador.</li>
       </ul>
     </>
   );
@@ -554,7 +563,7 @@ export function Combate() {
     <>
       <p>
         O combate acontece na mesa, num grid físico. O app guarda as fichas (vida, mana, esforço, status) e mostra o teste pronto de
-        cada carta; a mesa rola os dados e aplica o resultado. Estas regras valem em todo grupo. As{" "}
+        cada carta; a mesa rola os dados e aplica o resultado. Estas regras valem em toda mesa. As{" "}
         <Link to="/docs/combate-padrao">regras padrão de combate</Link> (grid, alcance, intervenção e outras) o mestre pode desligar e trocar.
       </p>
       <h2>Ordem e turno</h2>
@@ -597,6 +606,12 @@ export function Combate() {
         O mestre pode usar uma <strong>DT</strong> no lugar da defesa (ex.: um alvo parado, um objeto). Nesse caso ele diz a DT em voz
         alta, antes da rolagem.
       </p>
+      <h2>Cartas com DT</h2>
+      <p>
+        Carta que ninguém pode impedir (um fortalecimento, uma cura, um teleporte) pode ter uma <strong>DT</strong> própria, escrita na
+        carta. Ao usar, role o teste dela, com esforço se quiser. Total menor que a DT: a carta falha. A falha gasta só a ação ou a
+        reação: não gasta mana nem o uso da carta. Cartas passivas não têm DT.
+      </p>
       <h2>Esforço</h2>
       <p>
         Cada ponto de esforço gasto antes de um teste dá +1 d{t.ladosDoDado}, no máximo {t.esforcoMaximoPorRodada}{" "}
@@ -605,7 +620,7 @@ export function Combate() {
       <h2>Cura, morte e recuperação</h2>
       <ul>
         <li><strong>Cura</strong>: o jogador usa a carta ou o item, rola o dado e o mestre lança a cura na ficha (a vida só o mestre aumenta).</li>
-        <li><strong>Morte</strong>: vida ou mana em 0, o personagem morreu. Não há volta.</li>
+        <li><strong>Morte</strong>: vida ou mana em 0, o personagem morreu. Não há volta, e ele também não pode ir para outra mesa.</li>
         <li>Uma carta pode custar toda a mana que resta. Dá para usar, mas a mana em 0 mata: fique atento.</li>
         <li><strong>Recuperação</strong>: nos interlúdios da sessão, comendo, descansando, com itens ou habilidades.</li>
       </ul>
@@ -625,8 +640,8 @@ export function CombatePadrao() {
   return (
     <>
       <p>
-        Estas regras valem em todo grupo, a menos que o mestre desligue alguma (em Editar grupo, seção Regras de combate). O mestre
-        também pode criar regras próprias na página do grupo. Os jogadores veem as regras que valem na própria ficha, em Regras da mesa.
+        Estas regras valem em toda mesa, a menos que o mestre desligue alguma (em Editar mesa, seção Regras de combate). O mestre
+        também pode criar regras próprias na página da mesa. Os jogadores veem as regras que valem na própria ficha, em Regras da mesa.
       </p>
       {regrasPadrao.map((r) => (
         <section key={r.slug} id={r.slug}>

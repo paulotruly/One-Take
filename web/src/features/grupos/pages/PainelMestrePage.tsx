@@ -39,9 +39,9 @@ export function PainelMestrePage() {
       : (racas.data?.length ?? 0) === 0
         ? { texto: "Crie a primeira raça para as fichas.", to: "/mestre/racas", acao: "Ir para raças" }
         : grupos.data.length === 0
-          ? { texto: "Com classes e raças prontas, monte o grupo e chame a mesa.", to: "/mestre/grupos/novo", acao: "Criar grupo" }
+          ? { texto: "Com classes e raças prontas, monte a mesa e chame os jogadores.", to: "/mestre/grupos/novo", acao: "Criar mesa" }
           : grupos.data.find((g) => g.membros === 0)
-            ? { texto: `Ninguém entrou em ${grupos.data.find((g) => g.membros === 0)!.titulo} ainda. Envie o convite aos jogadores.`, to: `/mestre/grupos/${grupos.data.find((g) => g.membros === 0)!.id}`, acao: "Abrir grupo" }
+            ? { texto: `Ninguém entrou em ${grupos.data.find((g) => g.membros === 0)!.titulo} ainda. Envie o convite aos jogadores.`, to: `/mestre/grupos/${grupos.data.find((g) => g.membros === 0)!.id}`, acao: "Abrir mesa" }
             : null;
 
   return (
@@ -51,7 +51,7 @@ export function PainelMestrePage() {
           <h1>Olá, {me.data?.nome || `@${me.data?.nickname ?? ""}`}</h1>
           <p className="pagina__subtitulo">O que está acontecendo nas suas mesas.</p>
         </div>
-        <Link to="/mestre/grupos/novo" className="btn btn--primario"><Plus size={16} aria-hidden /> Novo grupo</Link>
+        <Link to="/mestre/grupos/novo" className="btn btn--primario"><Plus size={16} aria-hidden /> Nova mesa</Link>
       </div>
 
       {passo && (
@@ -63,7 +63,7 @@ export function PainelMestrePage() {
 
       <section className="secao">
         <div className="secao__cabecalho">
-          <h2>Grupos recentes</h2>
+          <h2>Mesas recentes</h2>
           <Link to="/mestre/grupos">Ver todos</Link>
         </div>
         {grupos.isPending ? (
@@ -71,7 +71,7 @@ export function PainelMestrePage() {
         ) : grupos.isError ? (
           <ErrorState mensagem={mensagemDeErro(grupos.error)} onTentarNovamente={() => grupos.refetch()} />
         ) : grupos.data.length === 0 ? (
-          <p className="pagina__subtitulo">Nenhum grupo ainda.</p>
+          <p className="pagina__subtitulo">Nenhuma mesa ainda.</p>
         ) : (
           <ul className="painel-mestre__grupos">
             {grupos.data.slice(0, 3).map((g) => (

@@ -25,7 +25,7 @@ export function KitsField({ valor, onChange, erro }: { valor: string[]; onChange
               </label>
             ))}
           </div>
-          <p className="campo__dica">{valor.length === 0 ? "Nenhum marcado: geral. Aparece em Todos e em qualquer grupo, mas não com um kit ativo." : "Aparece só nos kits marcados (e nos grupos que usam esses kits)."}</p>
+          <p className="campo__dica">{valor.length === 0 ? "Nenhum marcado: geral. Aparece em Todos e em qualquer mesa, mas não com um kit ativo." : "Aparece só nos kits marcados (e nas mesas que usam esses kits)."}</p>
         </>
       )}
       {erro && <span className="campo__erro">{erro}</span>}

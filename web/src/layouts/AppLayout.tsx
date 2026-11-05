@@ -13,7 +13,7 @@ type LinkTopo = { to: string; rotulo: string; Icone: LucideIcon; /** Caminhos em
 const LINKS: Record<Papel, LinkTopo[]> = {
   MESTRE: [
     { to: "/mestre/inicio", rotulo: "Início", Icone: Home, ativoEm: /^\/mestre\/inicio/ },
-    { to: "/mestre/grupos", rotulo: "Grupos", Icone: Shield, ativoEm: /^\/mestre\/(grupos|fichas)/, bloco: "Mesa" },
+    { to: "/mestre/grupos", rotulo: "Mesas", Icone: Shield, ativoEm: /^\/mestre\/(grupos|fichas)/, bloco: "Jogo" },
     { to: "/mestre", rotulo: "Classes", Icone: Layers, ativoEm: /^\/mestre(\/classes.*)?\/?$/, bloco: "Conteúdo" },
     { to: "/mestre/racas", rotulo: "Raças", Icone: Users, ativoEm: /^\/mestre\/racas/ },
     { to: "/mestre/npcs", rotulo: "NPCs", Icone: UserRound, ativoEm: /^\/mestre\/npcs/ },

@@ -3,12 +3,17 @@
 // cheios; sem itens; pontos de perícia de todos os níveis para gastar de novo (o catálogo de perícias é do mestre da mesa).
 // A classe e a raça precisam estar liberadas na mesa nova. A origem deixa de existir como personagem vivo: a ficha ativa vira
 // arquivada (motivo LEVADO_PARA_OUTRA_MESA) e a arquivada usada como origem é apagada. Assim só há uma cópia viva do personagem.
-import { naoEncontrado, requisicaoInvalida } from "../../lib/errors.js";
+// Personagem morto (vida ou mana em 0) não vai para outra mesa: a morte não tem volta.
+import { conflito, naoEncontrado, requisicaoInvalida } from "../../lib/errors.js";
 import { getPrisma } from "../../lib/prisma.js";
+import { estaMorto } from "../../regras/status.js";
 
 export type Origem = { tipo: "FICHA" | "ARQUIVADA"; id: string };
 
-type ConteudoArquivado = { historia?: string | null; imagemUrl?: string | null; atributos?: { nome: string; dados: number }[] };
+type ConteudoArquivado = { historia?: string | null; imagemUrl?: string | null; atributos?: { nome: string; dados: number }[]; vida?: { atual: number }; mana?: { atual: number } };
+
+/** Na cópia arquivada, os recursos ficam no retrato; retratos sem eles contam como vivos. */
+const arquivadaMorta = (c: ConteudoArquivado) => (c.vida?.atual ?? 1) <= 0 || (c.mana?.atual ?? 1) <= 0;
 
 /** Personagens do jogador que podem ir para outra mesa: fichas de outros grupos e arquivadas que guardam a classe e a raça. */
 export async function personagensDoJogador(usuarioId: string, grupoIdAtual: string) {
@@ -27,13 +32,13 @@ export async function personagensDoJogador(usuarioId: string, grupoIdAtual: stri
     prisma.fichaArquivada.findMany({ where: { jogadorId: usuarioId, classeId: { not: null }, racaId: { not: null } }, orderBy: { arquivadaEm: "desc" } }),
   ]);
   return [
-    ...fichas.map((f) => ({
+    ...fichas.filter((f) => !estaMorto(f)).map((f) => ({
       origem: { tipo: "FICHA" as const, id: f.id },
       nome: f.nome, nivel: f.nivel, historia: f.historia, imagemUrl: f.imagemUrl,
       classeId: f.classeId, racaId: f.racaId, classe: f.classe.titulo, raca: f.raca.titulo, grupo: f.grupo.titulo,
       atributos: f.atributos.map((a) => ({ nome: a.atributo.nome, dados: a.dados })),
     })),
-    ...arquivadas.map((a) => {
+    ...arquivadas.filter((a) => !arquivadaMorta(a.conteudo as ConteudoArquivado)).map((a) => {
       const c = a.conteudo as ConteudoArquivado;
       return {
         origem: { tipo: "ARQUIVADA" as const, id: a.id },
@@ -50,9 +55,12 @@ export async function origemDoPersonagem(origem: Origem, usuarioId: string, grup
   const prisma = getPrisma();
   const o =
     origem.tipo === "FICHA"
-      ? await prisma.ficha.findFirst({ where: { id: origem.id, jogadorId: usuarioId, NOT: { grupoId } }, select: { nivel: true, classeId: true, racaId: true } })
-      : await prisma.fichaArquivada.findFirst({ where: { id: origem.id, jogadorId: usuarioId }, select: { nivel: true, classeId: true, racaId: true } });
+      ? await prisma.ficha.findFirst({ where: { id: origem.id, jogadorId: usuarioId, NOT: { grupoId } }, select: { nivel: true, classeId: true, racaId: true, vidaAtual: true, manaAtual: true, esforcoAtual: true } })
+      : await prisma.fichaArquivada.findFirst({ where: { id: origem.id, jogadorId: usuarioId }, select: { nivel: true, classeId: true, racaId: true, conteudo: true } });
   if (!o || !o.classeId || !o.racaId) throw naoEncontrado("Personagem não encontrado");
+  if ("vidaAtual" in o ? estaMorto(o) : arquivadaMorta((o.conteudo ?? {}) as ConteudoArquivado)) {
+    throw conflito("PERSONAGEM_MORTO", "Este personagem morreu e não pode ir para outra mesa.");
+  }
   if (o.classeId !== escolha.classeId || o.racaId !== escolha.racaId) {
     throw requisicaoInvalida("O personagem leva a mesma classe e a mesma raça.", [{ campo: "classeId", mensagem: "Use a classe do personagem" }]);
   }

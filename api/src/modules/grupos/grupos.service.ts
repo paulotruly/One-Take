@@ -33,7 +33,7 @@ async function novoCodigo() {
 
 export async function grupoDoMestre(id: string, usuarioId: string) {
   const grupo = await getPrisma().grupo.findUnique({ where: { id } });
-  if (!grupo || grupo.mestreId !== usuarioId) throw naoEncontrado("Grupo não encontrado");
+  if (!grupo || grupo.mestreId !== usuarioId) throw naoEncontrado("Mesa não encontrada");
   return grupo;
 }
 
@@ -183,7 +183,7 @@ export async function editar(id: string, usuarioId: string, dados: z.infer<typeo
   if (dados.limiteMembros !== undefined) {
     const membros = await getPrisma().ficha.count({ where: { grupoId: id } });
     if (dados.limiteMembros < membros) {
-      throw requisicaoInvalida(`O grupo já tem ${membros} membros; o limite não pode ser menor que isso.`);
+      throw requisicaoInvalida(`A mesa já tem ${membros} membros; o limite não pode ser menor que isso.`);
     }
   }
   await validarLimitesPorFuncao(id, dados);
@@ -199,7 +199,7 @@ async function validarLimitesPorFuncao(id: string, dados: Partial<LimitesPorFunc
   for (const f of funcoes) {
     const limite = dados[CAMPO_DO_LIMITE[f]]!;
     if (limite < contagem[f]) {
-      throw requisicaoInvalida(`O grupo já tem ${contagem[f]} ${ROTULO_FUNCAO[f].plural}; o limite não pode ser menor que isso.`, [
+      throw requisicaoInvalida(`A mesa já tem ${contagem[f]} ${ROTULO_FUNCAO[f].plural}; o limite não pode ser menor que isso.`, [
         { campo: CAMPO_DO_LIMITE[f], mensagem: `Mínimo ${contagem[f]}` },
       ]);
     }

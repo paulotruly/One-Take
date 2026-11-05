@@ -43,8 +43,8 @@ async function main() {
     });
     const carta = (h: (typeof classes)[number]["habilidades"][number]) => ({
       titulo: h.titulo, tipoEfeito: h.tipoEfeito, efeito: h.descricaoEfeito, condicao: h.condicao, limite: rotuloLimite(h.limiteUsos, h.limitePor),
-      nivelNecessario: h.nivelNecessario, custoMana: h.custoMana, pericia: h.pericia?.nome ?? null, periciasDefesa: h.periciasDefesa.map((d) => d.pericia.nome),
-      aprimoramentos: h.aprimoramentos.map((a) => ({ nivel: a.nivel, efeito: a.descricaoEfeito, custoMana: a.custoMana, limite: rotuloLimite(a.limiteUsos, a.limitePor), condicao: a.condicao })),
+      nivelNecessario: h.nivelNecessario, custoMana: h.custoMana, dt: h.dt, alcance: h.alcance, pericia: h.pericia?.nome ?? null, periciasDefesa: h.periciasDefesa.map((d) => d.pericia.nome),
+      aprimoramentos: h.aprimoramentos.map((a) => ({ nivel: a.nivel, efeito: a.descricaoEfeito, custoMana: a.custoMana, dt: a.dt, alcance: a.alcance, limite: rotuloLimite(a.limiteUsos, a.limitePor), condicao: a.condicao })),
     });
     const saida = {
       classes: classes.map((c) => ({

@@ -16,6 +16,7 @@ import { readFileSync } from "node:fs";
 
 const LADOS = 20;
 const GANHO_POR_NIVEL = 5;
+const GANHO_PERICIA_POR_NIVEL = 2;
 
 // ---------- Dados ----------
 
@@ -186,7 +187,7 @@ function perfil(ent, nivel, o) {
   const mana = ent.mana + (nivel - 1) * GANHO_POR_NIVEL;
   const esforco = ent.esforco + (nivel - 1) * GANHO_POR_NIVEL;
   const pontos = ent.atributos?.length ? Math.max(0, ...ent.atributos.map((a) => a.dados)) : o.pontos;
-  const bonusNivel = ehClasse ? (nivel - 1) * GANHO_POR_NIVEL : 0;
+  const bonusNivel = ehClasse ? (nivel - 1) * GANHO_PERICIA_POR_NIVEL : 0;
   const melhorOfensiva = Math.max(0, ...ent.pericias.filter((p) => OFENSIVA.test(p.nome)).map((p) => p.modificador));
   const melhorDefensiva = Math.max(0, ...ent.pericias.filter((p) => DEFENSIVA.test(p.nome)).map((p) => p.modificador));
   const turnosSessao = o.turnos * o.combates;

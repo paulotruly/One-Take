@@ -28,6 +28,7 @@ npm test                     # vitest (Prisma mockado, sem banco)
 npm run typecheck && npm run build
 # Web (dentro de web/)
 npm run dev                  # http://localhost:5173
+npm run dev:mock             # http://localhost:5174: telas logadas com dados falsos, sem API nem banco (web/src/mock/)
 npm run build                # typecheck + build
 ```
 

@@ -73,7 +73,7 @@ export function NpcForm({ inicial, racas, classes, rotulo = "Salvar NPC", onEnvi
           </select>
         </Field>
         <Field rotulo="Nível" erro={erros.nivel}>
-          <input type="number" min={1} max={100} step={1} inputMode="numeric" value={v.nivel} onChange={set("nivel")} />
+          <input type="number" min={1} step={1} inputMode="numeric" value={v.nivel} onChange={set("nivel")} />
         </Field>
       </div>
       {semClasse && (

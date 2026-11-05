@@ -7,14 +7,14 @@
 export const PROGRESSAO = {
   nivelInicial: 1,
   /** Nível mais alto do sistema (fichas, NPCs, criaturas e cartas). */
-  nivelMaximo: 100,
+  nivelMaximo: 10,
   /** Ganho a cada nível acima do inicial. */
   ganhoPorNivel: {
     pontosVida: 5,
     pontosMana: 5,
     pontosEsforco: 5,
-    /** Pontos de perícia: uma perícia nova com +5 OU +5 numa perícia que o personagem já tem (escolha na ficha). */
-    pontosPericia: 5,
+    /** Pontos de perícia: uma perícia nova com +2 OU +2 numa perícia que o personagem já tem (escolha na ficha). */
+    pontosPericia: 2,
   },
   /** Quantos níveis a prévia mostra no mínimo (estende até a carta de maior nível). */
   niveisNaPrevia: 5,
@@ -77,16 +77,18 @@ type Aprimoramento = {
   limiteUsos: number | null;
   limitePor: string | null;
   custoMana: number;
+  dt?: number | null;
+  alcance?: string | null;
   statusId: string | null;
   status?: unknown;
 };
 
 /** Campos da carta que cada aprimoramento redefine (versão completa da carta naquele nível). */
-const CAMPOS_DO_APRIMORAMENTO = ["titulo", "descricao", "descricaoEfeito", "condicao", "limiteUsos", "limitePor", "custoMana", "statusId", "status"] as const;
+const CAMPOS_DO_APRIMORAMENTO = ["titulo", "descricao", "descricaoEfeito", "condicao", "limiteUsos", "limitePor", "custoMana", "dt", "alcance", "statusId", "status"] as const;
 
 /**
  * A carta como ela fica no nível dado: vale a versão do aprimoramento de maior nível até esse nível (cada aprimoramento é a
- * carta inteira naquele nível; nulo = sem condição, sem limite ou sem status). Informa a partir de que nível a versão vale.
+ * carta inteira naquele nível; nulo = sem condição, sem limite, sem DT ou sem status). Informa a partir de que nível a versão vale.
  */
 export function aplicarAprimoramentos<T extends { nivelNecessario: number; aprimoramentos?: Aprimoramento[] }>(h: T, nivel: number) {
   const aprimoramentos: Aprimoramento[] = h.aprimoramentos ?? [];

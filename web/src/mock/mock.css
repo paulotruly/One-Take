@@ -1,0 +1,15 @@
+/* Aviso fixo de que os dados são falsos. */
+body::before {
+  content: "Modo mock: dados de exemplo, nada é salvo";
+  position: fixed;
+  right: var(--esp-3);
+  bottom: var(--esp-3);
+  z-index: 100;
+  padding: var(--esp-1) var(--esp-3);
+  border: 1px solid var(--cor-primaria);
+  background: var(--cor-fundo);
+  color: var(--cor-primaria);
+  font-size: var(--texto-xs);
+  font-weight: var(--peso-forte);
+  pointer-events: none;
+}

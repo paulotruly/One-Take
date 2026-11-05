@@ -2,17 +2,15 @@
 // a página do grupo e a ficha mostram daqui.
 // Diferente das regras fixas (ficha, d20, ataque x defesa, progressão…), estas o mestre pode desligar por grupo e trocar por regras próprias.
 // Domínio de combate e Égide de presença saíram em 2026-10-14: status e cartas (ex.: escudos do Paladino) já fazem esse papel.
+// Ataques em grupo saiu em 2026-11-05 (somar o dano já acontece). Turno e iniciativa são regras fixas: aqui fica só o grid.
 
 export const REGRAS_PADRAO = [
   {
     slug: "combate-grid-turno",
-    titulo: "Grid, iniciativa e turno",
-    resumo: "Grid físico na mesa. A Iniciativa define a ordem; cada turno é 1 movimento + 1 ação, sem trocar um pelo outro.",
+    titulo: "Grid",
+    resumo: "O combate acontece num grid físico, na mesa.",
     texto: [
-      "O jogo é movido por um grid físico, na mesa: o app não guarda posições.",
-      "No início do combate, cada participante faz um teste de Capacidade física + Iniciativa. O maior total age primeiro, e a ordem segue assim até o fim do combate.",
-      "No seu turno, o personagem tem 1 movimento e 1 ação. Movimento é andar. Tudo o que não é movimento é ação: atacar, usar uma carta, usar um item, interagir com algo. Não dá para trocar o movimento por uma segunda ação, nem o contrário.",
-      "Cartas só são usadas no próprio turno. A exceção são as reações: cartas que dizem \"Reação\", a Intervenção defensiva e o ataque de oportunidade, usadas fora do turno (1 reação por rodada).",
+      "O jogo é movido por um grid físico, na mesa: o app não guarda posições. As distâncias das cartas e o deslocamento contam em quadrados desse grid.",
     ],
   },
   {
@@ -28,11 +26,11 @@ export const REGRAS_PADRAO = [
   {
     slug: "combate-intervencao",
     titulo: "Intervenção defensiva",
-    resumo: "Fora do próprio turno, um personagem defende o aliado atacado com Capacidade física + Iniciativa maior que o ataque. Gasta a reação.",
+    resumo: "Fora do próprio turno, um personagem defende o aliado atacado com Capacidade física + Iniciativa maior que o ataque. Gasta a reação e 1 de esforço.",
     texto: [
       "Quando um aliado é atacado, outro personagem pode intervir, mesmo no turno de outra pessoa.",
       "Quem intervém faz um teste de Capacidade física + Iniciativa. Se o total for maior que o total do ataque, ele defende o aliado e o ataque não acerta. Empate: o ataque passa.",
-      "Intervir gasta a reação do personagem: 1 por rodada, junto com cartas de reação e o ataque de oportunidade.",
+      "Intervir gasta a reação do personagem (1 por rodada, junto com cartas de reação e o ataque de oportunidade) e 1 de esforço, pago mesmo se o teste falhar. Sem esforço, não dá para intervir.",
     ],
   },
   {
@@ -40,7 +38,7 @@ export const REGRAS_PADRAO = [
     titulo: "Ataque de oportunidade",
     resumo: "Inimigo que sai andando do seu alcance corpo a corpo pode levar um ataque, gastando a sua reação.",
     texto: [
-      "Quando um inimigo sai andando do alcance corpo a corpo de um personagem, esse personagem pode gastar a reação para atacá-lo uma vez, com uma carta de Dano corpo a corpo sem limite de uso.",
+      "Quando um inimigo sai andando do alcance corpo a corpo de um personagem, esse personagem pode gastar a reação para atacá-lo uma vez, com uma carta de Dano corpo a corpo sem limite de uso. Se a carta custa mana, paga o custo.",
       "O ataque segue o ataque contra defesa normal. Movimentos de cartas que dizem \"sem provocar\" (ataques de oportunidade ou reações) não disparam o ataque.",
     ],
   },
@@ -61,14 +59,6 @@ export const REGRAS_PADRAO = [
     texto: [
       "O personagem pode se mover escondido: faz um teste de Furtividade contra a Percepção (alvo vê a área) ou a Intuição (fora do campo de visão) do alvo.",
       "Se vencer, o alvo tem -10 na defesa contra o próximo ataque desse personagem.",
-    ],
-  },
-  {
-    slug: "combate-ataque-grupo",
-    titulo: "Ataques em grupo",
-    resumo: "Vários personagens que acertam o mesmo alvo único somam o dano.",
-    texto: [
-      "Quando vários personagens atacam o mesmo alvo único e todos acertam, o dano de todos é somado e aplicado de uma vez.",
     ],
   },
 ] as const;

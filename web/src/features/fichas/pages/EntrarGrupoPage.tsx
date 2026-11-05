@@ -20,7 +20,7 @@ export function EntrarGrupoPage() {
   const { codigo = "" } = useParams();
   const convite = useConvite(codigo);
 
-  if (convite.isPending) return <Loading texto="Procurando o grupo…" />;
+  if (convite.isPending) return <Loading texto="Procurando a mesa…" />;
   if (convite.isError) {
     return (
       <div className="pagina">
@@ -58,16 +58,16 @@ function Conteudo({ codigo, c }: { codigo: string; c: Convite }) {
       </header>
 
       {c.souMestre ? (
-        <EmptyState titulo="Este grupo é seu" descricao="O mestre não cria ficha no próprio grupo." />
+        <EmptyState titulo="Esta mesa é sua" descricao="O mestre não cria ficha na própria mesa." />
       ) : c.minhaFichaId ? (
         <EmptyState
-          titulo="Você já está neste grupo"
+          titulo="Você já está nesta mesa"
           acao={<Link to={`/jogador/fichas/${c.minhaFichaId}`} className="btn btn--primario">Abrir minha ficha</Link>}
         />
       ) : cheio ? (
-        <EmptyState titulo="Grupo cheio" descricao="Todas as vagas estão ocupadas. Fale com o mestre." />
+        <EmptyState titulo="Mesa cheia" descricao="Todas as vagas estão ocupadas. Fale com o mestre." />
       ) : incompleto ? (
-        <EmptyState titulo="Grupo ainda não está pronto" descricao="O mestre ainda não liberou classes, raças e atributos." />
+        <EmptyState titulo="Mesa ainda não está pronta" descricao="O mestre ainda não liberou classes, raças e atributos." />
       ) : (
         <CriarFicha codigo={codigo} c={c} />
       )}
@@ -323,7 +323,7 @@ function CriarFicha({ codigo, c }: { codigo: string; c: Convite }) {
       {criar.isError && <div className="aviso">{erroDeFormulario(criar.error)}</div>}
       <div className="barra-acoes">
         <Button type="submit" variante="primario" disabled={criar.isPending || !racaId || !classeId || restantes !== 0}>
-          {criar.isPending ? "Criando ficha…" : origem ? `Levar ${origem.nome} para esta mesa` : "Criar ficha e entrar no grupo"}
+          {criar.isPending ? "Criando ficha…" : origem ? `Levar ${origem.nome} para esta mesa` : "Criar ficha e entrar na mesa"}
         </Button>
       </div>
     </form>

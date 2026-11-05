@@ -55,8 +55,22 @@ describe("ficha: vida e nível", () => {
     expect(prismaFalso.ficha.update).not.toHaveBeenCalled();
   });
 
-  it("não sobe além do nível máximo (100)", async () => {
-    prismaFalso.ficha.findUnique.mockResolvedValue(ficha({ nivel: 100 }));
+  it("jogador diminui a mana, mas não aumenta; o mestre aumenta", async () => {
+    prismaFalso.ficha.findUnique.mockResolvedValue(ficha());
+    prismaFalso.classe.findUniqueOrThrow.mockResolvedValue({ pontosVida: 20, pontosMana: 20, pontosEsforco: 5 });
+    const sobe = await comoJogador(request(app).patch(`/api/fichas/${FICHA}`)).send({ manaAtual: 15 });
+    expect(sobe.status).toBe(403);
+    expect(sobe.body.error.code).toBe("SO_MESTRE_CURA");
+    expect(prismaFalso.ficha.update).not.toHaveBeenCalled();
+
+    await comoJogador(request(app).patch(`/api/fichas/${FICHA}`)).send({ manaAtual: 3 });
+    expect(prismaFalso.ficha.update.mock.calls[0]![0].data).toMatchObject({ manaAtual: 3 });
+    await comoMestre(request(app).patch(`/api/fichas/${FICHA}`)).send({ manaAtual: 15 });
+    expect(prismaFalso.ficha.update.mock.calls[1]![0].data).toMatchObject({ manaAtual: 15 });
+  });
+
+  it("não sobe além do nível máximo (10)", async () => {
+    prismaFalso.ficha.findUnique.mockResolvedValue(ficha({ nivel: 10 }));
     const res = await comoMestre(request(app).post(`/api/fichas/${FICHA}/subir-nivel`));
     expect(res.status).toBe(409);
     expect(res.body.error.code).toBe("NIVEL_MAXIMO");

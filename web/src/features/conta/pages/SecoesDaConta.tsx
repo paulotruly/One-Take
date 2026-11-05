@@ -67,8 +67,8 @@ export function SecaoVerificados({ me }: { me: Me }) {
     <section className="secao secao-conta">
       <h2><BadgeCheck size={18} aria-hidden /> Conteúdo verificado</h2>
       <p className="pagina__subtitulo">
-        O conteúdo verificado do One-Take aparece para todo mestre, só leitura: dá para usar nos grupos e duplicar.
-        Se preferir trabalhar só com o que é seu, esconda. O que já está em uso nos seus grupos e fichas continua funcionando.
+        O conteúdo verificado do One-Take aparece para todo mestre, só leitura: dá para usar nas mesas e duplicar.
+        Se preferir trabalhar só com o que é seu, esconda. O que já está em uso nas suas mesas e fichas continua funcionando.
       </p>
       <label className="checklist__item">
         <input type="checkbox" checked={oculto} disabled={ocultar.isPending} onChange={(e) => ocultar.mutate(e.target.checked)} />
@@ -140,7 +140,7 @@ export function SecaoExcluirConta({ me }: { me: Me }) {
           <ul className="lista-consequencias">
             <li>seu perfil, nome de usuário e login;</li>
             <li>suas fichas, inclusive as arquivadas;</li>
-            <li>os grupos que você mestra (os jogadores ficam com uma cópia arquivada das fichas deles);</li>
+            <li>as mesas que você mestra (os jogadores ficam com uma cópia arquivada das fichas deles);</li>
             <li>tudo o que você criou como mestre: classes, raças, perícias, atributos, status, itens, bestiário, NPCs e kits.</li>
           </ul>
           <p className="pagina__subtitulo">

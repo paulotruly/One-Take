@@ -63,7 +63,7 @@ export function GaleriaPage() {
           filtrando={!!grupo || !!kitId}
           vazio={
             <EmptyState
-              titulo={grupo ? `Nenhuma classe do grupo ${ROTULO_GRUPO[grupo]}` : "Nenhuma classe ainda"}
+              titulo={grupo ? `Nenhuma classe da função ${ROTULO_GRUPO[grupo]}` : "Nenhuma classe ainda"}
               descricao="Crie uma classe do zero para começar."
               acao={
                 <Link to="/mestre/classes/nova" className="btn btn--primario">

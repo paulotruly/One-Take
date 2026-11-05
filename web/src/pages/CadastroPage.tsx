@@ -11,8 +11,8 @@ import { useRegras } from "../features/docs/regras";
 import { CodigoRecuperacao } from "../features/conta/components/CodigoRecuperacao";
 
 const OPCOES: { papel: Papel; titulo: string; descricao: string; Icone: typeof Crown }[] = [
-  { papel: "JOGADOR", titulo: "Jogador", descricao: "Interface simples: crio fichas e entro nos grupos com o código do mestre.", Icone: User },
-  { papel: "MESTRE", titulo: "Mestre", descricao: "Também carrega a interface de mestre: crio o mundo e conduzo os grupos. Continuo podendo jogar.", Icone: Crown },
+  { papel: "JOGADOR", titulo: "Jogador", descricao: "Interface simples: crio fichas e entro nas mesas com o código do mestre.", Icone: User },
+  { papel: "MESTRE", titulo: "Mestre", descricao: "Também carrega a interface de mestre: crio o mundo e conduzo as mesas. Continuo podendo jogar.", Icone: Crown },
 ];
 
 export function CadastroPage() {

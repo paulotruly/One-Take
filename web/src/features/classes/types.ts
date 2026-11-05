@@ -57,6 +57,8 @@ export type Aprimoramento = {
   limiteUsos: number | null;
   limitePor: LimiteUso | null;
   custoMana: number;
+  dt: number | null;
+  alcance: string | null;
   statusId: string | null;
   status?: { id: string; nome: string; tipo: "BUFF" | "DEBUFF" | "MISTO" } | null;
 };
@@ -105,6 +107,10 @@ export type Habilidade = {
   nivelNecessario: number;
   /** 0 = não custa mana. */
   custoMana: number;
+  /** DT para a carta funcionar, em cartas que ninguém pode impedir. Nula = sem DT. */
+  dt: number | null;
+  /** Alcance em texto curto (ex.: Corpo a corpo, 6 quadrados, Pessoal). */
+  alcance: string | null;
   /** Status que a carta ativa (opcional). */
   statusId: string | null;
   /** Perícia que o personagem testa para usar a carta (opcional). */

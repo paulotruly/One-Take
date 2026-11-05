@@ -115,7 +115,7 @@ export function ClasseForm({
           {conceitos.map((c) => <option key={c.id} value={c.id}>{c.titulo}</option>)}
         </select>
       </Field>
-      <Field rotulo="Grupo" erro={e.grupo}>
+      <Field rotulo="Função" erro={e.grupo}>
         <select value={v.grupo} onChange={set("grupo")}>
           {GRUPOS.map((g) => (
             <option key={g} value={g}>
@@ -199,6 +199,8 @@ export function HabilidadeForm({
     limitePor: inicial?.limitePor ?? ("" as LimiteUso | ""),
     nivelNecessario: String(inicial?.nivelNecessario ?? 1),
     custoMana: String(inicial?.custoMana ?? 0),
+    dt: inicial?.dt ? String(inicial.dt) : "",
+    alcance: inicial?.alcance ?? "",
     statusId: inicial?.statusId ?? "",
     periciaId: inicial?.periciaId ?? "",
   });
@@ -220,7 +222,7 @@ export function HabilidadeForm({
   const trocarPericia = (periciaId: string) => {
     const antes = [...sugestoes.keys()];
     const depois = [...sugeridas(periciaId).keys()];
-    setV({ ...v, periciaId });
+    setV({ ...v, periciaId, dt: periciaId ? v.dt : "" });
     // Troca só o que foi marcado sozinho; o que o mestre marcou à mão fica.
     setDefesas((d) => [...new Set([...d.filter((x) => !antes.includes(x)), ...depois])]);
   };
@@ -241,6 +243,8 @@ export function HabilidadeForm({
           limitePor: v.limitePor || null,
           nivelNecessario: inteiro(v.nivelNecessario),
           custoMana: inteiro(v.custoMana),
+          dt: v.dt.trim() ? inteiro(v.dt) : null,
+          alcance: v.alcance.trim() || null,
           statusId: v.statusId || null,
           periciaId: v.periciaId || null,
           periciasDefesaIds: defesas,
@@ -272,6 +276,9 @@ export function HabilidadeForm({
       <Field rotulo="Efeito" erro={e.descricaoEfeito} dica="O que a carta causa. Negrito: **assim**.">
         <textarea value={v.descricaoEfeito} onChange={set("descricaoEfeito")} maxLength={2000} rows={2} />
       </Field>
+      <Field rotulo="Alcance (opcional)" erro={e.alcance} dica="Ex.: Pessoal, Corpo a corpo, 6 quadrados.">
+        <input value={v.alcance} onChange={set("alcance")} maxLength={40} />
+      </Field>
       <Field rotulo="Condição (opcional)" erro={e.condicao} dica="O que precisa acontecer para poder usar.">
         <input value={v.condicao} onChange={set("condicao")} maxLength={500} />
       </Field>
@@ -283,6 +290,11 @@ export function HabilidadeForm({
           ))}
         </select>
       </Field>
+      {v.periciaId && (
+        <Field rotulo="DT da carta (opcional)" erro={e.dt} dica="Para cartas que ninguém pode impedir: se o teste não alcançar a DT, a carta falha. Deixe vazio em passivas e em cartas com defesa do alvo.">
+          <input type="number" min={1} max={99} step={1} inputMode="numeric" value={v.dt} onChange={set("dt")} />
+        </Field>
+      )}
       <fieldset className="form__grupo">
         <legend>Defesa do alvo (opcional)</legend>
         <p className="campo__dica">
@@ -309,7 +321,7 @@ export function HabilidadeForm({
       <Field rotulo="Ativa status (opcional)" erro={e.statusId} dica="Se a carta coloca um status no alvo ou em quem usa. O mestre aplica na ficha durante a sessão.">
         <select value={v.statusId} onChange={set("statusId")}>
           <option value="">Nenhum</option>
-          {opcoesStatus.filter((s) => !s.automatico).map((s) => (
+          {opcoesStatus.map((s) => (
             <option key={s.id} value={s.id}>{s.nome}</option>
           ))}
         </select>

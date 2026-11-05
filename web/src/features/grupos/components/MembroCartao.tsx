@@ -44,7 +44,7 @@ export function MembroCartao({ m, href, onStatus }: { m: Membro; href: string; o
         </span>
         <span className="membro-cartao__selos">
           <GrupoBadge grupo={m.funcao} />
-          {m.morto && <span className="selo selo--status-DEBUFF"><Skull size={12} aria-hidden /> Morto</span>}
+          {m.morto && !m.status.some((s) => s.automatico && s.nome.toLowerCase() === "morto") && <span className="selo selo--status-DEBUFF"><Skull size={12} aria-hidden /> Morto</span>}
           {m.status.map((s) => <StatusBadge key={s.id} nome={s.nome} tipo={s.tipo} />)}
         </span>
         <BarrasDeRecurso vida={m.vida} mana={m.mana} esforco={m.esforco} />

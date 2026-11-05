@@ -78,7 +78,7 @@ export function KitDetalhePage() {
         <Link key={c.id} to="/mestre/status"><StatusBadge nome={c.nome} tipo={d.status.find((s) => s.id === c.id)!.tipo} /></Link>
       )} />
       <Bloco titulo="Itens do catálogo" itens={d.itens} item={link(() => "/mestre/itens")} />
-      <Bloco titulo="Grupos que usam o kit" itens={d.grupos} item={link((c) => `/mestre/grupos/${c.id}`)} />
+      <Bloco titulo="Mesas que usam o kit" itens={d.grupos} item={link((c) => `/mestre/grupos/${c.id}`)} />
     </div>
   );
 }

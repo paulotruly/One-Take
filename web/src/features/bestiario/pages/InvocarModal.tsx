@@ -52,7 +52,7 @@ export function InvocarModal({ grupoId, kitId, aberto, onFechar }: { grupoId: st
           </Field>
           <div className="form__linha">
             <Field rotulo="Nível" erro={erros.nivel} dica="Mesma progressão das classes">
-              <input type="number" min={1} max={100} step={1} inputMode="numeric" value={nivel} onChange={(e) => setNivel(e.target.value)} />
+              <input type="number" min={1} step={1} inputMode="numeric" value={nivel} onChange={(e) => setNivel(e.target.value)} />
             </Field>
             <Field rotulo="Quantidade" erro={erros.quantidade} dica="Até 20 de uma vez">
               <input type="number" min={1} max={20} step={1} inputMode="numeric" value={quantidade} onChange={(e) => setQuantidade(e.target.value)} />

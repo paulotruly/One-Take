@@ -251,9 +251,9 @@ function FichaNpc({ n }: { n: NpcDetalhe }) {
                 </select>
               )}
               {n.destinos.grupos.length > 0 && (
-                <select value="" aria-label="Deixar vago num grupo"
+                <select value="" aria-label="Deixar vago numa mesa"
                   onChange={(e) => e.target.value && mover.mutate({ itemId: itemAberto.id, fichaId: null, grupoId: e.target.value }, { onSuccess: fecharItem })}>
-                  <option value="">Deixar vago no grupo…</option>
+                  <option value="">Deixar vago na mesa…</option>
                   {n.destinos.grupos.map((g) => <option key={g.id} value={g.id}>{g.titulo}</option>)}
                 </select>
               )}

@@ -20,9 +20,9 @@ export type KitDetalhe = Kit & {
   };
 };
 
-/** Kit ativo (telas do mestre): só o que está no kit. Sem kit escolhido ("Todos"), aparece tudo, inclusive o geral. */
+/** Com kit ativo: o que é do kit ou é geral (sem kit), como no grupo. Sem kit ativo, aparece tudo. */
 export function soDoKit(kitIds: string[] | undefined, kitId: string | null) {
-  return !kitId || (kitIds ?? []).includes(kitId);
+  return !kitId || (kitIds ?? []).length === 0 || (kitIds ?? []).includes(kitId);
 }
 
 /** Grupo com kit: o que é do kit ou é geral (sem kit). Sem kit, aparece tudo. */

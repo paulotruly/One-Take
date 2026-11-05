@@ -52,7 +52,7 @@ Formato único:
 ## Tipos de resposta
 **Classe (resumo)**: `{ id, grupo, titulo, descricao, imagemUrl, pontosVida, pontosMana, pontosEsforco, donoId, origemId, criadoEm, atualizadoEm }` (não há classe fixa)
 **Classe (detalhe)**: resumo + `habilidades: Habilidade[]` (a cartela, por `ordem`) + `pericias: PericiaDaClasse[]` (por atributo e nome).
-**Habilidade**: `{ id, classeId, bestaId, periciaId, pericia: { id, nome, atributo } | null, periciasDefesa: [{ periciaId, pericia: { id, nome, atributo } }], titulo, descricao, condicao, tipoEfeito, descricaoEfeito, limiteUsos, limitePor, nivelNecessario, custoMana, ordem }`
+**Habilidade**: `{ id, classeId, bestaId, periciaId, pericia: { id, nome, atributo } | null, periciasDefesa: [{ periciaId, pericia: { id, nome, atributo } }], titulo, descricao, condicao, tipoEfeito, descricaoEfeito, limiteUsos, limitePor, nivelNecessario, custoMana, dt, alcance, ordem }`
 Nas fichas, NPCs e criaturas, cada carta vem também com `teste: { pericia, atributo, teste: "2d20 + 5" } | null`. `periciaId` no POST/PATCH = perícia do catálogo do mestre.
 `tipoEfeito`: `DANO | DEFESA | CURA | SUPORTE | FORTALECIMENTO | ENFRAQUECIMENTO | CONTROLE | MOBILIDADE | INVOCACAO | UTILIDADE` (obrigatório; outro valor = 400 "Escolha um tipo de efeito").
 **PericiaCatalogo**: `{ id, nome, descricao, categoria, atributoId, atributo: Atributo, donoId, origemId, criadoEm, usosClasses, usosRacas }`
@@ -76,7 +76,7 @@ Nas fichas, NPCs e criaturas, cada carta vem também com `teste: { pericia, atri
 | PATCH | `/api/classes/:id` | qualquer subconjunto do POST | `Classe` |
 | DELETE | `/api/classes/:id` | — | `204` (cascata) |
 | POST | `/api/classes/:id/duplicar` | — | `201 Classe (detalhe)` — cópia "(cópia)" do mestre, com habilidades, perícias e o mesmo link de imagem |
-| POST | `/api/classes/:classeId/habilidades` | `{ titulo, descricao, tipoEfeito, descricaoEfeito, condicao?, limiteUsos? (1–99), limitePor? (COMBATE \| SESSAO), periciasDefesaIds? ([], perícias do catálogo do mestre), nivelNecessario? (1), custoMana? (0) }` (limite: os dois juntos ou nenhum) | `201 Habilidade` (no fim da cartela). Classe inexistente = 404; verificada de outra pessoa = 403 `VERIFICADO` |
+| POST | `/api/classes/:classeId/habilidades` | `{ titulo, descricao, tipoEfeito, descricaoEfeito, condicao?, limiteUsos? (1–99), limitePor? (COMBATE \| SESSAO), periciasDefesaIds? ([], perícias do catálogo do mestre), nivelNecessario? (1), custoMana? (0), dt? (1–99, exige perícia do teste), alcance? (até 40 caracteres) }` (limite: os dois juntos ou nenhum) | `201 Habilidade` (no fim da cartela). Classe inexistente = 404; verificada de outra pessoa = 403 `VERIFICADO` |
 | PUT | `/api/classes/:classeId/habilidades/ordem` | `{ ids: string[] }` — exatamente as habilidades da classe, na nova ordem | `Habilidade[]` |
 | PATCH | `/api/habilidades/:id` | subconjunto | `Habilidade` |
 | DELETE | `/api/habilidades/:id` | — | `204` |
@@ -119,7 +119,7 @@ Grupos: `disponiveis.statusIds` (status ativados). Membros do grupo trazem `stat
 | GET | `/api/conceitos` | — | conceitos do mestre com `subclasses[]` |
 | POST | `/api/conceitos` | `{ titulo, descricao }` | `201` |
 | PATCH / DELETE | `/api/conceitos/:id` | subconjunto | excluir mantém as subclasses (sem conceito) |
-| POST | `/api/habilidades/:id/aprimoramentos` | `{ nivel, titulo, descricao, descricaoEfeito, custoMana, condicao?, limiteUsos?, limitePor?, statusId? }`: a carta inteira no nível (nível > nível da carta; nulo = sem condição, sem limite, sem status) | `201`; nível repetido = 409 `NIVEL_EM_USO` |
+| POST | `/api/habilidades/:id/aprimoramentos` | `{ nivel, titulo, descricao, descricaoEfeito, custoMana, dt?, alcance?, condicao?, limiteUsos?, limitePor?, statusId? }`: a carta inteira no nível (nível > nível da carta; nulo = sem condição, sem limite, sem DT, sem status) | `201`; nível repetido = 409 `NIVEL_EM_USO` |
 | PATCH / DELETE | `/api/aprimoramentos/:id` | mesmo corpo | |
 
 Classes aceitam `conceitoId` (conceito do próprio mestre) e devolvem `conceito: { id, titulo }`. Cartas vêm com `aprimoramentos[]`.
@@ -176,9 +176,9 @@ formulários); `?verificados=1` inclui as verificadas que ele ainda não tem (me
 | GET | `/api/fichas` | — | minhas fichas (resumo) |
 | GET | `/api/fichas/:id` | — | `FichaDetalhe` (dono ou mestre do grupo): máximos, atuais, atributos com dados e `teste` ("2d20"), perícias somadas (raça/classe/nível/total) com `teste` ("2d20 + 5"), cartas do nível, inventário `{ capacidade, usados, itens: (Item & { podeUsar, motivoNaoPodeUsar })[] }`, opções de perícia, outras fichas do grupo, `morto`, `status[]`, `statusAplicaveis[]` |
 | PATCH | `/api/fichas/:id` | `{ nome?, historia?, imagemUrl?, vidaAtual?, manaAtual?, esforcoAtual? }` (atuais limitados a 0..máx) | `FichaDetalhe` |
-| POST | `/api/fichas/:id/subir-nivel` | — (só mestre) | `FichaDetalhe` (+1 nível, +5 nos atuais, +5 pontos de perícia) |
-| POST | `/api/fichas/:id/pericias` | `{ periciaId }` | gasta 5 pontos (+5 na perícia) · 409 `SEM_PONTOS` |
-| POST | `/api/fichas/:id/status` | `{ statusId, turnos? }` (só mestre; status ativado no grupo e não automático; `turnos` 1 a 99 ou nulo = sem prazo; aplicar de novo troca os turnos) | `FichaDetalhe` |
+| POST | `/api/fichas/:id/subir-nivel` | — (só mestre) | `FichaDetalhe` (+1 nível, +5 nos atuais, +2 pontos de perícia; nível máximo 10) |
+| POST | `/api/fichas/:id/pericias` | `{ periciaId }` | gasta 2 pontos (+2 na perícia) · 409 `SEM_PONTOS` |
+| POST | `/api/fichas/:id/status` | `{ statusId, turnos? }` (só mestre; status ativado no grupo, automático também (ex.: carta que cansa); `turnos` 1 a 99 ou nulo = sem prazo; aplicar de novo troca os turnos) | `FichaDetalhe` |
 | PATCH | `/api/fichas/:id/status/:statusId` | `{ turnos }` (só mestre; 0 a 99 ou nulo; 0 tira o status) | `FichaDetalhe`; não aplicado = 404 |
 | DELETE | `/api/fichas/:id/status/:statusId` | — (só mestre) | `FichaDetalhe` |
 | DELETE | `/api/fichas/:id` | — | `204` (dono sai / mestre remove; itens ficam vagos) |
@@ -281,7 +281,7 @@ recria o perfil.
 `motivo`: `SAIU_DO_GRUPO | REMOVIDO_PELO_MESTRE | GRUPO_EXCLUIDO`. `DELETE /api/fichas/:id` e `DELETE /api/grupos/:id` arquivam antes de apagar.
 
 ## Regras de combate do grupo (mestre)
-Status aplicados (ficha, NPC, criatura) vêm com `turnos` (turnos que faltam; `null` = sem prazo; automáticos sempre `null`).
+Status aplicados (ficha, NPC, criatura) vêm com `turnos` (turnos que faltam; `null` = sem prazo; automáticos pelo recurso sempre `null` e `automatico: true`; o automático aplicado à mão vem com `automatico: false` e turnos).
 
 | Método | Rota | Corpo | Resposta |
 |---|---|---|---|

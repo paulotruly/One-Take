@@ -14,8 +14,8 @@ Nunca altere classes, cartas ou criaturas sem o usuário aprovar: entregue um re
 - Esforço: cada ponto gasto antes da rolagem dá **+1 d20** (não vale com atributo 0). Esforço é um recurso de "dados extras".
 - DT (faixa de sucesso e falha) é livre: o mestre define na hora. Use DT 12 (média) e 15 (difícil) como referência.
 - Personagem começa com 3 pontos de atributo (normalmente 1 a 2 no atributo de ataque); criaturas têm os dados que o mestre definir.
-- Progressão: +5 vida, +5 mana, +5 esforço e +5 pontos de perícia por nível; cartas com nível necessário ≤ nível; aprimoramentos mudam a carta.
-- Vida 0 ou mana 0 = morte. Esforço 0 = cansado.
+- Progressão: +5 vida, +5 mana, +5 esforço e +2 pontos de perícia por nível, até o nível 10; cartas com nível necessário ≤ nível; aprimoramentos mudam a carta.
+- Vida 0 ou mana 0 = morte. Esforço 0 = cansado. No interlúdio, a mana sobe até 80% do máximo (o calc.mjs ainda trata a mana como orçamento da sessão inteira).
 - Limite de uso das cartas: N vezes por combate ou por sessão (lista fixa); dano de dados é somado (2d10 = soma dos dois).
 - Tipos de efeito fixos: Dano, Defesa, Cura, Suporte, Fortalecimento, Enfraquecimento, Controle, Mobilidade, Invocação, Utilidade.
 

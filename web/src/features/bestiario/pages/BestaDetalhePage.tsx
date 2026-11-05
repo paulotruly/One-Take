@@ -163,7 +163,7 @@ export function BestaDetalhePage() {
 
       <section className="secao">
         <h2>Progressão de nível</h2>
-        <p className="pagina__subtitulo">Ao invocar no grupo você escolhe o nível. Os pontos de perícia por nível não se aplicam a criaturas.</p>
+        <p className="pagina__subtitulo">Ao invocar na mesa você escolhe o nível. Os pontos de perícia por nível não se aplicam a criaturas.</p>
         {progressao.isPending ? (
           <Loading compacto />
         ) : progressao.isError ? (
@@ -192,7 +192,7 @@ export function BestaDetalhePage() {
       <ConfirmDialog
         aberto={confirmarExclusao}
         titulo="Excluir criatura"
-        mensagem={<>Excluir <strong>{b.titulo}</strong> com todas as cartas? As criaturas dela invocadas nos grupos também somem. Não dá para desfazer.</>}
+        mensagem={<>Excluir <strong>{b.titulo}</strong> com todas as cartas? As criaturas dela invocadas nas mesas também somem. Não dá para desfazer.</>}
         processando={excluir.isPending}
         erro={excluir.isError ? mensagemDeErro(excluir.error) : null}
         onCancelar={() => setConfirmarExclusao(false)}

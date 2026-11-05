@@ -31,6 +31,8 @@ export function AprimoramentoForm({ carta, inicial, opcoesStatus, onEnviar, onCa
     limiteUsos: base.limiteUsos ? String(base.limiteUsos) : "",
     limitePor: base.limitePor ?? ("" as LimiteUso | ""),
     custoMana: String(base.custoMana),
+    dt: base.dt ? String(base.dt) : "",
+    alcance: base.alcance ?? "",
     statusId: base.statusId ?? "",
   });
   const set = (campo: keyof typeof v) => (e: { target: { value: string } }) => setV({ ...v, [campo]: e.target.value });
@@ -47,6 +49,8 @@ export function AprimoramentoForm({ carta, inicial, opcoesStatus, onEnviar, onCa
       limiteUsos: v.limitePor ? numero(v.limiteUsos) : null,
       limitePor: v.limitePor || null,
       custoMana: numero(v.custoMana),
+      dt: v.dt.trim() ? numero(v.dt) : null,
+      alcance: v.alcance.trim() || null,
       statusId: v.statusId || null,
     });
   }
@@ -74,16 +78,24 @@ export function AprimoramentoForm({ carta, inicial, opcoesStatus, onEnviar, onCa
         <Field rotulo="Custo de mana" erro={erros.custoMana} dica="0 = não custa mana.">
           <input type="number" min={0} step={1} inputMode="numeric" value={v.custoMana} onChange={set("custoMana")} />
         </Field>
+        {carta.periciaId && (
+          <Field rotulo="DT (opcional)" erro={erros.dt} dica="Pode subir ou descer neste nível. Vazio = sem DT.">
+            <input type="number" min={1} max={99} step={1} inputMode="numeric" value={v.dt} onChange={set("dt")} />
+          </Field>
+        )}
         <Field rotulo="Condição (opcional)" erro={erros.condicao}>
           <input value={v.condicao} onChange={set("condicao")} maxLength={500} />
         </Field>
       </div>
+      <Field rotulo="Alcance (opcional)" erro={erros.alcance} dica="Ex.: Pessoal, Corpo a corpo, 6 quadrados.">
+        <input value={v.alcance} onChange={set("alcance")} maxLength={40} />
+      </Field>
       <CampoLimite usos={v.limiteUsos} por={v.limitePor} erro={erros.limiteUsos ?? erros.limitePor}
         onChange={(usos, por) => setV({ ...v, limiteUsos: usos, limitePor: por })} />
       <Field rotulo="Ativa status (no alvo)" erro={erros.statusId}>
         <select value={v.statusId} onChange={set("statusId")}>
           <option value="">Nenhum</option>
-          {opcoesStatus.filter((s) => !s.automatico).map((s) => <option key={s.id} value={s.id}>{s.nome}</option>)}
+          {opcoesStatus.map((s) => <option key={s.id} value={s.id}>{s.nome}</option>)}
         </select>
       </Field>
       {erroGeral && <div className="aviso">{erroGeral}</div>}

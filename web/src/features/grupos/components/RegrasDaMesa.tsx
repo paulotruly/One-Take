@@ -14,7 +14,7 @@ type Props = {
   vazio?: string;
 };
 
-export function RegrasDaMesa({ padrao, proprias, acoesPropria, vazio = "Nenhuma regra de combate neste grupo." }: Props) {
+export function RegrasDaMesa({ padrao, proprias, acoesPropria, vazio = "Nenhuma regra de combate nesta mesa." }: Props) {
   if (padrao.length === 0 && proprias.length === 0) return <p className="pagina__subtitulo">{vazio}</p>;
   return (
     <div className="regras-mesa">

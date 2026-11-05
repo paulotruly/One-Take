@@ -33,6 +33,6 @@ export function mensagemFuncaoCheia(limites: LimitesPorFuncao, funcao: GrupoClas
   const limite = limites[CAMPO_DO_LIMITE[funcao]];
   const r = ROTULO_FUNCAO[funcao];
   return limite === 0
-    ? `Este grupo não aceita classes da função ${r.singular}.`
-    : `Este grupo aceita no máximo ${limite} ${limite === 1 ? `${r.singular}, e a vaga já foi ocupada` : `${r.plural}, e as vagas já foram ocupadas`}.`;
+    ? `Esta mesa não aceita classes da função ${r.singular}.`
+    : `Esta mesa aceita no máximo ${limite} ${limite === 1 ? `${r.singular}, e a vaga já foi ocupada` : `${r.plural}, e as vagas já foram ocupadas`}.`;
 }

@@ -23,7 +23,7 @@ export type AcoesCarta = {
  */
 export function HabilidadeCard({ habilidade: h, onAbrir, acoes, bloqueada, marca }: { habilidade: Habilidade; onAbrir: () => void; acoes?: AcoesCarta; bloqueada?: boolean; marca?: string }) {
   return (
-    <article className={`carta ${bloqueada ? "carta--bloqueada" : ""}`}>
+    <article className={`carta ${bloqueada ? "carta--bloqueada" : ""}`} data-carta={h.id}>
       <button type="button" className="carta__abrir" onClick={onAbrir} title="Ver detalhes da carta">
         <span className="carta__topo">
           <EfeitoBadge tipo={h.tipoEfeito} />
@@ -39,7 +39,7 @@ export function HabilidadeCard({ habilidade: h, onAbrir, acoes, bloqueada, marca
             <span className="selo selo--novo" title="Muda em níveis maiores">+{h.aprimoramentos!.length} nv</span>
           )}
         </span>
-        {h.teste ? <span className="carta__limite">{h.teste.pericia}: {h.teste.teste}</span> : h.pericia && <span className="carta__limite">Teste: {h.pericia.nome}</span>}
+        {h.teste ? <span className="carta__limite">{h.teste.pericia}: {h.teste.teste}{h.dt && `, DT ${h.dt}`}</span> : h.pericia && <span className="carta__limite">Teste: {h.pericia.nome}{h.dt && `, DT ${h.dt}`}</span>}
         {h.limitePor && <span className="carta__limite">{rotuloLimite(h.limiteUsos, h.limitePor)}</span>}
       </button>
       {acoes && (
@@ -82,7 +82,12 @@ export function HabilidadeDetalhe({ habilidade: h }: { habilidade: Habilidade })
       <p className="carta__descricao"><ComNegrito texto={h.descricao} /></p>
       {(h.teste || h.pericia) && (
         <p className="carta__linha carta__teste">
-          <strong>Teste:</strong> {h.teste ? <>{h.teste.pericia} ({h.teste.atributo}): <b>{h.teste.teste}</b></> : <>{h.pericia!.nome} ({h.pericia!.atributo.nome})</>}
+          <strong>Teste:</strong> {h.teste ? <>{h.teste.pericia} ({h.teste.atributo}): <b>{h.teste.teste}</b></> : <>{h.pericia!.nome} ({h.pericia!.atributo.nome})</>}{h.dt && <>, <b>DT {h.dt}</b></>}
+        </p>
+      )}
+      {h.alcance && (
+        <p className="carta__linha">
+          <strong>Alcance:</strong> {h.alcance}
         </p>
       )}
       {(h.periciasDefesa?.length ?? 0) > 0 && (
