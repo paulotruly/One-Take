@@ -41,7 +41,6 @@ p, li, td, th, dd, dt, h1, h2, h3, h4, summary, .campo__dica, .card-link__descri
 
   /* Linhas que ficavam apertadas lado a lado. */
   .dados-atributo { flex-wrap: wrap; gap: var(--esp-2); }
-  .aviso-kit span { min-width: 0; }
   .membro__info { min-width: 0; }
   .ficha-arquivada__imagem { width: 88px; }
 

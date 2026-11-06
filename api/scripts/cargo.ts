@@ -1,7 +1,7 @@
 // Uso: npm run cargo -- paulo ADMIN     (cargo de administrador do sistema para @paulo)
 //      npm run cargo -- paulo USUARIO   (volta a ser usuário comum)
-// O cargo fica no banco (Perfil.cargo), nunca no código. Não há conteúdo fixo: o ADMIN recebe o conteúdo inicial do seed e marca
-// coisas dele como verificadas, principalmente kits (todo mestre vê e usa, só leitura).
+// O cargo fica no banco (Perfil.cargo), nunca no código. Não muda permissões (tudo é da própria conta): a conta ADMIN recebe o
+// conteúdo inicial do seed, e os atributos e status dela aparecem como exemplo na documentação pública.
 import "dotenv/config";
 import { Cargo } from "../src/generated/prisma/client.js";
 import { normalizarNickname } from "../src/lib/nickname.js";

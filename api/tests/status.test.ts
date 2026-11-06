@@ -13,8 +13,8 @@ const { criarApp } = await import("../src/app.js");
 const app = criarApp({ corsOrigin: ["http://localhost:5173"] });
 
 const st = (x: Record<string, unknown>) => ({
-  // Padrão: status do seed (do ADMIN, outra conta) verificado.
-  id: "s", nome: "S", efeito: "e", tipo: "DEBUFF", gatilho: null, ordem: 100, donoId: OUTRO_MESTRE_ID, verificado: true, criadoEm: new Date(), ...x,
+  // Padrão: status do próprio mestre.
+  id: "s", nome: "S", efeito: "e", tipo: "DEBUFF", gatilho: null, ordem: 100, donoId: MESTRE.id, criadoEm: new Date(), ...x,
 });
 const MORTO = st({ id: "morto", nome: "Morto", gatilho: "VIDA_ZERO", ordem: 1 });
 const SEM_ENERGIA = st({ id: "sem", nome: "Sem energia vital", gatilho: "MANA_ZERO", ordem: 2 });
@@ -78,11 +78,11 @@ describe("catálogo de status (mestre)", () => {
     expect(prismaFalso.status.create.mock.calls[0]![0].data).not.toHaveProperty("gatilho");
   });
 
-  it("status verificado de outra pessoa não é editável (403)", async () => {
-    prismaFalso.status.findUnique.mockResolvedValue(st({ id: ID }));
+  it("status de outra conta não é editável (404)", async () => {
+    prismaFalso.status.findUnique.mockResolvedValue(st({ id: ID, donoId: OUTRO_MESTRE_ID }));
     const res = await comoMestre(request(app).patch(`/api/status/${ID}`)).send({ efeito: "outro" });
-    expect(res.status).toBe(403);
-    expect(res.body.error.code).toBe("VERIFICADO");
+    expect(res.status).toBe(404);
+    expect(prismaFalso.status.update).not.toHaveBeenCalled();
   });
 
   it("o dono edita até o status automático, mas não o exclui", async () => {
@@ -125,7 +125,7 @@ describe("aplicar status na ficha", () => {
     const desativado = await comoMestre(request(app).post(`/api/fichas/${FICHA}/status`)).send({ statusId: ID });
     expect(desativado.status).toBe(400);
 
-    prismaFalso.status.findUnique.mockResolvedValueOnce(st({ id: ID, donoId: OUTRO_MESTRE_ID, verificado: false }));
+    prismaFalso.status.findUnique.mockResolvedValueOnce(st({ id: ID, donoId: OUTRO_MESTRE_ID }));
     const alheio = await comoMestre(request(app).post(`/api/fichas/${FICHA}/status`)).send({ statusId: ID });
     expect(alheio.status).toBe(404);
     expect(prismaFalso.fichaStatus.upsert).not.toHaveBeenCalled();

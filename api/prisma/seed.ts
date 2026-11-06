@@ -1,6 +1,6 @@
 // Conteúdo inicial: atributos, status e categorias de item (na conta ADMIN) e perícias base (modelo do catálogo, sem dono).
-// Não há conteúdo fixo: atributos, status e categorias são criados uma vez na conta ADMIN mais antiga, verificados, e depois
-// só o dono edita (pela interface). Rodar de novo não sobrescreve nada (só cria o que falta). Não cria classes.
+// Não há conteúdo fixo nem compartilhado: atributos, status e categorias são criados uma vez na conta ADMIN mais antiga e depois
+// só o dono edita (pela interface); as outras contas começam vazias. Rodar de novo não sobrescreve nada (só cria o que falta). Não cria classes.
 import "dotenv/config";
 import { criarPrisma } from "../src/lib/prisma.js";
 import { ATRIBUTOS_BASE, PERICIAS_BASE } from "./pericias-base.js";
@@ -20,12 +20,12 @@ async function main() {
   const donoId = admin.id;
 
   for (const { id, ...dados } of Object.values(ATRIBUTOS_BASE)) {
-    await prisma.atributo.upsert({ where: { id }, create: { id, ...dados, donoId, verificado: true }, update: {} });
+    await prisma.atributo.upsert({ where: { id }, create: { id, ...dados, donoId }, update: {} });
   }
   console.log(`ok: ${Object.keys(ATRIBUTOS_BASE).length} atributos`);
 
   for (const { id, ...dados } of STATUS_BASE) {
-    await prisma.status.upsert({ where: { id }, create: { id, ...dados, donoId, verificado: true }, update: {} });
+    await prisma.status.upsert({ where: { id }, create: { id, ...dados, donoId }, update: {} });
   }
   console.log(`ok: ${STATUS_BASE.length} status`);
 
@@ -36,7 +36,7 @@ async function main() {
     { id: "00000000-0000-4000-8004-000000000004", nome: "Sebo", descricao: "Livros, mapas, pergaminhos e achados usados.", icone: "livro", ordem: 4 },
   ];
   for (const { id, ...dados } of categorias) {
-    await prisma.categoriaItem.upsert({ where: { id }, create: { id, ...dados, donoId, verificado: true }, update: {} });
+    await prisma.categoriaItem.upsert({ where: { id }, create: { id, ...dados, donoId }, update: {} });
   }
   console.log(`ok: ${categorias.length} categorias de item`);
 

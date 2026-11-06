@@ -6,6 +6,28 @@ Registre só o que muda comportamento, manutenção ou entendimento do sistema. 
 
 Formato de cada entrada: **Resumo**, Motivo, Arquivos/módulos, Impacto (regras ou arquitetura), Procedimentos (migrations, config) e Docs.
 
+## Não commitado (2026-11-06)
+- **Mesa pelo kit:** o que vale na mesa vem do kit escolhido (classes, raças, atributos com as perícias, perícias com o atributo, status do kit e os automáticos) e acompanha quando o
+  kit muda (`api/src/modules/grupos/kit-da-mesa.ts`; `definirKits` e a tela do kit refazem as mesas). O formulário da mesa troca a escolha item a item por kit + resumo;
+  `PUT /api/grupos/:id/disponiveis` só vale para mesa sem kit. Mesa antiga sem kit mantém o que estava marcado.
+- **Tela do kit:** Editar conteúdo (caixas de seleção com tudo o que o mestre tem, `PUT /api/kits/:id/conteudo`) e Editar nome.
+- **Kit ativo visível:** faixa no topo de todas as telas do mestre (Abrir kit, Sair do kit) e o seletor da lateral em dourado.
+- **Arquétipos em filtro:** em Classes, Raças e Bestiário, os grupos recolhíveis viraram uma linha de filtros (Todas, cada arquétipo, Sem arquétipo) com a grade única embaixo;
+  ao escolher um arquétipo aparecem a descrição e as ações dele.
+- **Sem conteúdo verificado: tudo é da própria conta.** Nenhuma conta vê, usa ou duplica o conteúdo de outra; os jogadores veem o que o mestre libera na mesa.
+  Conta nova de mestre começa vazia (não copia mais as perícias base). Saíram o selo verificado, `PUT /api/verificados/:tipo/:id`, `GET /api/sistema`,
+  `POST /api/pericias/:id/duplicar`, `?verificados=1` em perícias, a preferência "Ocultar o conteúdo verificado" e o tópico "Conteúdo verificado" da documentação.
+  Coisa de outra conta agora dá 404 (antes, 403 `VERIFICADO` na edição). O cargo ADMIN fica no banco, sem efeito nas permissões. Item novo sem categoria por padrão
+  (antes ia para Artefatos, da conta ADMIN). Motivo: decisão do produto. Arquivos: `api/src/lib/posse.ts` (no lugar de `lib/sistema.ts`), services de classes, raças,
+  criaturas, NPCs, atributos, perícias, status, categorias, itens, kits, arquétipos e mesas; `web/src/features/verificados/` removida; telas e documentação pública.
+  Procedimento: migration `20261106120000_sem_verificado` (`npm run db:deploy`, junto com o deploy da API: a API antiga lê as colunas removidas).
+  Dados: contas `mestre_demo`, `ana_demo`, `bruno_demo`, `caio_demo` e `duda_demo` excluídas (pela exclusão de conta, com o Supabase Auth). Docs: DOMINIO, DADOS, API,
+  ARQUITETURA, DECISOES, ROADMAP, PROJECT_CONTEXT, CLAUDE.md, Termos de uso e REVISAO_LEGAL_PENDENCIAS.
+- **Cartas do @paulo (dados, após o `/balancear`):** Lanceiro com Varredura de lança, Investida lancinante e Ruptura dracônica em 1 vez por combate (eram 2) e Arremesso mortal
+  em 2 vezes por combate (era sem limite); Druida com vida 25 (era 20), Pólen revigorante 1d8+3 (era 2d8+2), Jardim de espinhos 20 de mana (era 15) e Companheiro selvagem como Invocação (era Dano).
+  Cura mais forte, perto de 1x o dano de um Combatente por uso: Oração restauradora 2d8+2 (era 1d8+3), Toque da primavera 2d6+2 (era 1d6+3),
+  Harmonia restauradora 2d6+3 (era 2d6+2), Incensário purificador 2d6+3 (era 1d8+2) e Pólen revigorante 2d6+3 (era 1d8+3).
+
 ## Não commitado (2026-11-04)
 - **Novo visual dark fantasy minimalista:** tema escuro no app inteiro, destaque e botão primário em dourado, vermelho só para ações destrutivas e perigo, títulos em Cinzel e texto em Inter, cantoneiras nos
   cards principais e linha com losango abaixo dos títulos. Motivo: a interface clara parecia uma plataforma de saúde. Arquivos: `web/src/styles/`, `web/src/components/ui/ui.css`

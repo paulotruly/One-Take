@@ -4,8 +4,7 @@ import { LinkVoltar } from "../../../components/ui/LinkVoltar";
 import { ErrorState, Loading } from "../../../components/ui/States";
 import { mensagemDeErro } from "../../../lib/api";
 import { useClasse, useCriarHabilidade, useOrdenarHabilidades } from "../api";
-import { VerificadoBadge } from "../../verificados/components/VerificadoBadge";
-import { GrupoBadge, OrigemBadge } from "../components/Selos";
+import { GrupoBadge } from "../components/Selos";
 import { CartelaEditor } from "./CartelaEditor";
 
 export function HabilidadesPage() {
@@ -25,7 +24,6 @@ export function HabilidadesPage() {
   }
 
   const c = classe.data;
-  const editavel = !!c.editavel;
 
   return (
     <div className="pagina">
@@ -33,15 +31,14 @@ export function HabilidadesPage() {
       <div className="classe-cabecalho__info">
         <div className="classe-cabecalho__selos">
           <GrupoBadge grupo={c.grupo} />
-          <OrigemBadge deOutro={c.deOutro} />
         </div>
-        <h1>Habilidades de {c.titulo} {c.verificado && <VerificadoBadge />}</h1>
+        <h1>Habilidades de {c.titulo}</h1>
         <p className="pagina__subtitulo">
           {c.habilidades.length} {c.habilidades.length === 1 ? "carta" : "cartas"} na cartela · toque numa carta para ver tudo
-          {editavel ? " · use as setas da carta para reordenar" : " · verificada, somente leitura"}
+          {" · use as setas da carta para reordenar"}
         </p>
       </div>
-      <CartelaEditor habilidades={c.habilidades} editavel={editavel} criar={criar} ordenar={ordenar} />
+      <CartelaEditor habilidades={c.habilidades} editavel criar={criar} ordenar={ordenar} />
     </div>
   );
 }

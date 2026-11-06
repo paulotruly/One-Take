@@ -5,12 +5,12 @@
 - API: autenticação (JWT Supabase via JWKS), papel MESTRE/JOGADOR, CRUD de classes,
   habilidades, catálogo de perícias por mestre (com 18 perícias base) e perícias das classes, duplicar classe, imagem por link, reordenar cartas, erros padronizados, testes.
 
-- Interface do mestre: login, galeria estilo seleção de herói (filtro por grupo, verificada x minha, vida/mana/esforço),
+- Interface do mestre: login, galeria estilo seleção de herói (filtro por grupo, vida/mana/esforço),
   criar/editar classe com link de imagem, tela própria de habilidades (cartela única, cartas reordenáveis), catálogo de perícias
   (categorias por emoji, atributos CF/CC) e perícias da classe escolhidas do catálogo com modificador,
   exclusão com confirmação, estados de carregamento/vazio/erro. Rota `/jogador` reservada.
 - Regras de progressão de nível (API, fonte única) e prévia por nível na página da classe.
-- Raças (deslocamento + perícias de base), atributos como cadastro (do mestre; os 3 do seed são do ADMIN, verificados).
+- Raças (deslocamento + perícias de base), atributos como cadastro (do mestre; os 3 do seed ficam na conta ADMIN).
 - Cadastro como mestre ou jogador, perfil (nome e foto), página pública de regras e guia do mestre.
 - Login por nickname. Grupos (código de entrada, limite, classes repetidas, o que vale no grupo),
   fichas (raça, classe, história, imagem, dados por atributo, recursos, perícias somadas, cartas do nível),
@@ -42,7 +42,7 @@
 - Testes de integração contra um Postgres real (ex.: branch do Supabase ou container).
 - Testes de componentes no front (hoje só typecheck + build).
 - Code-splitting do bundle (o supabase-js deixa o JS principal com ~590 kB; ~170 kB gzip).
-- "Restaurar perícias base" no catálogo do mestre (hoje, base apagada só volta ao duplicar uma classe verificada que a use).
+- Conteúdo inicial opcional para conta nova (hoje começa vazia; decisão de 2026-11-06).
 - Definir: cartas de um nível são todas recebidas ou escolhidas? Perícia nova é escolhida ou pré-determinada?
 - Desfazer gasto de pontos de perícia (descer de nível não existe por regra).
 - "Desativar" a interface de mestre.

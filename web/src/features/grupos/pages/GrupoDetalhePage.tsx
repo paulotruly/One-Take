@@ -82,6 +82,7 @@ export function GrupoDetalhePage() {
   const g = grupo.data;
   const d = g.disponiveis;
   const incompleto = d.classeIds.length === 0 || d.racaIds.length === 0 || d.atributoIds.length === 0;
+  const kitHref = g.kit ? `/mestre/kits/${g.kit.id}` : `/mestre/grupos/${id}/editar`;
   const destinos = g.membros.map((m) => ({ id: m.fichaId, rotulo: `${m.nome} (@${m.jogador.nickname})` }));
   const itemAberto = g.itensVagos.find((i) => i.id === itemAbertoId) ?? null;
   const membroStatus = g.membros.find((m) => m.fichaId === statusDe) ?? null;
@@ -206,9 +207,10 @@ export function GrupoDetalhePage() {
         <>
           <ProntidaoGrupo
             itens={[
-              { rotulo: "Classes", detalhe: `${d.classeIds.length} liberadas`, pronto: d.classeIds.length > 0, href: `/mestre/grupos/${id}/editar`, acao: "Liberar" },
-              { rotulo: "Raças", detalhe: `${d.racaIds.length} liberadas`, pronto: d.racaIds.length > 0, href: `/mestre/grupos/${id}/editar`, acao: "Liberar" },
-              { rotulo: "Atributos", detalhe: `${d.atributoIds.length} liberados`, pronto: d.atributoIds.length > 0, href: `/mestre/grupos/${id}/editar`, acao: "Liberar" },
+              { rotulo: "Kit", detalhe: g.kit ? g.kit.nome : "nenhum", pronto: !!g.kit, href: `/mestre/grupos/${id}/editar`, acao: "Escolher" },
+              { rotulo: "Classes", detalhe: `${d.classeIds.length} no kit`, pronto: d.classeIds.length > 0, href: kitHref, acao: "Pôr no kit" },
+              { rotulo: "Raças", detalhe: `${d.racaIds.length} no kit`, pronto: d.racaIds.length > 0, href: kitHref, acao: "Pôr no kit" },
+              { rotulo: "Atributos", detalhe: `${d.atributoIds.length} no kit`, pronto: d.atributoIds.length > 0, href: kitHref, acao: "Pôr no kit" },
               { rotulo: "Jogadores", detalhe: `${g.membros.length} de ${g.limiteMembros} vagas`, pronto: g.membros.length > 0 },
             ]}
           />
@@ -285,8 +287,9 @@ export function GrupoDetalhePage() {
       <section className="secao">
         <h2>O que vale nesta mesa</h2>
         <p className="pagina__subtitulo">
+          {g.kit ? <>Do kit <strong>{g.kit.nome}</strong>: </> : "Sem kit: "}
           {d.classeIds.length} classes · {d.racaIds.length} raças · {d.atributoIds.length} atributos · {d.periciaIds.length} perícias · {d.statusIds.length} status.{" "}
-          <Link to={`/mestre/grupos/${id}/editar`}>Alterar</Link>
+          {g.kit ? <Link to={`/mestre/kits/${g.kit.id}`}>Editar o kit</Link> : <Link to={`/mestre/grupos/${id}/editar`}>Escolher um kit</Link>}
         </p>
       </section>
 

@@ -1,10 +1,10 @@
 // Bestiário do mestre: criaturas montadas como classes (vida/mana/esforço base, cartela, perícias) e com dados por atributo.
 // Só o mestre dono vê e edita; de outro mestre = 404.
 import type { Pericia } from "../../generated/prisma/client.js";
-import { comVisao, kitIdsPara, podeUsar, quemVe, visao, visivelPara } from "../../lib/sistema.js";
+import { doDono, ehDoDono } from "../../lib/posse.js";
 import { periciaNoCatalogo } from "../classes/classes.service.js";
 import type { z } from "zod";
-import { AppError, naoEncontrado } from "../../lib/errors.js";
+import { naoEncontrado } from "../../lib/errors.js";
 import { comKitIds, comKits, definirKits } from "../../lib/kits.js";
 import { getPrisma } from "../../lib/prisma.js";
 import { previaProgressao } from "../../regras/progressao.js";
@@ -15,19 +15,14 @@ import { comStatus } from "../habilidades/habilidades.include.js";
 import { periciaDoMestre } from "../pericias/pericias.service.js";
 import type { criarBestaSchema, editarBestaSchema } from "./bestas.schemas.js";
 
-/** Ver, invocar e duplicar: do mestre ou verificado. */
+/** Ver, editar, invocar e duplicar: só o dono. */
 export async function bestaLegivel(id: string, usuarioId: string) {
   const besta = await getPrisma().besta.findUnique({ where: { id } });
-  if (!besta || !(await podeUsar("besta", besta, usuarioId))) throw naoEncontrado("Besta não encontrada");
+  if (!besta || !ehDoDono(besta, usuarioId)) throw naoEncontrado("Besta não encontrada");
   return besta;
 }
 
-/** Editar: só o dono (a verificado de outra pessoa é só leitura: duplique). */
-export async function bestaEditavel(id: string, usuarioId: string) {
-  const besta = await bestaLegivel(id, usuarioId);
-  if (besta.donoId !== usuarioId) throw new AppError(403, "VERIFICADO", "Esta criatura é verificado (de outra pessoa): só leitura. Duplique para editar.");
-  return besta;
-}
+export const bestaEditavel = bestaLegivel;
 
 /** Include da besta completa: cartela, perícias, atributos e conceito. */
 export const bestaCompleta = {
@@ -59,21 +54,17 @@ export function apresentarBesta({ pericias, atributos, ...b }: BestaComTudo) {
 }
 
 export async function listar(usuarioId: string) {
-  const quem = await quemVe(usuarioId);
   const bestas = await getPrisma().besta.findMany({
-    where: await visivelPara(usuarioId),
+    where: doDono(usuarioId),
     orderBy: { titulo: "asc" },
     include: { conceito: { select: { id: true, titulo: true } }, _count: { select: { habilidades: true } }, ...comKits },
   });
-  return bestas.map(({ _count, ...b }) => ({ ...comVisao(b, quem), cartas: _count.habilidades }));
+  return bestas.map(({ _count, ...b }) => ({ ...comKitIds(b), cartas: _count.habilidades }));
 }
 
 export async function detalhar(id: string, usuarioId: string) {
   await bestaLegivel(id, usuarioId);
-  const b = apresentarBesta((await buscarCompleta(id))!);
-  const quem = await quemVe(usuarioId);
-  const kits = b.kitIds.map((kitId) => ({ kitId }));
-  return { ...b, ...visao({ ...b, kits }, quem), kitIds: kitIdsPara({ donoId: b.donoId, kits }, quem) };
+  return apresentarBesta((await buscarCompleta(id))!);
 }
 
 /** Mesma progressão das classes: o mestre escolhe o nível ao invocar a criatura no grupo. */
@@ -110,8 +101,7 @@ export async function excluir(id: string, usuarioId: string) {
 }
 
 /**
- * Cópia "(cópia)" com cartela, aprimoramentos, perícias e atributos. Duplicar uma verificado: as perícias passam a ser as do
- * catálogo de quem duplica, sem arquétipo nem kits de outra pessoa.
+ * Cópia "(cópia)" com cartela, aprimoramentos, perícias e atributos. As perícias passam a ser as do catálogo de quem duplica.
  */
 export async function duplicar(id: string, usuarioId: string) {
   await bestaLegivel(id, usuarioId);

@@ -19,7 +19,7 @@ export function NovaBestaPage() {
       <BestaForm
         rotulo="Criar criatura"
         inicial={{ conceitoId: params.get("conceito") }}
-        conceitos={conceitos.data?.filter((c) => !c.deOutro)}
+        conceitos={conceitos.data}
         enviando={criar.isPending}
         erros={errosDeCampo(criar.error)}
         erroGeral={erroDeFormulario(criar.error)}
@@ -47,7 +47,7 @@ export function EditarBestaPage() {
       <h1>Editar criatura</h1>
       <BestaForm
         inicial={besta.data}
-        conceitos={conceitos.data?.filter((c) => !c.deOutro)}
+        conceitos={conceitos.data}
         enviando={editar.isPending}
         erros={errosDeCampo(editar.error)}
         erroGeral={erroDeFormulario(editar.error)}

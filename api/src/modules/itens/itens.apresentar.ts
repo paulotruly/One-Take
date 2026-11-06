@@ -1,6 +1,6 @@
 // Formato público de itens (molde e item lançado) e validação dos pré-requisitos.
 // Sem imports de services, para não criar dependência circular.
-import { podeUsar } from "../../lib/sistema.js";
+import { ehDoDono } from "../../lib/posse.js";
 import { getPrisma } from "../../lib/prisma.js";
 import { naoEncontrado } from "../../lib/errors.js";
 import { validarCategoria } from "./categorias.js";
@@ -47,7 +47,7 @@ export function apresentarItem<T extends ItemBase & { usosRestantes?: number | n
   };
 }
 
-/** Categoria e pré-requisitos precisam ser do mestre (ou verificados): perícia do catálogo dele; classe dele ou verificada. */
+/** Categoria e pré-requisitos precisam ser do próprio mestre: categoria, perícia do catálogo e classe dele. */
 export async function validarRequisitos(d: { requisitoPericiaId?: string | null; requisitoClasseId?: string | null; categoriaId?: string | null }, mestreId: string) {
   const prisma = getPrisma();
   await validarCategoria(d.categoriaId, mestreId);
@@ -56,7 +56,7 @@ export async function validarRequisitos(d: { requisitoPericiaId?: string | null;
     if (!p || p.donoId !== mestreId) throw naoEncontrado("Perícia do pré-requisito não encontrada");
   }
   if (d.requisitoClasseId) {
-    const c = await prisma.classe.findUnique({ where: { id: d.requisitoClasseId }, select: { id: true, donoId: true, verificado: true } });
-    if (!c || !(await podeUsar("classe", c, mestreId))) throw naoEncontrado("Classe do pré-requisito não encontrada");
+    const c = await prisma.classe.findUnique({ where: { id: d.requisitoClasseId }, select: { donoId: true } });
+    if (!c || !ehDoDono(c, mestreId)) throw naoEncontrado("Classe do pré-requisito não encontrada");
   }
 }

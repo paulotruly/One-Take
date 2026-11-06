@@ -42,7 +42,7 @@ window.fetch = async (entrada, init) => {
   console.info(`[mock] ${metodo} ${url.pathname} ignorado: nada é salvo`);
   if (metodo === "DELETE") return new Response(null, { status: 204 });
   const corpo = init?.body ? (JSON.parse(String(init.body)) as Record<string, unknown>) : {};
-  const semAcao = url.pathname.replace(/\/(duplicar|progressao|ordem|codigo|subir-nivel)$/, "");
+  const semAcao = url.pathname.replace(/\/(duplicar|progressao|ordem|codigo|subir-nivel|conteudo)$/, "");
   const atual = responder(semAcao, url.searchParams);
   const existente = Array.isArray(atual) ? atual[0] : atual;
   return json(existente ?? { id: "mock", ...corpo }, metodo === "POST" && !existente ? 201 : 200);

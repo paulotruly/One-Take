@@ -4,15 +4,6 @@ import { api } from "../../lib/api";
 import { supabase } from "../../lib/supabase";
 
 /** Gera um código de recuperação novo (com a senha atual); o anterior deixa de valer. */
-/** Preferência: esconder da interface o conteúdo verificado de outras pessoas. Muda todas as listas. */
-export function useOcultarVerificados() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (ocultarVerificados: boolean) => api("/api/me", { method: "PATCH", body: { ocultarVerificados } }),
-    onSuccess: () => qc.invalidateQueries(),
-  });
-}
-
 export function useGerarCodigo() {
   const qc = useQueryClient();
   return useMutation({

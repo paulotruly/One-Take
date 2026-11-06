@@ -19,9 +19,9 @@ npm run install:all          # instala api/ e web/ (na raiz)
 npm run dev                  # servidor com reload (porta 3333)
 npm run db:migrate           # cria/aplica migrations em dev (usa DIRECT_URL)
 npm run db:deploy            # aplica migrations em produção
-npm run db:seed              # conteúdo inicial na conta ADMIN (atributos, status, categorias) + perícias base (só cria o que falta; não cria classes)
+npm run db:seed              # conteúdo inicial na conta ADMIN (atributos, status, categorias) + perícias base (só cria o que falta; não cria classes; conta nova começa vazia)
 npm run promover -- email@x  # muda o papel de uma conta pelo email do Supabase Auth (padrão MESTRE)
-npm run cargo -- nick ADMIN  # cargo da conta (ADMIN | USUARIO), no banco: ADMIN marca o que é verificado (não há conteúdo fixo)
+npm run cargo -- nick ADMIN  # cargo da conta (ADMIN | USUARIO), no banco: sem efeito nas permissões (tudo é da própria conta); /api/regras usa os atributos e status do ADMIN como exemplo
 npm run exportar -- > ../conteudo.json  # classes e bestas em JSON para a skill de balanceamento (/balancear)
 npm run concluir-exclusoes   # retoma exclusões de conta que pararam no meio (idempotente)
 npm test                     # vitest (Prisma mockado, sem banco)

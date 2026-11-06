@@ -1,7 +1,6 @@
 import { Router } from "express";
 import { z } from "zod";
 import { getPrisma } from "../../lib/prisma.js";
-import { ehVerificado } from "../../lib/sistema.js";
 import { REGRAS_PADRAO } from "../../regras/combate.js";
 import { DEFESAS } from "../../regras/defesas.js";
 import { CONTA } from "../../regras/conta.js";
@@ -12,8 +11,9 @@ import { TESTE, chanceDeSucesso, mediaDoTeste, notacaoDoTeste, tabelaDeChances }
 // Regras públicas do sistema (sem login): usadas pela página inicial de regras.
 export const regrasRouter = Router();
 
-// Atributos e status "base": os do administrador que estão verificados (selo ou kit verificado). Não há conteúdo fixo.
-const doAdminVerificado = { dono: { cargo: "ADMIN" as const }, ...ehVerificado() };
+// Atributos e status de exemplo na documentação pública: os da conta ADMIN (a do criador do jogo). Não há conteúdo fixo
+// nem compartilhado: cada mestre cria os dele.
+const doAdmin = { dono: { cargo: "ADMIN" as const } };
 
 const chanceSchema = z.object({
   pontos: z.coerce.number().int().min(0).max(20),
@@ -34,12 +34,12 @@ regrasRouter.get("/regras/chance", (req, res) => {
 
 regrasRouter.get("/regras", async (_req, res) => {
   const atributosBase = await getPrisma().atributo.findMany({
-    where: doAdminVerificado,
+    where: doAdmin,
     orderBy: [{ ordem: "asc" }, { nome: "asc" }],
     select: { nome: true, descricao: true },
   });
   const statusBase = await getPrisma().status.findMany({
-    where: doAdminVerificado,
+    where: doAdmin,
     orderBy: [{ ordem: "asc" }, { nome: "asc" }],
     select: { nome: true, efeito: true, tipo: true, gatilho: true },
   });

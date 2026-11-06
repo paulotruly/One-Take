@@ -1,6 +1,4 @@
-// Catálogo de status do mestre: os dele (editáveis, inclusive os automáticos) + os verificados de outras pessoas (só leitura).
-import { SeloVerificado } from "../../verificados/pages/SeloVerificado";
-import { AvisoKit } from "../../kits/components/AvisoKit";
+// Catálogo de status do mestre (editáveis, inclusive os automáticos).
 import { useKitAtivo } from "../../kits/api";
 import { soDoKit } from "../../kits/types";
 import { ChevronDown, ChevronUp, Plus, Tags, Zap } from "lucide-react";
@@ -65,7 +63,6 @@ export function StatusPage() {
         </div>
       </div>
 
-      <AvisoKit />
       {status.isPending ? (
         <Loading texto="Carregando status…" />
       ) : status.isError ? (
@@ -140,21 +137,19 @@ function Lista({ itens, onEditar, onExcluir }: { itens: Status[]; onEditar: (s: 
       {itens.map((s) => (
         <li key={s.id} className="pericia pericia--atributo">
           <div>
-            {/* Título, tipo e (por último) o selo/botão de verificado. */}
+            {/* Título e tipo. */}
             <div className="pericia__nome">
               <StatusTitulo nome={s.nome} tipo={s.tipo} />
               <span className={`selo selo--status-${s.tipo}`}>{ROTULO_TIPO[s.tipo]}</span>
               {s.gatilho && <span className="selo"><Zap size={12} aria-hidden /> {ROTULO_GATILHO[s.gatilho]}</span>}
-              <SeloVerificado tipo="status" item={s} />
+             
             </div>
             <p><strong>Efeito:</strong> {s.efeito}</p>
           </div>
-          {s.editavel && (
-            <div className="pericia__acoes">
-              <Button pequeno variante="fantasma" onClick={() => onEditar(s)}>Editar</Button>
-              {!s.automatico && <Button pequeno variante="perigoSutil" onClick={() => onExcluir(s)} aria-label={`Excluir ${s.nome}`}>Excluir</Button>}
-            </div>
-          )}
+          <div className="pericia__acoes">
+            <Button pequeno variante="fantasma" onClick={() => onEditar(s)}>Editar</Button>
+            {!s.automatico && <Button pequeno variante="perigoSutil" onClick={() => onExcluir(s)} aria-label={`Excluir ${s.nome}`}>Excluir</Button>}
+          </div>
         </li>
       ))}
     </ul>

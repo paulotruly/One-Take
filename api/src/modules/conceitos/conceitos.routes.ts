@@ -2,14 +2,14 @@
 // - Arquétipo > subclasses (Bruxa > Bruxa elemental)
 // - Arquétipo de raça > sub-raças (Elfo > Elfo da floresta)
 // - Arquétipo de criatura > formas (Lobo > Lobo das neves)
-// Excluir o conceito nunca apaga as variações: elas só ficam sem conceito. Arquétipo verificado: todo mestre vê (só leitura).
+// Excluir o conceito nunca apaga as variações: elas só ficam sem conceito. Só o dono vê e edita.
 import { Router } from "express";
 import { z } from "zod";
 import { naoEncontrado } from "../../lib/errors.js";
 import { getPrisma } from "../../lib/prisma.js";
 import { idDe, texto } from "../../lib/validacao.js";
 import { usuarioDe } from "../../middleware/auth.js";
-import { ehVerificado, ocultaVerificados, quemVe, visao } from "../../lib/sistema.js";
+import { doDono } from "../../lib/posse.js";
 
 export const conceitosRouter = Router();
 
@@ -17,7 +17,7 @@ const schema = z.object({ titulo: texto(80), descricao: texto(2000) });
 type Dados = z.infer<typeof schema>;
 
 /** O mínimo que as rotas usam de um delegate do Prisma (classeConceito, racaConceito, bestaConceito). */
-type Conceito = { id: string; donoId: string; verificado: boolean };
+type Conceito = { id: string; donoId: string };
 type Delegate = {
   findUnique(a: { where: { id: string } }): Promise<Conceito | null>;
   findMany(a: object): Promise<Conceito[]>;
@@ -28,11 +28,7 @@ type Delegate = {
 
 type Variacoes = "subclasses" | "subracas" | "formas";
 
-/**
- * `variacoes` = relação (subclasses, subracas, formas); `campos` = o que mostrar de cada variação.
- * Listagem: os do mestre + os verificados + os que têm alguma variação verificada (de um kit verificado, por exemplo).
- * Das variações de outra pessoa só vêm as verificadas; as do mestre vêm todas.
- */
+/** `variacoes` = relação (subclasses, subracas, formas); `campos` = o que mostrar de cada variação. */
 function rotas(caminho: string, nome: string, delegate: () => Delegate, variacoes: Variacoes, campos: object) {
   const include = { [variacoes]: { orderBy: { titulo: "asc" }, select: campos } };
 
@@ -42,16 +38,7 @@ function rotas(caminho: string, nome: string, delegate: () => Delegate, variacoe
   }
 
   conceitosRouter.get(caminho, async (req, res) => {
-    const usuarioId = usuarioDe(req).id;
-    const quem = await quemVe(usuarioId);
-    const oculta = await ocultaVerificados(usuarioId);
-    const visivel = { OR: [{ donoId: usuarioId }, ...(oculta ? [] : ehVerificado().OR)] };
-    const lista = await delegate().findMany({
-      where: { OR: [{ donoId: usuarioId }, ...(oculta ? [] : [{ verificado: true }, { [variacoes]: { some: ehVerificado() } }])] },
-      orderBy: { titulo: "asc" },
-      include: { [variacoes]: { where: visivel, orderBy: { titulo: "asc" }, select: campos } },
-    });
-    res.json(lista.map((c) => ({ ...c, ...visao(c, quem) })));
+    res.json(await delegate().findMany({ where: doDono(usuarioDe(req).id), orderBy: { titulo: "asc" }, include }));
   });
 
   conceitosRouter.post(caminho, async (req, res) => {

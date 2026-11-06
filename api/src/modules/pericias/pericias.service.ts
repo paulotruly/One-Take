@@ -2,33 +2,15 @@ import type { z } from "zod";
 import type { Atributo } from "../../generated/prisma/client.js";
 import { conflito, naoEncontrado } from "../../lib/errors.js";
 import { getPrisma } from "../../lib/prisma.js";
-import type { Usuario } from "../../middleware/auth.js";
 import { apresentarAtributo, atributoUsavel, porAtributoENome } from "../atributos/atributos.service.js";
-import { classeEditavel, periciaNoCatalogo } from "../classes/classes.service.js";
-import { kitIdsPara, podeUsar, quemVe, visao, visivelPara } from "../../lib/sistema.js";
+import { classeEditavel } from "../classes/classes.service.js";
+import { doDono } from "../../lib/posse.js";
 import { comKits, definirKits } from "../../lib/kits.js";
 import type { criarPericiaSchema, editarPericiaSchema } from "./pericias.schemas.js";
 
 // ---------- Catálogo do mestre ----------
-// Perícias base (donoId nulo) são só o modelo do catálogo: não aparecem nas listas nem entram em classes.
-// Cada mestre trabalha numa cópia própria, criada uma única vez (Perfil.catalogoIniciado).
-
-/** Copia as perícias base para o catálogo do mestre na primeira vez. Idempotente. */
-export async function garantirCatalogo(usuario: Usuario) {
-  if (usuario.catalogoIniciado) return;
-  const prisma = getPrisma();
-  const base = await prisma.pericia.findMany({ where: { donoId: null } });
-  await prisma.$transaction([
-    prisma.pericia.createMany({
-      data: base.map(({ id, nome, descricao, categoria, atributoId }) => ({
-        nome, descricao, categoria, atributoId, donoId: usuario.id, origemId: id,
-      })),
-      skipDuplicates: true, // corrida entre duas requisições: o @@unique([donoId, nome]) protege
-    }),
-    prisma.perfil.update({ where: { id: usuario.id }, data: { catalogoIniciado: true } }),
-  ]);
-  usuario.catalogoIniciado = true;
-}
+// Cada mestre tem o próprio catálogo e começa vazio (cria os atributos e as perícias dele).
+// Perícias base (donoId nulo) são só a referência das defesas (regras/defesas.ts): não aparecem nas listas nem entram em classes.
 
 /** Perícia do catálogo do próprio mestre; qualquer outra (base ou de outro mestre) = 404. */
 export async function periciaDoMestre(id: string, usuarioId: string) {
@@ -49,31 +31,10 @@ function apresentar<T extends { atributo: Atributo; _count: { classes: number; r
   return { ...p, atributo: apresentarAtributo(atributo), usosClasses: _count.classes, usosRacas: _count.racas, kitIds: (kits ?? []).map((k) => k.kitId) };
 }
 
-/**
- * O catálogo do mestre (com `comVerificados`, também as perícias verificadas de outras pessoas que ele ainda não tem: mesma origem ou mesmo nome = já tem). Sem a opção, só as dele (opções dos formulários de vínculo).
- * As verificadas vêm só leitura; "duplicar" copia para o catálogo.
- */
-export async function listar(usuarioId: string, { comVerificados = false } = {}) {
-  const quem = await quemVe(usuarioId);
-  const pericias = await getPrisma().pericia.findMany({
-    where: comVerificados ? await visivelPara(usuarioId) : { donoId: usuarioId },
-    include: contarUsos,
-  });
-  const minhas = pericias.filter((p) => p.donoId === usuarioId);
-  const origens = new Set(minhas.map((p) => p.origemId ?? p.id));
-  const nomes = new Set(minhas.map((p) => p.nome.toLocaleLowerCase("pt-BR")));
-  return pericias
-    .filter((p) => p.donoId === usuarioId || !(origens.has(p.origemId ?? p.id) || nomes.has(p.nome.toLocaleLowerCase("pt-BR"))))
-    .map((p) => ({ ...apresentar(p), ...visao(p, quem), kitIds: kitIdsPara(p, quem) }))
-    .sort(porAtributoENome);
-}
-
-/** Copia uma perícia verificada para o catálogo do mestre (ou devolve a que ele já tem igual). */
-export async function duplicar(id: string, usuarioId: string) {
-  const p = await getPrisma().pericia.findUnique({ where: { id } });
-  if (!p || !(await podeUsar("pericia", p, usuarioId))) throw naoEncontrado("Perícia não encontrada");
-  const novaId = await periciaNoCatalogo(p, usuarioId);
-  return apresentar(await getPrisma().pericia.findUniqueOrThrow({ where: { id: novaId }, include: contarUsos }));
+/** O catálogo do mestre. */
+export async function listar(usuarioId: string) {
+  const pericias = await getPrisma().pericia.findMany({ where: doDono(usuarioId), include: contarUsos });
+  return pericias.map(apresentar).sort(porAtributoENome);
 }
 
 export async function criar(usuarioId: string, dados: z.infer<typeof criarPericiaSchema>) {

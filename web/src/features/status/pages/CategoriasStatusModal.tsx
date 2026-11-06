@@ -1,4 +1,4 @@
-// Container: gerenciar as categorias de status do mestre (criar, editar, excluir). As verificadas de outra pessoa só aparecem.
+// Container: gerenciar as categorias de status do mestre (criar, editar, excluir).
 import { Pencil, Plus, Tags, Trash2 } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { Button } from "../../../components/ui/Button";
@@ -6,8 +6,6 @@ import { Field } from "../../../components/ui/Field";
 import { Modal } from "../../../components/ui/Modal";
 import { Loading } from "../../../components/ui/States";
 import { erroDeFormulario, errosDeCampo, mensagemDeErro } from "../../../lib/api";
-import { AcessoBadge } from "../../verificados/components/VerificadoBadge";
-import { SeloVerificado } from "../../verificados/pages/SeloVerificado";
 import { useCategoriasStatus, useCriarCategoriaStatus, useEditarCategoriaStatus, useExcluirCategoriaStatus } from "../api";
 import type { CategoriaStatus } from "../types";
 
@@ -61,19 +59,16 @@ export function CategoriasStatusModal({ aberto, onFechar }: { aberto: boolean; o
                 <li key={c.id} className="categoria-linha">
                   <span className="item__miniatura item__miniatura--icone" aria-hidden><Tags size={18} /></span>
                   <span className="categoria-linha__texto">
-                    <strong>{c.nome} <SeloVerificado tipo="categoriaStatus" item={c} /></strong>
+                    <strong>{c.nome}</strong>
                     <span className="pagina__subtitulo">{c.descricao || "Sem descrição"}{c.usos ? ` · ${c.usos} status` : ""}</span>
                   </span>
-                  <AcessoBadge item={c} />
-                  {!c.deOutro && (
-                    <span className="pericia__acoes">
-                      <Button pequeno variante="fantasma" aria-label={`Editar ${c.nome}`} onClick={() => abrir(c)}><Pencil size={14} aria-hidden /></Button>
-                      <Button pequeno variante="perigoSutil" aria-label={`Excluir ${c.nome}`} title="Os status dela ficam sem categoria" disabled={excluir.isPending}
-                        onClick={() => excluir.mutate(c.id)}>
-                        <Trash2 size={14} aria-hidden />
-                      </Button>
-                    </span>
-                  )}
+                  <span className="pericia__acoes">
+                    <Button pequeno variante="fantasma" aria-label={`Editar ${c.nome}`} onClick={() => abrir(c)}><Pencil size={14} aria-hidden /></Button>
+                    <Button pequeno variante="perigoSutil" aria-label={`Excluir ${c.nome}`} title="Os status dela ficam sem categoria" disabled={excluir.isPending}
+                      onClick={() => excluir.mutate(c.id)}>
+                      <Trash2 size={14} aria-hidden />
+                    </Button>
+                  </span>
                 </li>
               ))}
             </ul>

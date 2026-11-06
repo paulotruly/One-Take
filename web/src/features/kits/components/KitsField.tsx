@@ -1,12 +1,10 @@
 // Campo "Kits" dos formulários do mestre: em quais kits de RPG a coisa está. Nenhum = geral.
-import { VerificadoBadge } from "../../verificados/components/VerificadoBadge";
 import { Link } from "react-router";
 import { useKits } from "../api";
 
 export function KitsField({ valor, onChange, erro }: { valor: string[]; onChange: (kitIds: string[]) => void; erro?: string }) {
   const kits = useKits();
-  // Só os kits do mestre: um kit verificado de outra pessoa é só leitura.
-  const lista = (kits.data ?? []).filter((k) => !k.deOutro);
+  const lista = kits.data ?? [];
   const alternar = (id: string, marcar: boolean) => onChange(marcar ? [...new Set([...valor, id])] : valor.filter((k) => k !== id));
   return (
     <fieldset className="form__grupo">
@@ -21,7 +19,7 @@ export function KitsField({ valor, onChange, erro }: { valor: string[]; onChange
             {lista.map((k) => (
               <label key={k.id} className={`checklist__item ${valor.includes(k.id) ? "checklist__item--marcado" : ""}`}>
                 <input type="checkbox" checked={valor.includes(k.id)} onChange={(e) => alternar(k.id, e.target.checked)} />
-                <span>{k.nome} {k.verificado && <VerificadoBadge />}</span>
+                <span>{k.nome}</span>
               </label>
             ))}
           </div>

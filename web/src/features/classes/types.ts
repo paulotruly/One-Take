@@ -1,4 +1,3 @@
-import type { Visao } from "../verificados/types";
 import { Anchor, HandHelping, HeartPulse, Ghost, Shield, Swords, TrendingDown, TrendingUp, Wind, Wrench, type LucideIcon } from "lucide-react";
 import type { PericiaDaClasse } from "../pericias/types";
 
@@ -22,22 +21,10 @@ export type Classe = {
   /** Arquétipo do qual esta é subclasse (opcional). */
   conceitoId?: string | null;
   conceito?: { id: string; titulo: string; descricao?: string } | null;
-  /** Para quem vê: pode editar (é dele). */
-  editavel?: boolean;
-  /** Selo verificado: todo mestre vê e usa. */
-  verificado?: boolean;
-  /** Verificado de outra pessoa: só leitura, dá para duplicar. */
-  deOutro?: boolean;
-  /** Quem vê é ADMIN e dono: pode pôr ou tirar o selo. */
-  podeVerificar?: boolean;
-  /** Selo marcado nesta coisa (sem contar o do kit). */
-  seloProprio?: boolean;
-  /** Verificado por estar num kit verificado. */
-  verificadoPorKit?: boolean;
 };
 
 /** Arquétipo: classe generalista que agrupa subclasses (o jogador escolhe a subclasse). */
-export type Conceito = Visao & {
+export type Conceito = {
   id: string;
   titulo: string;
   descricao: string;

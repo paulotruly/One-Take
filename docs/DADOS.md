@@ -31,7 +31,7 @@ Perfil(jogador) 1 ──< FichaArquivada (cópia somente leitura)
 | `Habilidade` | `classeId?` **ou** `bestaId?` (CHECK: exatamente um), `titulo`, `descricao`, `condicao?`, `tipoEfeito` (enum `TipoEfeito`), `periciaId?` (perícia do teste, SetNull), perícias de defesa em `HabilidadeDefesa` (habilidadeId + periciaId, Cascade), `descricaoEfeito`, `limiteUsos?` + `limitePor?` (enum `LimiteUso`: COMBATE, SESSAO; os dois juntos ou nulos, CHECK), `nivelNecessario` (≥1, padrão 1), `custoMana` (≥0, padrão 0 = sem custo), `dt?` (≥1, exige perícia do teste), `alcance?` (texto curto), `ordem` | Cartela de classe ou de criatura |
 | `Pericia` | `nome`, `descricao`, `categoria`, `atributoId`, `donoId?`, `origemId?` | Catálogo. `donoId` nulo = base do sistema. Nome único por dono |
 | `ClassePericia` | `classeId`, `periciaId`, `modificador` | Perícia que a classe tem. PK composta |
-| `Atributo` | `nome`, `descricao`, `ordem`, `donoId` | sempre de um mestre; os do seed (Capacidade física, Carisma, Conhecimento) são do ADMIN, no kit verificado dele. Nome único por dono |
+| `Atributo` | `nome`, `descricao`, `ordem`, `donoId` | sempre de um mestre; os do seed (Capacidade física, Carisma, Conhecimento) ficam na conta ADMIN. Nome único por dono |
 | `Raca` | `donoId`, `titulo`, `descricao`, `imagemUrl?`, `deslocamento` (≥1), `conceitoId?` | Do mestre; `conceitoId` = sub-raça (SetNull ao excluir o conceito) |
 | `RacaConceito` | `donoId`, `titulo`, `descricao` | raça generalista que agrupa sub-raças |
 | `RacaPericia` | `racaId`, `periciaId`, `pontos` (≥1) | Perícia de base da raça. PK composta |
@@ -54,7 +54,7 @@ Perfil(jogador) 1 ──< FichaArquivada (cópia somente leitura)
 | `BestaAtributo` | `bestaId`, `atributoId`, `dados` (≥0) | d20 da criatura por atributo |
 | `Criatura` | `grupoId`, `bestaId`, `nome`, `nivel` (≥1), `vidaAtual`, `manaAtual`, `esforcoAtual` | Criatura invocada no grupo; apagado ao morrer ou ser removido |
 | `Status` | `nome`, `efeito`, `tipo` (BUFF/DEBUFF/MISTO), `gatilho?` (VIDA_ZERO/MANA_ZERO/ESFORCO_ZERO), `ordem`, `donoId`, `categoriaId?` | sempre de um mestre; só os do seed têm gatilho (o dono edita, não exclui); sem descrição (a migration `20261014120000_sem_fixos_e_limite_por_funcao` juntou a antiga descrição no começo do efeito); categoria `SetNull` ao excluir |
-| `CategoriaStatus` | `nome`, `descricao`, `donoId`, `verificado` | do mestre (sem fixas); nome único por dono; só organiza (migration `20261013160000_categorias_de_status`) |
+| `CategoriaStatus` | `nome`, `descricao`, `donoId` | do mestre (sem fixas); nome único por dono; só organiza (migration `20261013160000_categorias_de_status`) |
 | `StatusNoGrupo` | `grupoId`, `statusId` | status ativados no grupo |
 | `FichaStatus` | `fichaId`, `statusId`, `aplicadoEm`, `turnos?` | status aplicados pelo mestre; `turnos` 1 a 99 (CHECK) ou nulo = sem prazo |
 `Habilidade.statusId?` = status que a carta ativa (SetNull se o status for excluído).
@@ -66,19 +66,17 @@ Enums: `Papel`, `GrupoClasse` (COMBATENTE, VANGUARDISTA, SUPORTE), `CategoriaPer
 Nomes no código x na interface: `ClasseConceito`/`RacaConceito`/`BestaConceito` = **Arquétipo** (de classe, de raça, de criatura);
 `Besta` = criatura do bestiário; `Criatura` = criatura invocada num grupo.
 `Perfil.papel = MESTRE` significa "interface de mestre ativada"; toda conta joga.
-`Perfil.catalogoIniciado` marca que o mestre já recebeu a cópia das perícias base.
-`Perfil.cargo` (enum `Cargo`: USUARIO, ADMIN; trocado só por `npm run cargo`) e `Perfil.ocultarVerificados` (preferência).
-`verificado` (booleano, índice) em Classe, Raca, Atributo, Pericia, Status, CategoriaItem, CategoriaStatus, ItemModelo, Besta, Npc, Kit,
-ClasseConceito, RacaConceito e BestaConceito (o do Kit vale para tudo ligado a ele, calculado na consulta, sem copiar o booleano): o ADMIN marca as
-coisas dele; todo mestre vê e usa, só leitura. Visibilidade das listas: dele + verificado (sem o verificado se a
-pessoa oculta). Quem não é o dono não recebe os `kitIds`. Migrations `20261013120000_kit_basico_admin` (cargo inicial e tabela
-`Sistema`, já removida), `20261013130000_verificado_e_cargo` (o que estava no kit básico virou verificado) e
-`20261013140000_verificado_em_tudo` e `20261013150000_verificado_kits_arquetipos`.
+`Perfil.cargo` (enum `Cargo`: USUARIO, ADMIN; trocado só por `npm run cargo`) não muda permissões: o seed cria o conteúdo inicial na
+conta ADMIN e `GET /api/regras` mostra os atributos e status dela como exemplo.
+**Tudo é da própria conta** (2026-11-06): as listas filtram por `donoId` e coisa de outra conta = 404. A migration
+`20261106120000_sem_verificado` tirou `verificado` de Classe, Raca, Atributo, Pericia, Status, CategoriaItem, CategoriaStatus, ItemModelo,
+Besta, Npc, Kit e dos três arquétipos, e `Perfil.ocultarVerificados` e `Perfil.catalogoIniciado` (antes: `20261013130000_verificado_e_cargo`,
+`20261013140000_verificado_em_tudo`, `20261013150000_verificado_kits_arquetipos`).
 
 ## Por que assim
 - **Não há conteúdo fixo** (desde 2026-10-14). Classe, atributo, status e categoria de item têm `donoId` obrigatório; o que era fixo
-  passou para a conta ADMIN mais antiga (atributos e status no kit verificado mais antigo dela; categorias e classes com selo).
-  Só as perícias base continuam com `donoId` nulo: são o modelo do catálogo de cada mestre e não aparecem em lista nenhuma.
+  passou para a conta ADMIN mais antiga. Só as perícias base continuam com `donoId` nulo: são a referência das defesas
+  (`regras/defesas.ts`) e não aparecem em lista nenhuma. Desde 2026-11-06 nada é compartilhado entre contas e conta nova começa vazia.
 - **Valores base na Classe, atuais na Ficha (futura).** A ficha vai referenciar `classeId` e guardar vida/mana/esforço atuais.
   CHECK no banco garante pontos ≥ 1 (nenhuma classe começa zerada).
 - **Cartela única, sem tabela.** Cada classe tem um só deck, sem nome nem atributos; então a cartela é apenas o
@@ -91,8 +89,8 @@ pessoa oculta). Quem não é o dono não recebe os `kitIds`. Migrations `2026101
   antigos (Dano, Defesa, Suporte, Buff→Fortalecimento, Debuff→Enfraquecimento; o resto→Utilidade). Rótulos e descrições ficam no front.
 - **Perícia como catálogo + vínculo.** A definição (nome, descrição, categoria, atributo) vive em `Pericia`;
   o número específico da classe vive em `ClassePericia.modificador`. Editar a perícia no catálogo reflete em todas as classes que a usam.
-- **Um catálogo por mestre**, copiado das perícias base (`donoId` nulo) uma única vez (`catalogoIniciado`), para cada mestre
-  personalizar sem afetar os outros. `origemId` liga a cópia à base; é usado ao duplicar uma classe verificada para achar a perícia equivalente.
+- **Um catálogo por mestre**, que começa vazio (até 2026-11-06 era copiado das perícias base no 1º acesso). `origemId` liga uma
+  cópia antiga à perícia base; a soma da ficha e o duplicar usam isso para achar a perícia equivalente do mestre.
 - **Categorias e atributos são enums** (listas fixas do sistema); rótulos, ícones (lucide) e descrições ficam no front (`features/pericias/types.ts`).
 - Excluir perícia do catálogo remove o vínculo das classes (cascata em `ClassePericia`).
 - **`imagemUrl`** é um link externo colado pelo mestre (não há upload por enquanto). Duplicar copia o link.
@@ -107,8 +105,8 @@ pessoa oculta). Quem não é o dono não recebe os `kitIds`. Migrations `2026101
   e CC para Carisma (perícias sociais e Vontade) ou Conhecimento (o resto).
 - **Raça do mestre** (sem raças fixas por enquanto). Perícias de base em `RacaPericia.pontos`, escolhidas do catálogo.
 - **Constantes de ficha** (3 pontos de atributo, inventário 5 + 2 por nível) ficam em `api/src/regras/ficha.ts`.
-- **Disponibilidade por tabelas de junção** (`*NoGrupo`): uma fonte só para "o que vale no grupo". O kit do grupo só serve
-  para a tela pré-marcar; não restringe o que é gravado.
+- **Disponibilidade por tabelas de junção** (`*NoGrupo`): uma fonte só para "o que vale no grupo". Com kit, as
+  tabelas são regravadas a partir do kit (`grupos/kit-da-mesa.ts`) sempre que o kit ou o conteúdo dele muda.
 - **Kits de RPG por tabelas de junção** (`Kit*`, muitos-para-muitos, Cascade dos dois lados): uma coisa pode estar em vários kits;
   sem linha = geral. Filtro "do kit + geral" em `visivelNoKit` (`api/src/lib/kits.ts`); `definirKits` troca a lista inteira.
   A migration `kits_de_rpg` substituiu `grupoExclusivoId`: criou um kit por grupo que tinha coisas exclusivas (com o nome do grupo),
@@ -132,7 +130,7 @@ pessoa oculta). Quem não é o dono não recebe os `kitIds`. Migrations `2026101
   (perícia de outra origem conta como a cópia do catálogo do mestre).
 - **Criatura guarda só o que muda** (nível e atuais; o posicionamento é no grid físico da mesa); máximos e cartas vêm da besta + `regras/progressao.ts`. Morte (vida
   ou mana 0, `estaMorto`) apaga a linha: não há "criatura morto" guardado.
-- **Categoria de item como tabela** (era enum até a migration `categorias_de_item`, que converteu os valores para as 4 do seed, hoje do ADMIN e verificadas).
+- **Categoria de item como tabela** (era enum até a migration `categorias_de_item`, que converteu os valores para as 4 do seed, hoje na conta ADMIN).
 - **Limite por função no grupo** em três colunas (`limiteCombatentes`, `limiteVanguardistas`, `limiteSuportes`) e não numa tabela:
   as funções são o enum fixo `GrupoClasse`; conferido ao criar a ficha (`api/src/modules/grupos/funcoes.ts`).
   `categoriaId` é SetNull: apagar a categoria não apaga itens.

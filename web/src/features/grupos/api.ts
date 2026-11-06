@@ -1,7 +1,7 @@
 // Hooks dos grupos do mestre.
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../../lib/api";
-import type { Disponiveis, Grupo, GrupoDetalhe, GrupoInput, RegraDaMesa, RegraDaMesaInput } from "./types";
+import type { Grupo, GrupoDetalhe, GrupoInput, RegraDaMesa, RegraDaMesaInput } from "./types";
 
 export function useGrupos(habilitado = true) {
   return useQuery({ queryKey: ["grupos", "lista"], queryFn: () => api<Grupo[]>("/api/grupos"), enabled: habilitado });
@@ -21,13 +21,10 @@ function useEscrita<V, R>(fn: (v: V) => Promise<R>) {
 }
 
 export const useCriarGrupo = () =>
-  useEscrita((dados: GrupoInput & { disponiveis: Disponiveis }) => api<GrupoDetalhe>("/api/grupos", { method: "POST", body: dados }));
+  useEscrita((dados: GrupoInput) => api<GrupoDetalhe>("/api/grupos", { method: "POST", body: dados }));
 
 export const useEditarGrupo = (id: string) =>
   useEscrita((dados: Partial<GrupoInput>) => api<GrupoDetalhe>(`/api/grupos/${id}`, { method: "PATCH", body: dados }));
-
-export const useDefinirDisponiveis = (id: string) =>
-  useEscrita((dados: Disponiveis) => api<GrupoDetalhe>(`/api/grupos/${id}/disponiveis`, { method: "PUT", body: dados }));
 
 export const useNovoCodigo = (id: string) => useEscrita(() => api<GrupoDetalhe>(`/api/grupos/${id}/codigo`, { method: "POST" }));
 

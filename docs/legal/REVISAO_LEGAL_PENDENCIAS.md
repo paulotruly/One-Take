@@ -19,8 +19,9 @@ As minutas continuam aqui. Enquanto não voltarem ao site, revisadas e sem marca
 - Encerramento do serviço: **sem aviso prévio**; a exportação fica disponível o tempo todo.
 - Denúncias: sem procedimento formal; pelo e-mail de contato.
 - Mudanças nos documentos: aviso no aplicativo.
-- Conteúdo compartilhado (2026-10-14): não há mais conteúdo fixo; o que todos veem é o conteúdo **verificado** pelo administrador
-  (conteúdo básico). Os Termos de uso passaram a dizer isso (seção de conteúdo do One-Take). Nenhum dado pessoal novo.
+- Conteúdo compartilhado (2026-10-14): não há mais conteúdo fixo; o que todos viam era o conteúdo **verificado** pelo administrador.
+  Desde 2026-11-06 **nada é compartilhado entre contas** (sem verificado): cada conta só vê o próprio conteúdo, e os jogadores o que o
+  mestre libera na mesa. Os Termos de uso falam só do conteúdo de exemplo. Nenhum dado pessoal novo; diminui o que outras contas veem.
 - Supabase: projeto `onetake`, região **us-west-2** (Estados Unidos), instância nano. Hospedagem: **Render** (API) e **Vercel** (site),
   ainda não publicados.
 - Encarregado: não indicado, como agente de tratamento de pequeno porte (Resolução CD/ANPD nº 2/2022, que inclui pessoas naturais e

@@ -1,6 +1,4 @@
 // Página da raça: dados (título, descrição, deslocamento) e perícias de base escolhidas do catálogo.
-import { SeloVerificado } from "../../verificados/pages/SeloVerificado";
-import { AcessoBadge } from "../../verificados/components/VerificadoBadge";
 import { Footprints, Plus } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
@@ -61,13 +59,12 @@ export function RacaDetalhePage() {
           <ClasseImagem url={r.imagemUrl} titulo={r.titulo} />
         </div>
         <div className="classe-cabecalho__info">
-          {(r.verificado || r.deOutro) && <div className="classe-cabecalho__selos"><AcessoBadge item={r} /></div>}
-          <h1>{r.titulo} <SeloVerificado tipo="raca" item={r} /></h1>
+          <h1>{r.titulo}</h1>
           <span className="stat" title="Deslocamento por turno">
             <Footprints size={14} aria-hidden /> Deslocamento: {r.deslocamento} quadrados por turno
           </span>
           <p className="classe-cabecalho__descricao">{r.descricao}</p>
-          <div className="classe-cabecalho__acoes" hidden={!(r.editavel ?? true)}>
+          <div className="classe-cabecalho__acoes">
           <Button
             onClick={() => {
               editar.reset();
@@ -98,7 +95,7 @@ export function RacaDetalhePage() {
               setPericiaEmEdicao(null);
             }}
             disabled={catalogo.isPending || disponiveis.length === 0}
-            hidden={!(r.editavel ?? true)}
+           
           >
             <Plus size={16} aria-hidden /> Adicionar perícia
           </Button>
@@ -119,7 +116,7 @@ export function RacaDetalhePage() {
                 pericia={p}
                 valor={p.pontos}
                 tituloValor="Pontos de base da raça"
-                acoes={!(r.editavel ?? true) ? undefined :
+                acoes={
                   <>
                     <Button pequeno variante="fantasma" onClick={() => { vincular.reset(); setPericiaEmEdicao(p); }}>
                       Pontos
@@ -143,7 +140,7 @@ export function RacaDetalhePage() {
       <Modal aberto={editando} onFechar={() => setEditando(false)} titulo="Editar raça">
         <RacaForm
           inicial={r}
-          conceitos={conceitosRaca.data?.filter((c) => !c.deOutro)}
+          conceitos={conceitosRaca.data}
           enviando={editar.isPending}
           erros={errosDeCampo(editar.error)}
           erroGeral={erroDeFormulario(editar.error)}

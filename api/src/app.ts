@@ -2,7 +2,7 @@ import cors from "cors";
 import express, { Router } from "express";
 import "./lib/validacao.js"; // configura mensagens do Zod em português
 import { getPrisma } from "./lib/prisma.js";
-import { autenticar, exigirPapel, usuarioDe } from "./middleware/auth.js";
+import { autenticar, exigirPapel } from "./middleware/auth.js";
 import { errorHandler, rotaNaoEncontrada } from "./middleware/error-handler.js";
 import { classesRouter } from "./modules/classes/classes.routes.js";
 import { habilidadesRouter } from "./modules/habilidades/habilidades.routes.js";
@@ -12,7 +12,6 @@ import { acessoRouter } from "./modules/acesso/acesso.routes.js";
 import { fichasRouter } from "./modules/fichas/fichas.routes.js";
 import { gruposRouter } from "./modules/grupos/grupos.routes.js";
 import { periciasRouter } from "./modules/pericias/pericias.routes.js";
-import { garantirCatalogo } from "./modules/pericias/pericias.service.js";
 import { racasRouter } from "./modules/racas/racas.routes.js";
 import { atributosRouter } from "./modules/atributos/atributos.routes.js";
 import { statusRouter } from "./modules/status/status.routes.js";
@@ -24,7 +23,6 @@ import { categoriasItemRouter } from "./modules/itens/categorias.js";
 import { categoriasStatusRouter } from "./modules/status/categorias.js";
 import { npcsRouter } from "./modules/npcs/npcs.routes.js";
 import { kitsRouter } from "./modules/kits/kits.routes.js";
-import { sistemaRouter } from "./modules/sistema/sistema.routes.js";
 import { contaPublicaRouter, contaRouter } from "./modules/conta/conta.routes.js";
 import { arquivoRouter } from "./modules/fichas/arquivo.js";
 
@@ -57,13 +55,9 @@ export function criarApp({ corsOrigin, confiarProxy = false }: { corsOrigin: str
   // Interface de mestre: só quem ativou (papel MESTRE). Rotas de jogador entram antes desta linha.
   const mestre = Router();
   mestre.use(exigirPapel("MESTRE"));
-  mestre.use(async (req, _res, next) => {
-    await garantirCatalogo(usuarioDe(req)); // 1º acesso do mestre: copia as perícias base
-    next();
-  });
   mestre.use(
     classesRouter, habilidadesRouter, periciasRouter, racasRouter, atributosRouter, gruposRouter, statusRouter, conceitosRouter,
-    bestasRouter, criaturasRouter, catalogoItensRouter, categoriasItemRouter, categoriasStatusRouter, npcsRouter, kitsRouter, sistemaRouter,
+    bestasRouter, criaturasRouter, catalogoItensRouter, categoriasItemRouter, categoriasStatusRouter, npcsRouter, kitsRouter,
   );
   api.use(mestre);
 

@@ -1,4 +1,3 @@
-import type { Visao } from "../verificados/types";
 // Bestiário: criaturas do mestre (como classes, mas com dados por atributo) e criaturas invocadas nos grupos.
 import type { Habilidade } from "../classes/types";
 import type { Criatura } from "../grupos/types";
@@ -18,18 +17,6 @@ export type Besta = {
   conceito: { id: string; titulo: string } | null;
   /** Kits de RPG em que a criatura está (vazio = geral). */
   kitIds: string[];
-  /** Para quem vê: pode editar (é dele). */
-  editavel?: boolean;
-  /** Selo verificado: todo mestre vê e usa. */
-  verificado?: boolean;
-  /** Verificado de outra pessoa: só leitura, dá para duplicar. */
-  deOutro?: boolean;
-  /** Quem vê é ADMIN e dono: pode pôr ou tirar o selo. */
-  podeVerificar?: boolean;
-  /** Selo marcado nesta coisa (sem contar o do kit). */
-  seloProprio?: boolean;
-  /** Verificado por estar num kit verificado. */
-  verificadoPorKit?: boolean;
   /** Na listagem: quantas cartas tem. */
   cartas?: number;
 };
@@ -51,7 +38,7 @@ export type BestaDetalhe = Besta & { habilidades: Habilidade[]; pericias: Perici
 
 export type BestaInput = Pick<Besta, "titulo" | "descricao" | "imagemUrl" | "pontosVida" | "pontosMana" | "pontosEsforco" | "deslocamento" | "kitIds" | "conceitoId">;
 
-export type BestaConceito = Visao & {
+export type BestaConceito = {
   id: string;
   titulo: string;
   descricao: string;

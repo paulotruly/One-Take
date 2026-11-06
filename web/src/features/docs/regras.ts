@@ -21,7 +21,7 @@ export type Regras = {
     dadosPorVantagem: number;
     chances: { dt: number; chances: { pontos: number; chance: number }[] }[];
   };
-  /** Atributos e status base: os do administrador, verificados (não há conteúdo fixo). */
+  /** Atributos e status de exemplo: os da conta ADMIN (não há conteúdo fixo nem compartilhado). */
   atributosBase: { nome: string; descricao: string }[];
   statusBase: { nome: string; efeito: string; tipo: "BUFF" | "DEBUFF" | "MISTO"; gatilho: string | null }[];
   conta: { idadeMinima: number };

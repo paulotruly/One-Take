@@ -56,7 +56,7 @@ docs/
 1. `cors` → `express.json` (limite 100 kb).
 2. `/api/*` → `autenticar`: lê `Authorization: Bearer`, valida o JWT contra o JWKS do Supabase
    (issuer `${SUPABASE_URL}/auth/v1`, audience `authenticated`), faz upsert do `Perfil` e põe `req.usuario`.
-3. Rotas de gestão → `exigirPapel("MESTRE")` → `garantirCatalogo` (1ª vez: copia as perícias base para o mestre).
+3. Rotas de gestão → `exigirPapel("MESTRE")`. Tudo é da própria conta: os services filtram por `donoId` (`lib/posse.ts`).
 4. Rota: `schema.parse(req.body)` (Zod) → `service` (regras de acesso + Prisma) → JSON.
 5. Qualquer erro lançado (Express 5 captura async) → `error-handler` → `{ error: { code, message, details? } }`.
 
@@ -114,7 +114,7 @@ exibido direto pelo front. Não há upload nem uso do Supabase Storage.
 - Sem login (fora dos layouts): `/recuperar-senha` (código de recuperação) e `/conta-excluida` (`pages/ContaPages.tsx`).
   Termos e Política (`pages/LegalPages.tsx`) renderizam as minutas de `docs/legal/` via `?raw` (o `vite.config.ts` libera ler `..`;
   na Vercel, manter "Include files outside the root directory" ligado). `/conta` (Perfil e conta, `features/conta/pages/ConfiguracoesContaPage.tsx`): perfil público, trocar a senha, código de recuperação,
-  preferências deste navegador (`lib/preferencias.ts`), conteúdo verificado, seus dados e, discreta no fim, a exclusão. Aviso de conta sem código no `AppLayout`. Jogador: `/jogador/arquivadas/:id`.
+  preferências deste navegador (`lib/preferencias.ts`), ativar mestre (conta só de jogador), seus dados e, discreta no fim, a exclusão. Aviso de conta sem código no `AppLayout`. Jogador: `/jogador/arquivadas/:id`.
 - Mestre: `/mestre/inicio` (painel, destino de `/area`), `/mestre/grupos`, `/mestre/grupos/novo`, `/mestre/grupos/:id`, `/mestre/grupos/:id/editar`, `/mestre/fichas/:id`,
   `/mestre` (galeria, `?grupo=` no filtro), `/mestre/racas`, `/mestre/racas/:id`, `/mestre/classes/nova` (só a classe),
   `/mestre/classes/:id` (dados, resumo das habilidades, perícias), `/mestre/classes/:id/editar`,

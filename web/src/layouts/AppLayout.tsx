@@ -3,6 +3,7 @@ import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, Outlet, useLocation } from "react-router";
 import { Rodape } from "../components/layout/Rodape";
 import { SeletorKit } from "../features/kits/components/SeletorKit";
+import { AvisoKit } from "../features/kits/components/AvisoKit";
 import { interfaceLembrada, lembrarInterface, useAuth, useMe, type Papel } from "../auth/AuthProvider";
 import { Avatar } from "../components/ui/Avatar";
 import { Button } from "../components/ui/Button";
@@ -136,6 +137,7 @@ export function AppLayout() {
               <Link to="/conta">Gerar código</Link>
             </p>
           )}
+          {area === "MESTRE" && ehMestre && <AvisoKit />}
           <Outlet />
         </main>
       </div>

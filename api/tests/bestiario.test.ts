@@ -175,12 +175,12 @@ describe("categorias de item", () => {
   const FIXA = "00000000-0000-4000-8004-000000000001";
   const MINHA = "22222222-0000-4000-8000-0000000000c1";
 
-  it("categoria verificada de outra pessoa não pode ser editada nem excluída (não há categoria fixa)", async () => {
-    prismaFalso.categoriaItem.findUnique.mockResolvedValue({ id: FIXA, nome: "Armas", donoId: OUTRO_MESTRE_ID, verificado: true });
+  it("categoria de outra conta não pode ser editada nem excluída (404)", async () => {
+    prismaFalso.categoriaItem.findUnique.mockResolvedValue({ id: FIXA, nome: "Armas", donoId: OUTRO_MESTRE_ID });
     const res = await comoMestre(request(app).patch(`/api/categorias-item/${FIXA}`)).send({ nome: "Armamento" });
-    expect(res.status).toBe(403);
-    expect(res.body.error.code).toBe("VERIFICADO");
-    expect((await comoMestre(request(app).delete(`/api/categorias-item/${FIXA}`))).status).toBe(403);
+    expect(res.status).toBe(404);
+    expect((await comoMestre(request(app).delete(`/api/categorias-item/${FIXA}`))).status).toBe(404);
+    expect(prismaFalso.categoriaItem.delete).not.toHaveBeenCalled();
   });
 
   it("mestre cria categoria própria com ícone da lista; nome repetido = 409", async () => {
@@ -212,7 +212,7 @@ describe("NPCs", () => {
 
   it("NPC com classe começa cheio, com a vida da classe no nível dele", async () => {
     prismaFalso.raca.findUnique.mockResolvedValue({ donoId: MESTRE.id });
-    prismaFalso.classe.findUnique.mockResolvedValue({ id: CLASSE, donoId: OUTRO_MESTRE_ID, verificado: true, pontosVida: 30, pontosMana: 10, pontosEsforco: 20 });
+    prismaFalso.classe.findUnique.mockResolvedValue({ id: CLASSE, donoId: MESTRE.id, pontosVida: 30, pontosMana: 10, pontosEsforco: 20 });
     prismaFalso.npc.create.mockImplementation(async ({ data }) => ({ id: NPC, ...data }));
     prismaFalso.npc.findUnique.mockResolvedValue({ id: NPC, donoId: MESTRE.id });
     prismaFalso.npc.findUniqueOrThrow.mockRejectedValue(new Error("parar aqui"));

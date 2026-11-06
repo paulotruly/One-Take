@@ -1,21 +1,19 @@
-// Lista agrupada por "conceito" (arquétipo, arquétipo de raça, arquétipo de criatura): cada um vira um grupo com suas variações
-// embaixo, e o que não tem conceito fica em "Sem arquétipo". Recebe os dados e as mutações de quem usa; aqui só ficam o desenho e o estado dos modais.
-import { ChevronDown, ChevronUp, Plus } from "lucide-react";
+// Lista com filtro por "conceito" (arquétipo, arquétipo de raça, arquétipo de criatura): uma linha de filtros no topo
+// (Todas, cada arquétipo, Sem arquétipo) e uma grade única embaixo. Com um arquétipo escolhido, aparecem a descrição dele e as
+// ações (variação nova, editar, excluir). Recebe os dados e as mutações de quem usa; aqui só ficam o desenho e o estado dos modais.
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router";
 import type { UseMutationResult } from "@tanstack/react-query";
 import type { ReactNode } from "react";
-import type { Visao } from "../../verificados/types";
-import { AcessoBadge, VerificadoBadge } from "../../verificados/components/VerificadoBadge";
 import { Button } from "../../../components/ui/Button";
 import { ConfirmDialog } from "../../../components/ui/ConfirmDialog";
 import { Field } from "../../../components/ui/Field";
 import { Modal } from "../../../components/ui/Modal";
 import { ErrorState, Loading } from "../../../components/ui/States";
-import { useOculto } from "../../../lib/useOculto";
 import { erroDeFormulario, errosDeCampo, mensagemDeErro } from "../../../lib/api";
 
-export type ConceitoVisao = Visao & { id: string; titulo: string; descricao: string; filhos: { id: string; titulo: string }[] };
+export type ConceitoVisao = { id: string; titulo: string; descricao: string; filhos: { id: string; titulo: string }[] };
 type Dados = { titulo: string; descricao: string };
 type ItemAgrupavel = { id: string; conceito?: { id: string } | null };
 
@@ -35,7 +33,7 @@ type Props<T extends ItemAgrupavel> = {
   /** Com filtro ativo, arquétipos sem nenhum item visível ficam de fora. */
   filtrando: boolean;
   renderItens: (itens: T[]) => ReactNode;
-  /** Mostrado quando não há nenhum grupo nem item. */
+  /** Mostrado quando não há nenhum arquétipo nem item. */
   vazio: ReactNode;
   /** Link para criar uma variação já ligada ao conceito; sem ele, o botão não aparece. */
   hrefNovoFilho?: (conceitoId: string) => string;
@@ -43,43 +41,21 @@ type Props<T extends ItemAgrupavel> = {
   criar: UseMutationResult<unknown, Error, Dados>;
   editar: UseMutationResult<unknown, Error, { id: string; dados: Dados }>;
   excluir: UseMutationResult<unknown, Error, string>;
-  /** Selo ao lado do nome (com o botão de verificar, para o ADMIN); sem ele, só o selo se for verificado. */
-  selo?: (c: ConceitoVisao) => ReactNode;
 };
 
-type GrupoProps = {
-  chave: string;
-  titulo: string;
-  total: number;
-  avulso?: boolean;
-  selo?: ReactNode;
-  acoes?: ReactNode;
-  descricao?: string;
-  children: ReactNode;
-};
+/** Filtro escolhido: todos, sem arquétipo ou o id de um arquétipo. */
+type Filtro = "todos" | "avulsos" | string;
 
-function GrupoConceito(p: GrupoProps) {
-  const [oculto, alternar] = useOculto(p.chave);
+function Chip({ ativo, rotulo, total, onEscolher }: { ativo: boolean; rotulo: string; total: number; onEscolher: () => void }) {
   return (
-    <section className={`conceito-grupo ${p.avulso ? "conceito-grupo--avulso" : ""}`}>
-      <div className="conceito-grupo__cabecalho">
-        <h2>
-          <button type="button" className="conceito-grupo__alternar" onClick={alternar} aria-expanded={!oculto} title={oculto ? "Mostrar" : "Ocultar"}>
-            {oculto ? <ChevronDown size={20} aria-hidden /> : <ChevronUp size={20} aria-hidden />}
-            {p.titulo}
-            <span className="pagina__subtitulo">({p.total})</span>
-          </button>
-        </h2>
-        {p.selo}
-        {p.acoes && <div className="conceito-grupo__acoes">{p.acoes}</div>}
-      </div>
-      {!oculto && p.descricao && <p className="pagina__subtitulo conceito-grupo__descricao">{p.descricao}</p>}
-      {!oculto && p.children}
-    </section>
+    <button type="button" className="filtro-chip" aria-pressed={ativo} onClick={onEscolher}>
+      {rotulo} <span className="filtro-chip__total">{total}</span>
+    </button>
   );
 }
 
 export function ConceitosBloco<T extends ItemAgrupavel>(p: Props<T>) {
+  const [filtro, setFiltro] = useState<Filtro>("todos");
   const [emEdicao, setEmEdicao] = useState<ConceitoVisao | null | undefined>(undefined);
   const [aExcluir, setAExcluir] = useState<ConceitoVisao | null>(null);
   const [titulo, setTitulo] = useState("");
@@ -104,82 +80,73 @@ export function ConceitosBloco<T extends ItemAgrupavel>(p: Props<T>) {
 
   const conceitos = p.conceitos ?? [];
   const idsConceitos = new Set(conceitos.map((c) => c.id));
-  const grupos = conceitos
-    .map((c) => ({ conceito: c, itens: p.itens.filter((i) => i.conceito?.id === c.id) }))
-    .filter((g) => g.itens.length > 0 || (!p.filtrando && !g.conceito.deOutro));
-  // Arquétipo fora da lista (ex.: cópia de item de outro mestre): o item não pode sumir.
+  const doConceito = (id: string) => p.itens.filter((i) => i.conceito?.id === id);
+  // Arquétipo fora da lista: o item não pode sumir.
   const avulsos = p.itens.filter((i) => !i.conceito || !idsConceitos.has(i.conceito.id));
+  const visiveis = conceitos.filter((c) => !p.filtrando || doConceito(c.id).length > 0);
+  // O arquétipo escolhido pode ter sumido (excluído ou fora do filtro da tela): volta para Todas.
+  const escolhido = conceitos.find((c) => c.id === filtro) ?? null;
+  const atual: Filtro = filtro === "avulsos" || escolhido ? filtro : "todos";
+  const lista = atual === "todos" ? p.itens : atual === "avulsos" ? avulsos : doConceito(atual);
+  const novo = (
+    <Button pequeno variante="fantasma" onClick={() => abrir(null)} title={p.explicacao}>
+      <Plus size={14} aria-hidden /> Novo {p.nome}
+    </Button>
+  );
 
   return (
     <>
-      <div className="conceitos-barra">
-        <p className="pagina__subtitulo">{p.explicacao}</p>
-        <Button onClick={() => abrir(null)}>
-          <Plus size={16} aria-hidden /> Novo {p.nome}
-        </Button>
-      </div>
-
       {p.erro ? <ErrorState mensagem={mensagemDeErro(p.erro)} onTentarNovamente={p.onTentarNovamente} /> : null}
 
       {p.carregando ? (
         <Loading compacto />
-      ) : grupos.length === 0 && avulsos.length === 0 ? (
-        p.vazio
-      ) : grupos.length === 0 ? (
-        p.renderItens(avulsos)
+      ) : conceitos.length === 0 && p.itens.length === 0 ? (
+        <>
+          <div className="conceitos-filtro">{novo}</div>
+          {p.vazio}
+        </>
       ) : (
-        <div className="conceitos-grupos">
-          {grupos.map(({ conceito: c, itens }) => (
-            <GrupoConceito
-              key={c.id}
-              chave={`${p.nome}:${c.id}`}
-              titulo={c.titulo}
-              total={itens.length}
-              descricao={c.descricao}
-              selo={
-                <>
-                  {p.selo ? p.selo(c) : c.verificado && <VerificadoBadge />}
-                  {(c.deOutro || c.verificado) && <AcessoBadge item={c} />}
-                </>
-              }
-              acoes={
-                !c.deOutro && (
-                  <>
-                    {p.hrefNovoFilho && (
-                      <Link to={p.hrefNovoFilho(c.id)} className="btn btn--pequeno">
-                        <Plus size={14} aria-hidden /> {p.rotuloFilho}
-                      </Link>
-                    )}
-                    {p.onNovoFilho && (
-                      <Button pequeno onClick={() => p.onNovoFilho!(c.id)}>
-                        <Plus size={14} aria-hidden /> {p.rotuloFilho}
-                      </Button>
-                    )}
-                    <Button pequeno variante="fantasma" onClick={() => abrir(c)}>Editar</Button>
-                    <Button pequeno variante="perigo" onClick={() => { p.excluir.reset(); setAExcluir(c); }}>Excluir</Button>
-                  </>
-                )
-              }
-            >
-              {itens.length > 0 ? (
-                p.renderItens(itens)
-              ) : (
-                <p className="pagina__subtitulo">
-                  {c.filhos.length === 0 ? `Sem ${p.rotuloFilho.toLowerCase()} ainda: crie pelo menos uma.` : "Nenhuma variação visível aqui."}
-                </p>
-              )}
-            </GrupoConceito>
-          ))}
-          {avulsos.length > 0 && (
-            <GrupoConceito chave={`${p.nome}:avulsos`} titulo="Sem arquétipo" total={avulsos.length} avulso>
-              {p.renderItens(avulsos)}
-            </GrupoConceito>
+        <>
+          <div className="conceitos-filtro" role="group" aria-label={`Filtrar por ${p.nome}`}>
+            <Chip ativo={atual === "todos"} rotulo="Todas" total={p.itens.length} onEscolher={() => setFiltro("todos")} />
+            {visiveis.map((c) => (
+              <Chip key={c.id} ativo={atual === c.id} rotulo={c.titulo} total={doConceito(c.id).length} onEscolher={() => setFiltro(c.id)} />
+            ))}
+            {avulsos.length > 0 && conceitos.length > 0 && (
+              <Chip ativo={atual === "avulsos"} rotulo={`Sem ${p.nome}`} total={avulsos.length} onEscolher={() => setFiltro("avulsos")} />
+            )}
+            {novo}
+          </div>
+
+          {escolhido && (
+            <div className="conceito-escolhido">
+              <p className="pagina__subtitulo conceito-escolhido__descricao">{escolhido.descricao}</p>
+              <div className="conceito-escolhido__acoes">
+                {p.hrefNovoFilho && (
+                  <Link to={p.hrefNovoFilho(escolhido.id)} className="btn btn--pequeno"><Plus size={14} aria-hidden /> {p.rotuloFilho}</Link>
+                )}
+                {p.onNovoFilho && (
+                  <Button pequeno onClick={() => p.onNovoFilho!(escolhido.id)}><Plus size={14} aria-hidden /> {p.rotuloFilho}</Button>
+                )}
+                <Button pequeno variante="fantasma" onClick={() => abrir(escolhido)}><Pencil size={14} aria-hidden /> Editar {p.nome}</Button>
+                <Button pequeno variante="perigoSutil" onClick={() => { p.excluir.reset(); setAExcluir(escolhido); }}><Trash2 size={14} aria-hidden /> Excluir</Button>
+              </div>
+            </div>
           )}
-        </div>
+
+          {lista.length > 0 ? (
+            p.renderItens(lista)
+          ) : (
+            <p className="pagina__subtitulo">
+              {escolhido && escolhido.filhos.length === 0 ? `Sem ${p.rotuloFilho.toLowerCase()} ainda: crie a primeira.` : "Nada para mostrar com este filtro."}
+            </p>
+          )}
+        </>
       )}
 
       <Modal aberto={emEdicao !== undefined} onFechar={fechar} titulo={emEdicao ? `Editar ${p.nome}` : `Novo ${p.nome}`}>
         <form className="form" noValidate onSubmit={enviar}>
+          {!emEdicao && <p className="pagina__subtitulo">{p.explicacao}</p>}
           <Field rotulo="Título" erro={errosDeCampo(salvando.error).titulo}>
             <input value={titulo} onChange={(e) => setTitulo(e.target.value)} maxLength={80} autoFocus placeholder={p.exemplo} />
           </Field>
@@ -197,11 +164,11 @@ export function ConceitosBloco<T extends ItemAgrupavel>(p: Props<T>) {
       <ConfirmDialog
         aberto={!!aExcluir}
         titulo={`Excluir ${p.nome}`}
-        mensagem={<>Excluir <strong>{aExcluir?.titulo}</strong>? As {aExcluir?.filhos.length ?? 0} variações continuam existindo, sem arquétipo.</>}
+        mensagem={<>Excluir <strong>{aExcluir?.titulo}</strong>? As {aExcluir?.filhos.length ?? 0} variações continuam existindo, sem {p.nome}.</>}
         processando={p.excluir.isPending}
         erro={p.excluir.isError ? mensagemDeErro(p.excluir.error) : null}
         onCancelar={() => setAExcluir(null)}
-        onConfirmar={() => aExcluir && p.excluir.mutate(aExcluir.id, { onSuccess: () => setAExcluir(null) })}
+        onConfirmar={() => aExcluir && p.excluir.mutate(aExcluir.id, { onSuccess: () => { setAExcluir(null); setFiltro("todos"); } })}
       />
     </>
   );

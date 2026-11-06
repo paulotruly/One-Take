@@ -1,6 +1,5 @@
 // Classes do mestre agrupadas por arquétipo na galeria (container: dados + mutações).
 import type { ReactNode } from "react";
-import { SeloVerificado } from "../../verificados/pages/SeloVerificado";
 import { useConceitos, useCriarConceito, useEditarConceito, useExcluirConceito } from "../api";
 import type { Classe } from "../types";
 import { ConceitosBloco } from "./ConceitosBloco";
@@ -32,7 +31,6 @@ export function ConceitosSecao({ classes, filtrando, renderClasses, vazio }: Pro
       criar={useCriarConceito()}
       editar={useEditarConceito()}
       excluir={useExcluirConceito()}
-      selo={(c) => <SeloVerificado tipo="classeConceito" item={c} />}
     />
   );
 }

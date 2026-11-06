@@ -26,16 +26,15 @@ export function PainelMestrePage() {
   const racas = useRacas();
   const bestas = useBestas();
 
-  const minhas = <T extends { deOutro?: boolean }>(lista: T[] | undefined) => lista?.filter((x) => !x.deOutro).length;
-  const totalClasses = minhas(classes.data);
-  const totalRacas = minhas(racas.data);
-  const totalBestas = minhas(bestas.data);
+  const totalClasses = classes.data?.length;
+  const totalRacas = racas.data?.length;
+  const totalBestas = bestas.data?.length;
 
   // Só o próximo passo que falta, na ordem em que um mestre costuma preparar a mesa.
   const passo = !grupos.data
     ? null
     : (classes.data?.length ?? 0) === 0
-      ? { texto: "Crie a primeira classe, ou duplique uma verificada.", to: "/mestre/classes/nova", acao: "Criar classe" }
+      ? { texto: "Crie a primeira classe.", to: "/mestre/classes/nova", acao: "Criar classe" }
       : (racas.data?.length ?? 0) === 0
         ? { texto: "Crie a primeira raça para as fichas.", to: "/mestre/racas", acao: "Ir para raças" }
         : grupos.data.length === 0

@@ -1,5 +1,4 @@
-// Container: gerenciar categorias de item. As do mestre podem ser criadas, editadas e excluídas; as verificadas de outras pessoas só aparecem.
-import { SeloVerificado } from "../../verificados/pages/SeloVerificado";
+// Container: gerenciar as categorias de item do mestre (criar, editar, excluir).
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { Button } from "../../../components/ui/Button";
@@ -59,18 +58,16 @@ export function CategoriasItemModal({ aberto, onFechar }: { aberto: boolean; onF
                   <li key={c.id} className="categoria-linha">
                     <span className="item__miniatura item__miniatura--icone" aria-hidden><Icone size={18} /></span>
                     <span className="categoria-linha__texto">
-                      <strong>{c.nome} <SeloVerificado tipo="categoriaItem" item={c} /></strong>
+                      <strong>{c.nome}</strong>
                       <span className="pagina__subtitulo">{c.descricao || "Sem descrição"}{c.usos ? ` · ${c.usos} itens` : ""}</span>
                     </span>
-                    {c.editavel && (
-                      <span className="pericia__acoes">
-                        <Button pequeno variante="fantasma" aria-label={`Editar ${c.nome}`} onClick={() => abrir(c)}><Pencil size={14} aria-hidden /></Button>
-                        <Button pequeno variante="perigoSutil" aria-label={`Excluir ${c.nome}`} title="Os itens dela ficam sem categoria" disabled={excluir.isPending}
-                          onClick={() => excluir.mutate(c.id)}>
-                          <Trash2 size={14} aria-hidden />
-                        </Button>
-                      </span>
-                    )}
+                    <span className="pericia__acoes">
+                      <Button pequeno variante="fantasma" aria-label={`Editar ${c.nome}`} onClick={() => abrir(c)}><Pencil size={14} aria-hidden /></Button>
+                      <Button pequeno variante="perigoSutil" aria-label={`Excluir ${c.nome}`} title="Os itens dela ficam sem categoria" disabled={excluir.isPending}
+                        onClick={() => excluir.mutate(c.id)}>
+                        <Trash2 size={14} aria-hidden />
+                      </Button>
+                    </span>
                   </li>
                 );
               })}

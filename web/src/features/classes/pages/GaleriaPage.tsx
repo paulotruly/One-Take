@@ -1,14 +1,13 @@
 import { Plus } from "lucide-react";
-import { AvisoKit } from "../../kits/components/AvisoKit";
 import { useKitAtivo } from "../../kits/api";
 import { soDoKit } from "../../kits/types";
 import { useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import { Button } from "../../../components/ui/Button";
 import { ConfirmDialog } from "../../../components/ui/ConfirmDialog";
 import { EmptyState, ErrorState, Loading } from "../../../components/ui/States";
 import { mensagemDeErro } from "../../../lib/api";
-import { useClasses, useDuplicarClasse, useExcluirClasse } from "../api";
+import { useClasses, useExcluirClasse } from "../api";
 import { ClasseCard } from "../components/ClasseCard";
 import { ConceitosSecao } from "../components/ConceitosSecao";
 import { GrupoFilter } from "../components/GrupoFilter";
@@ -19,11 +18,9 @@ export function GaleriaPage() {
   const grupoParam = params.get("grupo") as Grupo | null;
   const grupo = grupoParam && GRUPOS.includes(grupoParam) ? grupoParam : undefined;
 
-  const navigate = useNavigate();
   const classes = useClasses(grupo);
   const { kitId } = useKitAtivo();
   const classesNoKit = (classes.data ?? []).filter((x) => soDoKit(x.kitIds, kitId));
-  const duplicar = useDuplicarClasse();
   const excluir = useExcluirClasse();
   const [aExcluir, setAExcluir] = useState<Classe | null>(null);
 
@@ -31,17 +28,12 @@ export function GaleriaPage() {
     setParams(g ? { grupo: g } : {}, { replace: true });
   }
 
-  async function duplicarClasse(c: Classe) {
-    const copia = await duplicar.mutateAsync(c.id).catch(() => null);
-    if (copia) navigate(`/mestre/classes/${copia.id}`);
-  }
-
   return (
     <div className="pagina">
       <div className="pagina__cabecalho">
         <div>
           <h1>Classes</h1>
-          <p className="pagina__subtitulo">Abra uma classe para ver a cartela, duplique uma verificada ou crie a sua.</p>
+          <p className="pagina__subtitulo">Abra uma classe para ver a cartela ou crie uma nova.</p>
         </div>
         <Link to="/mestre/classes/nova" className="btn btn--primario">
           <Plus size={16} aria-hidden /> Nova classe
@@ -50,9 +42,7 @@ export function GaleriaPage() {
 
       <GrupoFilter valor={grupo} onChange={filtrar} />
 
-      {duplicar.isError && <div className="aviso">Não foi possível duplicar: {mensagemDeErro(duplicar.error)}</div>}
 
-      <AvisoKit />
       {classes.isPending ? (
         <Loading texto="Carregando classes…" />
       ) : classes.isError ? (
@@ -80,11 +70,7 @@ export function GaleriaPage() {
                   classe={c}
                   href={`/mestre/classes/${c.id}`}
                   acoes={
-                    !c.editavel ? (
-                      <Button pequeno onClick={() => duplicarClasse(c)} disabled={duplicar.isPending}>
-                        {duplicar.isPending && duplicar.variables === c.id ? "Duplicando…" : "Duplicar"}
-                      </Button>
-                    ) : (
+                    (
                       <>
                         <Link to={`/mestre/classes/${c.id}/editar`} className="btn btn--pequeno">
                           Editar

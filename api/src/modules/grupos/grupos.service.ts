@@ -1,6 +1,5 @@
 // Grupos: o RPG de um mestre. Só o mestre dono vê e altera o grupo.
-import type { TipoKit } from "../../lib/kits.js";
-import { podeUsar } from "../../lib/sistema.js";
+import { ehDoDono } from "../../lib/posse.js";
 import { randomInt } from "node:crypto";
 import type { z } from "zod";
 import { naoEncontrado, requisicaoInvalida } from "../../lib/errors.js";
@@ -16,6 +15,7 @@ import type { criarGrupoSchema, disponiveisSchema, editarGrupoSchema } from "./g
 import { CAMPO_DO_LIMITE, contarPorFuncao, ROTULO_FUNCAO, type LimitesPorFuncao } from "./funcoes.js";
 import type { GrupoClasse } from "../../generated/prisma/client.js";
 import { retratos } from "../fichas/retrato.js";
+import { disponiveisDoKit, gravarDisponiveis } from "./kit-da-mesa.js";
 
 type Disponiveis = z.infer<typeof disponiveisSchema>;
 
@@ -39,57 +39,39 @@ export async function grupoDoMestre(id: string, usuarioId: string) {
 
 /**
  * Confere que tudo o que o mestre marcou pode ser usado por ele e respeita a exclusividade:
- * classes, raças e atributos dele (ou verificados), perícias do catálogo dele dentro dos atributos marcados.
+ * classes, raças, atributos e status dele, perícias do catálogo dele dentro dos atributos marcados.
  */
 async function validarDisponiveis(d: Disponiveis, usuarioId: string) {
   const prisma = getPrisma();
   const unicos = (a: string[]) => [...new Set(a)];
 
-  const todosPodem = async (tipo: TipoKit, lista: { id: string; donoId: string | null }[]) =>
-    (await Promise.all(lista.map((x) => podeUsar(tipo, x, usuarioId)))).every(Boolean);
+  const todosPodem = (lista: { donoId: string | null }[]) => lista.every((x) => ehDoDono(x, usuarioId));
 
   const classes = await prisma.classe.findMany({ where: { id: { in: unicos(d.classeIds) } } });
-  if (classes.length !== unicos(d.classeIds).length || !(await todosPodem("classe", classes))) {
+  if (classes.length !== unicos(d.classeIds).length || !todosPodem(classes)) {
     throw requisicaoInvalida("Alguma classe escolhida não existe ou não é sua.");
   }
   const racas = await prisma.raca.findMany({ where: { id: { in: unicos(d.racaIds) } } });
-  if (racas.length !== unicos(d.racaIds).length || !(await todosPodem("raca", racas))) {
+  if (racas.length !== unicos(d.racaIds).length || !todosPodem(racas)) {
     throw requisicaoInvalida("Alguma raça escolhida não existe ou não é sua.");
   }
   const atributos = await prisma.atributo.findMany({ where: { id: { in: unicos(d.atributoIds) } } });
-  if (atributos.length !== unicos(d.atributoIds).length || !(await todosPodem("atributo", atributos))) {
+  if (atributos.length !== unicos(d.atributoIds).length || !todosPodem(atributos)) {
     throw requisicaoInvalida("Algum atributo escolhido não existe ou não é seu.");
   }
   const pericias = await prisma.pericia.findMany({ where: { id: { in: unicos(d.periciaIds) } } });
   const atributosMarcados = new Set(d.atributoIds);
-  if (pericias.length !== unicos(d.periciaIds).length || !(await todosPodem("pericia", pericias)) || pericias.some((p) => !atributosMarcados.has(p.atributoId))) {
+  if (pericias.length !== unicos(d.periciaIds).length || !todosPodem(pericias) || pericias.some((p) => !atributosMarcados.has(p.atributoId))) {
     throw requisicaoInvalida("Alguma perícia escolhida não é do seu catálogo ou está fora dos atributos marcados.");
   }
   const status = await prisma.status.findMany({ where: { id: { in: unicos(d.statusIds) } } });
-  if (status.length !== unicos(d.statusIds).length || !(await todosPodem("status", status))) {
+  if (status.length !== unicos(d.statusIds).length || !todosPodem(status)) {
     throw requisicaoInvalida("Algum status escolhido não existe ou não é seu.");
   }
   return {
     classeIds: unicos(d.classeIds), racaIds: unicos(d.racaIds), atributoIds: unicos(d.atributoIds),
     periciaIds: unicos(d.periciaIds), statusIds: unicos(d.statusIds),
   };
-}
-
-/** Substitui tudo o que vale no grupo. */
-async function gravarDisponiveis(grupoId: string, d: Disponiveis) {
-  const prisma = getPrisma();
-  await prisma.$transaction([
-    prisma.classeNoGrupo.deleteMany({ where: { grupoId } }),
-    prisma.racaNoGrupo.deleteMany({ where: { grupoId } }),
-    prisma.atributoNoGrupo.deleteMany({ where: { grupoId } }),
-    prisma.periciaNoGrupo.deleteMany({ where: { grupoId } }),
-    prisma.statusNoGrupo.deleteMany({ where: { grupoId } }),
-    prisma.classeNoGrupo.createMany({ data: d.classeIds.map((classeId) => ({ grupoId, classeId })) }),
-    prisma.racaNoGrupo.createMany({ data: d.racaIds.map((racaId) => ({ grupoId, racaId })) }),
-    prisma.atributoNoGrupo.createMany({ data: d.atributoIds.map((atributoId) => ({ grupoId, atributoId })) }),
-    prisma.periciaNoGrupo.createMany({ data: d.periciaIds.map((periciaId) => ({ grupoId, periciaId })) }),
-    prisma.statusNoGrupo.createMany({ data: d.statusIds.map((statusId) => ({ grupoId, statusId })) }),
-  ]);
 }
 
 export async function listar(usuarioId: string) {
@@ -173,7 +155,9 @@ export async function criar(usuarioId: string, dados: z.infer<typeof criarGrupoS
   await validarKitDoGrupo(resto.kitId, usuarioId);
   const d = disponiveis ? await validarDisponiveis(disponiveis, usuarioId) : null;
   const grupo = await getPrisma().grupo.create({ data: { ...resto, mestreId: usuarioId, codigo: await novoCodigo() } });
-  if (d) await gravarDisponiveis(grupo.id, d);
+  // Com kit, o que vale vem do kit; sem kit, o que vier no corpo.
+  if (resto.kitId) await gravarDisponiveis(grupo.id, await disponiveisDoKit(resto.kitId));
+  else if (d) await gravarDisponiveis(grupo.id, d);
   return detalhar(grupo.id, usuarioId);
 }
 
@@ -188,6 +172,8 @@ export async function editar(id: string, usuarioId: string, dados: z.infer<typeo
   }
   await validarLimitesPorFuncao(id, dados);
   await getPrisma().grupo.update({ where: { id }, data: dados });
+  // Trocar o kit refaz o que vale; tirar o kit mantém o que já estava.
+  if (dados.kitId) await gravarDisponiveis(id, await disponiveisDoKit(dados.kitId));
   return detalhar(id, usuarioId);
 }
 
@@ -206,8 +192,10 @@ async function validarLimitesPorFuncao(id: string, dados: Partial<LimitesPorFunc
   }
 }
 
+/** Só para mesa sem kit: com kit, o que vale vem do kit. */
 export async function definirDisponiveis(id: string, usuarioId: string, disponiveis: Disponiveis) {
-  await grupoDoMestre(id, usuarioId);
+  const grupo = await grupoDoMestre(id, usuarioId);
+  if (grupo.kitId) throw requisicaoInvalida("Esta mesa usa um kit: o que vale nela vem do kit. Mude o conteúdo do kit.");
   await gravarDisponiveis(id, await validarDisponiveis(disponiveis, usuarioId));
   return detalhar(id, usuarioId);
 }

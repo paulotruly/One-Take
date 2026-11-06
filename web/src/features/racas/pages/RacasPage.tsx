@@ -1,6 +1,4 @@
 import { Footprints, Plus } from "lucide-react";
-import { SeloVerificado } from "../../verificados/pages/SeloVerificado";
-import { AvisoKit } from "../../kits/components/AvisoKit";
 import { useKitAtivo } from "../../kits/api";
 import { soDoKit } from "../../kits/types";
 import { useState } from "react";
@@ -11,7 +9,6 @@ import { EmptyState, ErrorState, Loading } from "../../../components/ui/States";
 import { erroDeFormulario, errosDeCampo, mensagemDeErro } from "../../../lib/api";
 import { ClasseImagem } from "../../classes/components/ClasseImagem";
 import { ConceitosBloco } from "../../classes/components/ConceitosBloco";
-import { VerificadoBadge } from "../../verificados/components/VerificadoBadge";
 import { CategoriaIcone } from "../../pericias/components/CategoriaIcone";
 import { formatarModificador } from "../../pericias/types";
 import { useConceitosRaca, useCriarConceitoRaca, useCriarRaca, useEditarConceitoRaca, useExcluirConceitoRaca, useRacas } from "../api";
@@ -48,7 +45,6 @@ export function RacasPage() {
         </Button>
       </div>
 
-      <AvisoKit />
       {racas.isPending ? (
         <Loading texto="Carregando raças…" />
       ) : racas.isError ? (
@@ -77,7 +73,7 @@ export function RacasPage() {
                     <div className="card-link__topo">
                       <div>
                         {r.conceito && <span className="classe-card__conceito">{r.conceito.titulo}</span>}
-                        <h3>{r.titulo} {r.verificado && <VerificadoBadge porKit={r.verificadoPorKit && !r.seloProprio} />}</h3>
+                        <h3>{r.titulo}</h3>
                       </div>
                       <span className="stat" title="Deslocamento por turno">
                         <Footprints size={14} aria-hidden /> {r.deslocamento} quadrados
@@ -104,7 +100,6 @@ export function RacasPage() {
           criar={criarConceito}
           editar={editarConceito}
           excluir={excluirConceito}
-          selo={(c) => <SeloVerificado tipo="racaConceito" item={c} />}
         />
       )}
 
@@ -112,7 +107,7 @@ export function RacasPage() {
         <RacaForm
           key={criando ?? "fechado"}
           inicial={criando ? { titulo: "", descricao: "", imagemUrl: null, deslocamento: undefined as unknown as number, kitIds: kitsPadrao(), conceitoId: criando } : undefined}
-          conceitos={conceitos.data?.filter((c) => !c.deOutro)}
+          conceitos={conceitos.data}
           enviando={criar.isPending}
           erros={errosDeCampo(criar.error)}
           erroGeral={erroDeFormulario(criar.error)}

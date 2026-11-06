@@ -1,7 +1,4 @@
 // Bestiário do mestre: criaturas montadas como classes, prontas para invocar nos grupos.
-import { VerificadoBadge } from "../../verificados/components/VerificadoBadge";
-import { SeloVerificado } from "../../verificados/pages/SeloVerificado";
-import { AvisoKit } from "../../kits/components/AvisoKit";
 import { useKitAtivo } from "../../kits/api";
 import { soDoKit } from "../../kits/types";
 import { Footprints, PawPrint, Plus } from "lucide-react";
@@ -37,7 +34,6 @@ export function BestiarioPage() {
         </Link>
       </div>
 
-      <AvisoKit />
       {bestas.isPending ? (
         <Loading texto="Carregando bestiário…" />
       ) : bestas.isError ? (
@@ -69,7 +65,7 @@ export function BestiarioPage() {
                     </div>
                     <div className="classe-card__corpo">
                       {b.conceito && <span className="classe-card__conceito">{b.conceito.titulo}</span>}
-                      <h3>{b.titulo} {b.verificado && <VerificadoBadge porKit={b.verificadoPorKit && !b.seloProprio} />}</h3>
+                      <h3>{b.titulo}</h3>
                       <StatsBar vida={b.pontosVida} mana={b.pontosMana} esforco={b.pontosEsforco} compacto />
                       <span className="stat"><Footprints size={12} aria-hidden /> {b.deslocamento} quadrados</span>
                       <p className="classe-card__descricao">{b.descricao}</p>
@@ -83,7 +79,6 @@ export function BestiarioPage() {
           criar={criarConceito}
           editar={editarConceito}
           excluir={excluirConceito}
-          selo={(c) => <SeloVerificado tipo="bestaConceito" item={c} />}
         />
       )}
     </div>

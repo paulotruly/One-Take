@@ -4,7 +4,7 @@ import { ErrorState, Loading } from "../../../components/ui/States";
 import { mensagemDeErro } from "../../../lib/api";
 import { SecaoPerfil } from "./SecaoPerfil";
 import { SecaoPreferencias, SecaoSenha } from "./SecaoPreferencias";
-import { SecaoAtivarMestre, SecaoDados, SecaoExcluirConta, SecaoRecuperacao, SecaoVerificados } from "./SecoesDaConta";
+import { SecaoAtivarMestre, SecaoDados, SecaoExcluirConta, SecaoRecuperacao } from "./SecoesDaConta";
 
 export function ConfiguracoesContaPage() {
   const me = useMe();
@@ -20,7 +20,7 @@ export function ConfiguracoesContaPage() {
       <SecaoSenha />
       <SecaoRecuperacao me={me.data} />
       <SecaoPreferencias ehMestre={me.data.papel === "MESTRE"} />
-      {me.data.papel === "MESTRE" ? <SecaoVerificados me={me.data} /> : <SecaoAtivarMestre />}
+      {me.data.papel !== "MESTRE" && <SecaoAtivarMestre />}
       <SecaoDados me={me.data} />
       <SecaoExcluirConta me={me.data} />
     </div>

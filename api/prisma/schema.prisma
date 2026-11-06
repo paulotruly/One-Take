@@ -15,7 +15,7 @@ enum Papel {
   JOGADOR
 }
 
-/// Cargo da conta no sistema (independe de jogar ou mestrar). ADMIN edita o que é fixo (não automático) e marca o que é verificado.
+/// Cargo da conta no sistema (independe de jogar ou mestrar). Sem efeito nas permissões: tudo é da própria conta. A documentação pública mostra os atributos e status da conta ADMIN como exemplo.
 enum Cargo {
   USUARIO
   ADMIN
@@ -53,10 +53,6 @@ model Perfil {
   fotoUrl               String?
   /// Cargo no sistema. Trocado só por `npm run cargo` (nunca pela interface).
   cargo                 Cargo             @default(USUARIO)
-  /// Preferência: esconder da própria interface o conteúdo verificado de outras pessoas.
-  ocultarVerificados    Boolean           @default(false)
-  /// true depois que o catálogo de perícias base foi copiado para este mestre.
-  catalogoIniciado      Boolean           @default(false)
   /// Data de nascimento informada no cadastro (idade mínima: 12 anos). Nula em contas anteriores a essa regra. Só o dono vê.
   dataNascimento        DateTime?         @db.Date
   /// SHA-256 do código de recuperação (troca de senha sem e-mail). O código em si nunca é guardado.
@@ -87,7 +83,7 @@ model Perfil {
   conceitosBesta        BestaConceito[]
 }
 
-/// Classe jogável. Sempre de um mestre (não há classe fixa): os outros a veem se for verificada ou estiver num kit verificado.
+/// Classe jogável. Sempre de um mestre (não há classe fixa): só ele vê e edita; os jogadores veem pela mesa.
 model Classe {
   id                   String          @id @default(uuid()) @db.Uuid
   grupo                GrupoClasse
@@ -116,13 +112,10 @@ model Classe {
   criadoEm             DateTime        @default(now())
   atualizadoEm         DateTime        @updatedAt
 
-  kits       KitClasse[]
-  /// Verificado pelo administrador: todo mestre vê e usa (só leitura; duplica para mudar).
-  verificado Boolean     @default(false)
+  kits KitClasse[]
 
   @@index([donoId])
   @@index([grupo])
-  @@index([verificado])
 }
 
 /// Tipo de efeito de uma carta. Lista fixa do sistema; rótulos e descrições ficam no front.
@@ -201,19 +194,15 @@ model Pericia {
   itensQueExigem       Item[]             @relation("ItemPericia")
   criadoEm             DateTime           @default(now())
 
-  kits       KitPericia[]
-  /// Verificado pelo administrador: todo mestre vê e usa (só leitura; duplica para mudar).
-  verificado Boolean      @default(false)
+  kits KitPericia[]
 
   @@unique([donoId, nome])
   @@index([donoId])
   @@index([atributoId])
-  @@index([verificado])
 }
 
 /// Atributo que agrupa perícias (e, nas fichas, recebe dados d20).
-/// Sempre de um mestre (não há atributo fixo). Os do seed (Capacidade física, Carisma, Conhecimento) são do administrador e
-/// chegam aos outros pelo kit verificado dele.
+/// Sempre de um mestre (não há atributo fixo); conta nova começa sem nenhum.
 model Atributo {
   id        String            @id @default(uuid()) @db.Uuid
   nome      String
@@ -229,13 +218,10 @@ model Atributo {
   bestas    BestaAtributo[]
   criadoEm  DateTime          @default(now())
 
-  kits       KitAtributo[]
-  /// Verificado pelo administrador: todo mestre vê e usa (só leitura; duplica para mudar).
-  verificado Boolean       @default(false)
+  kits KitAtributo[]
 
   @@unique([donoId, nome])
   @@index([donoId])
-  @@index([verificado])
 }
 
 /// Perícia que uma classe possui, com o modificador daquela classe.
@@ -271,12 +257,9 @@ model Raca {
   criadoEm     DateTime      @default(now())
   atualizadoEm DateTime      @updatedAt
 
-  kits       KitRaca[]
-  /// Verificado pelo administrador: todo mestre vê e usa (só leitura; duplica para mudar).
-  verificado Boolean   @default(false)
+  kits KitRaca[]
 
   @@index([donoId])
-  @@index([verificado])
 }
 
 /// Perícia que a raça concede, com a quantidade de pontos base para o jogador.
@@ -423,42 +406,36 @@ model FichaPericia {
   @@id([fichaId, periciaId])
 }
 
-/// Categoria de item. Sempre de um mestre (as do seed, Armas, Artefatos, Taverna e Sebo, são do administrador e verificadas). `icone` é uma chave da lista de ícones permitidos (api/src/modules/itens/icones.ts).
+/// Categoria de item. Sempre de um mestre. `icone` é uma chave da lista de ícones permitidos (api/src/modules/itens/icones.ts).
 model CategoriaItem {
-  id         String       @id @default(uuid()) @db.Uuid
-  nome       String
-  descricao  String       @default("")
-  icone      String       @default("pacote")
-  ordem      Int          @default(100)
-  donoId     String       @db.Uuid
-  dono       Perfil       @relation(fields: [donoId], references: [id], onDelete: Cascade)
-  modelos    ItemModelo[]
-  itens      Item[]
-  criadoEm   DateTime     @default(now())
-  /// Verificado pelo administrador: todo mestre vê e usa (só leitura; duplica para mudar).
-  verificado Boolean      @default(false)
+  id        String       @id @default(uuid()) @db.Uuid
+  nome      String
+  descricao String       @default("")
+  icone     String       @default("pacote")
+  ordem     Int          @default(100)
+  donoId    String       @db.Uuid
+  dono      Perfil       @relation(fields: [donoId], references: [id], onDelete: Cascade)
+  modelos   ItemModelo[]
+  itens     Item[]
+  criadoEm  DateTime     @default(now())
 
   @@unique([donoId, nome])
   @@index([donoId])
-  @@index([verificado])
 }
 
 /// Categoria de status do mestre (ex.: Elementais, Mentais): organiza a página de status e a escolha do que vale no grupo.
 /// Excluir a categoria não apaga os status (ficam sem categoria).
 model CategoriaStatus {
-  id         String   @id @default(uuid()) @db.Uuid
-  nome       String
-  descricao  String   @default("")
-  donoId     String   @db.Uuid
-  dono       Perfil   @relation(fields: [donoId], references: [id], onDelete: Cascade)
-  status     Status[]
-  criadoEm   DateTime @default(now())
-  /// Verificado pelo administrador: todo mestre vê e usa (só leitura).
-  verificado Boolean  @default(false)
+  id        String   @id @default(uuid()) @db.Uuid
+  nome      String
+  descricao String   @default("")
+  donoId    String   @db.Uuid
+  dono      Perfil   @relation(fields: [donoId], references: [id], onDelete: Cascade)
+  status    Status[]
+  criadoEm  DateTime @default(now())
 
   @@unique([donoId, nome])
   @@index([donoId])
-  @@index([verificado])
 }
 
 /// Item do catálogo do mestre (molde). Lançar no grupo cria um Item com uma cópia destes campos.
@@ -490,12 +467,9 @@ model ItemModelo {
   criadoEm           DateTime       @default(now())
   atualizadoEm       DateTime       @updatedAt
 
-  kits       KitItemModelo[]
-  /// Verificado pelo administrador: todo mestre vê e usa (só leitura; duplica para mudar).
-  verificado Boolean         @default(false)
+  kits KitItemModelo[]
 
   @@index([donoId])
-  @@index([verificado])
 }
 
 /// Item. Com fichaId = no inventário daquela ficha; com npcId = no inventário daquele NPC; nenhum dos dois = vago no grupo.
@@ -548,8 +522,7 @@ enum GatilhoStatus {
   ESFORCO_ZERO
 }
 
-/// Status (condição/emoção) do personagem. Sempre de um mestre (não há status fixo): os do seed são do administrador e chegam
-/// aos outros pelo kit verificado dele. Os automáticos (com gatilho) podem ser editados pelo dono, mas não excluídos.
+/// Status (condição/emoção) do personagem. Sempre de um mestre (não há status fixo). Os automáticos (com gatilho) podem ser editados pelo dono, mas não excluídos.
 model Status {
   id             String                    @id @default(uuid()) @db.Uuid
   nome           String
@@ -570,8 +543,6 @@ model Status {
   criadoEm       DateTime                  @default(now())
 
   kits        KitStatus[]
-  /// Verificado pelo administrador: todo mestre vê e usa (só leitura; duplica para mudar).
-  verificado  Boolean          @default(false)
   /// Categoria criada pelo mestre (ex.: Elementais), só para organizar; sem categoria = "Outros".
   categoriaId String?          @db.Uuid
   categoria   CategoriaStatus? @relation(fields: [categoriaId], references: [id], onDelete: SetNull)
@@ -579,7 +550,6 @@ model Status {
   @@unique([donoId, nome])
   @@index([categoriaId])
   @@index([donoId])
-  @@index([verificado])
 }
 
 /// Status ativados no grupo (os demais não aparecem nem podem ser aplicados ali).
@@ -616,11 +586,8 @@ model ClasseConceito {
   subclasses   Classe[]
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
-  /// Verificado pelo administrador: todo mestre vê (só leitura).
-  verificado   Boolean  @default(false)
 
   @@index([donoId])
-  @@index([verificado])
 }
 
 /// A carta num nível maior: versão completa (o formulário já vem preenchido com a versão anterior; pode ficar igual).
@@ -674,11 +641,8 @@ model RacaConceito {
   subracas     Raca[]
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
-  /// Verificado pelo administrador: todo mestre vê (só leitura).
-  verificado   Boolean  @default(false)
 
   @@index([donoId])
-  @@index([verificado])
 }
 
 /// Arquétipo de criatura: criatura generalista que agrupa sub-formas (ex.: "Lobo" > "Lobo das neves").
@@ -691,11 +655,8 @@ model BestaConceito {
   formas       Besta[]
   criadoEm     DateTime @default(now())
   atualizadoEm DateTime @updatedAt
-  /// Verificado pelo administrador: todo mestre vê (só leitura).
-  verificado   Boolean  @default(false)
 
   @@index([donoId])
-  @@index([verificado])
 }
 
 /// Criatura do bestiário do mestre. Como a classe: valores BASE (nível 1), cartela e perícias; e também dados por atributo.
@@ -721,12 +682,9 @@ model Besta {
   criadoEm      DateTime        @default(now())
   atualizadoEm  DateTime        @updatedAt
 
-  kits       KitBesta[]
-  /// Verificado pelo administrador: todo mestre vê e usa (só leitura; duplica para mudar).
-  verificado Boolean    @default(false)
+  kits KitBesta[]
 
   @@index([donoId])
-  @@index([verificado])
 }
 
 /// Perícia que a besta possui, com o modificador dela.
@@ -799,12 +757,9 @@ model Npc {
   criadoEm     DateTime      @default(now())
   atualizadoEm DateTime      @updatedAt
 
-  kits       KitNpc[]
-  /// Verificado pelo administrador: todo mestre vê e usa (só leitura; duplica para mudar).
-  verificado Boolean  @default(false)
+  kits KitNpc[]
 
   @@index([donoId])
-  @@index([verificado])
 }
 
 /// Dados (d20) do NPC em cada atributo.
@@ -874,11 +829,8 @@ model Kit {
   grupos       Grupo[]
   criadoEm     DateTime        @default(now())
   atualizadoEm DateTime        @updatedAt
-  /// Verificado pelo administrador: todo mestre vê e usa o kit, e tudo o que está nele conta como verificado.
-  verificado   Boolean         @default(false)
 
   @@index([donoId])
-  @@index([verificado])
 }
 
 model KitClasse {

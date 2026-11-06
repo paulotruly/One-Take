@@ -1,11 +1,11 @@
 // Dados falsos do modo mock (npm run dev:mock). Nomes e contas são fictícios; nada disso existe no banco.
-const atributo = (id: string, nome: string, ordem: number) => ({ id, nome, descricao: `${nome}: atributo de exemplo.`, ordem, kitIds: [], editavel: true });
+const atributo = (id: string, nome: string, ordem: number) => ({ id, nome, descricao: `${nome}: atributo de exemplo.`, ordem, kitIds: [] });
 export const FIS = atributo("at-fis", "Capacidade física", 0);
 export const CAR = atributo("at-car", "Carisma", 1);
 export const CON = atributo("at-con", "Conhecimento", 2);
 const ATRIBUTOS = [FIS, CAR, CON];
 
-const pericia = (id: string, nome: string, categoria: string, at: typeof FIS) => ({ id, nome, descricao: `${nome}: perícia de exemplo.`, categoria, atributo: at, atributoId: at.id, kitIds: [], origemId: null, usosClasses: 2, usosRacas: 1, editavel: true });
+const pericia = (id: string, nome: string, categoria: string, at: typeof FIS) => ({ id, nome, descricao: `${nome}: perícia de exemplo.`, categoria, atributo: at, atributoId: at.id, kitIds: [], origemId: null, usosClasses: 2, usosRacas: 1 });
 const PERICIAS = [
   pericia("pe-atl", "Atletismo", "FISICO", FIS),
   pericia("pe-luta", "Luta", "CORPO_A_CORPO", FIS),
@@ -19,7 +19,7 @@ const PERICIAS = [
 ];
 const pe = (id: string) => PERICIAS.find((p) => p.id === id)!;
 
-const status = (id: string, nome: string, efeito: string, tipo: string, gatilho: string | null = null) => ({ id, nome, efeito, tipo, gatilho, ordem: 0, automatico: !!gatilho, kitIds: [], editavel: !gatilho, categoriaId: null, categoria: null });
+const status = (id: string, nome: string, efeito: string, tipo: string, gatilho: string | null = null) => ({ id, nome, efeito, tipo, gatilho, ordem: 0, automatico: !!gatilho, kitIds: [], categoriaId: null, categoria: null });
 const STATUS = [
   status("st-env", "Envenenado", "Perde vida no início de cada turno.", "DEBUFF"),
   status("st-ass", "Assustado", "Desvantagem nos testes contra quem causou o medo.", "DEBUFF"),
@@ -45,7 +45,7 @@ const CONCEITO_BRUXA = { id: "co-bruxa", titulo: "Bruxa", descricao: "Conjurador
 const CONCEITO_GUERREIRO = { id: "co-guerreiro", titulo: "Guerreiro", descricao: "Mestres das armas, treinados para segurar a linha de frente." };
 
 const classe = (id: string, titulo: string, grupo: string, descricao: string, v: number, m: number, e: number, conceito: { id: string; titulo: string; descricao: string } | null, cartas: (d: string) => ReturnType<typeof carta>[], pericias: [string, number][], extra: object = {}) => ({
-  id, titulo, grupo, descricao, imagemUrl: null, pontosVida: v, pontosMana: m, pontosEsforco: e, donoId: "me-mock", origemId: null, kitIds: ["kit-vorgrath"], conceitoId: conceito?.id ?? null, conceito, editavel: true,
+  id, titulo, grupo, descricao, imagemUrl: null, pontosVida: v, pontosMana: m, pontosEsforco: e, donoId: "me-mock", origemId: null, kitIds: ["kit-vorgrath"], conceitoId: conceito?.id ?? null, conceito,
   habilidades: cartas(id), pericias: pericias.map(([p, modificador]) => ({ ...pe(p), modificador })), ...extra,
 });
 
@@ -77,15 +77,15 @@ const CLASSES = [
     carta(d, "Nota dissonante", "DANO", 1, 5, "Causa **1d8** a um alvo a até 6 quadrados.", "pe-pers"),
     carta(d, "Refrão restaurador", "CURA", 2, 20, "Devolve **1d8** de vida a todos os aliados a até 3 quadrados.", null),
   ], [["pe-pers", 5], ["pe-perc", 2]]),
-  classe("cl-arqueiro", "Arqueiro das sombras", "COMBATENTE", "Verificada: exemplo de conteúdo de outra pessoa, só para leitura.", 55, 40, 14, null, (d) => [
+  classe("cl-arqueiro", "Arqueiro das sombras", "COMBATENTE", "Atirador que some nas sombras entre um disparo e outro.", 55, 40, 14, null, (d) => [
     carta(d, "Tiro certeiro", "DANO", 1, 0, "Causa **2d8** a um alvo a até 10 quadrados.", "pe-pont"),
     carta(d, "Passo nas sombras", "MOBILIDADE", 2, 10, "Move 4 quadrados sem provocar ataque de oportunidade.", null),
-  ], [["pe-pont", 5]], { editavel: false, deOutro: true, verificado: true, seloProprio: true, kitIds: [] }),
+  ], [["pe-pont", 5]], { kitIds: [] }),
 ];
 const semCartas = ({ habilidades: _h, pericias: _p, ...c }: (typeof CLASSES)[number]) => c;
 
 const raca = (id: string, titulo: string, descricao: string, deslocamento: number, pericias: [string, number][], conceito: { id: string; titulo: string } | null = null) => ({
-  id, titulo, descricao, imagemUrl: null, deslocamento, kitIds: [], editavel: true, conceitoId: conceito?.id ?? null, conceito, pericias: pericias.map(([p, pontos]) => ({ ...pe(p), pontos })),
+  id, titulo, descricao, imagemUrl: null, deslocamento, kitIds: [], conceitoId: conceito?.id ?? null, conceito, pericias: pericias.map(([p, pontos]) => ({ ...pe(p), pontos })),
 });
 const CONCEITO_ELFO = { id: "cr-elfo", titulo: "Elfo", descricao: "Povos antigos ligados às florestas e às sombras." };
 const RACAS = [
@@ -97,7 +97,7 @@ const RACAS = [
 
 const CONCEITO_LOBO = { id: "cb-lobo", titulo: "Lobo", descricao: "Caçadores em matilha que cercam as presas." };
 const besta = (id: string, titulo: string, descricao: string, v: number, m: number, e: number, desl: number, conceito: { id: string; titulo: string } | null, cartas: number) => ({
-  id, titulo, descricao, imagemUrl: null, pontosVida: v, pontosMana: m, pontosEsforco: e, deslocamento: desl, conceitoId: conceito?.id ?? null, conceito, kitIds: ["kit-vorgrath"], editavel: true, cartas,
+  id, titulo, descricao, imagemUrl: null, pontosVida: v, pontosMana: m, pontosEsforco: e, deslocamento: desl, conceitoId: conceito?.id ?? null, conceito, kitIds: ["kit-vorgrath"], cartas,
 });
 const BESTAS = [
   besta("be-neves", "Lobo das neves", "Ataca em silêncio e some na nevasca.", 30, 10, 6, 8, CONCEITO_LOBO, 2),
@@ -124,7 +124,7 @@ const ALABARDA = item("it-alabarda", "Alabarda de ferro negro", "Pesada e cheia 
 const CHAVE = item("it-chave", "Chave da cripta", "Fria ao toque, com runas gastas.", null, 1, null, null);
 const MAPA = item("it-mapa", "Mapa dos túneis", "Mostra uma passagem que não existe mais.", null, 1, null, null);
 const noInventario = <T extends object>(i: T, podeUsar = true) => ({ ...i, podeUsar, motivoNaoPodeUsar: podeUsar ? null : "Exige outra classe." });
-const noCatalogo = <T extends object>(i: T) => ({ ...i, kitIds: ["kit-vorgrath"], editavel: true });
+const noCatalogo = <T extends object>(i: T) => ({ ...i, kitIds: ["kit-vorgrath"] });
 
 const REGRAS_PROPRIAS = [{ id: "rm-1", titulo: "Noite sem lua", texto: "Enquanto estiverem nos túneis, testes de Percepção têm desvantagem sem uma tocha." }];
 export const REGRAS_PADRAO = [
@@ -220,7 +220,7 @@ const npc = (id: string, nome: string, descricao: string, racaId: string, classe
   const cl = CLASSES.find((x) => x.id === classeId);
   const m = cl ? maximos(cl, nivel) : { vida: 30, mana: 20, esforco: 6 };
   return {
-    id, nome, descricao, imagemUrl: null, nivel, racaId, classeId, vidaBase: null, manaBase: null, esforcoBase: null, kitIds: ["kit-vorgrath"], editavel: true, raca: { id: r.id, titulo: r.titulo, deslocamento: r.deslocamento },
+    id, nome, descricao, imagemUrl: null, nivel, racaId, classeId, vidaBase: null, manaBase: null, esforcoBase: null, kitIds: ["kit-vorgrath"], raca: { id: r.id, titulo: r.titulo, deslocamento: r.deslocamento },
     classe: cl ? { id: cl.id, titulo: cl.titulo, grupo: cl.grupo } : null, vida: { atual: m.vida, max: m.vida }, mana: { atual: m.mana, max: m.mana }, esforco: { atual: m.esforco, max: m.esforco }, morto: false,
     status: [], statusAplicaveis: STATUS, atributos: ATRIBUTOS.map((a, i) => ({ ...a, dados: i === 1 ? 2 : 1, teste: i === 1 ? "2d20" : "1d20" })),
     pericias: [{ id: "pe-pers", nome: "Persuasão", descricao: "Exemplo.", categoria: "SOCIAL", atributo: CAR, raca: 2, classe: 0, extra: 1, total: 3, teste: "2d20 + 3" }],
@@ -235,7 +235,7 @@ const KIT_DENTRO = {
   classes: CLASSES.filter((c) => c.id !== "cl-arqueiro").map((c) => ({ id: c.id, nome: c.titulo })), racas: [], atributos: [], pericias: [{ id: "pe-arc", nome: "Arcanismo", atributo: "Conhecimento" }], status: [{ id: "st-env", nome: "Envenenado", tipo: "DEBUFF" }],
   itens: [{ id: "it-pocao", nome: "Poção de cura" }], bestas: BESTAS.map((b) => ({ id: b.id, nome: b.titulo })), npcs: NPCS.map((n) => ({ id: n.id, nome: n.nome })), grupos: [{ id: GRUPO_VORGRATH.id, nome: GRUPO_VORGRATH.titulo }],
 };
-const KIT = { id: "kit-vorgrath", nome: "Vorgrath", descricao: "Tudo o que a noite em Vorgrath precisa.", editavel: true, conteudo: { classes: 5, racas: 0, atributos: 0, pericias: 1, status: 1, itens: 1, bestas: 3, npcs: 2, grupos: 1 } };
+const KIT = { id: "kit-vorgrath", nome: "Vorgrath", descricao: "Tudo o que a noite em Vorgrath precisa.", conteudo: { classes: 5, racas: 0, atributos: 0, pericias: 1, status: 1, itens: 1, bestas: 3, npcs: 2, grupos: 1 } };
 
 // Mesmas contas de api/src/regras/teste.ts, só para o mock responder sem a API.
 export function chance(pontos: number, bonus: number, dt: number, esforco: number) {
@@ -266,7 +266,7 @@ function progressao(habilidades: { id: string; nivelNecessario: number }[], base
   return { ganhoPorNivel: ganho, niveis };
 }
 
-export const ME = { id: "me-mock", nickname: "paulo", papel: "MESTRE", nome: "Paulo", fotoUrl: null, codigoRecuperacaoEm: "2026-10-20T12:00:00Z", dataNascimento: "1995-05-10", cargo: "USUARIO", ocultarVerificados: false };
+export const ME = { id: "me-mock", nickname: "paulo", papel: "MESTRE", nome: "Paulo", fotoUrl: null, codigoRecuperacaoEm: "2026-10-20T12:00:00Z", dataNascimento: "1995-05-10" };
 
 /** Respostas de leitura. Devolve undefined para o que o mock não conhece. */
 export function responder(caminho: string, q: URLSearchParams): unknown {
@@ -287,16 +287,16 @@ export function responder(caminho: string, q: URLSearchParams): unknown {
   if (caminho === "/api/classes") return CLASSES.filter((c) => !q.get("grupo") || c.grupo === q.get("grupo")).map(semCartas);
   if ((m = r(/^\/api\/classes\/([^/]+)\/progressao$/))) { const c = CLASSES.find((x) => x.id === m![1]); return c && progressao(c.habilidades, c); }
   if ((m = r(/^\/api\/classes\/([^/]+)$/))) return CLASSES.find((c) => c.id === m![1]);
-  if (caminho === "/api/conceitos") return [CONCEITO_BRUXA, CONCEITO_GUERREIRO, { id: "co-vazio", titulo: "Necromante", descricao: "Arquétipo ainda sem subclasse, para ver o estado vazio." }].map((c) => ({ ...c, editavel: true, subclasses: CLASSES.filter((x) => x.conceitoId === c.id).map(semCartas) }));
+  if (caminho === "/api/conceitos") return [CONCEITO_BRUXA, CONCEITO_GUERREIRO, { id: "co-vazio", titulo: "Necromante", descricao: "Arquétipo ainda sem subclasse, para ver o estado vazio." }].map((c) => ({ ...c, subclasses: CLASSES.filter((x) => x.conceitoId === c.id).map(semCartas) }));
 
   if (caminho === "/api/racas") return RACAS;
   if ((m = r(/^\/api\/racas\/([^/]+)$/))) return RACAS.find((x) => x.id === m![1]);
-  if (caminho === "/api/conceitos-raca") return [{ ...CONCEITO_ELFO, editavel: true, subracas: RACAS.filter((x) => x.conceitoId === CONCEITO_ELFO.id) }];
+  if (caminho === "/api/conceitos-raca") return [{ ...CONCEITO_ELFO, subracas: RACAS.filter((x) => x.conceitoId === CONCEITO_ELFO.id) }];
 
   if (caminho === "/api/bestas") return BESTAS;
   if ((m = r(/^\/api\/bestas\/([^/]+)\/progressao$/))) { const b = BESTAS.find((x) => x.id === m![1]); return b && progressao(cartasDaBesta(b.id), b); }
   if ((m = r(/^\/api\/bestas\/([^/]+)$/))) { const b = BESTAS.find((x) => x.id === m![1]); return b && bestaDetalhe(b); }
-  if (caminho === "/api/conceitos-besta") return [{ ...CONCEITO_LOBO, editavel: true, formas: BESTAS.filter((b) => b.conceitoId === CONCEITO_LOBO.id) }];
+  if (caminho === "/api/conceitos-besta") return [{ ...CONCEITO_LOBO, formas: BESTAS.filter((b) => b.conceitoId === CONCEITO_LOBO.id) }];
   if ((m = r(/^\/api\/criaturas\/([^/]+)$/))) {
     const c = CRIATURAS.find((x) => x.id === m![1]);
     if (!c) return undefined;
@@ -307,8 +307,16 @@ export function responder(caminho: string, q: URLSearchParams): unknown {
   if (caminho === "/api/npcs") return NPCS.map(resumoNpc);
   if ((m = r(/^\/api\/npcs\/([^/]+)$/))) return NPCS.find((n) => n.id === m![1]);
   if (caminho === "/api/catalogo-itens") return [POCAO, ALABARDA, CHAVE, MAPA].map(noCatalogo);
-  if (caminho === "/api/categorias-item") return [categoriaPocao, categoriaArma].map((c) => ({ ...c, descricao: `${c.nome} de exemplo.`, ordem: 0, usos: 1, editavel: true }));
+  if (caminho === "/api/categorias-item") return [categoriaPocao, categoriaArma].map((c) => ({ ...c, descricao: `${c.nome} de exemplo.`, ordem: 0, usos: 1 }));
   if (caminho === "/api/kits") return [KIT];
+  if (caminho === `/api/kits/${KIT.id}`) return {
+    ...KIT,
+    dentro: {
+      classes: CLASSES.filter((c) => c.kitIds.includes(KIT.id)).map((c) => ({ id: c.id, nome: c.titulo })),
+      racas: [], atributos: [], pericias: [], status: [], itens: [], bestas: [], npcs: [],
+      grupos: GRUPOS.filter((g) => g.kitId === KIT.id).map((g) => ({ id: g.id, nome: g.titulo })),
+    },
+  };
   if ((m = r(/^\/api\/kits\/([^/]+)$/))) return m[1] === KIT.id ? { ...KIT, dentro: KIT_DENTRO } : undefined;
   if (caminho === "/api/pericias") return PERICIAS;
   if (caminho === "/api/atributos") return ATRIBUTOS.map((a) => ({ ...a, pericias: PERICIAS.filter((p) => p.atributoId === a.id).length }));

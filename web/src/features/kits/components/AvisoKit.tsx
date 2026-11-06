@@ -1,6 +1,6 @@
-// Faixa no topo das listas do mestre quando há um kit ativo: lembra o filtro e deixa tirar.
+// Faixa no topo de todas as telas do mestre quando há um kit ativo: deixa claro que o que for criado entra no kit.
 import { Package, X } from "lucide-react";
-import { VerificadoBadge } from "../../verificados/components/VerificadoBadge";
+import { Link } from "react-router";
 import { Button } from "../../../components/ui/Button";
 import { useKitAtivo } from "../api";
 
@@ -9,12 +9,13 @@ export function AvisoKit() {
   if (!kit) return null;
   return (
     <div className="aviso-kit" role="status">
-      <Package size={16} aria-hidden />
+      <Package size={18} aria-hidden className="aviso-kit__icone" />
       <span>
-        Mostrando o kit <strong>{kit.nome}</strong> {kit.verificado && <VerificadoBadge />} e o conteúdo geral. {kit.deOutro ? "É um kit verificado: o que você criar fica fora dele." : "O que você criar aqui entra no kit."}
+        Kit ativo: <strong>{kit.nome}</strong>. Tudo o que você criar entra neste kit, e as listas mostram o kit e o conteúdo geral.
       </span>
+      <Link to={`/mestre/kits/${kit.id}`} className="btn btn--pequeno">Abrir kit</Link>
       <Button pequeno variante="fantasma" onClick={() => definir(null)}>
-        <X size={14} aria-hidden /> Mostrar tudo
+        <X size={14} aria-hidden /> Sair do kit
       </Button>
     </div>
   );

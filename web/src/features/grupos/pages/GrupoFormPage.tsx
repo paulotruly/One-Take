@@ -1,22 +1,18 @@
-// Criar e editar grupo: informações + o que vale no grupo, numa tela só.
-import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router";
+// Criar e editar mesa: informações, o kit (o que vale na mesa vem dele) e as regras de combate, numa tela só.
+import { Package } from "lucide-react";
+import { useState } from "react";
+import { Link, useNavigate, useParams } from "react-router";
 import { Button } from "../../../components/ui/Button";
 import { Field } from "../../../components/ui/Field";
 import { LinkVoltar } from "../../../components/ui/LinkVoltar";
 import { ErrorState, Loading } from "../../../components/ui/States";
 import { erroDeFormulario, errosDeCampo, mensagemDeErro } from "../../../lib/api";
-import { useClasses } from "../../classes/api";
-import { useAtributos, useCatalogo } from "../../pericias/api";
-import { useRacas } from "../../racas/api";
-import { useStatus } from "../../status/api";
 import { useRegras } from "../../docs/regras";
 import { useKitAtivo, useKits } from "../../kits/api";
-import { visivelNoKit } from "../../kits/types";
-import { useCriarGrupo, useDefinirDisponiveis, useEditarGrupo, useGrupo } from "../api";
-import { DisponiveisSelector } from "../components/DisponiveisSelector";
-import { GrupoInfoForm, type GrupoInfo } from "../components/GrupoInfoForm";
-import type { Disponiveis, GrupoDetalhe } from "../types";
+import type { Kit } from "../../kits/types";
+import { useCriarGrupo, useEditarGrupo, useGrupo } from "../api";
+import { GrupoInfoForm, GrupoJogadoresForm, type GrupoInfo } from "../components/GrupoInfoForm";
+import type { GrupoDetalhe } from "../types";
 
 /** Limite por função no formulário: vazio = sem limite. */
 const limiteParaCampo = (n: number | null | undefined) => (n == null ? "" : String(n));
@@ -36,16 +32,10 @@ export function EditarGrupoPage() {
 
 function Formulario({ grupo }: { grupo?: GrupoDetalhe }) {
   const navigate = useNavigate();
-  const classes = useClasses();
-  const racas = useRacas();
-  const atributos = useAtributos();
-  const catalogo = useCatalogo();
-  const status = useStatus();
   const kits = useKits();
   const { kitId: kitAtivo } = useKitAtivo();
   const criar = useCriarGrupo();
   const editar = useEditarGrupo(grupo?.id ?? "");
-  const definir = useDefinirDisponiveis(grupo?.id ?? "");
   const { regrasPadrao } = useRegras();
   // Regras padrão de combate desligadas (slugs); as que saíram do sistema são ignoradas ao salvar.
   const [desativadas, setDesativadas] = useState<string[]>(grupo?.regrasPadraoDesativadas ?? []);
@@ -64,41 +54,10 @@ function Formulario({ grupo }: { grupo?: GrupoDetalhe }) {
     limiteSuportes: limiteParaCampo(grupo?.limiteSuportes),
   });
   const [kitId, setKitId] = useState<string | null>(grupo ? grupo.kitId : kitAtivo);
-  const [disponiveis, setDisponiveis] = useState<Disponiveis>(
-    grupo?.disponiveis ?? { classeIds: [], racaIds: [], atributoIds: [], periciaIds: [], statusIds: [] },
-  );
+  const kit = kits.data?.find((k) => k.id === kitId) ?? null;
 
-  const carregando = classes.isPending || racas.isPending || atributos.isPending || catalogo.isPending || status.isPending;
-
-  /** Marca tudo o que o kit traz (do kit + gerais); os status automáticos vêm sempre. Sem kit, só os automáticos. */
-  function marcarDoKit(k: string | null) {
-    const no = (x: { kitIds?: string[] }) => visivelNoKit(x.kitIds, k);
-    const atrs = (atributos.data ?? []).filter(no).map((a) => a.id);
-    setDisponiveis({
-      classeIds: k ? (classes.data ?? []).filter(no).map((c) => c.id) : [],
-      racaIds: k ? (racas.data ?? []).filter(no).map((r) => r.id) : [],
-      atributoIds: k ? atrs : [],
-      periciaIds: k ? (catalogo.data ?? []).filter((p) => no(p) && atrs.includes(p.atributoId)).map((p) => p.id) : [],
-      statusIds: (status.data ?? []).filter((s) => s.automatico || (k && no(s))).map((s) => s.id),
-    });
-  }
-
-  // Grupo novo: já começa marcado pelo kit ativo (ou só com os status automáticos), quando os dados chegam.
-  const [iniciado, setIniciado] = useState(!!grupo);
-  useEffect(() => {
-    if (iniciado || carregando) return;
-    marcarDoKit(kitId);
-    setIniciado(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [carregando, iniciado]);
-
-  function trocarKit(k: string | null) {
-    setKitId(k);
-    marcarDoKit(k);
-  }
-  const erroCarga = classes.error ?? racas.error ?? atributos.error ?? catalogo.error ?? status.error;
-  const erro = criar.error ?? editar.error ?? definir.error;
-  const enviando = criar.isPending || editar.isPending || definir.isPending;
+  const erro = criar.error ?? editar.error;
+  const enviando = criar.isPending || editar.isPending;
 
   function dadosInfo() {
     return {
@@ -119,10 +78,9 @@ function Formulario({ grupo }: { grupo?: GrupoDetalhe }) {
   async function salvar() {
     if (grupo) {
       await editar.mutateAsync(dadosInfo());
-      await definir.mutateAsync(disponiveis);
       navigate(`/mestre/grupos/${grupo.id}`);
     } else {
-      const novo = await criar.mutateAsync({ ...dadosInfo(), disponiveis });
+      const novo = await criar.mutateAsync(dadosInfo());
       navigate(`/mestre/grupos/${novo.id}`);
     }
   }
@@ -132,55 +90,59 @@ function Formulario({ grupo }: { grupo?: GrupoDetalhe }) {
       <LinkVoltar to={grupo ? `/mestre/grupos/${grupo.id}` : "/mestre/grupos"}>{grupo ? grupo.titulo : "Mesas"}</LinkVoltar>
       <div>
         <h1>{grupo ? "Editar mesa" : "Nova mesa"}</h1>
-        <p className="pagina__subtitulo">A mesa é o seu RPG: os jogadores entram com o código e criam a ficha com o que você liberar aqui.</p>
+        <p className="pagina__subtitulo">A mesa é o seu RPG: os jogadores entram com o código e criam a ficha com o que está no kit da mesa.</p>
       </div>
 
       <div className="grupo-form">
-        <section className="secao">
-          <h2>Informações</h2>
-          <GrupoInfoForm valor={info} onChange={setInfo} erros={errosDeCampo(erro)} />
-        </section>
-        <section className="secao">
-          <h2>O que vale nesta mesa</h2>
-          <Field
-            rotulo="Kit de RPG"
-            dica={kitId ? "Trocar o kit marca de novo o que vale (do kit + gerais). Itens, criaturas e NPCs da mesa seguem o kit." : "Sem kit: você marca tudo à mão e a mesa vê todos os itens, criaturas e NPCs."}
-          >
-            <select value={kitId ?? ""} onChange={(e) => trocarKit(e.target.value || null)} disabled={carregando}>
-              <option value="">Sem kit</option>
-              {(kits.data ?? []).map((k) => <option key={k.id} value={k.id}>{k.nome}</option>)}
-            </select>
-          </Field>
-          {carregando ? (
-            <Loading compacto texto="Carregando classes, raças e perícias…" />
-          ) : erroCarga ? (
-            <ErrorState mensagem={mensagemDeErro(erroCarga)} />
-          ) : (
-            <DisponiveisSelector
-              classes={classes.data ?? []}
-              racas={racas.data ?? []}
-              atributos={atributos.data ?? []}
-              pericias={catalogo.data ?? []}
-              status={status.data ?? []}
-              valor={disponiveis}
-              onChange={setDisponiveis}
-            />
-          )}
-        </section>
-        <section className="secao">
-          <h2>Regras de combate</h2>
-          <p className="pagina__subtitulo">
-            As regras padrão valem em toda mesa. Desmarque as que não quiser nesta mesa; regras próprias você cria na página da mesa.
-          </p>
-          <div className="regras-padrao__lista">
-            {regrasPadrao.map((r) => (
-              <label key={r.slug} className="checklist__item">
-                <input type="checkbox" checked={!desativadas.includes(r.slug)} onChange={(e) => alternarRegra(r.slug, e.target.checked)} />
-                <span><strong>{r.titulo}</strong>: {r.resumo}</span>
-              </label>
-            ))}
-          </div>
-        </section>
+        <div className="grupo-form__coluna">
+          <section className="secao">
+            <h2>Informações</h2>
+            <GrupoInfoForm valor={info} onChange={setInfo} erros={errosDeCampo(erro)} />
+          </section>
+          <section className="secao">
+            <h2>Regras de combate</h2>
+            <p className="pagina__subtitulo">
+              As regras padrão valem em toda mesa. Desmarque as que não quiser nesta mesa; regras próprias você cria na página da mesa.
+            </p>
+            <div className="regras-padrao__lista">
+              {regrasPadrao.map((r) => (
+                <label key={r.slug} className="checklist__item">
+                  <input type="checkbox" checked={!desativadas.includes(r.slug)} onChange={(e) => alternarRegra(r.slug, e.target.checked)} />
+                  <span><strong>{r.titulo}</strong>: {r.resumo}</span>
+                </label>
+              ))}
+            </div>
+          </section>
+        </div>
+        <div className="grupo-form__coluna">
+          <section className="secao">
+            <h2>O que vale nesta mesa</h2>
+            <p className="pagina__subtitulo">
+              O que vale na mesa vem do kit: as classes, raças, atributos, perícias e status dele (os status automáticos valem sempre). Monte o kit
+              antes, em <Link to="/mestre/kits">Kits de RPG</Link>. Mudou o kit depois? A mesa acompanha.
+            </p>
+            <Field rotulo="Kit de RPG">
+              <select value={kitId ?? ""} onChange={(e) => setKitId(e.target.value || null)} disabled={kits.isPending}>
+                <option value="">{grupo && !grupo.kitId ? "Sem kit (mantém o que já estava marcado)" : "Escolha um kit"}</option>
+                {(kits.data ?? []).map((k) => <option key={k.id} value={k.id}>{k.nome}</option>)}
+              </select>
+            </Field>
+            {kits.isError && <ErrorState mensagem={mensagemDeErro(kits.error)} onTentarNovamente={() => kits.refetch()} />}
+            {kit ? (
+              <ResumoDoKit kit={kit} />
+            ) : (
+              !kits.isPending && (
+                <div className="aviso">
+                  {(kits.data ?? []).length === 0 ? <>Você ainda não tem kits. <Link to="/mestre/kits">Crie um kit</Link> com as classes e raças da aventura.</> : "Sem kit, os jogadores não têm classes nem raças novas para escolher."}
+                </div>
+              )
+            )}
+          </section>
+          <section className="secao">
+            <h2>Jogadores</h2>
+            <GrupoJogadoresForm valor={info} onChange={setInfo} erros={errosDeCampo(erro)} />
+          </section>
+        </div>
       </div>
 
       {erro && <div className="aviso">{erroDeFormulario(erro)}</div>}
@@ -188,10 +150,30 @@ function Formulario({ grupo }: { grupo?: GrupoDetalhe }) {
         <Button onClick={() => navigate(grupo ? `/mestre/grupos/${grupo.id}` : "/mestre/grupos")} disabled={enviando}>
           Cancelar
         </Button>
-        <Button variante="primario" onClick={() => salvar().catch(() => undefined)} disabled={enviando || carregando}>
+        <Button variante="primario" onClick={() => salvar().catch(() => undefined)} disabled={enviando}>
           {enviando ? "Salvando…" : grupo ? "Salvar mesa" : "Criar mesa"}
         </Button>
       </div>
+    </div>
+  );
+}
+
+const ROTULOS_RESUMO: [keyof Kit["conteudo"], string, string][] = [
+  ["classes", "classe", "classes"], ["racas", "raça", "raças"], ["atributos", "atributo", "atributos"], ["pericias", "perícia", "perícias"],
+  ["status", "status", "status"], ["itens", "item", "itens"], ["bestas", "criatura", "criaturas"], ["npcs", "NPC", "NPCs"],
+];
+
+/** O que o kit leva para a mesa, em números, com link para editar o kit. */
+function ResumoDoKit({ kit }: { kit: Kit }) {
+  const partes = ROTULOS_RESUMO.filter(([c]) => kit.conteudo[c] > 0).map(([c, um, varios]) => `${kit.conteudo[c]} ${kit.conteudo[c] === 1 ? um : varios}`);
+  return (
+    <div className="aviso-kit">
+      <Package size={18} aria-hidden className="aviso-kit__icone" />
+      <span>
+        <strong>{kit.nome}</strong>: {partes.join(" · ") || "vazio por enquanto"}.
+        {kit.conteudo.classes === 0 || kit.conteudo.racas === 0 ? " Sem classe ou raça no kit, os jogadores não conseguem criar a ficha." : ""}
+      </span>
+      <Link to={`/mestre/kits/${kit.id}`} className="btn btn--pequeno">Editar o kit</Link>
     </div>
   );
 }

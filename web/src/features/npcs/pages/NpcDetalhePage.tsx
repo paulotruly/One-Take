@@ -1,6 +1,4 @@
 // Ficha do NPC (mestre): recursos, dados por atributo, perícias com teste, cartas da classe no nível e inventário.
-import { SeloVerificado } from "../../verificados/pages/SeloVerificado";
-import { AcessoBadge } from "../../verificados/components/VerificadoBadge";
 import { Dices, Droplet, Footprints, Heart, Minus, Plus, Skull, Trash2, Zap, Copy } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
@@ -55,7 +53,6 @@ function FichaNpc({ n }: { n: NpcDetalhe }) {
   const removerStatus = useRemoverStatusNpc(n.id);
   const turnosStatus = useTurnosStatusNpc(n.id);
   const duplicar = useDuplicarNpc();
-  const editavel = n.editavel ?? true;
 
   const [confirmarExclusao, setConfirmarExclusao] = useState(false);
   const [periciaEmEdicao, setPericiaEmEdicao] = useState<PericiaDoNpc | null | undefined>(undefined);
@@ -80,24 +77,18 @@ function FichaNpc({ n }: { n: NpcDetalhe }) {
           <div className="classe-cabecalho__selos">
             <span className="selo selo--nivel">Nível {n.nivel}</span>
             <span className="selo">NPC</span>
-            {n.kitIds.length === 0 && !n.deOutro && <span className="selo">Geral</span>}
-            <AcessoBadge item={n} />
+            {n.kitIds.length === 0 && <span className="selo">Geral</span>}
           </div>
-          <h1>{n.nome} <SeloVerificado tipo="npc" item={n} /></h1>
+          <h1>{n.nome}</h1>
           <p className="pericia__nome">{n.raca.titulo}{n.classe ? ` · ${n.classe.titulo}` : " · sem classe"}</p>
           <span className="stat"><Footprints size={14} aria-hidden /> Deslocamento: {n.raca.deslocamento} quadrados</span>
           {n.descricao && <p className="classe-cabecalho__descricao">{n.descricao}</p>}
           <div className="classe-cabecalho__acoes">
-            {editavel ? (
-              <>
-                <Link to={`/mestre/npcs/${n.id}/editar`} className="btn">Editar NPC</Link>
-                <Button variante="perigo" onClick={() => { excluir.reset(); setConfirmarExclusao(true); }}>Excluir NPC</Button>
-              </>
-            ) : (
-              <Button variante="primario" disabled={duplicar.isPending} onClick={() => duplicar.mutate(n.id, { onSuccess: (c) => navigate(`/mestre/npcs/${c.id}`) })}>
-                <Copy size={16} aria-hidden /> {duplicar.isPending ? "Duplicando…" : "Duplicar"}
-              </Button>
-            )}
+            <Link to={`/mestre/npcs/${n.id}/editar`} className="btn">Editar NPC</Link>
+            <Button disabled={duplicar.isPending} onClick={() => duplicar.mutate(n.id, { onSuccess: (c) => navigate(`/mestre/npcs/${c.id}`) })}>
+              <Copy size={16} aria-hidden /> {duplicar.isPending ? "Duplicando…" : "Duplicar"}
+            </Button>
+            <Button variante="perigo" onClick={() => { excluir.reset(); setConfirmarExclusao(true); }}>Excluir NPC</Button>
           </div>
           {duplicar.isError && <div className="aviso">{mensagemDeErro(duplicar.error)}</div>}
         </div>
@@ -115,11 +106,11 @@ function FichaNpc({ n }: { n: NpcDetalhe }) {
 
       <PainelStatus
         status={n.status}
-        aplicaveis={editavel ? n.statusAplicaveis : []}
+        aplicaveis={n.statusAplicaveis}
         onAplicar={(statusId, turnos) => aplicarStatus.mutate({ statusId, turnos })}
         onRemover={(id) => removerStatus.mutate(id)}
-        onMudarTurnos={editavel ? (statusId, turnos) => turnosStatus.mutate({ statusId, turnos }) : undefined}
-        ocupado={!editavel || aplicarStatus.isPending || removerStatus.isPending || turnosStatus.isPending}
+        onMudarTurnos={(statusId, turnos) => turnosStatus.mutate({ statusId, turnos })}
+        ocupado={aplicarStatus.isPending || removerStatus.isPending || turnosStatus.isPending}
         semAplicaveis="Nenhum status para aplicar."
       />
       {(aplicarStatus.isError || removerStatus.isError || turnosStatus.isError) && <div className="aviso">{mensagemDeErro(aplicarStatus.error ?? removerStatus.error ?? turnosStatus.error)}</div>}
@@ -127,9 +118,9 @@ function FichaNpc({ n }: { n: NpcDetalhe }) {
       <section className="secao">
         <h2>Recursos</h2>
         <div className="recursos">
-          <BarraRecurso rotulo="Vida" Icone={Heart} tipo="vida" atual={n.vida.atual} max={n.vida.max} editavel={editavel} ocupado={editar.isPending} onMudar={(v) => editar.mutate({ vidaAtual: v })} />
-          <BarraRecurso rotulo="Mana" Icone={Droplet} tipo="mana" atual={n.mana.atual} max={n.mana.max} editavel={editavel} ocupado={editar.isPending} onMudar={(v) => editar.mutate({ manaAtual: v })} />
-          <BarraRecurso rotulo="Esforço" Icone={Zap} tipo="esforco" atual={n.esforco.atual} max={n.esforco.max} editavel={editavel} ocupado={editar.isPending} onMudar={(v) => editar.mutate({ esforcoAtual: v })} />
+          <BarraRecurso rotulo="Vida" Icone={Heart} tipo="vida" atual={n.vida.atual} max={n.vida.max} editavel ocupado={editar.isPending} onMudar={(v) => editar.mutate({ vidaAtual: v })} />
+          <BarraRecurso rotulo="Mana" Icone={Droplet} tipo="mana" atual={n.mana.atual} max={n.mana.max} editavel ocupado={editar.isPending} onMudar={(v) => editar.mutate({ manaAtual: v })} />
+          <BarraRecurso rotulo="Esforço" Icone={Zap} tipo="esforco" atual={n.esforco.atual} max={n.esforco.max} editavel ocupado={editar.isPending} onMudar={(v) => editar.mutate({ esforcoAtual: v })} />
         </div>
       </section>
 
@@ -149,12 +140,12 @@ function FichaNpc({ n }: { n: NpcDetalhe }) {
                     <p className="pericia__descricao">Teste: {n.atributos.find((x) => x.id === a.id)?.teste ?? "1d20 ÷ 2"}</p>
                   </div>
                   <div className="contador">
-                    <Button pequeno aria-label={`Menos um dado em ${a.nome}`} disabled={!editavel || qtd === 0 || definirAtributo.isPending}
+                    <Button pequeno aria-label={`Menos um dado em ${a.nome}`} disabled={qtd === 0 || definirAtributo.isPending}
                       onClick={() => definirAtributo.mutate({ atributoId: a.id, dados: qtd - 1 })}>
                       <Minus size={14} aria-hidden />
                     </Button>
                     <span className="contador__valor"><Dices size={16} aria-hidden /> {qtd}d20</span>
-                    <Button pequeno aria-label={`Mais um dado em ${a.nome}`} disabled={!editavel || qtd >= 20 || definirAtributo.isPending}
+                    <Button pequeno aria-label={`Mais um dado em ${a.nome}`} disabled={qtd >= 20 || definirAtributo.isPending}
                       onClick={() => definirAtributo.mutate({ atributoId: a.id, dados: qtd + 1 })}>
                       <Plus size={14} aria-hidden />
                     </Button>
@@ -169,7 +160,7 @@ function FichaNpc({ n }: { n: NpcDetalhe }) {
       <section className="secao">
         <div className="secao__cabecalho">
           <h2>Perícias</h2>
-          <Button onClick={() => { definirPericia.reset(); setPericiaEmEdicao(null); }} disabled={catalogo.isPending} hidden={!editavel}>
+          <Button onClick={() => { definirPericia.reset(); setPericiaEmEdicao(null); }} disabled={catalogo.isPending}>
             <Plus size={16} aria-hidden /> Pontos extras
           </Button>
         </div>
@@ -192,7 +183,7 @@ function FichaNpc({ n }: { n: NpcDetalhe }) {
                     {[p.raca && `raça +${p.raca}`, p.classe && `classe ${p.classe >= 0 ? "+" : ""}${p.classe}`, p.extra && `extra ${p.extra >= 0 ? "+" : ""}${p.extra}`].filter(Boolean).join(" · ")}
                   </span>
                 }
-                acoes={editavel ? <Button pequeno variante="fantasma" onClick={() => { definirPericia.reset(); setPericiaEmEdicao(p); }}>Extra</Button> : undefined}
+                acoes={<Button pequeno variante="fantasma" onClick={() => { definirPericia.reset(); setPericiaEmEdicao(p); }}>Extra</Button>}
               />
             )}
           />
@@ -217,7 +208,7 @@ function FichaNpc({ n }: { n: NpcDetalhe }) {
           <span className="selo">{n.inventario.usados} / {n.inventario.capacidade} espaços</span>
         </div>
         {aviso && <p className="sucesso">{aviso}</p>}
-        <div hidden={!editavel}>
+        <div>
           <Button onClick={() => setLancando(true)} disabled={cheio}>
             <Plus size={16} aria-hidden /> Dar item do catálogo
           </Button>
@@ -238,7 +229,7 @@ function FichaNpc({ n }: { n: NpcDetalhe }) {
           <div className="form">
             <ItemDetalhe item={itemAberto} />
             {(mover.isError || usar.isError || excluirItem.isError) && <div className="aviso">{mensagemDeErro(mover.error ?? usar.error ?? excluirItem.error)}</div>}
-            <div className="acoes-item" hidden={!editavel}>
+            <div className="acoes-item">
               <Button variante="primario" disabled={usar.isPending}
                 onClick={() => usar.mutate(itemAberto.id, { onSuccess: (r) => { setAviso(`${itemAberto.nome} usado${r.consumido ? " e acabou" : ""}.`); fecharItem(); } })}>
                 Usar

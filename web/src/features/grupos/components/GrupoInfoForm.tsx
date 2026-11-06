@@ -1,4 +1,4 @@
-// Campos de informação do grupo (apresentação). O container junta com os disponíveis e envia.
+// Campos do formulário da mesa (apresentação): informações e jogadores (vagas e limites). O container junta e envia.
 import { Field } from "../../../components/ui/Field";
 import { ClasseImagem } from "../../classes/components/ClasseImagem";
 
@@ -21,21 +21,19 @@ const LIMITES_POR_FUNCAO = [
   ["limiteSuportes", "Suportes"],
 ] as const;
 
-export function GrupoInfoForm({ valor, onChange, erros = {} }: { valor: GrupoInfo; onChange: (v: GrupoInfo) => void; erros?: Record<string, string> }) {
+type Props = { valor: GrupoInfo; onChange: (v: GrupoInfo) => void; erros?: Record<string, string> };
+
+/** Título, gênero, sinopse e imagem. */
+export function GrupoInfoForm({ valor, onChange, erros = {} }: Props) {
   const set = (campo: keyof GrupoInfo) => (e: { target: { value: string } }) => onChange({ ...valor, [campo]: e.target.value });
   return (
     <div className="form">
       <Field rotulo="Título" erro={erros.titulo}>
         <input value={valor.titulo} onChange={set("titulo")} maxLength={80} autoFocus />
       </Field>
-      <div className="form__linha">
-        <Field rotulo="Gênero" erro={erros.genero} dica="Ex.: fantasia, terror, ficção científica.">
-          <input value={valor.genero} onChange={set("genero")} maxLength={60} />
-        </Field>
-        <Field rotulo="Limite de membros" erro={erros.limiteMembros} dica="Quantos jogadores podem entrar.">
-          <input type="number" min={1} max={50} step={1} inputMode="numeric" value={valor.limiteMembros} onChange={set("limiteMembros")} />
-        </Field>
-      </div>
+      <Field rotulo="Gênero" erro={erros.genero} dica="Ex.: fantasia, terror, ficção científica.">
+        <input value={valor.genero} onChange={set("genero")} maxLength={60} />
+      </Field>
       <Field rotulo="Sinopse" erro={erros.sinopse}>
         <textarea value={valor.sinopse} onChange={set("sinopse")} maxLength={4000} rows={5} />
       </Field>
@@ -47,6 +45,18 @@ export function GrupoInfoForm({ valor, onChange, erros = {} }: { valor: GrupoInf
           <ClasseImagem url={valor.imagemUrl.trim()} titulo={valor.titulo} />
         </div>
       )}
+    </div>
+  );
+}
+
+/** Vagas, classes repetidas e limite por função. */
+export function GrupoJogadoresForm({ valor, onChange, erros = {} }: Props) {
+  const set = (campo: keyof GrupoInfo) => (e: { target: { value: string } }) => onChange({ ...valor, [campo]: e.target.value });
+  return (
+    <div className="form">
+      <Field rotulo="Limite de membros" erro={erros.limiteMembros} dica="Quantos jogadores podem entrar.">
+        <input type="number" min={1} max={50} step={1} inputMode="numeric" value={valor.limiteMembros} onChange={set("limiteMembros")} />
+      </Field>
       <label className="checklist__item">
         <input
           type="checkbox"

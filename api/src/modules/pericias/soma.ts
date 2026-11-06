@@ -7,7 +7,7 @@ import { notacaoDoTeste } from "../../regras/teste.js";
 import { apresentarAtributo, porAtributoENome } from "../atributos/atributos.service.js";
 
 /**
- * Chave de soma: perícia base -> cópia do mestre; cópia de outro mestre (ex.: classe verificado) com a mesma origem -> cópia do
+ * Chave de soma: perícia base -> cópia do mestre; cópia de outro mestre com a mesma origem -> cópia do
  * mestre; o resto conta como ela mesma.
  */
 export function chaveDaPericia(p: { id: string; donoId: string | null; origemId?: string | null }, copiaDe: Map<string, string>) {

@@ -1,4 +1,4 @@
-// Itens: catálogo do mestre (moldes), itens lançados nos grupos e categorias (as do mestre + as verificadas).
+// Itens: catálogo do mestre (moldes), itens lançados nos grupos e categorias do mestre.
 import {
   Apple, Axe, Beer, Bomb, BookOpen, BowArrow, CircleDot, Coins, Crown, FlaskConical, Gem, Hammer, Key, Map, Package,
   ScrollText, Shield, Shirt, Sword, WandSparkles, type LucideIcon,
@@ -32,8 +32,8 @@ export const LISTA_ICONES_ITEM = Object.keys(ICONES_ITEM);
 /** Ícone lucide de uma chave (desconhecida = pacote). */
 export const iconeDe = (chave: string | undefined | null) => (ICONES_ITEM[chave ?? ""] ?? ICONES_ITEM.pacote!).Icone;
 
-/** Categoria de item: criada pelo mestre ou verificada de outra pessoa (somente leitura). */
-export type CategoriaItem = { id: string; nome: string; descricao: string; icone: string; ordem: number; usos?: number; editavel?: boolean; verificado?: boolean; deOutro?: boolean; podeVerificar?: boolean; seloProprio?: boolean; verificadoPorKit?: boolean };
+/** Categoria de item criada pelo mestre. */
+export type CategoriaItem = { id: string; nome: string; descricao: string; icone: string; ordem: number; usos?: number };
 export type CategoriaItemInput = { nome: string; descricao: string; icone: string };
 
 /** Campos comuns ao molde do catálogo e ao item no grupo. */
@@ -64,7 +64,7 @@ export type Item = Omit<CamposItem, "categoriaId" | "requisitoPericiaId" | "requ
 export type ItemDaFicha = Item & { podeUsar: boolean; motivoNaoPodeUsar: string | null };
 
 /** Molde do catálogo do mestre. */
-export type ItemModelo = Item & { kitIds: string[]; editavel?: boolean; verificado?: boolean; deOutro?: boolean; podeVerificar?: boolean; seloProprio?: boolean; verificadoPorKit?: boolean };
+export type ItemModelo = Item & { kitIds: string[] };
 
 export type ItemModeloInput = CamposItem & { kitIds: string[] };
 export type ItemNoGrupoInput = CamposItem & { fichaId: string | null };

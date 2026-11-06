@@ -1,12 +1,12 @@
 import type { z } from "zod";
 import type { Atributo } from "../../generated/prisma/client.js";
-import { AppError, conflito, naoEncontrado } from "../../lib/errors.js";
+import { conflito, naoEncontrado } from "../../lib/errors.js";
 import { comKits, definirKits } from "../../lib/kits.js";
 import { getPrisma } from "../../lib/prisma.js";
-import { kitIdsPara, podeUsar, quemVe, visao, visivelPara } from "../../lib/sistema.js";
+import { doDono, ehDoDono } from "../../lib/posse.js";
 import type { criarAtributoSchema, editarAtributoSchema } from "./atributos.schemas.js";
 
-// Atributos são sempre de um mestre (não há fixos). Os outros veem os verificados (selo ou kit), só leitura.
+// Atributos são sempre de um mestre (não há fixos): só ele vê e edita.
 
 /** Formato público de um atributo (com `kitIds` quando os kits vierem junto). */
 export function apresentarAtributo({ id, nome, descricao, ordem, kits }: Atributo & { kits?: { kitId: string }[] }) {
@@ -22,21 +22,14 @@ export function porAtributoENome<T extends { nome: string; atributo: { ordem: nu
   );
 }
 
-/** Atributo que o mestre pode usar: verificado ou criado por ele. Outro = 404. */
+/** Atributo do próprio mestre. Outro = 404. */
 export async function atributoUsavel(id: string, usuarioId: string) {
   const atributo = await getPrisma().atributo.findUnique({ where: { id } });
-  if (!atributo || !(await podeUsar("atributo", atributo, usuarioId))) {
-    throw naoEncontrado("Atributo não encontrado");
-  }
+  if (!atributo || !ehDoDono(atributo, usuarioId)) throw naoEncontrado("Atributo não encontrado");
   return atributo;
 }
 
-/** Editar e excluir: só o dono. */
-async function atributoEditavel(id: string, usuarioId: string) {
-  const atributo = await atributoUsavel(id, usuarioId);
-  if (atributo.donoId === usuarioId) return atributo;
-  throw new AppError(403, "VERIFICADO", "Este atributo é verificado (de outra pessoa): só leitura.");
-}
+const atributoEditavel = atributoUsavel;
 
 async function garantirNomeLivre(usuarioId: string, nome: string, exceto?: string) {
   const meu = await getPrisma().atributo.findFirst({ where: { donoId: usuarioId, nome: { equals: nome, mode: "insensitive" } } });
@@ -46,16 +39,13 @@ async function garantirNomeLivre(usuarioId: string, nome: string, exceto?: strin
 const contarPericias = { _count: { select: { pericias: true } } } as const;
 
 export async function listar(usuarioId: string) {
-  const quem = await quemVe(usuarioId);
   const atributos = await getPrisma().atributo.findMany({
-    where: await visivelPara(usuarioId),
+    where: doDono(usuarioId),
     orderBy: [{ ordem: "asc" }, { nome: "asc" }],
     include: { _count: { select: { pericias: { where: { donoId: usuarioId } } } }, ...comKits },
   });
   return atributos.map(({ _count, ...a }) => ({
     ...apresentarAtributo(a),
-    ...visao(a, quem),
-    kitIds: kitIdsPara(a, quem),
     pericias: _count.pericias,
   }));
 }

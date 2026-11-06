@@ -5,8 +5,8 @@ import { prismaFalso } from "./prisma-falso.js";
 
 export { prismaFalso };
 
-export const MESTRE = { id: "11111111-1111-4111-8111-111111111111", email: "mestre@x.com", papel: "MESTRE", catalogoIniciado: true };
-export const JOGADOR = { id: "22222222-2222-4222-8222-222222222222", email: "jogador@x.com", papel: "JOGADOR", catalogoIniciado: false };
+export const MESTRE = { id: "11111111-1111-4111-8111-111111111111", email: "mestre@x.com", papel: "MESTRE" };
+export const JOGADOR = { id: "22222222-2222-4222-8222-222222222222", email: "jogador@x.com", papel: "JOGADOR" };
 export const OUTRO_MESTRE_ID = "33333333-3333-4333-8333-333333333333";
 
 const ISS = "https://teste.supabase.co/auth/v1";

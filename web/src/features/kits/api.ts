@@ -2,7 +2,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSyncExternalStore } from "react";
 import { api } from "../../lib/api";
-import { gravarKitAtivo, lerKitAtivo, type Kit, type KitDetalhe, type KitInput } from "./types";
+import { gravarKitAtivo, lerKitAtivo, type ConteudoKit, type Kit, type KitDetalhe, type KitInput } from "./types";
 
 export function useKits() {
   return useQuery({ queryKey: ["kits"], queryFn: () => api<Kit[]>("/api/kits") });
@@ -20,6 +20,9 @@ function useEscrita<V, R>(fn: (v: V) => Promise<R>) {
 
 export const useCriarKit = () => useEscrita((dados: KitInput) => api<Kit>("/api/kits", { method: "POST", body: dados }));
 export const useEditarKit = () => useEscrita(({ id, dados }: { id: string; dados: KitInput }) => api<Kit>(`/api/kits/${id}`, { method: "PATCH", body: dados }));
+/** Troca tudo o que está no kit; as mesas que usam o kit passam a valer com o conteúdo novo. */
+export const useDefinirConteudoKit = (id: string) =>
+  useEscrita((dados: ConteudoKit) => api<KitDetalhe>(`/api/kits/${id}/conteudo`, { method: "PUT", body: dados }));
 export const useExcluirKit = () => useEscrita((id: string) => api<void>(`/api/kits/${id}`, { method: "DELETE" }));
 
 // ---------- Kit ativo (guardado no navegador) ----------
@@ -37,7 +40,7 @@ export function useKitAtivo() {
   // Kit apagado: o filtro some sozinho.
   const kitId = kits.data && !kit ? null : id;
   function definir(novo: string | null) {
-    gravarKitAtivo(novo, !!kits.data?.find((k) => k.id === novo)?.deOutro);
+    gravarKitAtivo(novo);
     ouvintes.forEach((cb) => cb());
   }
   return { kitId, kit, definir };

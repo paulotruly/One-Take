@@ -36,7 +36,7 @@ describe("health", () => {
 });
 
 describe("regras públicas", () => {
-  it("GET /api/regras não exige login e traz progressão, ficha e atributos base (do ADMIN, verificados)", async () => {
+  it("GET /api/regras não exige login e traz progressão, ficha e atributos de exemplo (da conta ADMIN)", async () => {
     prismaFalso.atributo.findMany.mockResolvedValue([{ nome: "Capacidade física", descricao: "x" }]);
     const res = await request(app).get("/api/regras");
     expect(res.status).toBe(200);
@@ -130,7 +130,7 @@ describe("autenticação e papel", () => {
   it("primeiro acesso cria perfil como JOGADOR", async () => {
     prismaFalso.$queryRaw.mockResolvedValue([{ "?column?": 1 }]);
     prismaFalso.perfil.findUnique.mockResolvedValue(null);
-    prismaFalso.perfil.create.mockImplementation(async ({ data }) => ({ papel: "JOGADOR", catalogoIniciado: false, ...data }));
+    prismaFalso.perfil.create.mockImplementation(async ({ data }) => ({ papel: "JOGADOR", ...data }));
     prismaFalso.perfil.findUniqueOrThrow.mockResolvedValue(MESTRE);
     const res = await request(app).get("/api/me").set("Authorization", `Bearer ${tokenMestre}`);
     expect(res.status).toBe(200);
@@ -140,7 +140,7 @@ describe("autenticação e papel", () => {
   it("cadastro como mestre: papel e nome vêm do user_metadata do Supabase", async () => {
     prismaFalso.$queryRaw.mockResolvedValue([{ "?column?": 1 }]);
     prismaFalso.perfil.findUnique.mockResolvedValue(null);
-    prismaFalso.perfil.create.mockImplementation(async ({ data }) => ({ catalogoIniciado: false, ...data }));
+    prismaFalso.perfil.create.mockImplementation(async ({ data }) => ({ ...data }));
     prismaFalso.perfil.findUniqueOrThrow.mockResolvedValue(MESTRE);
     const t = await token(MESTRE, { metadata: { papel: "MESTRE", nome: "Paulo", nickname: "@Paulo" } });
     await request(app).get("/api/me").set("Authorization", `Bearer ${t}`);
@@ -150,7 +150,7 @@ describe("autenticação e papel", () => {
   it("papel desconhecido no cadastro vira JOGADOR", async () => {
     prismaFalso.$queryRaw.mockResolvedValue([{ "?column?": 1 }]);
     prismaFalso.perfil.findUnique.mockResolvedValue(null);
-    prismaFalso.perfil.create.mockImplementation(async ({ data }) => ({ catalogoIniciado: false, ...data }));
+    prismaFalso.perfil.create.mockImplementation(async ({ data }) => ({ ...data }));
     prismaFalso.perfil.findUniqueOrThrow.mockResolvedValue(JOGADOR);
     const t = await token(MESTRE, { metadata: { papel: "ADMIN" } });
     await request(app).get("/api/me").set("Authorization", `Bearer ${t}`);
@@ -187,17 +187,14 @@ describe("autenticação e papel", () => {
 });
 
 describe("classes", () => {
-  it("lista as verificadas primeiro, depois as próprias (não há classe fixa)", async () => {
-    prismaFalso.classe.findMany.mockResolvedValue([
-      classeFake({ titulo: "A minha" }),
-      classeFake({ id: "x", donoId: OUTRO_MESTRE_ID, verificado: true }),
-    ]);
+  it("lista só as classes do próprio mestre (nada é compartilhado entre contas)", async () => {
+    prismaFalso.classe.findMany.mockResolvedValue([{ ...classeFake({ titulo: "A minha" }), kits: [{ kitId: "k1" }] }]);
     const res = await comoMestre(request(app).get("/api/classes?grupo=SUPORTE"));
     expect(res.status).toBe(200);
-    expect(res.body[0]).toMatchObject({ id: "x", verificado: true, editavel: false });
-    expect(res.body[1]).toMatchObject({ editavel: true });
-    expect(res.body[0]).not.toHaveProperty("fixa");
-    expect(prismaFalso.classe.findMany.mock.calls[0]![0].where.grupo).toBe("SUPORTE");
+    expect(prismaFalso.classe.findMany.mock.calls[0]![0].where).toEqual({ donoId: MESTRE.id, grupo: "SUPORTE" });
+    expect(res.body[0]).toMatchObject({ titulo: "A minha", kitIds: ["k1"] });
+    expect(res.body[0]).not.toHaveProperty("verificado");
+    expect(res.body[0]).not.toHaveProperty("kits");
   });
 
   it("valida o corpo e devolve erros legíveis por campo", async () => {
@@ -258,15 +255,15 @@ describe("classes", () => {
     expect(prismaFalso.classe.create).not.toHaveBeenCalled();
   });
 
-  it("classe verificada de outra pessoa é somente leitura (403 VERIFICADO)", async () => {
-    prismaFalso.classe.findUnique.mockResolvedValue(classeFake({ donoId: OUTRO_MESTRE_ID, verificado: true }));
+  it("classe de outra conta não é editável (404)", async () => {
+    prismaFalso.classe.findUnique.mockResolvedValue(classeFake({ donoId: OUTRO_MESTRE_ID }));
     const res = await comoMestre(request(app).patch(`/api/classes/${classeFake().id}`)).send({ titulo: "X" });
-    expect(res.status).toBe(403);
-    expect(res.body.error.code).toBe("VERIFICADO");
+    expect(res.status).toBe(404);
+    expect(prismaFalso.classe.update).not.toHaveBeenCalled();
   });
 
-  it("prévia de progressão da classe (também para classe verificada)", async () => {
-    const fixa = classeFake({ donoId: OUTRO_MESTRE_ID, verificado: true, pontosVida: 40 });
+  it("prévia de progressão da classe", async () => {
+    const fixa = classeFake({ pontosVida: 40 });
     prismaFalso.classe.findUnique.mockResolvedValue(fixa);
     prismaFalso.classe.findUniqueOrThrow.mockResolvedValue({ ...fixa, habilidades: [{ id: "h", nivelNecessario: 2 }] });
     const res = await comoMestre(request(app).get(`/api/classes/${fixa.id}/progressao`));
@@ -286,8 +283,8 @@ describe("classes", () => {
     expect(res.status).toBe(404);
   });
 
-  it("duplica classe verificada copiando habilidades e ligando as perícias ao catálogo do mestre", async () => {
-    const fixa = classeFake({ donoId: OUTRO_MESTRE_ID, verificado: true, imagemUrl: "https://x.com/a.png" });
+  it("duplica a classe copiando habilidades e ligando as perícias base ao catálogo do mestre", async () => {
+    const fixa = classeFake({ imagemUrl: "https://x.com/a.png" });
     prismaFalso.classe.findUnique.mockResolvedValue(fixa);
     prismaFalso.classe.findUniqueOrThrow.mockResolvedValueOnce({
       ...fixa,
@@ -339,12 +336,13 @@ describe("habilidades", () => {
     expect(prismaFalso.habilidade.create).not.toHaveBeenCalled();
   });
 
-  it("não cria habilidade em classe verificada de outra pessoa (403)", async () => {
-    prismaFalso.classe.findUnique.mockResolvedValue(classeFake({ donoId: OUTRO_MESTRE_ID, verificado: true }));
+  it("não cria habilidade em classe de outra conta (404)", async () => {
+    prismaFalso.classe.findUnique.mockResolvedValue(classeFake({ donoId: OUTRO_MESTRE_ID }));
     const res = await comoMestre(request(app).post(`/api/classes/${classeId}/habilidades`)).send({
       titulo: "Golpe", descricao: "d", tipoEfeito: "DANO", descricaoEfeito: "e",
     });
-    expect(res.status).toBe(403);
+    expect(res.status).toBe(404);
+    expect(prismaFalso.habilidade.create).not.toHaveBeenCalled();
   });
 
   it("cria habilidade no fim da cartela com nível padrão 1", async () => {
@@ -462,31 +460,19 @@ describe("habilidades", () => {
 });
 
 describe("perícias", () => {
-  // Atributos do seed: do ADMIN (outra conta), verificados.
-  const FISICA = { id: "00000000-0000-4000-8002-000000000001", nome: "Capacidade física", descricao: "", ordem: 1, donoId: OUTRO_MESTRE_ID, verificado: true };
-  const CARISMA = { id: "00000000-0000-4000-8002-000000000002", nome: "Carisma", descricao: "", ordem: 2, donoId: OUTRO_MESTRE_ID, verificado: true };
+  // Atributos do próprio mestre (cada conta cria os seus).
+  const FISICA = { id: "00000000-0000-4000-8002-000000000001", nome: "Capacidade física", descricao: "", ordem: 1, donoId: MESTRE.id };
+  const CARISMA = { id: "00000000-0000-4000-8002-000000000002", nome: "Carisma", descricao: "", ordem: 2, donoId: MESTRE.id };
   const P = (x: Record<string, unknown> = {}) => ({
     id: "99999999-9999-4999-8999-999999999999", nome: "Luta", descricao: "d",
     categoria: "CORPO_A_CORPO", atributoId: FISICA.id, atributo: FISICA, donoId: MESTRE.id, origemId: null, ...x,
   });
 
-  it("primeiro acesso do mestre copia as perícias base para o catálogo dele", async () => {
-    logarComo({ ...MESTRE, catalogoIniciado: false });
-    const { atributo: _a, ...semAtributo } = P({ id: "base-1", donoId: null });
-    prismaFalso.pericia.findMany.mockResolvedValueOnce([semAtributo]).mockResolvedValueOnce([]);
-    prismaFalso.pericia.createMany.mockResolvedValue({ count: 1 });
-    prismaFalso.perfil.update.mockResolvedValue({});
+  it("conta nova começa com o catálogo vazio (nada é copiado)", async () => {
+    prismaFalso.pericia.findMany.mockResolvedValue([]);
     const res = await comoMestre(request(app).get("/api/pericias"));
     expect(res.status).toBe(200);
-    expect(prismaFalso.pericia.createMany.mock.calls[0]![0].data).toEqual([
-      { nome: "Luta", descricao: "d", categoria: "CORPO_A_CORPO", atributoId: FISICA.id, donoId: MESTRE.id, origemId: "base-1" },
-    ]);
-    expect(prismaFalso.perfil.update).toHaveBeenCalledWith({ where: { id: MESTRE.id }, data: { catalogoIniciado: true } });
-  });
-
-  it("catálogo já iniciado não é copiado de novo", async () => {
-    prismaFalso.pericia.findMany.mockResolvedValue([]);
-    await comoMestre(request(app).get("/api/pericias"));
+    expect(res.body).toEqual([]);
     expect(prismaFalso.pericia.createMany).not.toHaveBeenCalled();
   });
 
@@ -537,15 +523,16 @@ describe("perícias", () => {
     expect(res.body).toEqual({ classeId: classeFake().id, periciaId: P().id, modificador: 3 });
   });
 
-  it("não usa perícia fora do catálogo do mestre (404) nem altera classe verificada de outra pessoa (403)", async () => {
+  it("não usa perícia fora do catálogo do mestre nem altera classe de outra conta (404)", async () => {
     prismaFalso.classe.findUnique.mockResolvedValue(classeFake());
     prismaFalso.pericia.findUnique.mockResolvedValue(P({ donoId: OUTRO_MESTRE_ID }));
     const alheia = await comoMestre(request(app).put(`/api/classes/${classeFake().id}/pericias/${P().id}`)).send({ modificador: 1 });
     expect(alheia.status).toBe(404);
 
-    prismaFalso.classe.findUnique.mockResolvedValue(classeFake({ donoId: OUTRO_MESTRE_ID, verificado: true }));
-    const fixa = await comoMestre(request(app).put(`/api/classes/${classeFake().id}/pericias/${P().id}`)).send({ modificador: 1 });
-    expect(fixa.status).toBe(403);
+    prismaFalso.classe.findUnique.mockResolvedValue(classeFake({ donoId: OUTRO_MESTRE_ID }));
+    prismaFalso.pericia.findUnique.mockResolvedValue(P());
+    const alheiaClasse = await comoMestre(request(app).put(`/api/classes/${classeFake().id}/pericias/${P().id}`)).send({ modificador: 1 });
+    expect(alheiaClasse.status).toBe(404);
     expect(prismaFalso.classePericia.upsert).not.toHaveBeenCalled();
   });
 
@@ -631,14 +618,11 @@ describe("raças", () => {
 describe("atributos", () => {
   const ATR = "cccccccc-cccc-4ccc-8ccc-cccccccccccc";
 
-  it("lista os verificados e os do mestre (não há atributo fixo)", async () => {
-    prismaFalso.atributo.findMany.mockResolvedValue([
-      { id: "f", nome: "Carisma", descricao: "", ordem: 2, donoId: OUTRO_MESTRE_ID, verificado: true, _count: { pericias: 4 } },
-      { id: ATR, nome: "Sorte", descricao: "", ordem: 100, donoId: MESTRE.id, _count: { pericias: 0 } },
-    ]);
+  it("lista só os atributos do mestre (não há atributo fixo nem compartilhado)", async () => {
+    prismaFalso.atributo.findMany.mockResolvedValue([{ id: ATR, nome: "Sorte", descricao: "", ordem: 100, donoId: MESTRE.id, _count: { pericias: 0 } }]);
     const res = await comoMestre(request(app).get("/api/atributos"));
-    expect(prismaFalso.atributo.findMany.mock.calls[0]![0].where).toEqual({ OR: [{ donoId: MESTRE.id }, { verificado: true }, { kits: { some: { kit: { verificado: true } } } }] });
-    expect(res.body.map((a: { nome: string; editavel: boolean }) => [a.nome, a.editavel])).toEqual([["Carisma", false], ["Sorte", true]]);
+    expect(prismaFalso.atributo.findMany.mock.calls[0]![0].where).toEqual({ donoId: MESTRE.id });
+    expect(res.body).toEqual([{ id: ATR, nome: "Sorte", descricao: "", ordem: 100, pericias: 0 }]);
   });
 
   it("cria atributo do mestre; nome igual a um dele = 409", async () => {
@@ -653,13 +637,13 @@ describe("atributos", () => {
     expect(ok.body).toMatchObject({ nome: "Sorte", pericias: 0 });
   });
 
-  it("atributo verificado de outra pessoa não é editável nem excluível (403)", async () => {
-    prismaFalso.atributo.findUnique.mockResolvedValue({ id: ATR, nome: "Carisma", donoId: OUTRO_MESTRE_ID, verificado: true });
+  it("atributo de outra conta não é editável nem excluível (404)", async () => {
+    prismaFalso.atributo.findUnique.mockResolvedValue({ id: ATR, nome: "Carisma", donoId: OUTRO_MESTRE_ID });
     const editar = await comoMestre(request(app).patch(`/api/atributos/${ATR}`)).send({ nome: "X" });
-    expect(editar.status).toBe(403);
-    expect(editar.body.error.code).toBe("VERIFICADO");
+    expect(editar.status).toBe(404);
     const excluir = await comoMestre(request(app).delete(`/api/atributos/${ATR}`));
-    expect(excluir.status).toBe(403);
+    expect(excluir.status).toBe(404);
+    expect(prismaFalso.atributo.delete).not.toHaveBeenCalled();
   });
 
   it("não exclui atributo com perícias (409)", async () => {

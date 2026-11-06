@@ -259,7 +259,7 @@ export function StatusTopico() {
         <li>Quando uma carta <strong>ativa um status</strong>, ele vai sempre para o <strong>alvo</strong> da carta.</li>
       </ul>
       <h2>Personalizável</h2>
-      <p>Os status acima são os do conteúdo básico, verificados pelo administrador do One-Take. Nenhum status é fixo:</p>
+      <p>Os status acima são exemplos, do conteúdo do criador do One-Take. Nenhum status é fixo:</p>
       <ul>
         <li>O mestre pode criar status próprios, com nome, tipo e efeito, e editar os seus (até os automáticos, que só não podem ser excluídos).</li>
         <li>Em cada mesa, o mestre escolhe quais status valem. É opcional: uma mesa pode não usar status nenhum.</li>
@@ -273,7 +273,7 @@ export function Atributos() {
   const f = r.ficha;
   return (
     <>
-      <p>Atributos são as capacidades gerais do personagem e agrupam as perícias. Os atributos do conteúdo básico, verificados pelo administrador do One-Take, são:</p>
+      <p>Atributos são as capacidades gerais do personagem e agrupam as perícias. Cada mestre cria os dele; os de exemplo, do conteúdo do criador do One-Take, são:</p>
       <Tabela cabecalho={["Atributo", "Descrição"]} linhas={r.atributosBase.map((a) => [<strong key={a.nome}>{a.nome}</strong>, a.descricao])} />
       <p>O mestre pode criar outros atributos para o tema do RPG dele (por exemplo, Sanidade num jogo de terror) e escolher quais valem em cada mesa.</p>
       <h2>Pontos de atributo</h2>
@@ -486,9 +486,9 @@ export function Inventario() {
         <li>O jogador pode <strong>passar</strong> um item para outro membro da mesa (se couber), <strong>descartar</strong> (fica vago na mesa) ou pegar um item vago.</li>
       </ul>
       <h2>Categorias</h2>
-      <p>O conteúdo básico traz 4 categorias, verificadas pelo administrador do One-Take, e cada mestre pode criar as suas (com nome, descrição e ícone), como Relíquias, Munição ou Ervas.</p>
+      <p>Cada mestre cria as categorias dele (com nome, descrição e ícone), como Relíquias, Munição ou Ervas. Estas são as de exemplo:</p>
       <Tabela
-        cabecalho={["Categoria do conteúdo básico", "O que costuma ser"]}
+        cabecalho={["Categoria de exemplo", "O que costuma ser"]}
         linhas={[
           ["espada", "Armas", "Espadas, arcos, cajados: o que se usa para lutar."],
           ["joia", "Artefatos", "Objetos especiais, mágicos ou raros."],

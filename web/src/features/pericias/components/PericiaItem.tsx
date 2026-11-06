@@ -8,7 +8,7 @@ type Props = {
   valor?: number;
   tituloValor?: string;
   rodape?: ReactNode;
-  /** Selos ao lado do nome (verificado, só leitura). */
+  /** Selos ao lado do nome. */
   aposNome?: ReactNode;
   acoes?: ReactNode;
 };

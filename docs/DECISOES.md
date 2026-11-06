@@ -344,3 +344,24 @@ Formato: data — decisão. Motivo.
 - **"Mesa" no lugar de "Grupo" na interface — decisão do produto.** Grupo, mesa e sessão eram três palavras para a mesma coisa, e "grupo" também era o papel da classe. Interpretado: só os textos mudam (telas, documentação pública, mensagens de erro da API e minutas legais); rotas (`/mestre/grupos`), código, API e banco continuam `grupo`, para não quebrar links e convites. A aba "Mesa" da página virou **Em jogo** e o bloco do menu, **Jogo**.
 - **Sem ataque básico, por enquanto — decisão do produto.** Todo dano continua vindo de carta; conjuradores sem carta grátis dependem da mana, agora mais barata nas cartas básicas. Rever se a mana ainda travar o turno.
 - **Cartas que só afetam aliados não têm defesa do alvo — decisão do produto.** Ganham DT (Intervenção divina e Transposição guardiã 10, Milagre supremo 15).
+
+## 2026-11-06
+- **Tudo é da própria conta, sem conteúdo verificado — decisão do produto.** Substitui as de 2026-10-13 e 2026-10-14 sobre verificado e kit
+  verificado. Nenhuma conta vê, usa ou duplica o conteúdo de outra; coisa de outra conta = 404, como antes do verificado. Interpretado: o
+  duplicar fica para as próprias coisas (variação de uma classe, criatura ou NPC).
+- **Conta nova começa vazia — decisão do produto.** Não há cópia das perícias base nem de atributos, status ou categorias: o mestre cria
+  o catálogo dele. As perícias base (sem dono) ficam só como referência das defesas da carta.
+- **Cargo ADMIN mantido sem efeito — decisão do produto.** Fica no banco e no `npm run cargo`. Interpretado: a documentação pública continua
+  mostrando os atributos e status da conta ADMIN como exemplo (`GET /api/regras`), e o seed continua criando o conteúdo inicial nela.
+- **Contas de demonstração apagadas — decisão do produto.** `mestre_demo` e as contas `*_demo` de jogador eram de teste e usavam o
+  conteúdo da conta ADMIN; foram excluídas pela rotina de exclusão de conta.
+- **Item novo sem categoria — interpretado.** O padrão era a categoria Artefatos da conta ADMIN, que deixou de valer para os outros mestres.
+- **O que vale na mesa vem do kit — decisão do produto.** Pedido: "criar o kit por fora, pra depois selecionar um dos kits que o mestre
+  criou". Substitui a escolha item a item (e o "kit só pré-marca" de 2026-10-13). Interpretado: vale só o conteúdo do kit (não o geral),
+  atributo leva as perícias dele, perícia leva o atributo, status automáticos sempre; a mesa acompanha as mudanças do kit; mesa antiga
+  sem kit mantém o que estava marcado.
+- **Conteúdo do kit marcado na tela do kit — decisão do produto.** Caixas de seleção com todo o conteúdo do mestre, salvas de uma vez;
+  o campo de kits nos formulários continua.
+- **Kit ativo com faixa fixa — decisão do produto.** A faixa aparece em todas as telas do mestre, não só nas listas.
+- **Arquétipos como filtro — decisão do produto.** Os grupos recolhíveis ocupavam espaço e escondiam as classes sem arquétipo no fim da página.
+- **Cura mais forte — decisão do produto, números do /balancear.** Cura por uso perto de 1x o dano por turno de um Combatente do nível 1 (antes 0,66x a 0,92x).

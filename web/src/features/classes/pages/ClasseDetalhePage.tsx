@@ -1,7 +1,6 @@
 import { Pencil, Plus } from "lucide-react";
 // Página da classe: dados, cartela por nível e perícias (escolhidas do catálogo).
 // Toda a lógica de dados/estado de modais fica aqui; os componentes só desenham.
-import { SeloVerificado } from "../../verificados/pages/SeloVerificado";
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { LinkVoltar } from "../../../components/ui/LinkVoltar";
@@ -71,7 +70,6 @@ export function ClasseDetalhePage() {
   }
 
   const c = classe.data;
-  const editavel = !!c.editavel;
   // Perícias do catálogo que a classe ainda não tem.
   const disponiveis = (catalogo.data ?? []).filter((p) => !c.pericias.some((cp) => cp.id === p.id));
 
@@ -81,28 +79,21 @@ export function ClasseDetalhePage() {
 
       <ClasseCabecalho
         classe={c}
-        selo={<SeloVerificado tipo="classe" item={c} />}
         acoes={
-          editavel ? (
-            <>
-              <Link to={`/mestre/classes/${id}/editar`} className="btn">
-                Editar classe
-              </Link>
-              <Button variante="perigo" onClick={() => pedirExclusao({ tipo: "classe" })}>
-                Excluir classe
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button
-                variante="primario"
-                disabled={duplicar.isPending}
-                onClick={() => duplicar.mutate(id, { onSuccess: (copia) => navigate(`/mestre/classes/${copia.id}`) })}
-              >
-                {duplicar.isPending ? "Duplicando…" : "Duplicar para editar"}
-              </Button>
-            </>
-          )
+          <>
+            <Link to={`/mestre/classes/${id}/editar`} className="btn">
+              Editar classe
+            </Link>
+            <Button
+              disabled={duplicar.isPending}
+              onClick={() => duplicar.mutate(id, { onSuccess: (copia) => navigate(`/mestre/classes/${copia.id}`) })}
+            >
+              {duplicar.isPending ? "Duplicando…" : "Duplicar"}
+            </Button>
+            <Button variante="perigo" onClick={() => pedirExclusao({ tipo: "classe" })}>
+              Excluir classe
+            </Button>
+          </>
         }
       />
       {duplicar.isError && <div className="aviso">Não foi possível duplicar: {mensagemDeErro(duplicar.error)}</div>}
@@ -119,7 +110,7 @@ export function ClasseDetalhePage() {
             progressao={progressao.data}
             acao={
               <Link to={`/mestre/classes/${id}/habilidades`} className="btn">
-                {editavel ? <><Pencil size={16} aria-hidden /> Editar cartela</> : "Ver cartas em grade"}
+                <Pencil size={16} aria-hidden /> Editar cartela
               </Link>
             }
           />
@@ -129,24 +120,22 @@ export function ClasseDetalhePage() {
       <section className="secao">
         <div className="secao__cabecalho">
           <h2>Perícias</h2>
-          {editavel && (
-            <Button
-              onClick={() => abrirPericia(null)}
-              disabled={catalogo.isPending || disponiveis.length === 0}
-              title={disponiveis.length === 0 && !catalogo.isPending ? "Todas as perícias do catálogo já estão nesta classe" : undefined}
-            >
-              <Plus size={16} aria-hidden /> Adicionar perícia
-            </Button>
-          )}
+          <Button
+            onClick={() => abrirPericia(null)}
+            disabled={catalogo.isPending || disponiveis.length === 0}
+            title={disponiveis.length === 0 && !catalogo.isPending ? "Todas as perícias do catálogo já estão nesta classe" : undefined}
+          >
+            <Plus size={16} aria-hidden /> Adicionar perícia
+          </Button>
         </div>
-        {editavel && catalogo.isError && (
+        {catalogo.isError && (
           <div className="aviso">Não foi possível carregar o catálogo: {mensagemDeErro(catalogo.error)}</div>
         )}
         {c.pericias.length === 0 ? (
           <EmptyState
             compacto
             titulo="Nenhuma perícia nesta classe"
-            descricao={editavel ? <>Adicione perícias do seu <Link to="/mestre/pericias">catálogo</Link>.</> : undefined}
+            descricao={<>Adicione perícias do seu <Link to="/mestre/pericias">catálogo</Link>.</>}
           />
         ) : (
           <PericiasPorAtributo
@@ -159,7 +148,7 @@ export function ClasseDetalhePage() {
                 valor={p.modificador}
                 tituloValor="Modificador da classe"
                 acoes={
-                  editavel && (
+                  (
                     <>
                       <Button pequeno variante="fantasma" onClick={() => abrirPericia(p)}>
                         Modificador

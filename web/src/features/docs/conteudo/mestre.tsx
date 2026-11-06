@@ -1,5 +1,5 @@
 // Tópicos da documentação: guia do mestre, guia do jogador e referência.
-import { Activity, Backpack, BadgeCheck, Copy, Footprints, Layers, ListChecks, Lock, PawPrint, Printer, Shield, UserRound } from "lucide-react";
+import { Activity, Backpack, Copy, Footprints, Layers, ListChecks, PawPrint, Printer, Shield, UserRound } from "lucide-react";
 import { Link } from "react-router";
 import { Button } from "../../../components/ui/Button";
 import { Cartoes, Destaque, Passos, Tabela } from "../../../components/texto/Manual";
@@ -24,9 +24,9 @@ export function MestreVisaoGeral() {
         ]}
       />
       <p>
-        Tudo o que você cria é <strong>seu</strong>: outros mestres não veem nem alteram. Não há conteúdo fixo: o que é compartilhado
-        com todos é o conteúdo <strong>verificado</strong> pelo administrador do One-Take (como o conteúdo básico, com atributos e status),
-        que você usa como está ou duplica para mudar.
+        Tudo o que você cria é <strong>seu</strong>: outros mestres não veem nem alteram, e nada é compartilhado entre contas. Os
+        jogadores veem só o que você libera nas suas mesas. Uma conta nova começa vazia: você cria os atributos, as perícias, os status,
+        as raças e as classes da sua aventura.
       </p>
       <p>
         A interface de mestre é ativada na conta (no cadastro ou depois, em <strong>Perfil e conta</strong>). A mesma conta continua
@@ -41,9 +41,9 @@ export function MestrePrimeiraSessao() {
     <Passos
       passos={[
         { titulo: "Ative a interface de mestre", texto: <>No <Link to="/cadastro">cadastro</Link>, escolha "Mestre"; ou, numa conta de jogador, toque em Mestrar no topo.</> },
-        { titulo: "Revise o catálogo de perícias", texto: <>Em Perícias você já recebe 18 perícias base. Ajuste, crie novas ou crie um atributo novo. Veja <Link to="/docs/mestre-catalogo">Perícias e atributos</Link>.</> },
+        { titulo: "Monte o catálogo de perícias", texto: <>Em Perícias, crie os atributos (ex.: Capacidade física, Carisma, Conhecimento) e as perícias de cada um. Veja <Link to="/docs/mestre-catalogo">Perícias e atributos</Link>.</> },
         { titulo: "Crie pelo menos uma raça", texto: <>Título, descrição, deslocamento e perícias de base. Veja <Link to="/docs/mestre-racas">Criando raças</Link>.</> },
-        { titulo: "Escolha ou crie as classes", texto: <>Use as verificadas, duplique para adaptar ou crie do zero. Veja <Link to="/docs/mestre-classes">Criando classes e cartas</Link>.</> },
+        { titulo: "Crie as classes", texto: <>Crie do zero ou duplique uma sua para adaptar. Veja <Link to="/docs/mestre-classes">Criando classes e cartas</Link>.</> },
         { titulo: "Crie a mesa", texto: <>Informações e o que vale na mesa. Veja <Link to="/docs/mestre-grupos">Montando uma mesa</Link>.</> },
         { titulo: "Envie o convite", texto: "Na página da mesa, copie o link de convite, ou passe o código de 6 caracteres para os jogadores digitarem em Minhas fichas." },
         { titulo: "Prepare itens e criaturas (opcional)", texto: <>Em Itens e Bestiário. Veja <Link to="/docs/mestre-itens">Itens</Link> e <Link to="/docs/mestre-bestiario">Bestiário</Link>.</> },
@@ -58,17 +58,14 @@ export function MestreCatalogo() {
   return (
     <>
       <p>
-        Na primeira vez que você entra como mestre, recebe uma <strong>cópia própria</strong> das 18 perícias base. A partir daí o
-        catálogo é seu: mudanças não afetam outros mestres.
+        O catálogo é seu e começa vazio: crie primeiro os atributos e depois as perícias de cada um. Mudanças não afetam outros
+        mestres.
       </p>
       <h2>Atributos</h2>
-      <Tabela
-        cabecalho={["Tipo", "O que dá para fazer"]}
-        linhas={[
-          [<span key="f" className="regra__inline"><BadgeCheck size={14} aria-hidden /> Do conteúdo básico</span>, "Capacidade física, Carisma e Conhecimento. Verificados pelo administrador do One-Take: só leitura para você; use na mesa como estão."],
-          ["Seus", "Crie quantos quiser (ex.: Sanidade, Tecnologia). Pode editar e excluir."],
-        ]}
-      />
+      <p>
+        Crie quantos quiser (ex.: Capacidade física, Carisma, Conhecimento, Sanidade, Tecnologia), edite e exclua. Os atributos de exemplo
+        estão em <Link to="/docs/atributos">Atributos</Link>.
+      </p>
       <p>Um atributo só pode ser excluído quando não tiver perícias. Mova as perícias para outro atributo antes.</p>
       <h2>Perícias</h2>
       <ul>
@@ -89,7 +86,7 @@ export function MestreRacas() {
         <li>Na página da raça, em <strong>Perícias de base</strong>, adicione perícias do catálogo com a quantidade de pontos. Elas somam na ficha de quem escolher a raça.</li>
         <li>Não há raças fixas: cada mestre cria as suas. Uma mesa precisa de pelo menos uma raça liberada.</li>
         <li>
-          <strong>Arquétipos de raça</strong>: em Raças, crie um arquétipo (ex.: Elfo) e use <strong>Sub-raça</strong> no grupo dele, ou escolha o
+          <strong>Arquétipos de raça</strong>: em Raças, crie um arquétipo (ex.: Elfo), escolha ele no filtro do topo e use <strong>Sub-raça</strong>, ou escolha o
           arquétipo no campo "Arquétipo de raça" de qualquer raça. Excluir o arquétipo não apaga as sub-raças.
         </li>
       </ul>
@@ -101,20 +98,19 @@ export function MestreRacas() {
 export function MestreClasses() {
   return (
     <>
-      <h2>Classes verificadas e classes suas</h2>
+      <h2>Criar e duplicar</h2>
       <Tabela
         cabecalho={["Opção", "Como funciona"]}
         linhas={[
-          [<span key="f" className="regra__inline"><Lock size={14} aria-hidden /> Usar uma verificada</span>, "Verificadas pelo administrador do One-Take: somente leitura, e podem ser liberadas nas suas mesas como estão."],
-          [<span key="d" className="regra__inline"><Copy size={14} aria-hidden /> Duplicar</span>, "Cria uma cópia sua com cartas e perícias, para editar à vontade."],
           ["Criar do zero", "Nova classe cria só a classe; as cartas e perícias você adiciona depois, na página dela."],
+          [<span key="d" className="regra__inline"><Copy size={14} aria-hidden /> Duplicar</span>, "Na página de uma classe sua, cria uma cópia com cartas e perícias, para fazer uma variação."],
         ]}
       />
       <h2>Arquétipos</h2>
       <ul>
         <li>Em <strong>Classes &gt; Novo arquétipo</strong>: título e descrição (ex.: Bruxa).</li>
-        <li>A lista de classes fica agrupada por arquétipo; as classes sem arquétipo ficam em <strong>Sem arquétipo</strong>. Clique no título de um grupo para recolher ou abrir.</li>
-        <li>No grupo do arquétipo, use <strong>Subclasse</strong> para criar uma classe já ligada a ele, ou escolha o arquétipo no campo "Arquétipo" de qualquer classe sua.</li>
+        <li>No topo da lista de classes, uma linha de filtros: <strong>Todas</strong>, cada arquétipo e <strong>Sem arquétipo</strong>. As classes ficam numa grade só, com o arquétipo escrito no card.</li>
+        <li>Ao escolher um arquétipo no filtro, aparecem a descrição dele e os botões <strong>Subclasse</strong> (cria uma classe já ligada a ele), Editar e Excluir. Também dá para escolher o arquétipo no campo "Arquétipo" de qualquer classe sua.</li>
         <li>O jogador escolhe a subclasse; na criação da ficha elas aparecem agrupadas pelo arquétipo.</li>
         <li>Excluir o arquétipo não apaga as subclasses: elas viram classes avulsas.</li>
       </ul>
@@ -151,16 +147,18 @@ export function MestreKits() {
     <>
       <p>
         Um <strong>kit de RPG</strong> junta o conteúdo de uma aventura: classes, raças, atributos, perícias, status, itens do catálogo,
-        criaturas e NPCs. Crie kits no menu <strong>Kits de RPG</strong> e marque, no formulário de cada coisa, em quais kits ela entra.
+        criaturas e NPCs. Crie o kit no menu <strong>Kits de RPG</strong> e ponha o conteúdo nele de três jeitos: na tela do kit, em
+        <strong>Editar conteúdo</strong> (caixas de seleção com tudo o que é seu); no formulário de cada coisa, no campo Kits de RPG; ou
+        deixando o kit ativo enquanto cria.
       </p>
       <Tabela
         cabecalho={["Situação", "O que acontece"]}
         linhas={[
           ["Sem kit (geral)", "Aparece em todos os kits e pode ser usado em qualquer mesa. É o padrão."],
           ["Em um ou mais kits", "Aparece só com esses kits. A mesma coisa pode estar em vários kits (ex.: um Lobo no kit de terror e no de fantasia)."],
-          ["Kit ativo", "Escolhido no topo da navegação lateral. As listas mostram o que é do kit e o geral, como na página da mesa, e tudo o que você criar já entra nele. Para ver todos os kits, escolha Todos."],
-          ["Mesa com kit", "Ao montar a mesa, escolha o kit: ele já marca as classes, raças, perícias e status do kit (você ajusta). Itens, criaturas e NPCs mostrados na mesa seguem o kit."],
-          ["Ver o que tem", "Em Kits de RPG, toque no nome do kit (ou em Ver o que tem): a tela lista tudo o que está nele, por tipo, com link para cada coisa e as mesas que usam o kit."],
+          ["Kit ativo", "Escolhido no topo da navegação lateral (ou em Usar este kit). Uma faixa no topo de todas as telas mostra qual kit está ativo: tudo o que você criar entra nele, e as listas mostram o kit e o geral. Para voltar a ver tudo, use Sair do kit."],
+          ["Mesa com kit", "O que vale na mesa vem do kit: as classes, raças, atributos, perícias e status dele (o atributo leva todas as perícias dele; os status automáticos valem sempre). Mudou o kit? A mesa acompanha. Itens, criaturas e NPCs mostrados na mesa seguem o kit."],
+          ["Ver e editar", "Toque no nome do kit: a tela lista tudo o que está nele, com link para cada coisa e as mesas que usam o kit. Editar conteúdo mostra as caixas de seleção; Editar nome muda o nome e a descrição."],
         ]}
       />
       <Destaque tipo="dica" titulo="Excluir um kit não apaga nada">
@@ -170,29 +168,6 @@ export function MestreKits() {
   );
 }
 
-export function MestreVerificados() {
-  return (
-    <>
-      <p>
-        O <strong>conteúdo verificado</strong> é o material pronto do One-Take: classes, raças, atributos, perícias, status, categorias de
-        item, itens, criaturas, NPCs, arquétipos e kits de RPG com o selo <strong>Verificado</strong>. Ele aparece para todo mestre, só
-        leitura e sempre atualizado. Num <strong>kit verificado</strong>, tudo o que está dentro dele também é verificado.
-      </p>
-      <Tabela
-        cabecalho={["Você quer", "Como"]}
-        linhas={[
-          ["Usar", "Libere na mesa, lance o item, invoque a criatura ou escolha a raça e a classe num NPC, como faria com o que é seu."],
-          ["Usar um kit verificado", "Em Kits de RPG, escolha Usar este kit (as telas mostram só o conteúdo dele) ou escolha o kit ao montar a mesa. O que você criar fica fora dele."],
-          ["Mudar", "Duplique a classe, a criatura ou o NPC para ter a sua versão. Perícias: Copiar para o meu catálogo, em Perícias."],
-          ["Não ver", "Em Perfil e conta, marque Ocultar o conteúdo verificado. O que já está nas suas mesas e fichas continua funcionando."],
-        ]}
-      />
-      <Destaque tipo="dica" titulo="Com um kit ativo">
-        As telas mostram o que está no kit ativo e o geral, verificado ou não. Para ver todo o conteúdo verificado, escolha Todos.
-      </Destaque>
-    </>
-  );
-}
 
 export function MestreBestiario() {
   return (
@@ -292,10 +267,11 @@ export function MestreGrupos() {
       </ul>
       <h2>O que vale nesta mesa</h2>
       <ul>
-        <li>Marque as <strong>classes</strong> (suas ou verificadas) e as <strong>raças</strong> que os jogadores podem escolher.</li>
-        <li>Marque os <strong>atributos</strong>: marcar um atributo leva todas as perícias dele. Depois desmarque perícias específicas que não fazem sentido na aventura.</li>
-        <li>Os {f.pontosAtributoIniciais} pontos de atributo (d20) da ficha são distribuídos só entre os atributos marcados.</li>
-        <li>Para os jogadores conseguirem criar ficha, a mesa precisa de pelo menos uma classe, uma raça e um atributo.</li>
+        <li>Escolha o <strong>kit</strong> da mesa. Monte o kit antes, em <Link to="/docs/mestre-kits">Kits de RPG</Link>: o que vale na mesa são as classes, raças, atributos, perícias e status dele.</li>
+        <li>Um atributo no kit leva todas as perícias dele; uma perícia no kit leva o atributo dela. Os status automáticos valem sempre.</li>
+        <li>Mudou o conteúdo do kit? A mesa acompanha sozinha.</li>
+        <li>Os {f.pontosAtributoIniciais} pontos de atributo (d20) da ficha são distribuídos só entre os atributos que valem na mesa.</li>
+        <li>Para os jogadores conseguirem criar ficha, o kit precisa de pelo menos uma classe, uma raça e um atributo.</li>
       </ul>
       <h2>Regras de combate</h2>
       <ul>
@@ -361,7 +337,7 @@ export function MestreStatus() {
       <p>Status mostram alertas nas fichas (ex.: Cansado: -10 no total dos dados em testes físicos). Eles não mudam números: a mesa aplica o efeito.</p>
       <h2>Catálogo</h2>
       <ul>
-        <li>Em <strong>Status</strong>, no menu, ficam os seus status e os verificados de outras pessoas (somente leitura). Nenhum status é fixo.</li>
+        <li>Em <strong>Status</strong>, no menu, ficam os seus status. Nenhum status é fixo e uma conta nova começa sem nenhum.</li>
         <li>Crie status próprios com nome, tipo (benefício, prejuízo ou misto) e efeito.</li>
         <li>Os automáticos (Morto, Sem energia vital, Cansado) aparecem sozinhos quando vida, mana ou esforço chegam a 0. Quem tem um deles pode mudar o nome e o efeito, mas não excluir. Também dá para aplicá-los à mão, como os outros (ex.: carta que deixa Cansado).</li>
         <li>
@@ -420,7 +396,6 @@ export function MestreProtecoes() {
           ["Perícia", "Quando alguma ficha colocou pontos nela."],
           ["Atributo", "Quando ainda tem perícias (mova antes) ou quando fichas têm dados nele."],
           ["Status automático", "Nunca: a ficha usa ele quando vida, mana ou esforço chegam a 0 (dá para editar)."],
-          ["Coisa verificada de outra pessoa", "Nunca: é só leitura para você. Duplique para ter a sua."],
         ]}
       />
       <p>Excluir uma <strong>mesa</strong> é permitido, com confirmação: apaga as criaturas invocadas e os itens dela, e as fichas saem dela. Cada jogador fica com uma cópia arquivada (só leitura) da própria ficha. O mesmo vale quando você remove um membro ou exclui a sua conta.</p>

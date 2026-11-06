@@ -1,11 +1,11 @@
-// Status (condições/emoções). Sempre de um mestre (não há fixos): os outros veem os verificados (selo ou kit), só leitura.
+// Status (condições/emoções). Sempre de um mestre (não há fixos): só ele vê e edita.
 // Os automáticos (com gatilho, vindos do seed) podem ser editados pelo dono, mas não excluídos.
 import type { z } from "zod";
 import type { Status } from "../../generated/prisma/client.js";
 import { AppError, conflito, naoEncontrado } from "../../lib/errors.js";
 import { getPrisma } from "../../lib/prisma.js";
-import { kitIdsPara, podeUsar, quemVe, visao, visivelPara } from "../../lib/sistema.js";
-import { comKits, definirKits } from "../../lib/kits.js";
+import { doDono, ehDoDono } from "../../lib/posse.js";
+import { comKitIds, comKits, definirKits } from "../../lib/kits.js";
 import { validarCategoriaStatus } from "./categorias.js";
 import type { criarStatusSchema, editarStatusSchema } from "./status.schemas.js";
 
@@ -13,25 +13,22 @@ export function apresentarStatus({ id, nome, efeito, tipo, gatilho, ordem, categ
   return { id, nome, efeito, tipo, gatilho, ordem, automatico: gatilho !== null, categoriaId };
 }
 
-type CategoriaVisivel = { id: string; nome: string; donoId: string; verificado: boolean } | null;
-/** Categoria do status para quem vê: só se for dele ou verificada (a categoria privada de outra pessoa não aparece). */
-const categoriaPara = (c: CategoriaVisivel, usuarioId: string) => (c && (c.donoId === usuarioId || c.verificado) ? { id: c.id, nome: c.nome } : null);
-const comCategoria = { categoria: { select: { id: true, nome: true, donoId: true, verificado: true } } } as const;
+const comCategoria = { categoria: { select: { id: true, nome: true } } } as const;
 
-/** Status que o mestre pode usar: verificado ou dele. Outro = 404. */
+/** Status do próprio mestre. Outro = 404. */
 export async function statusUsavel(id: string, usuarioId: string) {
   const status = await getPrisma().status.findUnique({ where: { id } });
-  if (!status || !(await podeUsar("status", status, usuarioId))) throw naoEncontrado("Status não encontrado");
+  if (!status || !ehDoDono(status, usuarioId)) throw naoEncontrado("Status não encontrado");
   return status;
 }
 
 /**
- * Status que valem para um personagem: os ativados no grupo dele; sem grupo (NPC geral), todos os que o mestre vê (dele + verificados).
+ * Status que valem para um personagem: os ativados no grupo dele; sem grupo (NPC geral), todos os do mestre.
  */
 export async function statusDisponiveis(mestreId: string, grupoId: string | null) {
   const prisma = getPrisma();
   if (grupoId) return (await prisma.statusNoGrupo.findMany({ where: { grupoId }, include: { status: true } })).map((s) => s.status);
-  return prisma.status.findMany({ where: await visivelPara(mestreId) });
+  return prisma.status.findMany({ where: doDono(mestreId) });
 }
 
 /** Status manuais que ainda podem ser aplicados (disponíveis, não automáticos, ainda não aplicados), ordenados. */
@@ -52,7 +49,6 @@ export async function validarAplicacao(statusId: string, mestreId: string, dispo
 /** Editar: só o dono. Excluir: o dono, menos os automáticos (a ficha depende deles). */
 async function statusEditavel(id: string, usuarioId: string, { excluir = false } = {}) {
   const status = await statusUsavel(id, usuarioId);
-  if (status.donoId !== usuarioId) throw new AppError(403, "VERIFICADO", "Este status é verificado (de outra pessoa): só leitura.");
   if (excluir && status.gatilho) throw new AppError(403, "STATUS_AUTOMATICO", "Status automático não pode ser excluído: a ficha usa ele quando vida, mana ou esforço chegam a 0. Edite o nome e o efeito, se quiser.");
   return status;
 }
@@ -65,18 +61,12 @@ async function garantirNomeLivre(usuarioId: string, nome: string, exceto?: strin
 }
 
 export async function listar(usuarioId: string) {
-  const quem = await quemVe(usuarioId);
   const status = await getPrisma().status.findMany({
-    where: await visivelPara(usuarioId),
+    where: doDono(usuarioId),
     orderBy: [{ ordem: "asc" }, { nome: "asc" }],
     include: { ...comKits, ...comCategoria },
   });
-  return status.map((s) => ({
-    ...apresentarStatus(s),
-    categoria: categoriaPara(s.categoria, usuarioId),
-    ...visao(s, quem),
-    kitIds: kitIdsPara(s, quem),
-  }));
+  return status.map((s) => ({ ...apresentarStatus(s), categoria: s.categoria, kitIds: comKitIds(s).kitIds }));
 }
 
 export async function criar(usuarioId: string, dados: z.infer<typeof criarStatusSchema>) {
@@ -85,7 +75,7 @@ export async function criar(usuarioId: string, dados: z.infer<typeof criarStatus
   const { kitIds, ...resto } = dados;
   const s = await getPrisma().status.create({ data: { ...resto, donoId: usuarioId }, include: comCategoria });
   await definirKits("status", s.id, kitIds, usuarioId);
-  return { ...apresentarStatus(s), categoria: categoriaPara(s.categoria, usuarioId), kitIds: kitIds ?? [] };
+  return { ...apresentarStatus(s), categoria: s.categoria, kitIds: kitIds ?? [] };
 }
 
 export async function editar(id: string, usuarioId: string, dados: z.infer<typeof editarStatusSchema>) {
@@ -95,7 +85,7 @@ export async function editar(id: string, usuarioId: string, dados: z.infer<typeo
   const { kitIds, ...resto } = dados;
   await definirKits("status", id, kitIds, usuarioId);
   const s = await getPrisma().status.update({ where: { id }, data: resto, include: { ...comKits, ...comCategoria } });
-  return { ...apresentarStatus(s), categoria: categoriaPara(s.categoria, usuarioId), kitIds: (s.kits ?? []).map((k) => k.kitId) };
+  return { ...apresentarStatus(s), categoria: s.categoria, kitIds: (s.kits ?? []).map((k) => k.kitId) };
 }
 
 /** Sai também das fichas e grupos (cascata) e das cartas que o ativavam (fica sem status). */

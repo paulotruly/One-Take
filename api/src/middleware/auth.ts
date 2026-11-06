@@ -5,7 +5,7 @@ import { conflito, naoAutenticado, proibido } from "../lib/errors.js";
 import { nicknameDoEmail, nicknameSchema } from "../lib/nickname.js";
 import { getPrisma } from "../lib/prisma.js";
 
-export type Usuario = { id: string; email: string; papel: Papel; catalogoIniciado: boolean };
+export type Usuario = { id: string; email: string; papel: Papel };
 
 declare global {
   namespace Express {
@@ -66,7 +66,7 @@ export const autenticar: RequestHandler = async (req, _res, next) => {
   if (perfil.sessoesValidasDesde && (claims.autenticadoEm === null || claims.autenticadoEm < Math.floor(perfil.sessoesValidasDesde.getTime() / 1000))) {
     throw naoAutenticado("Sua senha foi alterada. Entre novamente.");
   }
-  req.usuario = { id: perfil.id, email: perfil.email, papel: perfil.papel, catalogoIniciado: perfil.catalogoIniciado };
+  req.usuario = { id: perfil.id, email: perfil.email, papel: perfil.papel };
   next();
 };
 

@@ -1,6 +1,4 @@
 // Catálogo de itens do mestre: armas, artefatos, taverna e sebo. Os itens ficam sempre à mão para lançar nos grupos.
-import { SeloVerificado } from "../../verificados/pages/SeloVerificado";
-import { AcessoBadge, VerificadoBadge } from "../../verificados/components/VerificadoBadge";
 import { Pencil, Plus, Send, Tags, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "../../../components/ui/Button";
@@ -10,7 +8,6 @@ import { Modal } from "../../../components/ui/Modal";
 import { EmptyState, ErrorState, Loading } from "../../../components/ui/States";
 import { erroDeFormulario, errosDeCampo, mensagemDeErro } from "../../../lib/api";
 import { useClasses } from "../../classes/api";
-import { AvisoKit } from "../../kits/components/AvisoKit";
 import { KitsField } from "../../kits/components/KitsField";
 import { useKitAtivo } from "../../kits/api";
 import { kitsPadrao, soDoKit } from "../../kits/types";
@@ -87,7 +84,6 @@ export function CatalogoItensPage() {
         </div>
       </div>
 
-      <AvisoKit />
 
       <div className="filtro" role="group" aria-label="Filtrar por categoria">
         <button type="button" className="filtro__opcao" aria-pressed={!categoria} onClick={() => setCategoria(undefined)}>Todos</button>
@@ -111,28 +107,25 @@ export function CatalogoItensPage() {
               key={i.id}
               item={i}
               onAbrir={() => setAberto(i)}
-              aposNome={i.verificado && <VerificadoBadge />}
-              extra={i.verificado || i.deOutro ? <AcessoBadge item={i} /> : i.kitIds.length === 0 && <span className="selo">Geral</span>}
+              extra={i.kitIds.length === 0 && <span className="selo">Geral</span>}
             />
           ))}
         </ul>
       )}
 
-      <Modal aberto={!!aberto} onFechar={() => setAberto(null)} titulo={aberto ? <>{aberto.nome} <SeloVerificado tipo="itemModelo" item={aberto} /></> : ""}>
+      <Modal aberto={!!aberto} onFechar={() => setAberto(null)} titulo={aberto ? <>{aberto.nome}</> : ""}>
         {aberto && (
           <>
             <ItemDetalhe item={aberto} />
             <div className="modal__acoes modal__acoes--quebra">
-              {(aberto.editavel ?? true) && (
-                <>
-                  <Button onClick={() => { excluir.reset(); setAExcluir(aberto); setAberto(null); }}>
-                    <Trash2 size={16} aria-hidden /> Excluir
-                  </Button>
-                  <Button onClick={() => abrirForm(aberto)}>
-                    <Pencil size={16} aria-hidden /> Editar
-                  </Button>
-                </>
-              )}
+              <>
+                <Button onClick={() => { excluir.reset(); setAExcluir(aberto); setAberto(null); }}>
+                  <Trash2 size={16} aria-hidden /> Excluir
+                </Button>
+                <Button onClick={() => abrirForm(aberto)}>
+                  <Pencil size={16} aria-hidden /> Editar
+                </Button>
+              </>
               <Button variante="primario" onClick={() => abrirLancar(aberto)}>
                 <Send size={16} aria-hidden /> Lançar numa mesa
               </Button>

@@ -1,6 +1,4 @@
 // Kits de RPG do mestre: criar, editar, excluir e escolher o kit ativo (filtro da interface).
-import { SeloVerificado } from "../../verificados/pages/SeloVerificado";
-import { AcessoBadge } from "../../verificados/components/VerificadoBadge";
 import { Check, Eye, Package, Pencil, Plus, Trash2 } from "lucide-react";
 import { Link } from "react-router";
 import { useState, type FormEvent } from "react";
@@ -73,15 +71,12 @@ export function KitsPage() {
           {kits.data.map((k) => (
             <li key={k.id} className={`conceito ${k.id === kitId ? "conceito--ativo" : ""}`}>
               <div className="conceito__topo">
-                <h3><Package size={18} aria-hidden /> <Link to={`/mestre/kits/${k.id}`}>{k.nome}</Link> <SeloVerificado tipo="kit" item={k} /></h3>
-                {!k.deOutro && (
-                  <div className="pericia__acoes">
-                    <Button pequeno variante="fantasma" aria-label={`Editar ${k.nome}`} onClick={() => abrir(k)}><Pencil size={14} aria-hidden /></Button>
-                    <Button pequeno variante="perigoSutil" aria-label={`Excluir ${k.nome}`} onClick={() => { excluir.reset(); setAExcluir(k); }}><Trash2 size={14} aria-hidden /></Button>
-                  </div>
-                )}
+                <h3><Package size={18} aria-hidden /> <Link to={`/mestre/kits/${k.id}`}>{k.nome}</Link></h3>
+                <div className="pericia__acoes">
+                  <Button pequeno variante="fantasma" aria-label={`Editar ${k.nome}`} onClick={() => abrir(k)}><Pencil size={14} aria-hidden /></Button>
+                  <Button pequeno variante="perigoSutil" aria-label={`Excluir ${k.nome}`} onClick={() => { excluir.reset(); setAExcluir(k); }}><Trash2 size={14} aria-hidden /></Button>
+                </div>
               </div>
-              {(k.verificado || k.deOutro) && <div><AcessoBadge item={k} /></div>}
               {k.descricao && <p className="pericia__descricao">{k.descricao}</p>}
               <p className="pagina__subtitulo">
                 {ROTULOS.filter(([c]) => k.conteudo[c] > 0).map(([c, r]) => `${k.conteudo[c]} ${r}`).join(" · ") || "Vazio por enquanto."}

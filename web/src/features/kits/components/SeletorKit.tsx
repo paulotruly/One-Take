@@ -7,7 +7,7 @@ export function SeletorKit() {
   const { kitId, definir } = useKitAtivo();
   if (!kits.data || kits.data.length === 0) return null;
   return (
-    <label className="seletor-kit">
+    <label className={`seletor-kit ${kitId ? "seletor-kit--ativo" : ""}`}>
       <span className="seletor-kit__rotulo">
         <Package size={14} aria-hidden /> Kit ativo
       </span>

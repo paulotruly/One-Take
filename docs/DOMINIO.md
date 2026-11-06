@@ -45,9 +45,9 @@ Um **arquétipo** é uma classe generalista (só título e descrição) que agru
 elemental, Bruxa assombrosa). Cada subclasse é uma classe normal; o jogador escolhe a subclasse, nunca o arquétipo.
 Classes sem arquétipo continuam valendo (avulsas). Só o mestre dono cria arquétipos e liga classes dele a eles.
 
-### Classes do mestre e verificadas
-- **Não há classe fixa** (nem nenhum outro conteúdo fixo): toda classe é de um mestre, e só ele edita.
-- **Verificadas**: as do ADMIN com selo (ou num kit verificado) aparecem para todo mestre, só leitura, e podem ser **duplicadas**.
+### Classes do mestre
+- **Não há classe fixa** (nem nenhum outro conteúdo fixo): toda classe é de um mestre, e só ele vê e edita.
+- O mestre pode **duplicar** uma classe dele para fazer uma variação. Os jogadores veem a classe pela mesa em que ela foi liberada.
 
 ## Cartela de habilidades
 O **deck de cartas** da classe. Cada classe tem **uma única cartela**: o conjunto ordenado das suas
@@ -99,12 +99,11 @@ Cada perícia do catálogo tem:
 - **Atributo** ao qual pertence (ver "Atributos e testes"). O mestre pode mover a perícia para qualquer atributo.
 
 ### Perícias base e catálogo do mestre
-O sistema traz 18 perícias base (Atletismo, Acrobacia, Iniciativa, Furtividade, Luta, Pontaria,
-Reflexos, Resistência, Diplomacia, Enganação, Intimidação, Intuição, Percepção, Vontade, Religião,
-Adestramento, Sobrevivência, Domínio). No primeiro acesso, cada mestre recebe **uma cópia própria**
-delas e pode editar, excluir e criar novas à vontade — 100% personalizável, sem afetar outros mestres.
-Ao duplicar uma classe verificada de outra pessoa, as perícias dela passam a apontar para as cópias do catálogo do mestre
-(mesma origem ou mesmo nome).
+Cada mestre tem o próprio catálogo, que **começa vazio** (decisão de 2026-11-06): ele cria os atributos e as perícias da aventura
+e edita ou exclui à vontade, sem afetar outros mestres. As 18 perícias base do sistema (Atletismo, Acrobacia, Iniciativa,
+Furtividade, Luta, Pontaria, Reflexos, Resistência, Diplomacia, Enganação, Intimidação, Intuição, Percepção, Vontade, Religião,
+Adestramento, Sobrevivência, Domínio; sem dono) não aparecem nas listas: servem de referência para as defesas da carta
+(`regras/defesas.ts`) e ficam no catálogo de quem já as tinha.
 
 O modificador (classe) e os pontos (raça, níveis) somam o **bônus** da perícia, usado nos testes (ver "Atributos e testes").
 
@@ -119,7 +118,7 @@ Define de onde o personagem vem. Criada pelo mestre (só ele vê e edita). Tem:
 
 ## Atributos e testes (dados)
 Atributos agrupam as perícias e recebem os dados nos testes.
-- **Do conteúdo básico** (do ADMIN, verificados; não são fixos): **Capacidade física**, **Carisma** e **Conhecimento**. Só o dono edita.
+- **Cada mestre cria os dele**; conta nova começa sem atributos. Os de exemplo (do seed, na conta ADMIN) são **Capacidade física**, **Carisma** e **Conhecimento**.
 - O **mestre pode criar atributos** próprios (ex.: "Sorte", "Tecnologia") para o tema do RPG dele, e mover
   perícias entre atributos. Atributo com perícias não pode ser excluído (mova as perícias antes).
 - Ao criar a ficha, o personagem recebe **3 pontos de atributo** para distribuir. **Cada ponto é um d20.**
@@ -184,26 +183,22 @@ Atributos agrupam as perícias e recebem os dados nos testes.
 - **Limite por função**: o mestre define quantas fichas o grupo aceita de cada função da classe (Combatente, Vanguardista, Suporte).
   Vazio = sem limite; 0 = função fechada. Com a função cheia, a classe aparece bloqueada na criação da ficha (com o motivo) e a
   API recusa (409 `FUNCAO_CHEIA`). O limite não pode ficar abaixo de quantas fichas daquela função o grupo já tem.
-- O mestre escolhe **o que vale no grupo**: classes (dele ou verificadas), raças, atributos e, dentro dos atributos,
+- O mestre escolhe **o que vale no grupo**: classes, raças, atributos e, dentro dos atributos,
   perícias específicas. Isso permite adaptar o sistema a temas diferentes de RPG.
 - **Kits de RPG**: o mestre junta o conteúdo de uma aventura num kit (classes, raças, atributos, perícias, status, itens do
-  catálogo, criaturas e NPCs). Sem kit = **geral** (aparece em tudo); uma coisa pode estar em **vários kits**. Com um **kit ativo**
-  (escolhido na lateral), as telas mostram **o que é do kit e o geral** (como no grupo) e o que for
-  criado já entra no kit. O **grupo** pode ter um kit:
-  ao escolher, a tela marca o que vale (do kit + gerais; status automáticos sempre), e itens, criaturas e NPCs mostrados no grupo seguem o kit.
-  Excluir um kit não apaga nada.
-- **Conteúdo verificado**: qualquer coisa criada pelo ADMIN (classes, raças, atributos, perícias, status, categorias de item, itens do catálogo, criaturas e NPCs,
-  e também **kits de RPG** e **arquétipos**) pode receber o selo **verificado**. **Kit verificado leva tudo o que está nele**: cada coisa
-  do kit conta como verificada enquanto estiver lá (inclusive o que entrar depois); tirar do kit tira o selo, a menos que a coisa tenha
-  o selo próprio. O kit verificado aparece para todo mestre, que pode usá-lo como kit ativo e no grupo (o que ele cria não entra nesse
-  kit). O arquétipo aparece se for verificado ou se tiver variação verificada (só as variações verificadas aparecem para os outros). Verificado aparece para todo mestre, **só leitura** e sempre atualizado: dá para usar nos grupos, lançar os
-  itens, invocar as criaturas e **duplicar** (classe, criatura, NPC; a perícia é copiada para o catálogo). Com kit ativo, o verificado
-  de outra pessoa segue o kit como o resto (aparece se estiver no kit ativo). Perícias de uma carta verificada contam como a perícia equivalente do mestre (mesma
-  origem) na soma da ficha. Cada pessoa pode **ocultar os verificados** da própria interface (Perfil e conta); o que já está em
-  uso nos grupos e fichas continua funcionando.
-- **Cargo ADMIN** (`Perfil.cargo`, trocado por `npm run cargo -- <nome de usuário> ADMIN`): põe ou tira o selo verificado nas coisas
-  dele (principalmente kits). **Não há conteúdo fixo** (decisão de 2026-10-14): o conteúdo inicial do seed (atributos, status,
-  categorias de item) é do ADMIN, que o edita como qualquer dono; os outros mestres recebem pelo kit verificado (ou selo).
+  catálogo, criaturas e NPCs). Sem kit = **geral** (aparece em tudo); uma coisa pode estar em **vários kits**. O conteúdo entra no kit
+  pela tela do kit (caixas de seleção com tudo o que é do mestre), pelo campo de kits do formulário de cada coisa ou pelo **kit ativo**
+  (escolhido na lateral): com ele, uma faixa no topo de todas as telas do mestre avisa qual kit está ativo, as listas mostram **o que é do
+  kit e o geral** e o que for criado já entra no kit.
+- **O que vale na mesa vem do kit** (decisão de 2026-11-06): o mestre escolhe o kit da mesa, e valem as classes, raças, atributos,
+  perícias e status do kit (atributo no kit leva as perícias dele; perícia no kit leva o atributo; status automáticos sempre). Quando o
+  conteúdo do kit muda, as mesas que usam o kit acompanham. Mesa antiga sem kit mantém o que já estava marcado. Itens, criaturas e NPCs
+  mostrados no grupo seguem o kit (do kit + gerais). Excluir um kit não apaga nada; a mesa fica sem kit e mantém o que valia.
+- **Tudo é da própria conta** (decisão de 2026-11-06, no lugar do conteúdo verificado): nenhuma conta vê, usa ou duplica o conteúdo
+  de outra. Conta nova de mestre começa vazia (sem atributos, perícias, status nem categorias).
+- **Cargo ADMIN** (`Perfil.cargo`, trocado por `npm run cargo -- <nome de usuário> ADMIN`): não muda permissões. O seed cria o
+  conteúdo inicial (atributos, status, categorias de item) na conta ADMIN, e a documentação pública mostra os atributos e status
+  dela como exemplo.
 - Membro = jogador com ficha no grupo. Só entra enquanto houver vaga.
 
 ## Ficha
@@ -239,7 +234,7 @@ Fichas arquivadas antes de 2026-10-14 não guardam a classe e a raça e não pod
   título, descrição, imagem (link), **categoria**, **efeito ao usar** (texto),
   **espaços**, **consumo** (sem limite ou N usos) e **pré-requisito para saber usar**: classe, perícia (precisa ter
   total > 0) e/ou texto livre. Pode estar em kits de RPG (nenhum = geral).
-- **Categorias de item**: as 4 do seed (Armas, Artefatos, Taverna, Sebo) são do ADMIN e verificadas (só leitura para os outros) + as que cada mestre cria
+- **Categorias de item**: cada mestre cria as suas
   (nome, descrição e ícone escolhido de uma lista). Excluir uma categoria deixa os itens dela sem categoria.
 - O item lançado é uma **cópia** do molde: editar o catálogo não muda itens já lançados. O mestre também cria
   **itens avulsos** direto no grupo.
@@ -278,12 +273,11 @@ O One-Take é RPG de mesa com apoio de tecnologia: o app controla fichas e avisa
   alerta, nenhum número muda.
   - **Automáticos** (do seed, do ADMIN): Morto (vida 0), Sem energia vital (mana 0), Cansado (esforço 0). O dono muda nome e efeito;
     ninguém exclui. Status tem só **efeito** (sem descrição).
-  - **Aplicados pelo mestre** durante a sessão: os do conteúdo básico (Assustado, Furioso, Inspirado, Confiante, Envenenado,
-    Atordoado; proposta inicial) e os criados por cada mestre.
+  - **Aplicados pelo mestre** durante a sessão: os que cada mestre cria (os de exemplo, do seed na conta ADMIN: Assustado,
+    Furioso, Inspirado, Confiante, Envenenado, Atordoado).
   - **Categorias de status** (do mestre, ex.: Elementais, Mentais): só organizam. A página de status mostra os aplicados pelo
     mestre separados por categoria (cada uma oculta com a seta); ao montar o grupo, marcar a categoria leva todos os status dela.
-    Excluir a categoria não apaga os status. Categoria verificada aparece para todo mestre (só leitura); a categoria privada de outra
-    pessoa não aparece nem no status verificado dela.
+    Excluir a categoria não apaga os status.
   - Em cada grupo o mestre escolhe quais status valem (opcional). Grupo novo começa com os automáticos marcados (e, com kit, os do kit).
   - Uma carta de habilidade pode indicar o status que **ativa** (campo opcional); o mestre aplica na ficha do **alvo** (ou de quem usa,
     se a carta disser). Vale qualquer status, até os automáticos (ex.: Sobrecarga deixa Cansado): aplicado à mão, ele tem turnos e

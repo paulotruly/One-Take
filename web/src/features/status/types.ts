@@ -1,4 +1,3 @@
-import type { Visao } from "../verificados/types";
 
 export type TipoStatus = "BUFF" | "DEBUFF" | "MISTO";
 export type GatilhoStatus = "VIDA_ZERO" | "MANA_ZERO" | "ESFORCO_ZERO";
@@ -14,18 +13,6 @@ export type Status = {
   automatico: boolean;
   /** Na lista do mestre: kits de RPG em que o status está (vazio = geral). */
   kitIds?: string[];
-  /** Para quem vê: pode editar (é dele). */
-  editavel?: boolean;
-  /** Selo verificado: todo mestre vê e usa. */
-  verificado?: boolean;
-  /** Verificado de outra pessoa: só leitura, dá para duplicar. */
-  deOutro?: boolean;
-  /** Quem vê é ADMIN e dono: pode pôr ou tirar o selo. */
-  podeVerificar?: boolean;
-  /** Selo marcado nesta coisa (sem contar o do kit). */
-  seloProprio?: boolean;
-  /** Verificado por estar num kit verificado. */
-  verificadoPorKit?: boolean;
   /** Categoria do mestre (ex.: Elementais); null = sem categoria. Só vem se for visível para quem vê. */
   categoriaId?: string | null;
   /** Aplicado numa ficha, NPC ou criatura: turnos que faltam (null = sem prazo). */
@@ -33,8 +20,8 @@ export type Status = {
   categoria?: { id: string; nome: string } | null;
 };
 
-/** Categoria de status criada pelo mestre (ou verificada): só organiza a lista e o que vale no grupo. */
-export type CategoriaStatus = Visao & { id: string; nome: string; descricao: string; usos?: number };
+/** Categoria de status criada pelo mestre: só organiza a lista e o que vale no grupo. */
+export type CategoriaStatus = { id: string; nome: string; descricao: string; usos?: number };
 
 export type StatusResumo = { id: string; nome: string; tipo: TipoStatus };
 

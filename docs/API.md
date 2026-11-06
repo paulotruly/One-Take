@@ -10,7 +10,7 @@ Base local: `http://localhost:3333`. JSON em tudo.
 | POST | `/api/senha/recuperar` | `{ nickname, codigo, senha }` → `{ codigoRecuperacao }` (código novo; o usado deixa de valer). Troca a senha no Auth e encerra as sessões anteriores. Usuário inexistente, conta sem código ou código errado = mesma resposta 400 `RECUPERACAO_INVALIDA`. Limite: 10 por hora por IP |
 | POST | `/api/entrar` | corpo `{ login, senha }` (login = nickname, com ou sem @, ou email antigo) → `{ access_token, refresh_token }` do Supabase; erro = 401 "Nickname ou senha incorretos." Limite: 30 a cada 15 minutos por IP (429 `MUITAS_TENTATIVAS`) |
 | GET | `/api/regras/chance` | query `pontos` (0–20), `dt` (1–200), `bonus?` (-50 a 100), `esforco?` (0 até o máximo da rodada) → `{ chance (0..1), media, notacao }`. Calculadora da documentação; não usa o banco |
-| GET | `/api/regras` | `{ progressao, ficha: { pontosAtributoIniciais, inventarioInicial, inventarioPorNivel }, teste: { ladosDoDado, dadosComAtributoZero, divisorComAtributoZero, esforcoPorDadoExtra, esforcoComAtributoZero, esforcoMaximoPorRodada, dadosPorVantagem, chances: [{ dt, chances: [{ pontos, chance }] }] }, atributosBase, statusBase (do ADMIN e verificados; status com `nome, efeito, tipo, gatilho`), regrasPadrao: [{ slug, titulo, resumo, texto: string[] }], conta: { idadeMinima }, defesas: [{ ataque: { id, nome }, defesa: { id, nome }, quando }] }` (defesas pelas perícias base) |
+| GET | `/api/regras` | `{ progressao, ficha: { pontosAtributoIniciais, inventarioInicial, inventarioPorNivel }, teste: { ladosDoDado, dadosComAtributoZero, divisorComAtributoZero, esforcoPorDadoExtra, esforcoComAtributoZero, esforcoMaximoPorRodada, dadosPorVantagem, chances: [{ dt, chances: [{ pontos, chance }] }] }, atributosBase, statusBase (exemplos: os da conta ADMIN; status com `nome, efeito, tipo, gatilho`), regrasPadrao: [{ slug, titulo, resumo, texto: string[] }], conta: { idadeMinima }, defesas: [{ ataque: { id, nome }, defesa: { id, nome }, quando }] }` (defesas pelas perícias base) |
 
 ## Autenticação
 Todas as rotas sob `/api` exigem `Authorization: Bearer <access_token do Supabase>`.
@@ -34,7 +34,6 @@ Formato único:
 | 409 | `INVENTARIO_CHEIO` | o item (com seus espaços) não cabe |
 | 403 | `SO_MESTRE_CURA` | jogador tentou aumentar a vida da própria ficha (só diminuir) |
 | 409 | `NIVEL_MAXIMO` | subir nível além do 100 |
-| 403 | `VERIFICADO` | tentativa de alterar algo verificado de outra pessoa (classe e seus filhos, atributo, status, categoria) |
 | 403 | `STATUS_AUTOMATICO` | tentativa de excluir status automático (com gatilho); editar pode |
 | 409 | `FUNCAO_CHEIA` | criar ficha com classe de uma função (Combatente, Vanguardista, Suporte) que já chegou ao limite do grupo |
 | 404 | `NAO_ENCONTRADO` | não existe, id malformado, ou pertence a outro mestre |
@@ -69,10 +68,10 @@ Nas fichas, NPCs e criaturas, cada carta vem também com `teste: { pericia, atri
 | GET | `/api/me` | — (qualquer papel) | `{ id, nickname, papel, nome, fotoUrl, dataNascimento, codigoRecuperacaoEm }` (só para o próprio usuário; o e-mail interno do login e o hash do código nunca são expostos). No 1º acesso cria o perfil com `papel` e `nome` do `user_metadata` do cadastro (papel inválido = JOGADOR); conta recriada herda o perfil antigo |
 | POST | `/api/me/mestre` | — | ativa a interface de mestre (papel MESTRE) → perfil |
 | PATCH | `/api/me` | `{ nickname?, nome?, fotoUrl? }` (`""` = limpar; nickname 3–20 `[a-z0-9_.-]`, único: 409 `NICKNAME_EM_USO`) | perfil |
-| GET | `/api/classes?grupo=SUPORTE` | — | `Classe[]` (verificadas de outras pessoas primeiro, depois as do mestre; por título) |
+| GET | `/api/classes?grupo=SUPORTE` | — | `Classe[]` do mestre, por título |
 | POST | `/api/classes` | `{ grupo, titulo, descricao, imagemUrl?, pontosVida, pontosMana, pontosEsforco }` | `201 Classe` (só a classe; habilidades e perícias vêm depois) |
 | GET | `/api/classes/:id` | — | `Classe (detalhe)` |
-| GET | `/api/classes/:id/progressao` | — | `{ ganhoPorNivel: { pontosVida, pontosMana, pontosEsforco, pontosPericia }, niveis: [{ nivel, pontosVida, pontosMana, pontosEsforco, pontosPericia, habilidades: id[], novasHabilidades: id[] }] }` — do Nv 1 até max(5, maior nível de carta). Vale para verificadas |
+| GET | `/api/classes/:id/progressao` | — | `{ ganhoPorNivel: { pontosVida, pontosMana, pontosEsforco, pontosPericia }, niveis: [{ nivel, pontosVida, pontosMana, pontosEsforco, pontosPericia, habilidades: id[], novasHabilidades: id[] }] }` — do Nv 1 até max(5, maior nível de carta) |
 | PATCH | `/api/classes/:id` | qualquer subconjunto do POST | `Classe` |
 | DELETE | `/api/classes/:id` | — | `204` (cascata) |
 | POST | `/api/classes/:id/duplicar` | — | `201 Classe (detalhe)` — cópia "(cópia)" do mestre, com habilidades, perícias e o mesmo link de imagem |
@@ -81,13 +80,13 @@ Nas fichas, NPCs e criaturas, cada carta vem também com `teste: { pericia, atri
 | PATCH | `/api/habilidades/:id` | subconjunto | `Habilidade` |
 | DELETE | `/api/habilidades/:id` | — | `204` |
 | GET | `/api/pericias` | — | `PericiaCatalogo[]` — catálogo do mestre (por atributo e nome) |
-| POST | `/api/pericias` | `{ nome, categoria, atributoId, descricao? ("") }` (atributo do mestre ou verificado) | `201 PericiaCatalogo`; nome repetido = `409 NOME_EM_USO` |
+| POST | `/api/pericias` | `{ nome, categoria, atributoId, descricao? ("") }` (atributo do mestre) | `201 PericiaCatalogo`; nome repetido = `409 NOME_EM_USO` |
 | PATCH | `/api/pericias/:id` | subconjunto | `PericiaCatalogo`; só do próprio catálogo (base/outro mestre = 404) |
 | DELETE | `/api/pericias/:id` | — | `204` (remove também das classes e raças que a usam) |
-| GET | `/api/atributos` | — | `Atributo[]` do mestre + verificados |
+| GET | `/api/atributos` | — | `Atributo[]` do mestre |
 | POST | `/api/atributos` | `{ nome, descricao? }` | `201 Atributo`; nome igual a outro dele = `409 NOME_EM_USO` |
-| PATCH | `/api/atributos/:id` | subconjunto | `Atributo`; de outra pessoa = `403 VERIFICADO` |
-| DELETE | `/api/atributos/:id` | — | `204`; de outra pessoa = 403; com perícias (de qualquer pessoa, inclusive as base) = `409 ATRIBUTO_EM_USO` |
+| PATCH | `/api/atributos/:id` | subconjunto | `Atributo`; de outra conta = 404 |
+| DELETE | `/api/atributos/:id` | — | `204`; de outra conta = 404; com perícias (de qualquer pessoa, inclusive as base) = `409 ATRIBUTO_EM_USO` |
 | GET | `/api/racas` | — | `Raca[]` do mestre |
 | POST | `/api/racas` | `{ titulo, descricao, deslocamento, imagemUrl? }` (link http(s); `""` = sem imagem) | `201 Raca` |
 | GET / PATCH / DELETE | `/api/racas/:id` | subconjunto no PATCH | `Raca` / `204`; de outro mestre = 404 |
@@ -103,12 +102,12 @@ Em campos de texto opcionais (inclusive `imagemUrl`), `""` é salvo como `null`.
 ## Status (mestre)
 | Método | Rota | Corpo | Resposta |
 |---|---|---|---|
-| GET | `/api/status` | — | do mestre + verificados: `{ id, nome, efeito, tipo, gatilho, ordem, automatico, categoriaId, categoria: { id, nome } \| null }` (categoria só se for do mestre ou verificada) |
-| POST | `/api/status` | `{ nome, efeito (até 1000), tipo, categoriaId? }` (sempre manual, sem gatilho; status não tem descrição) | `201`; nome repetido = 409 `NOME_EM_USO`; categoria de outra pessoa (não verificada) = 404 |
-| PATCH / DELETE | `/api/status/:id` | subconjunto | só o dono (outra pessoa = 403 `VERIFICADO`); o dono edita até o automático, mas excluir automático = 403 `STATUS_AUTOMATICO`; excluir tira de fichas, grupos e cartas |
-| GET | `/api/status-categorias` | — | do mestre + verificadas: `{ id, nome, descricao, usos }` + campos de visão |
+| GET | `/api/status` | — | do mestre: `{ id, nome, efeito, tipo, gatilho, ordem, automatico, categoriaId, categoria: { id, nome } \| null, kitIds }` |
+| POST | `/api/status` | `{ nome, efeito (até 1000), tipo, categoriaId? }` (sempre manual, sem gatilho; status não tem descrição) | `201`; nome repetido = 409 `NOME_EM_USO`; categoria de outra conta = 404 |
+| PATCH / DELETE | `/api/status/:id` | subconjunto | só o dono (outra conta = 404); o dono edita até o automático, mas excluir automático = 403 `STATUS_AUTOMATICO`; excluir tira de fichas, grupos e cartas |
+| GET | `/api/status-categorias` | — | do mestre: `{ id, nome, descricao, usos }` |
 | POST | `/api/status-categorias` | `{ nome, descricao? }` | `201`; nome repetido = 409 `NOME_EM_USO` |
-| PATCH / DELETE | `/api/status-categorias/:id` | subconjunto | verificada de outra pessoa = 403 `VERIFICADO`; excluir deixa os status sem categoria |
+| PATCH / DELETE | `/api/status-categorias/:id` | subconjunto | de outra conta = 404; excluir deixa os status sem categoria |
 
 Habilidades aceitam `statusId` (ou `null`) no POST/PATCH e devolvem `status: { id, nome, tipo }`.
 Grupos: `disponiveis.statusIds` (status ativados). Membros do grupo trazem `status[]`.
@@ -130,23 +129,22 @@ A prévia de progressão tem `aprimoradas[]` por nível.
 | Método | Rota | Corpo | Resposta |
 |---|---|---|---|
 | GET | `/api/grupos` | — | grupos do mestre com `membros` (nº de fichas) e `composicao` (fichas por função: `{ COMBATENTE?, VANGUARDISTA?, SUPORTE? }`). No detalhe (`GET /api/grupos/:id`), cada membro traz também `funcao` e `morto` |
-| POST | `/api/grupos` | `{ titulo, sinopse, genero, imagemUrl?, limiteMembros, permitirClassesRepetidas, limiteCombatentes?, limiteVanguardistas?, limiteSuportes? (0–50 ou null = sem limite; padrão null), kitId? (null), disponiveis? }` | `201 GrupoDetalhe` (código gerado) |
+| POST | `/api/grupos` | `{ titulo, sinopse, genero, imagemUrl?, limiteMembros, permitirClassesRepetidas, limiteCombatentes?, limiteVanguardistas?, limiteSuportes? (0–50 ou null = sem limite; padrão null), kitId? (null), disponiveis? }` (com `kitId`, o que vale vem do kit e `disponiveis` é ignorado) | `201 GrupoDetalhe` (código gerado) |
 | GET | `/api/grupos/:id` | — | `GrupoDetalhe`: grupo (com `kitId` e `kit { id, nome }`) + `disponiveis { classeIds, racaIds, atributoIds, periciaIds, statusIds }` + `membros[]` (ficha, jogador, classe, raça, nível, vida/mana/esforço atual/max, status) + `statusAtivos[]` + `itensVagos: Item[]` + `criaturas: Criatura[]` |
 | PATCH | `/api/grupos/:id` | subconjunto (limite não pode ficar abaixo dos membros; limite por função não fica abaixo das fichas daquela função, 400 com o campo) | `GrupoDetalhe` |
-| PUT | `/api/grupos/:id/disponiveis` | `{ classeIds, racaIds, atributoIds, periciaIds }` (do mestre; perícias do catálogo, dentro dos atributos) | `GrupoDetalhe` |
+| PUT | `/api/grupos/:id/disponiveis` | `{ classeIds, racaIds, atributoIds, periciaIds }` (do mestre; perícias do catálogo, dentro dos atributos) | `GrupoDetalhe`. Só mesa sem kit (a interface não usa mais); mesa com kit = 400. `PATCH /api/grupos/:id` com `kitId` refaz o que vale pelo kit |
 | POST | `/api/grupos/:id/codigo` | — | `GrupoDetalhe` com código novo |
 | DELETE | `/api/grupos/:id` | — | `204` (apaga fichas e itens) |
 | POST | `/api/grupos/:id/itens` | campos de item + `fichaId?` (item avulso) | `201 Item` (sem ficha = vago) |
 | POST | `/api/grupos/:id/criaturas` | `{ bestaId, nivel? (1), quantidade? (1, máx 20) }` | `201 Criatura[]` (todas do grupo) |
 
-O kit do grupo (`kitId`) não limita o PUT de disponíveis: a tela usa o kit para pré-marcar, e itens, criaturas e NPCs mostrados no grupo seguem o kit.
+Com kit (`kitId`), o que vale no grupo vem do kit e é refeito quando o kit muda; itens, criaturas e NPCs mostrados no grupo seguem o kit (do kit + gerais).
 
 ## Kits de RPG (mestre)
 | Método | Rota | Corpo | Resposta |
 |---|---|---|---|
-| GET | `/api/sistema` | — | `{ admin }` (cargo ADMIN de quem pede) |
-| PUT | `/api/verificados/:tipo/:id` | `{ verificado: boolean }` | `{ tipo, id, verificado }`. `tipo`: classe, raca, atributo, pericia, status, categoriaItem, itemModelo, besta, npc, kit, classeConceito, racaConceito, bestaConceito, categoriaStatus (outro = 400). Só ADMIN (403) e só nas coisas dele (404) |
-| GET | `/api/kits` | — | kits do mestre e verificados: `{ id, nome, descricao, conteudo { classes, racas, atributos, pericias, status, itens, bestas, npcs, grupos } }` + campos de visão |
+| GET | `/api/kits` | — | kits do mestre: `{ id, nome, descricao, conteudo { classes, racas, atributos, pericias, status, itens, bestas, npcs, grupos } }` |
+| PUT | `/api/kits/:id/conteudo` | `{ classeIds, racaIds, atributoIds, periciaIds, statusIds, itemIds, bestaIds, npcIds }` (listas completas) | detalhe do kit (como `GET /api/kits/:id`). Troca tudo o que está no kit; coisa de outra conta = 400; as mesas que usam o kit são refeitas |
 | GET | `/api/kits/:id` | — | o kit + `dentro: { classes, racas, atributos, pericias (com atributo), status (com tipo), itens, bestas, npcs, grupos }` (cada um `{ id, nome }`, por nome; `grupos` só para o dono). Kit de outra pessoa sem selo = 404 |
 | POST | `/api/kits` | `{ nome, descricao? }` | `201 Kit` |
 | PATCH | `/api/kits/:id` | parcial | `Kit` |
@@ -156,17 +154,11 @@ Classes, raças, atributos, perícias, status, itens do catálogo, criaturas e N
 outro = 404) no POST/PATCH e devolvem `kitIds` (vazio = geral). No PATCH, mandar `kitIds` troca a lista inteira; omitir mantém.
 Listas com `?kitId=` (`/api/catalogo-itens`, `/api/npcs`) devolvem o que está no kit mais o que é geral.
 
-**Verificado e cargo ADMIN.** Listas e detalhes de classes, raças, atributos, perícias, status, categorias de item, itens do catálogo, criaturas e NPCs incluem o que é
-verificado (a menos que a pessoa tenha `ocultarVerificados`) e trazem `editavel` (é seu; não há conteúdo fixo), `verificado`,
-`seloProprio`, `verificadoPorKit` (está num kit verificado), `deOutro` (de outra pessoa: só leitura; `kitIds` só com os kits
-verificados) e `podeVerificar` (ADMIN e dono). `GET /api/kits` traz os do mestre e os verificados; `GET /api/conceitos*` traz os do
-mestre, os verificados e os que têm variação verificada (das variações de outra pessoa, só as verificadas). Grupo aceita kit verificado. Editar algo verificado de
-outra pessoa = 403 `VERIFICADO`; usar no grupo, lançar item, invocar criatura e duplicar funcionam
-(`POST /api/classes/:id/duplicar`, `/api/bestas/:id/duplicar`, `/api/npcs/:id/duplicar` (vida cheia, sem status, itens nem kits),
-`/api/pericias/:id/duplicar` (copia para o catálogo ou devolve a igual)). `GET /api/pericias` traz só as do mestre (opções dos
-formulários); `?verificados=1` inclui as verificadas que ele ainda não tem (mesma origem ou nome). Só o dono edita, inclusive o ADMIN
-(que recebeu o conteúdo inicial do seed). `GET /api/me` traz `cargo` e `ocultarVerificados`;
-`PATCH /api/me` aceita `ocultarVerificados: boolean`.
+**Tudo é da própria conta.** Listas e detalhes de classes, raças, atributos, perícias, status, categorias, itens do catálogo,
+criaturas, NPCs, arquétipos e kits trazem só o que é do mestre que pede; coisa de outra conta = 404 (ler, editar, usar na mesa,
+lançar, invocar ou duplicar). Duplicar é para as próprias coisas: `POST /api/classes/:id/duplicar`, `/api/bestas/:id/duplicar`,
+`/api/npcs/:id/duplicar` (vida cheia, sem status, itens nem kits). Conta nova começa vazia (nada é copiado). O cargo (`Perfil.cargo`)
+não muda permissões: serve só para `GET /api/regras` mostrar os atributos e status da conta ADMIN como exemplo.
 
 ## Fichas, convites e itens (qualquer usuário logado)
 | Método | Rota | Corpo | Resposta |
@@ -190,8 +182,8 @@ Erro genérico de exclusão bloqueada: `409 EM_USO` (ex.: classe/raça usada por
 
 ## Itens (formato)
 **Item**: `{ id, categoria: { id, nome, icone } | null, nome, descricao, imagemUrl, efeito, espacos, usosMaximos, usosRestantes, requisito, requisitoPericia: { id, nome } | null, requisitoClasse: { id, titulo } | null, fichaId?, modeloId? }`
-Campos de item no corpo: `{ categoriaId? (Artefatos; null = sem categoria), nome, descricao? (""), imagemUrl?, efeito?, espacos? (1), usosMaximos? (null = sem limite), requisito?, requisitoPericiaId?, requisitoClasseId? }`
-(perícia do catálogo do mestre; classe do mestre ou verificada). Limites: nome 80, descrição/efeito 1000, requisito 200, espaços 1–99, usos 1–999.
+Campos de item no corpo: `{ categoriaId? (null = sem categoria), nome, descricao? (""), imagemUrl?, efeito?, espacos? (1), usosMaximos? (null = sem limite), requisito?, requisitoPericiaId?, requisitoClasseId? }`
+(categoria, perícia do catálogo e classe do mestre). Limites: nome 80, descrição/efeito 1000, requisito 200, espaços 1–99, usos 1–999.
 
 ## Catálogo de itens (mestre)
 | Método | Rota | Corpo | Resposta |
@@ -231,9 +223,9 @@ Cartas de besta usam as mesmas rotas `/api/habilidades/:id` e `/api/aprimorament
 ## Categorias de item (mestre)
 | Método | Rota | Corpo | Resposta |
 |---|---|---|---|
-| GET | `/api/categorias-item` | — | do mestre + verificadas: `{ id, nome, descricao, icone, ordem, usos }` + campos de visão |
+| GET | `/api/categorias-item` | — | do mestre: `{ id, nome, descricao, icone, ordem, usos }` |
 | POST | `/api/categorias-item` | `{ nome (até 40), descricao? (""), icone? ("pacote") }` | `201`; nome igual a outra sua (sem diferenciar maiúsculas) = 409 `NOME_EM_USO` |
-| PATCH / DELETE | `/api/categorias-item/:id` | parcial | só o dono (outra pessoa = 403 `VERIFICADO`); excluir deixa os itens sem categoria |
+| PATCH / DELETE | `/api/categorias-item/:id` | parcial | só o dono (outra conta = 404); excluir deixa os itens sem categoria |
 `icone`: `pacote | espada | machado | arco | escudo | joia | anel | coroa | varinha | caneca | pocao | comida | livro | pergaminho | mapa | chave | moeda | roupa | martelo | bomba`.
 
 ## NPCs (mestre)

@@ -1,23 +1,19 @@
 import { randomUUID } from "node:crypto";
 import type { z } from "zod";
 import type { Atributo, Classe, ClassePericia, GrupoClasse, Pericia } from "../../generated/prisma/client.js";
-import { classeDeOutro, naoEncontrado } from "../../lib/errors.js";
-import { comKits, definirKits } from "../../lib/kits.js";
+import { naoEncontrado } from "../../lib/errors.js";
+import { comKitIds, comKits, definirKits } from "../../lib/kits.js";
 import { getPrisma } from "../../lib/prisma.js";
-import { comVisao, podeUsar, quemVe, visivelPara, type Quem } from "../../lib/sistema.js";
+import { doDono, ehDoDono } from "../../lib/posse.js";
 import { previaProgressao } from "../../regras/progressao.js";
 import { apresentarAtributo, porAtributoENome } from "../atributos/atributos.service.js";
 import { comStatus } from "../habilidades/habilidades.include.js";
 import type { criarClasseSchema, editarClasseSchema } from "./classes.schemas.js";
 
-/**
- * Formato público de uma classe: se vierem os kits, acrescenta `kitIds`.
- * Com `quem`, também `editavel`, `verificado`, `deOutro` e `podeVerificar` (e os kits só aparecem para o dono).
- */
-export function apresentarClasse<T extends Classe & { kits?: { kitId: string }[] }>(c: T, quem?: Quem) {
-  if (quem) return comVisao(c, quem);
-  const { kits, ...resto } = c;
-  return { ...resto, ...(kits && { kitIds: kits.map((k) => k.kitId) }) };
+/** Formato público de uma classe: se vierem os kits, troca por `kitIds`. */
+export function apresentarClasse<T extends Classe & { kits?: { kitId: string }[] }>(c: T) {
+  if (!c.kits) return c;
+  return comKitIds(c);
 }
 
 /** Perícias da classe achatadas: dados do catálogo + modificador da classe, por atributo e nome. */
@@ -30,33 +26,26 @@ export function apresentarPericias(vinculos: (ClassePericia & { pericia: Pericia
 }
 
 // ---------- Regras de acesso ----------
-// Leitura: classe verificada (selo ou kit) ou do próprio mestre. Classe de outro mestre = 404 (não revela que existe).
-// Escrita: só classe do próprio mestre; verificada de outra pessoa = 403 VERIFICADO (duplique para editar).
+// Leitura e escrita: só a classe do próprio mestre. Classe de outra conta = 404 (não revela que existe).
+// O jogador vê a classe da ficha pela mesa (fichas.service), não por aqui.
 
 export async function classeLegivel(id: string, usuarioId: string) {
   const classe = await getPrisma().classe.findUnique({ where: { id } });
-  if (!classe || !(await podeUsar("classe", classe, usuarioId))) throw naoEncontrado("Classe não encontrada");
+  if (!classe || !ehDoDono(classe, usuarioId)) throw naoEncontrado("Classe não encontrada");
   return classe;
 }
 
-export async function classeEditavel(id: string, usuarioId: string) {
-  const classe = await classeLegivel(id, usuarioId);
-  if (classe.donoId === usuarioId) return classe;
-  throw classeDeOutro();
-}
+export const classeEditavel = classeLegivel;
 
 // ---------- Casos de uso ----------
 
 export async function listar(usuarioId: string, grupo?: GrupoClasse) {
-  const quem = await quemVe(usuarioId);
   const classes = await getPrisma().classe.findMany({
-    where: { ...(await visivelPara(usuarioId)), ...(grupo && { grupo }) },
+    where: { ...doDono(usuarioId), ...(grupo && { grupo }) },
     orderBy: [{ titulo: "asc" }],
     include: { conceito: { select: { id: true, titulo: true } }, ...comKits },
   });
-  // Verificadas primeiro, depois as próprias.
-  const ordem = (c: { donoId: string }) => (c.donoId === usuarioId ? 1 : 0);
-  return classes.sort((a, b) => ordem(a) - ordem(b)).map((c) => apresentarClasse(c, quem));
+  return classes.map((c) => apresentarClasse(c));
 }
 
 export async function detalhar(id: string, usuarioId: string) {
@@ -71,7 +60,7 @@ export async function detalhar(id: string, usuarioId: string) {
     },
   });
   const { pericias, ...resto } = classe;
-  return { ...apresentarClasse(resto, await quemVe(usuarioId)), pericias: apresentarPericias(pericias) };
+  return { ...apresentarClasse(resto), pericias: apresentarPericias(pericias) };
 }
 
 /** Prévia de progressão: atributos, pontos de perícia e cartas disponíveis em cada nível. */
@@ -115,7 +104,7 @@ export async function excluir(id: string, usuarioId: string) {
 
 /**
  * Copia classe + habilidades + perícias para o mestre.
- * Perícias da origem que não são do catálogo do mestre (ex.: classe verificada de outra pessoa) são trocadas
+ * Perícias da origem que não são do catálogo do mestre (ex.: a perícia base, sem dono) são trocadas
  * pela cópia correspondente no catálogo dele (mesma origem ou mesmo nome); se não houver, é criada.
  */
 export async function duplicar(id: string, usuarioId: string) {

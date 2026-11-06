@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { naoEncontrado } from "./errors.js";
 import { getPrisma } from "./prisma.js";
+import { sincronizarMesas } from "../modules/grupos/kit-da-mesa.js";
 
 /** Campo opcional nos corpos de criar/editar: a lista completa de kits (substitui a anterior). Ausente = não mexe. */
 export const kitIdsSchema = z.array(z.guid("Kit inválido")).max(50).optional();
@@ -26,19 +27,37 @@ export async function validarKits(kitIds: string[] | undefined, mestreId: string
   if (n !== unicos.length) throw naoEncontrado("Kit não encontrado");
 }
 
-/** Kit de um grupo: do mestre ou verificado. */
+/** Kit de um grupo: do próprio mestre. */
 export async function validarKitDoGrupo(kitId: string | null | undefined, mestreId: string) {
   if (!kitId) return;
-  const n = await getPrisma().kit.count({ where: { id: kitId, OR: [{ donoId: mestreId }, { verificado: true }] } });
+  const n = await getPrisma().kit.count({ where: { id: kitId, donoId: mestreId } });
   if (n === 0) throw naoEncontrado("Kit não encontrado");
 }
 
-/** Liga o registro aos kits informados (troca a lista inteira). `undefined` = não mexe. */
+/** Kits em que o registro está hoje. */
+async function kitsAtuais(tipo: TipoKit, id: string): Promise<string[]> {
+  const prisma = getPrisma();
+  const onde = { select: { kitId: true } } as const;
+  const atuais = {
+    classe: () => prisma.kitClasse.findMany({ where: { classeId: id }, ...onde }),
+    raca: () => prisma.kitRaca.findMany({ where: { racaId: id }, ...onde }),
+    atributo: () => prisma.kitAtributo.findMany({ where: { atributoId: id }, ...onde }),
+    pericia: () => prisma.kitPericia.findMany({ where: { periciaId: id }, ...onde }),
+    status: () => prisma.kitStatus.findMany({ where: { statusId: id }, ...onde }),
+    itemModelo: () => prisma.kitItemModelo.findMany({ where: { itemModeloId: id }, ...onde }),
+    besta: () => prisma.kitBesta.findMany({ where: { bestaId: id }, ...onde }),
+    npc: () => prisma.kitNpc.findMany({ where: { npcId: id }, ...onde }),
+  } as const;
+  return ((await atuais[tipo]()) ?? []).map((l) => l.kitId);
+}
+
+/** Liga o registro aos kits informados (troca a lista inteira) e atualiza as mesas desses kits. `undefined` = não mexe. */
 export async function definirKits(tipo: TipoKit, id: string, kitIds: string[] | undefined, mestreId: string) {
   if (kitIds === undefined) return;
   await validarKits(kitIds, mestreId);
   const prisma = getPrisma();
   const unicos = [...new Set(kitIds)];
+  const antes = await kitsAtuais(tipo, id);
   const ops = {
     classe: () => [prisma.kitClasse.deleteMany({ where: { classeId: id } }), prisma.kitClasse.createMany({ data: unicos.map((kitId) => ({ kitId, classeId: id })) })],
     raca: () => [prisma.kitRaca.deleteMany({ where: { racaId: id } }), prisma.kitRaca.createMany({ data: unicos.map((kitId) => ({ kitId, racaId: id })) })],
@@ -50,6 +69,7 @@ export async function definirKits(tipo: TipoKit, id: string, kitIds: string[] | 
     npc: () => [prisma.kitNpc.deleteMany({ where: { npcId: id } }), prisma.kitNpc.createMany({ data: unicos.map((kitId) => ({ kitId, npcId: id })) })],
   } as const;
   await prisma.$transaction(ops[tipo]());
+  await sincronizarMesas([...antes, ...unicos]);
 }
 
 /** Filtro de listagem "o que aparece com este kit": o que é do kit + o que é geral (sem kit). */

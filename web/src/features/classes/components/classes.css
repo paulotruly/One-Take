@@ -2,7 +2,6 @@
 .selo--grupo-COMBATENTE { color: var(--cor-grupo-combatente); }
 .selo--grupo-VANGUARDISTA { color: var(--cor-grupo-vanguardista); }
 .selo--grupo-SUPORTE { color: var(--cor-grupo-suporte); }
-.selo--propria { color: var(--cor-propria); }
 .selo--efeito { color: var(--cor-efeito); }
 .selo--nivel { color: var(--cor-fixa); }
 .selo--mana { color: var(--cor-mana); }
@@ -118,13 +117,6 @@
 .classe-card__selos .selo--grupo-COMBATENTE { --cor-grupo: var(--cor-grupo-combatente); }
 .classe-card__selos .selo--grupo-VANGUARDISTA { --cor-grupo: var(--cor-grupo-vanguardista); }
 .classe-card__selos .selo--grupo-SUPORTE { --cor-grupo: var(--cor-grupo-suporte); }
-/* Origem: vidro escuro discreto sobre a imagem. */
-.classe-card__selos .selo--propria,
-.classe-card__selos .selo--leitura {
-  background: var(--cor-selo-vidro);
-  color: var(--cor-sobre-selo);
-  backdrop-filter: blur(6px);
-}
 .classe-card__corpo { display: flex; flex-direction: column; gap: var(--esp-3); padding: var(--esp-4); flex: 1; }
 .classe-card__descricao {
   color: var(--cor-texto-suave);
@@ -274,19 +266,7 @@
 /* ---------- Arquétipos ---------- */
 /* Arquétipos em uma linha com rolagem horizontal: ocupam pouca altura. */
 /* Lista agrupada por arquétipo (classes, raças e criaturas). */
-.conceitos-barra { display: flex; justify-content: space-between; align-items: center; gap: var(--esp-4); flex-wrap: wrap; }
-.conceitos-barra p { flex: 1 1 320px; }
-.conceitos-grupos { display: flex; flex-direction: column; gap: var(--esp-6); }
-.conceito-grupo { display: flex; flex-direction: column; gap: var(--esp-4); padding-top: var(--esp-5); border-top: 1px solid var(--cor-borda); }
-.conceito-grupo__cabecalho { display: flex; align-items: center; gap: var(--esp-2) var(--esp-3); flex-wrap: wrap; }
-.conceito-grupo__alternar { display: flex; align-items: center; gap: var(--esp-2); padding: 0; border: 0; background: none; color: inherit; font: inherit; letter-spacing: inherit; cursor: pointer; text-align: left; }
-.conceito-grupo__alternar:hover { color: var(--cor-primaria-hover); }
-.conceito-grupo__alternar .pagina__subtitulo { font-family: var(--fonte-base); letter-spacing: 0; }
-.conceito-grupo__acoes { display: flex; align-items: center; gap: var(--esp-2); flex-wrap: wrap; margin-left: auto; }
-.conceito-grupo__descricao { max-width: 760px; margin-top: calc(-1 * var(--esp-2)); white-space: pre-line; }
 /* Dentro do grupo, o nome do arquétipo já está no título. */
-.conceito-grupo .classe-card__conceito { display: none; }
-.conceito-grupo--avulso h2 { color: var(--cor-texto-suave); }
 .conceitos { display: flex; gap: var(--esp-3); margin: 0; padding: 0 0 var(--esp-2); list-style: none; overflow-x: auto; scroll-snap-type: x proximity; }
 .conceito { flex: 0 0 min(280px, 85%); scroll-snap-align: start; display: flex; flex-direction: column; gap: var(--esp-2); padding: var(--esp-3); border: 1px solid var(--cor-borda); border-left: 4px solid var(--cor-primaria); }
 .conceito__descricao { display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin: 0; }
@@ -316,3 +296,13 @@
   .classe-card__selos { flex-wrap: wrap; }
   .classe-card__acoes { flex-direction: column; padding: 0 var(--esp-3) var(--esp-3); }
 }
+
+/* Filtro por arquétipo: chips em linha no topo; a lista é uma grade única. */
+.conceitos-filtro { display: flex; align-items: center; gap: var(--esp-2); flex-wrap: wrap; }
+.filtro-chip { display: inline-flex; align-items: center; gap: var(--esp-2); min-height: 36px; padding: 0 var(--esp-3); border: 1px solid var(--cor-borda); background: var(--cor-superficie); color: var(--cor-texto-suave); font: inherit; font-size: var(--texto-sm); cursor: pointer; transition: border-color var(--transicao), color var(--transicao); }
+.filtro-chip:hover { border-color: var(--cor-borda-destaque); color: var(--cor-texto); }
+.filtro-chip[aria-pressed="true"] { border-color: var(--cor-primaria); color: var(--cor-primaria); }
+.filtro-chip__total { color: var(--cor-texto-suave); font-size: var(--texto-xs); }
+.conceito-escolhido { display: flex; align-items: flex-start; gap: var(--esp-3); flex-wrap: wrap; padding: var(--esp-3) var(--esp-4); border-left: 2px solid var(--cor-primaria); background: var(--cor-superficie); }
+.conceito-escolhido__descricao { flex: 1 1 320px; margin: 0; white-space: pre-line; }
+.conceito-escolhido__acoes { display: flex; align-items: center; gap: var(--esp-2); flex-wrap: wrap; }

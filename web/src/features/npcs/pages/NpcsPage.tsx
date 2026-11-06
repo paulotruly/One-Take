@@ -3,7 +3,6 @@ import { Plus } from "lucide-react";
 import { Link } from "react-router";
 import { EmptyState, ErrorState, Loading } from "../../../components/ui/States";
 import { mensagemDeErro } from "../../../lib/api";
-import { AvisoKit } from "../../kits/components/AvisoKit";
 import { useKitAtivo } from "../../kits/api";
 import { soDoKit } from "../../kits/types";
 import { useNpcs } from "../api";
@@ -27,7 +26,6 @@ export function NpcsPage() {
           <Plus size={16} aria-hidden /> Novo NPC
         </Link>
       </div>
-      <AvisoKit />
 
       {npcs.isPending ? (
         <Loading texto="Carregando NPCs…" />

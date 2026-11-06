@@ -8,16 +8,12 @@ export const periciasRouter = Router();
 
 // ---------- Catálogo do mestre ----------
 periciasRouter.get("/pericias", async (req, res) => {
-  res.json(await service.listar(usuarioDe(req).id, { comVerificados: req.query.verificados === "1" }));
+  res.json(await service.listar(usuarioDe(req).id));
 });
 
 periciasRouter.post("/pericias", async (req, res) => {
   const dados = criarPericiaSchema.parse(req.body);
   res.status(201).json(await service.criar(usuarioDe(req).id, dados));
-});
-
-periciasRouter.post("/pericias/:id/duplicar", async (req, res) => {
-  res.status(201).json(await service.duplicar(idDe(req.params.id, "Perícia não encontrada"), usuarioDe(req).id));
 });
 
 periciasRouter.patch("/pericias/:id", async (req, res) => {
