@@ -1,8 +1,8 @@
 // Seções de Perfil e conta: código de recuperação, conteúdo verificado, seus dados e (discreta, no fim) excluir a conta.
-import { BadgeCheck, Download, KeyRound } from "lucide-react";
+import { BadgeCheck, Crown, Download, KeyRound } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import { useAuth, type Me } from "../../../auth/AuthProvider";
+import { useAtivarMestre, useAuth, type Me } from "../../../auth/AuthProvider";
 import { Button } from "../../../components/ui/Button";
 import { Field } from "../../../components/ui/Field";
 import { Modal } from "../../../components/ui/Modal";
@@ -75,6 +75,26 @@ export function SecaoVerificados({ me }: { me: Me }) {
         <span>Ocultar o conteúdo verificado da minha interface</span>
       </label>
       {ocultar.isError && <div className="aviso">{mensagemDeErro(ocultar.error)}</div>}
+    </section>
+  );
+}
+
+/** Conta só de jogador: ativa a interface de mestre (a de jogador continua). */
+export function SecaoAtivarMestre() {
+  const ativar = useAtivarMestre();
+  const navigate = useNavigate();
+  return (
+    <section className="secao secao-conta">
+      <h2><Crown size={18} aria-hidden /> Interface de mestre</h2>
+      <p className="pagina__subtitulo">
+        Para criar classes, raças, itens e criaturas e conduzir mesas. Sua conta continua jogando, e você alterna entre Mestrar e Jogar no topo.
+      </p>
+      {ativar.isError && <div className="aviso">{mensagemDeErro(ativar.error)}</div>}
+      <div>
+        <Button disabled={ativar.isPending} onClick={() => ativar.mutate(undefined, { onSuccess: () => navigate("/mestre/inicio") })}>
+          <Crown size={16} aria-hidden /> {ativar.isPending ? "Ativando…" : "Ativar interface de mestre"}
+        </Button>
+      </div>
     </section>
   );
 }

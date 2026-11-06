@@ -17,7 +17,7 @@ export function RequirePapel({ papel }: { papel?: Papel }) {
   if (!session) return <Navigate to="/login" replace state={{ de: location.pathname }} />;
   if (me.isPending) return <Loading texto="Carregando perfil…" />;
   if (me.isError) return <ErrorState mensagem={mensagemDeErro(me.error)} onTentarNovamente={() => me.refetch()} />;
-  if (papel === "MESTRE" && me.data.papel !== "MESTRE") return <Navigate to="/ativar-mestre" replace />;
+  if (papel === "MESTRE" && me.data.papel !== "MESTRE") return <Navigate to="/jogador" replace />;
   return <Outlet />;
 }
 

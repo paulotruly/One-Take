@@ -362,6 +362,3 @@ button.topo__perfil { border: 0; background: transparent; font: inherit; cursor:
 .painel-mestre__contagem { display: flex; flex-direction: column; gap: var(--esp-1); padding: var(--esp-4); border: 1px solid var(--cor-borda); background: var(--cor-superficie); color: var(--cor-primaria); transition: border-color var(--transicao); }
 .painel-mestre__contagem:hover { border-color: var(--cor-borda-destaque); text-decoration: none; }
 .painel-mestre__contagem strong { color: var(--cor-texto); font-size: var(--texto-lg); }
-
-/* ---------- Perfil e conta ---------- */
-.conta-atalhos { display: flex; flex-wrap: wrap; gap: var(--esp-2) var(--esp-4); padding-bottom: var(--esp-3); border-bottom: 1px solid var(--cor-borda); font-size: var(--texto-sm); }

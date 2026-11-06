@@ -29,7 +29,7 @@ export function MestreVisaoGeral() {
         que você usa como está ou duplica para mudar.
       </p>
       <p>
-        A interface de mestre é ativada na conta (no cadastro ou depois, em <strong>Mestrar</strong> no topo). A mesma conta continua
+        A interface de mestre é ativada na conta (no cadastro ou depois, em <strong>Perfil e conta</strong>). A mesma conta continua
         jogando: use <strong>Jogar</strong> no topo para ir às suas fichas.
       </p>
     </>

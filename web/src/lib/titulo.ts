@@ -17,7 +17,6 @@ const TITULOS: [RegExp, string][] = [
   [/^\/login/, "Entrar"],
   [/^\/cadastro/, "Criar conta"],
   [/^\/recuperar-senha/, "Recuperar senha"],
-  [/^\/ativar-mestre/, "Ativar mestre"],
 ];
 
 export function atualizarTitulo(caminho: string) {

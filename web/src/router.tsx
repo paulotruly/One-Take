@@ -26,7 +26,6 @@ import { NpcsPage } from "./features/npcs/pages/NpcsPage";
 import { KitDetalhePage } from "./features/kits/pages/KitDetalhePage";
 import { KitsPage } from "./features/kits/pages/KitsPage";
 import { AppLayout } from "./layouts/AppLayout";
-import { AtivarMestrePage } from "./pages/AtivarMestrePage";
 import { PublicLayout } from "./layouts/PublicLayout";
 import { CadastroPage } from "./pages/CadastroPage";
 import { HomePage } from "./pages/HomePage";
@@ -64,7 +63,7 @@ export const router = createBrowserRouter([
         children: [
           { path: "/perfil", element: <Navigate to="/conta" replace /> },
           { path: "/conta", element: <ConfiguracoesContaPage /> },
-          { path: "/ativar-mestre", element: <AtivarMestrePage /> },
+          { path: "/ativar-mestre", element: <Navigate to="/conta" replace /> },
         ],
       },
     ],

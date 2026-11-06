@@ -73,7 +73,7 @@ export function Contas() {
         ]}
       />
       <ul>
-        <li>Começou como jogador e quer mestrar? Toque em <strong>Mestrar</strong> no topo da tela e ative a interface de mestre.</li>
+        <li>Começou como jogador e quer mestrar? Em <strong>Perfil e conta</strong>, use <strong>Ativar interface de mestre</strong>. Depois disso aparece <strong>Mestrar</strong> no topo da tela.</li>
         <li>Quem já é mestre alterna entre <strong>Mestrar</strong> e <strong>Jogar</strong> no topo da tela.</li>
         <li>O catálogo do mestre só é criado no primeiro acesso à interface de mestre: quem nunca mestra não ocupa espaço à toa.</li>
       </ul>

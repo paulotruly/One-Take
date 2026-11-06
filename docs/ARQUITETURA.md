@@ -119,11 +119,11 @@ exibido direto pelo front. Não há upload nem uso do Supabase Storage.
   `/mestre` (galeria, `?grupo=` no filtro), `/mestre/racas`, `/mestre/racas/:id`, `/mestre/classes/nova` (só a classe),
   `/mestre/classes/:id` (dados, resumo das habilidades, perícias), `/mestre/classes/:id/editar`,
   `/mestre/classes/:id/habilidades` (criar/editar/reordenar/excluir cartas), `/mestre/pericias` (catálogo); `/jogador` (reservada, tela vazia); `/` redireciona conforme o papel.
-- `RequirePapel` exige sessão; com `papel="MESTRE"`, exige a interface de mestre ativada (senão vai para `/ativar-mestre`).
+- `RequirePapel` exige sessão; com `papel="MESTRE"`, exige a interface de mestre ativada (senão vai para `/jogador`; quem é só jogador ativa em Perfil e conta).
   `/jogador` vale para qualquer conta. O topo alterna **Mestrar**/**Jogar**; `/area` volta à última interface usada (localStorage).
 - Mestre também: `/mestre/npcs`, `/mestre/npcs/novo` (`?grupo=` volta ao grupo, `?kit=` já marca o kit), `/mestre/npcs/:id`, `/mestre/npcs/:id/editar`, `/mestre/bestiario`, `/mestre/bestiario/novo`, `/mestre/bestiario/:id`, `/mestre/bestiario/:id/editar`, `/mestre/itens`, `/mestre/kits`.
   Kit ativo: guardado no navegador (`features/kits/types.ts`, try/catch); `useKitAtivo` + `soDoKit` filtram as listas (só o kit) e o kit ativo é o padrão dos formulários. No grupo vale `visivelNoKit` (kit + gerais).
-  Logado: `/ativar-mestre`.
+  Logado: `/ativar-mestre` redireciona para `/conta`.
 - Layouts: `PublicLayout` (regras, guia; botões Login e Registrar-se sempre visíveis, que com sessão levam à área da conta; links no topo) e `AppLayout` (topo com marca, troca Mestrar/Jogar
   e menu do perfil com Perfil e conta e Sair; navegação da interface numa **barra lateral**, que no celular vira gaveta aberta pelo botão de menu). Os dois têm o `Rodape` (`components/layout/Rodape.tsx`): créditos, direitos autorais, Documentação, Termos de uso, Política de privacidade e GitHub.
 - Se a API responder 401, o front faz `signOut` e volta ao login.

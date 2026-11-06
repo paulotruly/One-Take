@@ -36,7 +36,7 @@ export function AppLayout() {
   const { sair } = useAuth();
   const me = useMe();
   const { pathname } = useLocation();
-  // Em páginas comuns (perfil, ativar mestre) continua a interface em que a pessoa estava.
+  // Em páginas comuns (perfil) continua a interface em que a pessoa estava.
   const area: Papel = pathname.startsWith("/mestre")
     ? "MESTRE"
     : pathname.startsWith("/jogador")
@@ -60,10 +60,12 @@ export function AppLayout() {
     else if (pathname.startsWith("/jogador")) lembrarInterface("JOGADOR");
   }, [pathname]);
 
-  const troca =
-    area === "MESTRE"
+  // Só quem ativou a interface de mestre alterna; o jogador fica só com Minhas fichas (ativa em Perfil e conta).
+  const troca = !ehMestre
+    ? null
+    : area === "MESTRE"
       ? { to: "/jogador", rotulo: "Jogar", Icone: Gamepad2, titulo: "Ir para a interface de jogador (suas fichas)" }
-      : { to: ehMestre ? "/mestre/inicio" : "/ativar-mestre", rotulo: "Mestrar", Icone: Crown, titulo: ehMestre ? "Ir para a interface de mestre" : "Ativar a interface de mestre" };
+      : { to: "/mestre/inicio", rotulo: "Mestrar", Icone: Crown, titulo: "Ir para a interface de mestre" };
 
   return (
     <div className="app">
@@ -82,7 +84,7 @@ export function AppLayout() {
           </Button>
           <Marca />
           <div className="topo__usuario">
-            {me.data && (
+            {troca && (
               <Link to={troca.to} className="topo__troca" title={troca.titulo}>
                 <troca.Icone size={16} aria-hidden />
                 <span>{troca.rotulo}</span>
