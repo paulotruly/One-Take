@@ -138,4 +138,37 @@ exibido direto pelo front. Não há upload nem uso do Supabase Storage.
 | `VITE_API_URL` | URL da API (`http://localhost:3333` ou a do Render) |
 
 ## Deploy
-Detalhado ao fim da fase de deploy (ver ROADMAP).
+API no **Render** (`render.yaml` na raiz, blueprint) e web na **Vercel** (`web/vercel.json`). O banco e o login continuam no Supabase.
+Os dois sobem sozinhos a cada push na `main`. Ordem na primeira vez: Render, Vercel, e depois voltar ao Render para liberar o CORS.
+
+### 1. API no Render
+1. render.com > **New > Blueprint** > conectar o GitHub e escolher o repositório `One-Take`. O Render lê o `render.yaml`:
+   serviço `one-take-api`, pasta `api`, região Oregon (a mesma do banco, us-west-2), plano free.
+2. Preencher as variáveis pedidas (os mesmos valores do `api/.env`):
+   `DATABASE_URL` (porta 6543, com `?pgbouncer=true`), `DIRECT_URL` (porta 5432), `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`,
+   `SUPABASE_SECRET_KEY` e `CORS_ORIGIN` (por enquanto `http://localhost:5173`; troca no passo 3).
+   `TRUST_PROXY=1` e `NODE_VERSION` já vêm do blueprint.
+3. **Apply**. Quando terminar, abrir `https://<serviço>.onrender.com/health`: tem que responder `{"status":"ok","banco":"ok"}`.
+   Guardar essa URL (sem barra no fim) para a Vercel.
+- Build: `npm ci --include=dev && npm run build` (o Prisma gera o client no build). Início: `npm start`.
+- Plano free: o serviço dorme após uns 15 minutos sem acesso, e a primeira requisição depois disso demora (perto de 1 minuto).
+
+### 2. Web na Vercel
+1. vercel.com > **Add New > Project** > importar o repositório.
+2. **Root Directory**: `web`. Framework, build (`npm run build`) e saída (`dist`) vêm do `web/vercel.json`.
+   Em Root Directory, manter ligado **Include files outside the root directory in the Build Step** (Termos e Política leem `docs/legal`).
+3. **Environment Variables** (Production e Preview): `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` (os do `web/.env`) e
+   `VITE_API_URL` = a URL do Render. São embutidas no build: mudou alguma, faça **Redeploy**.
+4. **Deploy**. Guardar a URL do site (ex.: `https://one-take.vercel.app`).
+
+### 3. Liberar o site na API
+No Render > serviço > **Environment**: `CORS_ORIGIN` = a URL da Vercel (sem barra no fim; domínio próprio, se tiver, separado por vírgula).
+Salvar (o Render reinicia). Testar no site: cadastro, login e uma tela de mestre.
+
+### Migrations e manutenção
+- Migrations **não** rodam no deploy (no plano free o Render não tem pre-deploy). Quando um commit trouxer migration nova, rode
+  na sua máquina, dentro de `api/`, com o `.env` apontando para o banco de produção: `npm run db:deploy`.
+  Se a migration remove colunas que a versão no ar ainda lê (ex.: `20261106120000_sem_verificado`), espere o deploy do Render
+  terminar antes de rodar. Se só acrescenta, rode antes do push.
+- Seed, cargo, exportar e concluir exclusões também rodam da sua máquina (`npm run db:seed`, `npm run cargo`...).
+- Logs: Render > serviço > **Logs**; Vercel > projeto > **Deployments**.

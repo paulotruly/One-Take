@@ -6,6 +6,10 @@ Registre só o que muda comportamento, manutenção ou entendimento do sistema. 
 
 Formato de cada entrada: **Resumo**, Motivo, Arquivos/módulos, Impacto (regras ou arquitetura), Procedimentos (migrations, config) e Docs.
 
+## Não commitado (2026-11-06, deploy)
+- **Deploy preparado:** `render.yaml` na raiz (API no Render: pasta `api`, Oregon, health check `/health`, `TRUST_PROXY=1`, Node 22.12) e
+  `web/vercel.json` com framework, build e saída; `web/package.json` fixa Node 22. Passo a passo em `ARQUITETURA.md`, seção Deploy. Sem mudança de código.
+
 ## Não commitado (2026-11-06)
 - **Mesa pelo kit:** o que vale na mesa vem do kit escolhido (classes, raças, atributos com as perícias, perícias com o atributo, status do kit e os automáticos) e acompanha quando o
   kit muda (`api/src/modules/grupos/kit-da-mesa.ts`; `definirKits` e a tela do kit refazem as mesas). O formulário da mesa troca a escolha item a item por kit + resumo;

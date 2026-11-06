@@ -29,8 +29,9 @@
 - Regras de combate definidas e visíveis (documentação, página do grupo, ficha), regras da mesa, turnos nos status e aprimoramento
   como carta inteira por nível; personagem entre mesas (2026-10-14).
 
+- Deploy preparado: `render.yaml` (API no Render, Oregon, junto do banco) e `web/vercel.json` (web na Vercel), passo a passo em ARQUITETURA (2026-11-06).
+
 ## Em andamento
-- Instruções de deploy (Render, Vercel).
 - Configurar a chave secreta do Supabase em produção; revisar as minutas legais (`docs/legal/REVISAO_LEGAL_PENDENCIAS.md`).
 
 ## A seguir (fora do escopo atual)
